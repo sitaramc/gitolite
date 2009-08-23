@@ -1,0 +1,86 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+# === add-auth-keys ===
+# refreshes ~/.ssh/authorized_keys from the list of pub-keys
+
+# part of the gitosis-lite (GL) suite
+
+# how run:      manual, by GL admin
+# when:         anytime a pubkey is added/deleted
+#               (i.e., contents of ~/.gitosis-lite/keydir change)
+# input:        ~/.gitosis-lite/keydir
+# output:       ~/.ssh/authorized_keys
+# security:
+#     - touches a very critical system file that manages the restrictions on
+#       incoming users.  Be sure to audit AUTH_COMMAND and AUTH_OPTIONS (see
+#       below) on any change to this script
+#     - no security checks within program.  The GL admin runs this manually
+
+# robustness:
+#     - if the "start" line exists, but the "end" line does not, you lose the
+#       rest of the existing authkey file.  In general, "don't do that (TM)",
+#       but we do have a "vim -d" popping up so you can see the changes being
+#       made, just in case...
+
+# other notes:
+#     - you do NOT need to run this for permission changes within
+#       gitosis-lite.conf, (like giving an *existing* user new rights)
+#     - keys are added/deleted from the keystore **manually**, and all keys
+#       are named "name.pub"
+
+# command and options for authorized_keys
+our $AUTH_COMMAND=$ENV{HOME} . "/.gitosis-lite/gl-auth-command";
+our $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
+
+# quick subroutines
+sub my_chdir
+{
+    chdir($_[0]) or die "chdir $_[0] failed: $!";
+}
+
+open(INF, "<", $ENV{HOME} . "/.ssh/authorized_keys") or die "open old authkeys failed: $!";
+open(OUT, ">", $ENV{HOME} . "/.ssh/new_authkeys")    or die "open new authkeys failed: $!";
+# save existing authkeys minus the GL-added stuff
+while (<INF>)
+{
+    print OUT unless (/^# gitosis-lite start/../^# gitosis-lite end/);
+}
+
+# add our "start" line, each key on its own line (prefixed by command and
+# options, in the standard ssh authorized_keys format), then the "end" line.
+print OUT "# gitosis-lite start\n";
+my_chdir($ENV{HOME} . "/.gitosis-lite/keydir");
+for my $pubkey (glob("*.pub"))
+{
+    my $user = $pubkey; $user =~ s/\.pub$//;
+    print OUT "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";
+    print OUT `cat $pubkey`;
+}
+print OUT "# gitosis-lite end\n";
+close(OUT);
+
+# check what changes are being made; just a comfort factor
+system("vim -d ~/.ssh/authorized_keys ~/.ssh/new_authkeys");
+
+# all done; overwrite the file (use cat to avoid perm changes)
+system("cat ~/.ssh/new_authkeys > ~/.ssh/authorized_keys");
+system("rm  ~/.ssh/new_authkeys");
+
+# if the gl admin directory (~/.gitosis-lite) is itself a git repo, do an
+# autocheckin.  nothing fancy; this is a "just in case" type of thing.
+my_chdir($ENV{HOME} . "/.gitosis-lite");
+if (-d ".git")
+{
+    system("git add -A keydir");        # stage all changes in keydir
+    if (! system("git diff --cached --quiet") )
+    # and if there are any
+    {
+        open(COMMIT, "|-", "git commit -F -")
+            or die "pipe commit failed: $!";
+        print COMMIT "keydir changed\n\n";
+        print COMMIT `git diff --cached --name-status`;
+        close(COMMIT) or die "close commit failed: $!";
+    }
+}
