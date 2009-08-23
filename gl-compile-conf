@@ -225,6 +225,7 @@ close(OUT);
 # did not have that luxury, so it was forced to detect the first push and
 # create it then
 
+umask(0077);
 my_chdir("$ENV{HOME}/$REPO_BASE");
 for my $repo (keys %repos)
 {
@@ -233,6 +234,8 @@ for my $repo (keys %repos)
         mkdir("$repo.git") or die "mkdir $repo.git failed: $!";
         my_chdir("$repo.git");
         system("git init --bare");
+        system("cp $GL_ADMINDIR/update-hook.pl hooks/update");
+        system("chmod 755 hooks/update");
         my_chdir("$ENV{HOME}/$REPO_BASE");
     }
 }
