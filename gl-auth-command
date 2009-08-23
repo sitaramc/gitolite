@@ -1,0 +1,106 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+# === auth-command ===
+# the command that GL users actually run
+
+# part of the gitosis-lite (GL) suite
+
+# how run:      via sshd, being listed in "command=" in ssh authkeys
+# when:         every login by a GL user
+# input:        $1 is GL username, plus $SSH_ORIGINAL_COMMAND
+# output:
+# security:
+#     - currently, we just make some basic checks, copied from gitosis
+
+# robustness:
+
+# other notes:
+
+# ----------------------------------------------------------------------------
+#       common definitions
+# ----------------------------------------------------------------------------
+
+our $GL_ADMINDIR;
+our $GL_CONF;
+our $GL_KEYDIR;
+our $GL_CONF_COMPILED;
+our $REPO_BASE;
+our %repos;
+
+my $glrc = $ENV{HOME} . "/.gitosis-lite.rc";
+unless (my $ret = do $glrc)
+{
+    die "parse $glrc failed: $@" if $@;
+    die "couldn't do $glrc: $!"  unless defined $ret;
+    die "couldn't run $glrc"     unless $ret;
+}
+
+die "couldnt do perms file" unless (my $ret = do $GL_CONF_COMPILED);
+
+# ----------------------------------------------------------------------------
+#       definitions specific to this program
+# ----------------------------------------------------------------------------
+
+our $R_COMMANDS=qr/git[ -]upload-pack/;
+our $W_COMMANDS=qr/git[ -]receive-pack/;
+our $REPONAME_PATT=qr(^[0-9a-zA-Z][0-9a-zA-Z._/-]*$); # very simple pattern
+
+# ----------------------------------------------------------------------------
+#       start...
+# ----------------------------------------------------------------------------
+
+# first, fix the biggest gripe I have with gitosis, a 1-line change
+my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
+
+# ----------------------------------------------------------------------------
+#       sanity checks on SSH_ORIGINAL_COMMAND
+# ----------------------------------------------------------------------------
+
+# SSH_ORIGINAL_COMMAND must exist.  Since we also captured $user, we print
+# that in the message so people saying "ssh git@server" can see which gitosis
+# user he is being recognised as
+my $cmd = $ENV{SSH_ORIGINAL_COMMAND}
+    or die "no SSH_ORIGINAL_COMMAND?  I'm not a shell, $user!";
+
+# we don't like newlines or semicolons in SSH_ORIGINAL_COMMAND
+die "$cmd???  you're a funny guy..."
+    if $cmd =~ /[;\n]/;
+
+# split into command and arguments; the pattern allows old style as well as
+# new style: "git-subcommand arg" or "git subcommand arg", just like gitosis
+# does, although I'm not sure how necessary that is
+#
+# keep in mind this is how git sends across the command:
+#   git-receive-pack 'reponame.git'
+# including the single quotes
+
+my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'(.*).git'/);
+die "$verb?  I don't do odd jobs, sorry..."
+    unless $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS;
+
+die "I don't like the look of $repo, sorry!"
+    unless $repo =~ $REPONAME_PATT;
+
+# ----------------------------------------------------------------------------
+#       first level permissions check
+# ----------------------------------------------------------------------------
+
+# now, knowing the user and repo (which is repo path), we try perms
+my $perm = 'W'; $perm = 'R' if $verb =~ $R_COMMANDS;
+die "access denied" unless $repos{$repo}{$perm}{$user};
+
+# ----------------------------------------------------------------------------
+#       over to git now
+# ----------------------------------------------------------------------------
+
+# ( but first save the reponame; we can save some time later in the hook )
+$ENV{GL_REPO}=$repo;
+
+open(LOG, ">>", "$GL_ADMINDIR/log");
+print LOG "\n", scalar(localtime), " $ENV{SSH_ORIGINAL_COMMAND} $user\n";
+close(LOG);
+
+$repo = "'$REPO_BASE/$repo.git'";
+exec("git", "shell", "-c", "$verb $repo");
