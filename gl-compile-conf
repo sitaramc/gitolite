@@ -16,15 +16,14 @@ use Data::Dumper;
 
 # how run:      manual, by GL admin
 # when:
-#     - anytime a pubkey is added/deleted (i.e., contents of
-#       ~/.gitosis-lite/keydir change)
+#     - anytime a pubkey is added/deleted
 #     - anytime gitosis-lite.conf is changed
 # input:
-#     - ~/.gitosis-lite/gitosis-lite.conf
-#     - ~/.gitosis-lite/keydir
+#     - GL_CONF (default: ~/.gitosis-lite/gitosis-lite.conf)
+#     - GL_KEYDIR (default: ~/.gitosis-lite/keydir)
 # output:
-#     - ~/.ssh/authorized_keys
-#     - ~/.ssh/gitosis-lite.conf-compiled.pm
+#     - ~/.ssh/authorized_keys (dictated by sshd)
+#     - GL_CONF_COMPILED (default: ~/.gitosis-lite/gitosis-lite.conf-compiled.pm)
 # security:
 #     - touches a very critical system file that manages the restrictions on
 #       incoming users.  Be sure to audit AUTH_COMMAND and AUTH_OPTIONS (see
@@ -37,18 +36,39 @@ use Data::Dumper;
 #       but we do have a "vim -d" popping up so you can see the changes being
 #       made, just in case...
 
-# other notes:
-#     - keys are added/deleted from the keystore **manually**, and all keys
-#       are named "name.pub".  Keep the names simple.
+# ----------------------------------------------------------------------------
+#       common definitions
+# ----------------------------------------------------------------------------
+
+our $GL_ADMINDIR;
+our $GL_CONF;
+our $GL_KEYDIR;
+our $GL_CONF_COMPILED;
+our $REPO_BASE;
+
+my $glrc = $ENV{HOME} . "/.gitosis-lite.rc";
+unless (my $ret = do $glrc)
+{
+    die "parse $glrc failed: $@" if $@;
+    die "couldn't do $glrc: $!"  unless defined $ret;
+    die "couldn't run $glrc"     unless $ret;
+}
+
+# ----------------------------------------------------------------------------
+#       definitions specific to this program
+# ----------------------------------------------------------------------------
 
 # command and options for authorized_keys
-our $AUTH_COMMAND=$ENV{HOME} . "/.gitosis-lite/gl-auth-command";
+our $AUTH_COMMAND="$GL_ADMINDIR/gl-auth-command";
 our $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
 
 our %groups = ();
 our %repos = ();
 
-# quick subroutines
+# ----------------------------------------------------------------------------
+#       subroutines
+# ----------------------------------------------------------------------------
+
 sub my_chdir
 {
     chdir($_[0]) or die "chdir $_[0] failed: $!";
@@ -91,7 +111,7 @@ while (<INF>)
 # add our "start" line, each key on its own line (prefixed by command and
 # options, in the standard ssh authorized_keys format), then the "end" line.
 print OUT "# gitosis-lite start\n";
-my_chdir($ENV{HOME} . "/.gitosis-lite/keydir");
+my_chdir($GL_KEYDIR);
 for my $pubkey (glob("*.pub"))
 {
     my $user = $pubkey; $user =~ s/\.pub$//;
@@ -110,12 +130,12 @@ system("rm  ~/.ssh/new_authkeys");
 
 # if the gl admin directory (~/.gitosis-lite) is itself a git repo, do an
 # autocheckin.  nothing fancy; this is a "just in case" type of thing.
-my_chdir($ENV{HOME} . "/.gitosis-lite");
+my_chdir($GL_ADMINDIR);
 if (-d ".git")
 {
     system("git add -A keydir");        # stage all changes in keydir
-    if (! system("git diff --cached --quiet") )
     # and if there are any
+    if (system("git diff --cached --quiet") )
     {
         open(COMMIT, "|-", "git commit -F -")
             or die "pipe commit failed: $!";
@@ -129,9 +149,9 @@ if (-d ".git")
 #       "compile" GL conf
 # ----------------------------------------------------------------------------
 
-open(INF, "<", $ENV{HOME} . "/.gitosis-lite/gitosis-lite.conf")
+open(INF, "<", $GL_CONF)
     or die "open GL conf failed: $!";
-open(OUT, ">", $ENV{HOME} . "/.ssh/gitosis-lite.conf-compiled.pm")
+open(OUT, ">", $GL_CONF_COMPILED)
     or die "open GL conf compiled failed: $!";
 
 # the syntax is fairly simple, so we parse it inline
@@ -164,14 +184,14 @@ while (<INF>)
     elsif (/^(R|RW|RW\+) (.* )?= (.+)/)
     {
         my @perms = split //, $1;
-        my @refs = split ' ', $2 if $2;
+        my @refs; @refs = split(' ', $2) if $2;
         my @users = split ' ', $3;
 
         # if no ref is given, this PERM applies to all refs
         @refs = qw(refs/.*) unless @refs;
         # fully qualify refs that dont start with "refs/"; prefix them with
         # "refs/heads/"
-        @refs = map { m(^refs/) or s(^)(refs/heads/) } @refs;
+        @refs = map { m(^refs/) or s(^)(refs/heads/); $_ } @refs;
 
         # expand the user list, unless it is just "@all"
         @users = expand_userlist ( @users )
@@ -182,11 +202,11 @@ while (<INF>)
         {
             for my $perm (@perms)
             {
-                for my $ref (@refs)
+                for my $user (@users)
                 {
-                    for my $user (@users)
+                    for my $ref (@refs)
                     {
-                        $repos{$repo}{$perm}{$ref}{$user} = 1;
+                        $repos{$repo}{$perm}{$user}{$ref} = 1;
                     }
                 }
             }
@@ -196,3 +216,23 @@ while (<INF>)
 
 print OUT Data::Dumper->Dump([\%repos], [qw(*repos)]);
 close(OUT);
+
+# ----------------------------------------------------------------------------
+#       any new repos created?
+# ----------------------------------------------------------------------------
+
+# modern gits allow cloning from an empty repo, so we just create it.  Gitosis
+# did not have that luxury, so it was forced to detect the first push and
+# create it then
+
+my_chdir("$ENV{HOME}/$REPO_BASE");
+for my $repo (keys %repos)
+{
+    unless (-d "$repo.git")
+    {
+        mkdir("$repo.git") or die "mkdir $repo.git failed: $!";
+        my_chdir("$repo.git");
+        system("git init --bare");
+        my_chdir("$ENV{HOME}/$REPO_BASE");
+    }
+}
