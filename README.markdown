@@ -1,65 +1,93 @@
 # gitosis-lite
 
+gitosis-lite is the bare essentials of gitosis, with a completely different
+config file that allows (at last!) access control down to the branch level,
+including specifying who can and cannot *rewind* a given branch.
+
 In this document:
 
-  * "lite"?
-  * what's extra
-  * workflow
+  * why
+  * what's gone
+  * what's new
+  * the workflow
 
 ----
 
-### "lite"?
+### why
 
-I have been gitosis for a while, and have learnt a lot from it.  But in a
-typical $DAYJOB setting, there are some issues.  It's not always Linux, so you
-can't just "urpmi gitosis" and be done.  "python-setuptools" isn't often
-installed (and on a Solaris 9 I was trying to help remotely, we never did
-manage it).  And the most requested feature (see next section) had to be
-written anyway.
+I have been using gitosis for a while, and have learnt a lot from it.  But in
+a typical $DAYJOB setting, there are some issues:
 
-While I was pondering having to finally learn python (I hate whitespace based
-flow logic except for plain text; this is a *personal* opinion so pythonistas
-can back off :-), I also realised that:
+  * it's not always Linux; you can't just "urpmi gitosis" (or yum or apt-get)
+    and be done
+  * often, "python-setuptools" isn't installed (and on a Solaris9 I was trying
+    to help remotely, we never did manage to install it eventually)
+  * the most requested feature (see "what's extra?") had to be written anyway
 
-  * no one in $DAYJOB settings will use or approve access methods that work
-    without any authentication, so I didn't need gitweb/daemon support in the
-    tool
-  * the idea that you admin it by pushing to a special repo is cute and
-    convenient, but not really necessary because of how rarely these changes
-    are made.
+### what's gone
 
-All of this pointed to a rewrite.  In perl, naturally.
+While I was pondering the need to finally learn python[1] , I also realised
+that:
 
-I also gained (and used) an unfair advantage: gits newer than 1.6.2 can clone
-an empty repo, so I don't need complex logic in the permissions checking part
-to *create* the repo initially -- I just create an empty bare repo when I
-"compile" the config file (see "workflow" below).
+  * no one in $DAYJOB type environments will use or approve access methods
+    that work without any authentication, so I didn't need gitweb/daemon
+    support in the tool or in the config file
+  * the idea that you admin it by pushing to a special repo is nice, but not
+    really necessary because of how rarely these changes are made, especially
+    considering how much code is involved in that piece
+
+All of this pointed to a rewrite.  In perl, naturally :-)
 
 ### what's extra?
 
-A lot of people in my $DAYJOB type world want per-branch permissions, so I
-copied the basic idea from
-git.git:Documentation/howto/update-hook-example.txt.  I think this is the most
-significant extra I have.  This includes not just who can push to what branch,
-but also whether they are allowed to rewind it or not (non-ff push).
+Per-branch permissions.  You will not believe how often I am asked this at
+$DAYJOB.  This is almost the single reason I started *thinking* about rolling
+my own gitosis in the first place.
 
-### workflow
+Take a look at the example config file in the repo to see how I do this.  I
+copied the basic idea from `update-hook-example.txt` (it's one of the "howto"s
+that come with the git source tree).  This includes not just who can push to
+what branch, but also whether they are allowed to rewind it or not (non-ff
+push).
 
-I took the opportunity to change the workflow significantly.
+However, please note the difference in the size and complexity of the
+*operational code* between the update hook in that example, and in mine :-)
+The reason is in the next section.
 
-  * all admin happens *on the server*, in a special directory
-  * after making any changes, one "compiles" the configuration.  This
+### the workflow
+
+In order to get per-branch access, you *must* use an update hook.  However,
+that only gets invoked on a push; "read" access still has to be controlled
+right at the beginning, before git even enters the scene (just the way gitosis
+currently works).
+
+So: either split the access control into two config files, or have two
+completely different programs *both* parse the same one and pick what they
+want.  Crap... I definitely don't want the hook doing any parsing, (and it
+would be nice if the auth-control program didn't have to either).
+
+So I changed the workflow completely:
+
+  * all admin changes happen *on the server*, in a special directory that
+    contains the config and the users' pubkeys.  But there's no commit and
+    push afterward.  Nothing prevents you from version-controlling that
+    directory if you wish to, but it's not *required*
+  * instead, after making changes, you "compile" the configuration.  This
     refreshes `~/.ssh/authorized_keys`, as well as puts a parsed form of the
     access list in a file for the other two pieces to use.
 
-Why pre-parse?  Because access control decisions are taken at two separate
-stages now:
+The pre-parsed form is basically a huge perl variable.  It's human readable
+too (never mind what the python guys say!)
 
-  * the program that is run via `~/.ssh/authorized_keys` (called
-    `gl-auth-command`, equivalent to `gitosis-serve`) decides whether even git
-    should be allowed to run (basic R/W/no access)
-  * the update-hook on each repo, which decides the per-branch permissions.
+Advantages: all the complexity of parsing and error checking the parse is done
+away from the two places where the actual access control happens, which are:
 
-But the user specifies only one access file, and he doesn't have to know these
-distinctions.  So I avoid having to parse the access file in two completely
-different programs by pre-compiling it and storing it as a perl "variable".
+  * the program that is run via `~/.ssh/authorized_keys` (I call it
+    `gl-auth-command`, equivalent to `gitosis-serve`); this decides whether
+    git should even be allowed to run (basic R/W/no access)
+  * the update-hook on each repo, which decides the per-branch permissions
+
+----
+
+[1] I hate whitespace to mean anything significant except for text; this is a
+personal opinion *only*, so pythonistas please back off :-)

@@ -1,25 +1,99 @@
-There are 5 files you need to touch/copy 
+### quickinstall
 
-    example.conf
-    example.gitosis-lite.rc
-    gl-auth-command
-    gl-compile-conf
-    update-hook.pl
+I assume all the files pertaining to this software are untarred and available
+in the current directory.
 
-1.  copy `example.gitosis-lite.rc` as `~/.gitosis-lite.rc`.  This location is
-    fixed for now (maybe later I'll change it to a "git config" variable).
+A quick install, taking all the defaults, can be done with the following
+commands; just copy and paste them into your shell:
 
-2.  edit `~/.gitosis-lite.rc` and change all the paths however you want.  Be
-    sure to keep the perl syntax -- you *don't* have to know perl to do so,
-    it's fairly easy to guess in this limited case.
+    # this one is fixed to the location shown
+    cp example.gitosis-lite.rc  ~/.gitosis-lite.rc
 
-3.  copy `example.conf` to whatever path you specified for `GL_CONF` in the rc
-    file in step 2.  By default it is `~/.gitosis-lite/gitosis-lite.conf`.
+    # the destinations below are defaults; if you change the paths in the "rc"
+    # file above, these destinations also must change accordingly
 
+    # mkdir $REPO_BASE, $GL_ADMINDIR, and $GL_KEYDIR
+    mkdir                       ~/repositories
+    mkdir                       ~/.gitosis-lite                 
+    mkdir                       ~/.gitosis-lite/keydir
+
+    # copy sample conf to $GL_CONF
+    cp example.conf             ~/.gitosis-lite/gitosis-lite.conf
+
+    # copy the 3 programs to $GL_ADMINDIR
+    cp update-hook.pl           ~/.gitosis-lite
+    cp gl-auth-command          ~/.gitosis-lite
+    cp gl-compile-conf          ~/.gitosis-lite
+
+    # optional; copy the documents also (if you untarred the package into a
+    # temporary directory and need to get rid of it)
+    cp INSTALL README.markdown  ~/.gitosis-lite
+
+### install notes
+
+  * At present the location of `~/.gitosis-lite.rc` is fixed (maybe later I'll
+    change it to a "git config" variable).
+
+    If you edit it and change any paths, be sure to keep the perl syntax --
+    you *don't* have to know perl to do so, it's fairly easy to guess in this
+    limited case.  And of course, make sure you adjust the commands shown
+    above to suit the new locations
+
+  * the config file is (by default) at `~/.gitosis-lite/gitosis-lite.conf`.
     Edit the file as you wish.  The comments in the file ought to be clear
     enough but let me know if not
 
-4.  create directories for whatever you named in `GL_KEYDIR` and `REPO_BASE`
-    (default `~/.gitosis-lite/keydir` and `~/repositories`)
+  * if you want to bring in existing (bare, server) repos into gitosis-lite,
+    this should work:
+      * backup the repo, then move it to `$BASE_REPO`
+      * copy `$GL_ADMINDIR/update-hook.pl` to `[reponame].git/hooks/update` --
+        if you don't do this, per branch restrictions will not work
+      * then update the keys and the config file and "compile"
 
-5.  copy `update-hook.pl` to `$GL_ADMINDIR` (default `~/.gitosis-lite`)
+### administer
+
+  * ask each user who will get access to send you a public key.  See other
+    sources (for example
+    [here](http://sitaramc.github.com/0-installing/2-access-gitosis.html#generating_a_public_key))
+    for how to do this
+  * for each "user" in `$GL_CONF`, copy their public key to a file called
+    "user.pub" in `$GL_KEYDIR`
+  * edit the config file (`$GL_CONF`) to add the new users in whatever way you
+    like
+  * backup your `~/.ssh/authorized_keys` file if you feel nervous :-)
+  * cd to `$GL_ADMINDIR` and run `./gl-compile-conf`
+
+#### optional -- if you want to be doubly sure
+
+It should all work, but the first couple of times you may want to check these
+
+  * check the outputs
+    
+      * `~/.ssh/authorized_keys` should contain one line for each "user" pub
+        key added, between two "marker" lines (which you should please please
+        not remove!).  The line should contain a "command=" pointing to a
+        `$GL_ADMINDIR/gl-auth-command` file, then some sshd restrictions, the
+        key, etc.
+      * `$GL_CONF_COMPILED` (default
+        `~/.gitosis-lite/gitosis-lite.conf-compiled.pm`) should contain an
+        expanded list of the access control rules.  It may look a little long,
+        but it's fairly intuitive!
+
+  * if the run threw up any "initialising empty repo" messages, check the
+    individual repos (inside `$REPO_BASE`) if you wish.  Especially make sure
+    the `$REPO_BASE/[reponame].git/hooks/update` got copied OK and is
+    executable
+
+### run
+
+Just use it as normal.  Every new repo mentioned has been created already, so
+(as long as your clients are using git > 1.6.2), you can just clone it.
+
+And once in a while, if you're feeling particularly BOFH-ish, take a look at
+`$GL_ADMINDIR/log` :-)
+
+### errors, warnings, etc
+
+  * when you clone an empty repo, git seems to complain about the remote
+    hanging up or something.  I have no idea what that is, but it doesn't seem
+    to hurt anything.  This happens even in normal git, not just gitosis-lite.
