@@ -204,10 +204,7 @@ while (<INF>)
             {
                 for my $user (@users)
                 {
-                    for my $ref (@refs)
-                    {
-                        $repos{$repo}{$perm}{$user}{$ref} = 1;
-                    }
+                    push @{ $repos{$repo}{$perm}{$user} }, @refs;
                 }
             }
         }
