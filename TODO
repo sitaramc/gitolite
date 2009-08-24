@@ -1,0 +1,9 @@
+  * a proper INSTALL file with clear instructions for non-experts
+
+  * make a proper test suite
+
+  * `use Git` instead of run git commands: I don't run too many git commands
+    in this and Git.pm just runs the same commands (per the documentation), so
+    it's sorta moot right now, but it's worth trying
+
+  * change the "rc" file to use "gitconfig" instead...
