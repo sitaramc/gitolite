@@ -1,14 +1,20 @@
 # this is meant to be pulled into a perl program using "do"
 
-# gitosis-lite admin directory, files, etc
-$GL_ADMINDIR=$ENV{HOME} . "/.gitosis-lite";
-$GL_CONF="$GL_ADMINDIR/gitosis-lite.conf";
-$GL_KEYDIR="$GL_ADMINDIR/keydir";
-    # this one has to agree with the other programs, watch out:
-$GL_CONF_COMPILED=$ENV{HOME} . "/.ssh/gitosis-lite.conf-compiled.pm";
-
 # base directory for all the repos
 $REPO_BASE="repositories";
 
-# this should be the last line in this file
+# gitosis-lite admin directory, files, etc
+$GL_ADMINDIR=$ENV{HOME} . "/.gitosis-lite";
+
+# --------------------------------------
+
+# the ones below can be left as they are, unless for some reason you want them
+# elsewhere
+
+$GL_CONF="$GL_ADMINDIR/gitosis-lite.conf";
+$GL_KEYDIR="$GL_ADMINDIR/keydir";
+$GL_CONF_COMPILED="$GL_ADMINDIR/gitosis-lite.conf-compiled.pm";
+
+# --------------------------------------
+# this should be the last line in this file, per perl rules
 1;

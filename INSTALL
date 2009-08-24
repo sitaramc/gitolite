@@ -1,0 +1,25 @@
+There are 5 files you need to touch/copy 
+
+    example.conf
+    example.gitosis-lite.rc
+    gl-auth-command
+    gl-compile-conf
+    update-hook.pl
+
+1.  copy `example.gitosis-lite.rc` as `~/.gitosis-lite.rc`.  This location is
+    fixed for now (maybe later I'll change it to a "git config" variable).
+
+2.  edit `~/.gitosis-lite.rc` and change all the paths however you want.  Be
+    sure to keep the perl syntax -- you *don't* have to know perl to do so,
+    it's fairly easy to guess in this limited case.
+
+3.  copy `example.conf` to whatever path you specified for `GL_CONF` in the rc
+    file in step 2.  By default it is `~/.gitosis-lite/gitosis-lite.conf`.
+
+    Edit the file as you wish.  The comments in the file ought to be clear
+    enough but let me know if not
+
+4.  create directories for whatever you named in `GL_KEYDIR` and `REPO_BASE`
+    (default `~/.gitosis-lite/keydir` and `~/repositories`)
+
+5.  copy `update-hook.pl` to `$GL_ADMINDIR` (default `~/.gitosis-lite`)

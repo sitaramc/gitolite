@@ -4,9 +4,7 @@ In this document:
 
   * "lite"?
   * what's extra
-  * whats missing/TODO
   * workflow
-  * conf file example
 
 ----
 
@@ -44,10 +42,6 @@ copied the basic idea from
 git.git:Documentation/howto/update-hook-example.txt.  I think this is the most
 significant extra I have.  This includes not just who can push to what branch,
 but also whether they are allowed to rewind it or not (non-ff push).
-
-### what's missing/TODO
-
-See TODO file
 
 ### workflow
 

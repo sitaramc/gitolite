@@ -7,3 +7,5 @@
     it's sorta moot right now, but it's worth trying
 
   * change the "rc" file to use "gitconfig" instead...
+
+  * check user/group names with some suitable regex
