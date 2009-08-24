@@ -61,6 +61,7 @@ unless (my $ret = do $glrc)
 # command and options for authorized_keys
 our $AUTH_COMMAND="$GL_ADMINDIR/gl-auth-command";
 our $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
+our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);     # very simple pattern
 
 our %groups = ();
 our %repos = ();
@@ -81,6 +82,7 @@ sub expand_userlist
 
     for my $item (@list)
     {
+        die "bad user $item\n" unless $item =~ $USERNAME_PATT;
         if ($item =~ /^@/)      # nested group
         {
             die "undefined group $item" unless $groups{$item};
@@ -94,6 +96,103 @@ sub expand_userlist
     }
 
     return @new_list;
+}
+
+# ----------------------------------------------------------------------------
+#       "compile" GL conf
+# ----------------------------------------------------------------------------
+
+open(INF, "<", $GL_CONF)
+    or die "open GL conf failed: $!";
+
+# the syntax is fairly simple, so we parse it inline
+
+my @repos;
+while (<INF>)
+{
+    # normalise whitespace; keeps later regexes very simple
+    s/=/ = /;
+    s/\s+/ /g;
+    s/^ //;
+    s/ $//;
+    # kill comments
+    s/#.*//;
+    # and blank lines
+    next unless /\S/;
+
+    # user groups
+    if (/^(@\S+) = (.*)/)
+    {
+        push @{ $groups{$1} }, expand_userlist( split(' ', $2) );
+        die "bad group $1\n" unless $1 =~ $USERNAME_PATT;
+    }
+    # repo(s)
+    elsif (/^repo (.*)/)
+    {
+        @repos = split(' ', $1);
+    }
+    # actual permission line
+    elsif (/^(R|RW|RW\+) (.* )?= (.+)/)
+    {
+        # split perms to separate out R, W, and +
+        my @perms = split //, $1;
+        my @refs; @refs = split(' ', $2) if $2;
+        my @users = split ' ', $3;
+
+        # if no ref is given, this PERM applies to all refs
+        @refs = qw(refs/.*) unless @refs;
+        # fully qualify refs that dont start with "refs/"; prefix them with
+        # "refs/heads/"
+        @refs = map { m(^refs/) or s(^)(refs/heads/); $_ } @refs;
+
+        # expand the user list, unless it is just "@all"
+        @users = expand_userlist ( @users )
+            unless (@users == 1 and $users[0] eq '@all');
+
+        # ok, we can finally populate the %repos hash
+        for my $repo (@repos)       # each repo in the current stanza
+        {
+            for my $perm (@perms)
+            {
+                for my $user (@users)
+                {
+                    push @{ $repos{$repo}{$perm}{$user} }, @refs;
+                }
+            }
+        }
+    }
+    else
+    {
+        die "can't make head or tail of '$_'\n";
+    }
+}
+
+open(OUT, ">", $GL_CONF_COMPILED)
+    or die "open GL conf compiled failed: $!";
+print OUT Data::Dumper->Dump([\%repos], [qw(*repos)]);
+close(OUT);
+
+# ----------------------------------------------------------------------------
+#       any new repos created?
+# ----------------------------------------------------------------------------
+
+# modern gits allow cloning from an empty repo, so we just create it.  Gitosis
+# did not have that luxury, so it was forced to detect the first push and
+# create it then
+
+umask(0077);
+my_chdir("$ENV{HOME}/$REPO_BASE");
+for my $repo (keys %repos)
+{
+    unless (-d "$repo.git")
+    {
+        mkdir("$repo.git") or die "mkdir $repo.git failed: $!";
+        my_chdir("$repo.git");
+        system("git init --bare");
+        system("cp $GL_ADMINDIR/update-hook.pl hooks/update");
+        system("chmod 755 hooks/update");
+        my_chdir("$ENV{HOME}/$REPO_BASE");
+    }
 }
 
 # ----------------------------------------------------------------------------
@@ -142,97 +241,5 @@ if (-d ".git")
         print COMMIT "keydir changed\n\n";
         print COMMIT `git diff --cached --name-status`;
         close(COMMIT) or die "close commit failed: $!";
-    }
-}
-
-# ----------------------------------------------------------------------------
-#       "compile" GL conf
-# ----------------------------------------------------------------------------
-
-open(INF, "<", $GL_CONF)
-    or die "open GL conf failed: $!";
-open(OUT, ">", $GL_CONF_COMPILED)
-    or die "open GL conf compiled failed: $!";
-
-# the syntax is fairly simple, so we parse it inline
-
-my @repos;
-while (<INF>)
-{
-    # normalise whitespace; keeps later regexes very simple
-    s/=/ = /;
-    s/\s+/ /g;
-    s/^ //;
-    s/ $//;
-    # kill comments
-    s/#.*//;
-    # and blank lines
-    next unless /\S/;
-
-
-    # user groups
-    if (/^(@\S+) = (.*)/)
-    {
-        push @{ $groups{$1} }, expand_userlist( split(' ', $2) );
-    }
-    # repo(s)
-    elsif (/^repo (.*)/)
-    {
-        @repos = split(' ', $1);
-    }
-    # actual permission line
-    elsif (/^(R|RW|RW\+) (.* )?= (.+)/)
-    {
-        my @perms = split //, $1;
-        my @refs; @refs = split(' ', $2) if $2;
-        my @users = split ' ', $3;
-
-        # if no ref is given, this PERM applies to all refs
-        @refs = qw(refs/.*) unless @refs;
-        # fully qualify refs that dont start with "refs/"; prefix them with
-        # "refs/heads/"
-        @refs = map { m(^refs/) or s(^)(refs/heads/); $_ } @refs;
-
-        # expand the user list, unless it is just "@all"
-        @users = expand_userlist ( @users )
-            unless (@users == 1 and $users[0] eq '@all');
-
-        # ok, we can finally populate the %repos hash
-        for my $repo (@repos)       # each repo in the current stanza
-        {
-            for my $perm (@perms)
-            {
-                for my $user (@users)
-                {
-                    push @{ $repos{$repo}{$perm}{$user} }, @refs;
-                }
-            }
-        }
-    }
-}
-
-print OUT Data::Dumper->Dump([\%repos], [qw(*repos)]);
-close(OUT);
-
-# ----------------------------------------------------------------------------
-#       any new repos created?
-# ----------------------------------------------------------------------------
-
-# modern gits allow cloning from an empty repo, so we just create it.  Gitosis
-# did not have that luxury, so it was forced to detect the first push and
-# create it then
-
-umask(0077);
-my_chdir("$ENV{HOME}/$REPO_BASE");
-for my $repo (keys %repos)
-{
-    unless (-d "$repo.git")
-    {
-        mkdir("$repo.git") or die "mkdir $repo.git failed: $!";
-        my_chdir("$repo.git");
-        system("git init --bare");
-        system("cp $GL_ADMINDIR/update-hook.pl hooks/update");
-        system("chmod 755 hooks/update");
-        my_chdir("$ENV{HOME}/$REPO_BASE");
     }
 }
