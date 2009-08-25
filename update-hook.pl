@@ -55,17 +55,21 @@ my $ref = shift;
 my $oldsha = shift;
 my $newsha = shift;
 my $merge_base = '0' x 40;
+# compute a merge-base if both SHAs are non-0, else leave it as '0'x40
+# (i.e., for branch create or delete, merge_base == '0'x40)
 chomp($merge_base = `git merge-base $oldsha $newsha`)
-    unless $oldsha eq '0' x 40;
+    unless $oldsha eq '0' x 40
+        or $newsha eq '0' x 40;
 
 # some of this is from an example hook in Documentation/howto of git.git, with
 # some variations
 
 # what are you trying to do?  (is it 'W' or '+'?)
 my $perm = 'W';
-# rewriting a tag
+# rewriting a tag is considered a rewind, in terms of permissions
 $perm = '+' if $ref =~ m(refs/tags/) and $oldsha ne ('0' x 40);
-# non-ff push to branch
+# non-ff push to branch.  Notice that branch delete looks like a rewind, as it
+# should
 $perm = '+' if $ref =~ m(refs/heads/) and $oldsha ne $merge_base;
 
 my $allowed_refs = $repos{$ENV{GL_REPO}}{$perm}{$ENV{GL_USER}};
