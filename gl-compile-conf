@@ -66,6 +66,9 @@ our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);     # very simple patter
 our %groups = ();
 our %repos = ();
 
+# set a restrictive umask, just in case
+umask(0077);
+
 # ----------------------------------------------------------------------------
 #       subroutines
 # ----------------------------------------------------------------------------
@@ -180,7 +183,6 @@ close(OUT);
 # did not have that luxury, so it was forced to detect the first push and
 # create it then
 
-umask(0077);
 my_chdir("$ENV{HOME}/$REPO_BASE");
 for my $repo (keys %repos)
 {
