@@ -43,8 +43,8 @@ die "couldnt do perms file" unless (my $ret = do $GL_CONF_COMPILED);
 #       definitions specific to this program
 # ----------------------------------------------------------------------------
 
-my $R_COMMANDS=qr/git[ -]upload-pack/;
-my $W_COMMANDS=qr/git[ -]receive-pack/;
+my $R_COMMANDS=qr/^git[ -]upload-pack$/;
+my $W_COMMANDS=qr/^git[ -]receive-pack$/;
 my $REPONAME_PATT=qr(^[0-9a-zA-Z][0-9a-zA-Z._/-]*$); # very simple pattern
 
 # ----------------------------------------------------------------------------
@@ -87,8 +87,9 @@ die "I don't like the look of $repo, sorry!"
 #       first level permissions check
 # ----------------------------------------------------------------------------
 
-# now, knowing the user and repo (which is repo path), we try perms
-my $perm = 'W'; $perm = 'R' if $verb =~ $R_COMMANDS;
+# we know the user and repo; we just need to know what perm he's trying
+my $perm = ($verb =~ $R_COMMANDS ? 'R' : 'W');
+
 die "access denied" unless $repos{$repo}{$perm}{$user};
 
 # ----------------------------------------------------------------------------
