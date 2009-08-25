@@ -99,9 +99,12 @@ die "access denied" unless $repos{$repo}{$perm}{$user};
 # ( but first save the reponame; we can save some time later in the hook )
 $ENV{GL_REPO}=$repo;
 
-open(LOG, ">>", "$GL_ADMINDIR/log");
-print LOG "\n", scalar(localtime), " $ENV{SSH_ORIGINAL_COMMAND} $user\n";
-close(LOG);
+# if log failure isn't important enough to block access, get rid of all the
+# error checking
+open my $log_fh, ">>", "$GL_ADMINDIR/log"
+    or die "open log failed: $!";
+print $log_fh "\n", scalar(localtime), " $ENV{SSH_ORIGINAL_COMMAND} $user\n";
+close $log_fh or die "close log failed: $!";
 
 $repo = "'$REPO_BASE/$repo.git'";
 exec("git", "shell", "-c", "$verb $repo");
