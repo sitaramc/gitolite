@@ -43,9 +43,9 @@ die "couldnt do perms file" unless (my $ret = do $GL_CONF_COMPILED);
 #       definitions specific to this program
 # ----------------------------------------------------------------------------
 
-our $R_COMMANDS=qr/git[ -]upload-pack/;
-our $W_COMMANDS=qr/git[ -]receive-pack/;
-our $REPONAME_PATT=qr(^[0-9a-zA-Z][0-9a-zA-Z._/-]*$); # very simple pattern
+my $R_COMMANDS=qr/git[ -]upload-pack/;
+my $W_COMMANDS=qr/git[ -]receive-pack/;
+my $REPONAME_PATT=qr(^[0-9a-zA-Z][0-9a-zA-Z._/-]*$); # very simple pattern
 
 # ----------------------------------------------------------------------------
 #       start...

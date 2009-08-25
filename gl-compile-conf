@@ -59,12 +59,12 @@ unless (my $ret = do $glrc)
 # ----------------------------------------------------------------------------
 
 # command and options for authorized_keys
-our $AUTH_COMMAND="$GL_ADMINDIR/gl-auth-command";
-our $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
-our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);     # very simple pattern
+my $AUTH_COMMAND="$GL_ADMINDIR/gl-auth-command";
+my $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
+my $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);     # very simple pattern
 
-our %groups = ();
-our %repos = ();
+my %groups = ();
+my %repos = ();
 
 # set a restrictive umask, just in case
 umask(0077);
