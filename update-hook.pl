@@ -42,12 +42,6 @@ unless (my $ret = do $glrc)
 die "couldnt do perms file" unless (my $ret = do $GL_CONF_COMPILED);
 
 # ----------------------------------------------------------------------------
-#       definitions specific to this program
-# ----------------------------------------------------------------------------
-
-open(LOG, ">>", "$GL_ADMINDIR/log");
-
-# ----------------------------------------------------------------------------
 #       start...
 # ----------------------------------------------------------------------------
 
@@ -78,8 +72,12 @@ for my $refex (@$allowed_refs)
 {
     if ($ref =~ /$refex/)
     {
-        print LOG "$perm: $ENV{GL_USER} $ENV{GL_REPO} $ref $oldsha $newsha\n";
-        close (LOG);
+        # if log failure isn't important enough to block pushes, get rid of
+        # all the error checking
+        open my $log_fh, ">>", "$GL_ADMINDIR/log"
+            or die "open log failed: $!";
+        print $log_fh "$perm: $ENV{GL_USER} $ENV{GL_REPO} $ref $oldsha $newsha\n";
+        close $log_fh or die "close log failed: $!";
         exit 0;
     }
 }

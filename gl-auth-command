@@ -43,9 +43,9 @@ die "couldnt do perms file" unless (my $ret = do $GL_CONF_COMPILED);
 #       definitions specific to this program
 # ----------------------------------------------------------------------------
 
-our $R_COMMANDS=qr/git[ -]upload-pack/;
-our $W_COMMANDS=qr/git[ -]receive-pack/;
-our $REPONAME_PATT=qr(^[0-9a-zA-Z][0-9a-zA-Z._/-]*$); # very simple pattern
+my $R_COMMANDS=qr/^git[ -]upload-pack$/;
+my $W_COMMANDS=qr/^git[ -]receive-pack$/;
+my $REPONAME_PATT=qr(^[0-9a-zA-Z][0-9a-zA-Z._/-]*$); # very simple pattern
 
 # ----------------------------------------------------------------------------
 #       start...
@@ -87,8 +87,9 @@ die "I don't like the look of $repo, sorry!"
 #       first level permissions check
 # ----------------------------------------------------------------------------
 
-# now, knowing the user and repo (which is repo path), we try perms
-my $perm = 'W'; $perm = 'R' if $verb =~ $R_COMMANDS;
+# we know the user and repo; we just need to know what perm he's trying
+my $perm = ($verb =~ $R_COMMANDS ? 'R' : 'W');
+
 die "access denied" unless $repos{$repo}{$perm}{$user};
 
 # ----------------------------------------------------------------------------
@@ -98,9 +99,12 @@ die "access denied" unless $repos{$repo}{$perm}{$user};
 # ( but first save the reponame; we can save some time later in the hook )
 $ENV{GL_REPO}=$repo;
 
-open(LOG, ">>", "$GL_ADMINDIR/log");
-print LOG "\n", scalar(localtime), " $ENV{SSH_ORIGINAL_COMMAND} $user\n";
-close(LOG);
+# if log failure isn't important enough to block access, get rid of all the
+# error checking
+open my $log_fh, ">>", "$GL_ADMINDIR/log"
+    or die "open log failed: $!";
+print $log_fh "\n", scalar(localtime), " $ENV{SSH_ORIGINAL_COMMAND} $user\n";
+close $log_fh or die "close log failed: $!";
 
 $repo = "'$REPO_BASE/$repo.git'";
 exec("git", "shell", "-c", "$verb $repo");

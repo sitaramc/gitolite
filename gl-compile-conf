@@ -59,12 +59,12 @@ unless (my $ret = do $glrc)
 # ----------------------------------------------------------------------------
 
 # command and options for authorized_keys
-our $AUTH_COMMAND="$GL_ADMINDIR/gl-auth-command";
-our $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
-our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);     # very simple pattern
+my $AUTH_COMMAND="$GL_ADMINDIR/gl-auth-command";
+my $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
+my $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);     # very simple pattern
 
-our %groups = ();
-our %repos = ();
+my %groups = ();
+my %repos = ();
 
 # set a restrictive umask, just in case
 umask(0077);
@@ -105,13 +105,13 @@ sub expand_userlist
 #       "compile" GL conf
 # ----------------------------------------------------------------------------
 
-open(INF, "<", $GL_CONF)
-    or die "open GL conf failed: $!";
+open my $conf_fh, "<", $GL_CONF
+    or die "open conf failed: $!";
 
 # the syntax is fairly simple, so we parse it inline
 
 my @repos;
-while (<INF>)
+while (<$conf_fh>)
 {
     # normalise whitespace; keeps later regexes very simple
     s/=/ = /;
@@ -170,10 +170,10 @@ while (<INF>)
     }
 }
 
-open(OUT, ">", $GL_CONF_COMPILED)
-    or die "open GL conf compiled failed: $!";
-print OUT Data::Dumper->Dump([\%repos], [qw(*repos)]);
-close(OUT);
+open my $compiled_fh, ">", $GL_CONF_COMPILED
+    or die "open compiled-conf failed: $!";
+print $compiled_fh Data::Dumper->Dump([\%repos], [qw(*repos)]);
+close $compiled_fh or die "close compiled-conf failed: $!";
 
 # ----------------------------------------------------------------------------
 #       any new repos created?
@@ -201,26 +201,28 @@ for my $repo (keys %repos)
 #       "compile" ssh authorized_keys
 # ----------------------------------------------------------------------------
 
-open(INF, "<", $ENV{HOME} . "/.ssh/authorized_keys") or die "open old authkeys failed: $!";
-open(OUT, ">", $ENV{HOME} . "/.ssh/new_authkeys")    or die "open new authkeys failed: $!";
+open my $authkeys_fh, "<", $ENV{HOME} . "/.ssh/authorized_keys"
+    or die "open authkeys failed: $!";
+open my $newkeys_fh, ">", $ENV{HOME} . "/.ssh/new_authkeys"
+    or die "open newkeys failed: $!";
 # save existing authkeys minus the GL-added stuff
-while (<INF>)
+while (<$authkeys_fh>)
 {
-    print OUT unless (/^# gitosis-lite start/../^# gitosis-lite end/);
+    print $newkeys_fh unless (/^# gitosis-lite start/../^# gitosis-lite end/);
 }
 
 # add our "start" line, each key on its own line (prefixed by command and
 # options, in the standard ssh authorized_keys format), then the "end" line.
-print OUT "# gitosis-lite start\n";
+print $newkeys_fh "# gitosis-lite start\n";
 my_chdir($GL_KEYDIR);
 for my $pubkey (glob("*.pub"))
 {
     my $user = $pubkey; $user =~ s/\.pub$//;
-    print OUT "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";
-    print OUT `cat $pubkey`;
+    print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";
+    print $newkeys_fh `cat $pubkey`;
 }
-print OUT "# gitosis-lite end\n";
-close(OUT);
+print $newkeys_fh "# gitosis-lite end\n";
+close $newkeys_fh or die "close newkeys failed: $!";
 
 # check what changes are being made; just a comfort factor
 # system("vim -d ~/.ssh/authorized_keys ~/.ssh/new_authkeys");
@@ -238,10 +240,10 @@ if (-d ".git")
     # and if there are any
     if (system("git diff --cached --quiet") )
     {
-        open(COMMIT, "|-", "git commit -F -")
-            or die "pipe commit failed: $!";
-        print COMMIT "keydir changed\n\n";
-        print COMMIT `git diff --cached --name-status`;
-        close(COMMIT) or die "close commit failed: $!";
+        open my $commit_ph, "|-", "git commit -F -"
+            or die "open commit failed: $!";
+        print $commit_ph "keydir changed\n\n";
+        print $commit_ph `git diff --cached --name-status`;
+        close $commit_ph or die "close commit failed: $!";
     }
 }
