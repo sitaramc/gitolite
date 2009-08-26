@@ -1,6 +1,6 @@
-# gitosis-lite
+# gitolite
 
-gitosis-lite is the bare essentials of gitosis, with a completely different
+Gitolite is the bare essentials of gitosis, with a completely different
 config file that allows (at last!) access control down to the branch level,
 including specifying who can and cannot *rewind* a given branch.  It is
 released under GPL v2.  See COPYING for details.

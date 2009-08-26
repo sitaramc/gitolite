@@ -5,7 +5,7 @@ use strict;
 # === auth-command ===
 # the command that GL users actually run
 
-# part of the gitosis-lite (GL) suite
+# part of the gitolite (GL) suite
 
 # how run:      via sshd, being listed in "command=" in ssh authkeys
 # when:         every login by a GL user
@@ -29,7 +29,7 @@ our $GL_CONF_COMPILED;
 our $REPO_BASE;
 our %repos;
 
-my $glrc = $ENV{HOME} . "/.gitosis-lite.rc";
+my $glrc = $ENV{HOME} . "/.gitolite.rc";
 unless (my $ret = do $glrc)
 {
     die "parse $glrc failed: $@" if $@;

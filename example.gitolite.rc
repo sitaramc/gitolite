@@ -3,17 +3,17 @@
 # base directory for all the repos
 $REPO_BASE="repositories";
 
-# gitosis-lite admin directory, files, etc
-$GL_ADMINDIR=$ENV{HOME} . "/.gitosis-lite";
+# gitolite admin directory, files, etc
+$GL_ADMINDIR=$ENV{HOME} . "/.gitolite";
 
 # --------------------------------------
 
 # the ones below can be left as they are, unless for some reason you want them
 # elsewhere
 
-$GL_CONF="$GL_ADMINDIR/gitosis-lite.conf";
+$GL_CONF="$GL_ADMINDIR/gitolite.conf";
 $GL_KEYDIR="$GL_ADMINDIR/keydir";
-$GL_CONF_COMPILED="$GL_ADMINDIR/gitosis-lite.conf-compiled.pm";
+$GL_CONF_COMPILED="$GL_ADMINDIR/gitolite.conf-compiled.pm";
 
 # --------------------------------------
 # this should be the last line in this file, per perl rules

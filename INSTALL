@@ -5,7 +5,7 @@ access, permissions to create other userids, etc.  This could be a typical
 hosting provider type of thing, or -- in a corporate setting -- a very tightly
 controlled server.
 
-Gitosis-lite requires these:
+Gitolite requires these:
 
   * git itself, the more recent the better
   * perl, typically installed with git, since git sort of needs it; any
@@ -21,31 +21,31 @@ A quick install, taking all the defaults, can be done with the following
 commands; just copy and paste them into your shell:
 
     # this one is fixed to the location shown
-    cp example.gitosis-lite.rc  ~/.gitosis-lite.rc
+    cp example.gitolite.rc      ~/.gitolite.rc
 
     # the destinations below are defaults; if you change the paths in the "rc"
     # file above, these destinations also must change accordingly
 
     # mkdir $REPO_BASE, $GL_ADMINDIR, and $GL_KEYDIR
     mkdir                       ~/repositories
-    mkdir                       ~/.gitosis-lite                 
-    mkdir                       ~/.gitosis-lite/keydir
+    mkdir                       ~/.gitolite                 
+    mkdir                       ~/.gitolite/keydir
 
     # copy sample conf to $GL_CONF
-    cp example.conf             ~/.gitosis-lite/gitosis-lite.conf
+    cp example.conf             ~/.gitolite/gitolite.conf
 
     # copy the 3 programs to $GL_ADMINDIR
-    cp update-hook.pl           ~/.gitosis-lite
-    cp gl-auth-command          ~/.gitosis-lite
-    cp gl-compile-conf          ~/.gitosis-lite
+    cp update-hook.pl           ~/.gitolite
+    cp gl-auth-command          ~/.gitolite
+    cp gl-compile-conf          ~/.gitolite
 
     # optional; copy the documents also (if you untarred the package into a
     # temporary directory and need to get rid of it)
-    cp INSTALL README.markdown  ~/.gitosis-lite
+    cp INSTALL README.markdown  ~/.gitolite
 
 ### install notes
 
-  * At present the location of `~/.gitosis-lite.rc` is fixed (maybe later I'll
+  * At present the location of `~/.gitolite.rc` is fixed (maybe later I'll
     change it to a "git config" variable).
 
     If you edit it and change any paths, be sure to keep the perl syntax --
@@ -53,11 +53,11 @@ commands; just copy and paste them into your shell:
     limited case.  And of course, make sure you adjust the commands shown
     above to suit the new locations
 
-  * the config file is (by default) at `~/.gitosis-lite/gitosis-lite.conf`.
+  * the config file is (by default) at `~/.gitolite/gitolite.conf`.
     Edit the file as you wish.  The comments in the file ought to be clear
     enough but let me know if not
 
-  * if you want to bring in existing (bare, server) repos into gitosis-lite,
+  * if you want to bring in existing (bare, server) repos into gitolite,
     this should work:
       * backup the repo, then move it to `$BASE_REPO`
       * copy `$GL_ADMINDIR/update-hook.pl` to `[reponame].git/hooks/update` --
@@ -89,7 +89,7 @@ It should all work, but the first couple of times you may want to check these
         `$GL_ADMINDIR/gl-auth-command` file, then some sshd restrictions, the
         key, etc.
       * `$GL_CONF_COMPILED` (default
-        `~/.gitosis-lite/gitosis-lite.conf-compiled.pm`) should contain an
+        `~/.gitolite/gitolite.conf-compiled.pm`) should contain an
         expanded list of the access control rules.  It may look a little long,
         but it's fairly intuitive!
 
@@ -110,13 +110,13 @@ And once in a while, if you're feeling particularly BOFH-ish, take a look at
 
   * when you clone an empty repo, git seems to complain about the remote
     hanging up or something.  I have no idea what that is, but it doesn't seem
-    to hurt anything.  This happens even in normal git, not just gitosis-lite.
+    to hurt anything.  This happens even in normal git, not just gitolite.
 
 ----
 
 Footnotes:
 
-[1] Actually, due to the way gitosis-lite is architected, you can manage
+[1] Actually, due to the way gitolite is architected, you can manage
 without `Data::Dumper` on the server if you have no choice.  Only
 `gl-compile-conf` needs it, so just run that on some other machine and copy
 the two output files across.  Cumbersome but doable... the advantage of
@@ -125,11 +125,11 @@ separating all the hard work into a manually-run piece :)
 [2] If you have *only* pubkey access, and **no** password access, then your
 pubkey is already in the server's `~/.ssh/authorized_keys`.  If you also need
 to access git as a developer (clone, push, etc), do *not* submit this same
-pubkey to gitosis-lite -- it won't work.
+pubkey to gitolite -- it won't work.
 
 Instead, create a different keypair for your "developer" role (by, e.g.,
 `ssh-keygen -t rsa -f ~/.ssh/gitdev`), then give `~/.ssh/gitdev.pub` to
-gitosis-lite as "yourname.pub", just like you would do for any other user.
+gitolite as "yourname.pub", just like you would do for any other user.
 
 Then you create a suitable `~/.ssh/config` to use the correct key
 automatically, something like this:
@@ -144,11 +144,11 @@ automatically, something like this:
          identityfile ~/.ssh/gitdev
 
 From now on, `ssh gitadm` will get you a command line on the server, to do
-gitosis-lite admin and other work.  And your repository URLs would look like
+gitolite admin and other work.  And your repository URLs would look like
 `gitdev:reponame.git`.  Very, very, simple...
 
 And as with gitosis, there's more "ssh" magic than "git" magic here :-)
 
 ----
 
-gitosis-lite is released under the GPL v2 license.  See COPYING for details
+gitolite is released under the GPL v2 license.  See COPYING for details

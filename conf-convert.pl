@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-# migrate gitosis.conf to gitosis-lite.conf format
+# migrate gitosis.conf to gitolite.conf format
 
 # not very smart, but there shouldn't be any errors for simple configurations.
 # the biggest thing you'll find is probably some comments rearranged or

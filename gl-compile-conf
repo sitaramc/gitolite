@@ -5,7 +5,7 @@ use Data::Dumper;
 
 # === add-auth-keys ===
 
-# part of the gitosis-lite (GL) suite
+# part of the gitolite (GL) suite
 
 # (1) - "compiles" ~/.ssh/authorized_keys from the list of pub-keys
 # (2) - also "compiles" the user-friendly GL conf file into something easier
@@ -17,13 +17,13 @@ use Data::Dumper;
 # how run:      manual, by GL admin
 # when:
 #     - anytime a pubkey is added/deleted
-#     - anytime gitosis-lite.conf is changed
+#     - anytime gitolite.conf is changed
 # input:
-#     - GL_CONF (default: ~/.gitosis-lite/gitosis-lite.conf)
-#     - GL_KEYDIR (default: ~/.gitosis-lite/keydir)
+#     - GL_CONF (default: ~/.gitolite/gitolite.conf)
+#     - GL_KEYDIR (default: ~/.gitolite/keydir)
 # output:
 #     - ~/.ssh/authorized_keys (dictated by sshd)
-#     - GL_CONF_COMPILED (default: ~/.gitosis-lite/gitosis-lite.conf-compiled.pm)
+#     - GL_CONF_COMPILED (default: ~/.gitolite/gitolite.conf-compiled.pm)
 # security:
 #     - touches a very critical system file that manages the restrictions on
 #       incoming users.  Be sure to audit AUTH_COMMAND and AUTH_OPTIONS (see
@@ -46,7 +46,7 @@ our $GL_KEYDIR;
 our $GL_CONF_COMPILED;
 our $REPO_BASE;
 
-my $glrc = $ENV{HOME} . "/.gitosis-lite.rc";
+my $glrc = $ENV{HOME} . "/.gitolite.rc";
 unless (my $ret = do $glrc)
 {
     die "parse $glrc failed: $@" if $@;
@@ -208,12 +208,12 @@ open my $newkeys_fh, ">", $ENV{HOME} . "/.ssh/new_authkeys"
 # save existing authkeys minus the GL-added stuff
 while (<$authkeys_fh>)
 {
-    print $newkeys_fh $_ unless (/^# gitosis-lite start/../^# gitosis-lite end/);
+    print $newkeys_fh $_ unless (/^# gitolite start/../^# gitolite end/);
 }
 
 # add our "start" line, each key on its own line (prefixed by command and
 # options, in the standard ssh authorized_keys format), then the "end" line.
-print $newkeys_fh "# gitosis-lite start\n";
+print $newkeys_fh "# gitolite start\n";
 my_chdir($GL_KEYDIR);
 for my $pubkey (glob("*.pub"))
 {
@@ -221,7 +221,7 @@ for my $pubkey (glob("*.pub"))
     print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";
     print $newkeys_fh `cat $pubkey`;
 }
-print $newkeys_fh "# gitosis-lite end\n";
+print $newkeys_fh "# gitolite end\n";
 close $newkeys_fh or die "close newkeys failed: $!";
 
 # check what changes are being made; just a comfort factor
@@ -231,7 +231,7 @@ close $newkeys_fh or die "close newkeys failed: $!";
 system("cat ~/.ssh/new_authkeys > ~/.ssh/authorized_keys");
 system("rm  ~/.ssh/new_authkeys");
 
-# if the gl admin directory (~/.gitosis-lite) is itself a git repo, do an
+# if the gl admin directory (~/.gitolite) is itself a git repo, do an
 # autocheckin.  nothing fancy; this is a "just in case" type of thing.
 my_chdir($GL_ADMINDIR);
 if (-d ".git")

@@ -3,9 +3,9 @@
 use strict;
 
 # === update ===
-# this is gitosis-lite's update hook
+# this is gitolite's update hook
 
-# part of the gitosis-lite (GL) suite
+# part of the gitolite (GL) suite
 
 # how run:      via git, being copied as .git/hooks/update in every repo
 # when:         every push
@@ -31,7 +31,7 @@ our $GL_CONF_COMPILED;
 our $REPO_BASE;
 our %repos;
 
-my $glrc = $ENV{HOME} . "/.gitosis-lite.rc";
+my $glrc = $ENV{HOME} . "/.gitolite.rc";
 unless (my $ret = do $glrc)
 {
     die "parse $glrc failed: $@" if $@;
