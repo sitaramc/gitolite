@@ -208,7 +208,7 @@ open my $newkeys_fh, ">", $ENV{HOME} . "/.ssh/new_authkeys"
 # save existing authkeys minus the GL-added stuff
 while (<$authkeys_fh>)
 {
-    print $newkeys_fh $_ unless (/^# gitolite start/../^# gitolite end/);
+    print $newkeys_fh $_ unless (/^# gito(sis-)?lite start/../^# gito(sis-)?lite end/);
 }
 
 # add our "start" line, each key on its own line (prefixed by command and
