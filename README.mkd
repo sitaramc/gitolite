@@ -39,7 +39,7 @@ that:
 
 All of this pointed to a rewrite.  In perl, naturally :-)
 
-### what's extra?
+### what's new
 
 Per-branch permissions.  You will not believe how often I am asked this at
 $DAYJOB.  This is almost the single reason I started *thinking* about rolling

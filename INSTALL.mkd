@@ -112,9 +112,7 @@ And once in a while, if you're feeling particularly BOFH-ish, take a look at
     hanging up or something.  I have no idea what that is, but it doesn't seem
     to hurt anything.  This happens even in normal git, not just gitolite.
 
-----
-
-Footnotes:
+### Footnotes:
 
 [1] Actually, due to the way gitolite is architected, you can manage
 without `Data::Dumper` on the server if you have no choice.  Only
