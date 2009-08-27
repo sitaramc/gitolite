@@ -1,0 +1,35 @@
+# administering and running gitolite
+
+### administer
+
+  * ask each user who will get access to send you a public key.  See other
+    sources (for example
+    [here](http: /sitaramc.github.com/0-installing/2-access-gitolite.html#generating_a_public_key))
+    for how to do this
+  * for each "user" in `$GL_CONF`, copy their public key to a file called
+    "user.pub" in `$GL_KEYDIR`.  For example, mine would be called
+    "sitaram.pub"
+  * edit the config file (`$GL_CONF`) to add the new users in whatever way you
+    like
+  * backup your `~/.ssh/authorized_keys` file if you feel nervous :-)
+  * cd to `$GL_ADMINDIR` and run `src/gl-compile-conf`
+
+That should be it, really.  However, if you want to be doubly sure, or maybe
+the first couple of times you use it, you may want to check these:
+
+  * check the outputs
+    
+      * `~/.ssh/authorized_keys` should contain one line for each "user" pub
+        key added, between two "marker" lines (which you should please please
+        not remove!).  The line should contain a "command=" pointing to a
+        `$GL_ADMINDIR/src/gl-auth-command` file, then some sshd restrictions, the
+        key, etc.
+      * `$GL_CONF_COMPILED` (default
+        `~/.gitolite/conf/gitolite.conf-compiled.pm`) should contain an
+        expanded list of the access control rules.  It may look a little long,
+        but it's fairly intuitive!
+
+  * if the run threw up any "initialising empty repo" messages, check the
+    individual repos (inside `$REPO_BASE`) if you wish.  Especially make sure
+    the `$REPO_BASE/[reponame].git/hooks/update` got copied OK and is
+    executable

@@ -1,0 +1,38 @@
+# assorted faqs, tips, and notes on gitolite
+
+### errors, warnings, notes...
+
+  * cloning an empty repo is only possible with clients greater than 1.6.2.
+    So at least one of your clients needs to have a recent git.  Once at least
+    one commit has been made, older clients can also use it.
+
+  * when you clone an empty repo, git seems to complain about the remote
+    hanging up or something.  I have no idea what that is, but it doesn't seem
+    to hurt anything.  This happens even in normal git, not just gitolite.
+
+  * once in a while, if you're feeling particularly BOFH-ish, take a look at
+    `$GL_ADMINDIR/log` :-)
+
+### special cases
+
+#### one user, many keys
+
+Sometimes the same user needs to access the server from differnt machines
+(like a desktop and a laptop, for instance).  Gitolite needs to be given all
+these public keys, but associate *all* of them with the same user.
+
+Recall from the "admin" document that each "user" has one public key file
+called "user.pub", which seems to imply a one-to-one match.
+
+But this is not strictly true -- gitolite allows a *filename* to have a small
+"location" piece attached to it.  So you can have "sitaram@laptop.pub" and
+"sitaram@desktop.pub", for instance, and they'll all be treated as keys for
+"sitaram".  Just add both the files to "keydir/", and use the username
+"sitaram" (*without* the "@location" part) in your `gitolite.conf` file.
+
+Advantages: if a user reports *one of his keys* is lost or needs replacing,
+it's easy to remove or replace just that.
+
+(Contrast with gitosis, which keeps multiple entries in the same "user.pub"
+file.  Deleting or changing one of the keys involves editing the file and
+figuring out which key is the right one!)

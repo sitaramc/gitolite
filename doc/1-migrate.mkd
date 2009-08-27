@@ -1,0 +1,3 @@
+# migrating from gitosis to gitolite
+
+

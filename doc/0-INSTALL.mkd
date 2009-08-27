@@ -1,0 +1,84 @@
+# installing gitolite
+
+### pre-requisites
+
+One of the big needs I'm trying to fill here is people who do not have root
+access, permissions to create other userids, etc.  This could be a typical
+hosting provider type of thing, or -- in a corporate setting -- a very tightly
+controlled server.
+
+Gitolite requires these:
+
+  * git itself, the more recent the better
+  * perl, typically installed with git, since git sort of needs it; any
+    version that includes `Data::Dumper`[1] will do.
+  * one user account on the server, with password access [2]
+
+### quickinstall
+
+I assume all the files pertaining to this software are untarred and available
+in the current directory.
+
+A quick install, taking all the defaults, can be done with the `install.sh`
+script in the `src` directory.
+
+Note:
+
+  * At present the location of `~/.gitolite.rc` is fixed (maybe later I'll
+    change it to a "git config" variable).
+
+    If you edit it and change any paths, be sure to keep the perl syntax --
+    you *don't* have to know perl to do so, it's fairly easy to guess in this
+    limited case.  And of course, make sure you adjust the commands shown
+    above to suit the new locations
+
+  * the config file is (by default) at `~/.gitolite/conf/gitolite.conf`.
+    Edit the file as you wish.  The comments in the file ought to be clear
+    enough but let me know if not
+
+  * if you want to bring in existing (bare, server) repos into gitolite, this
+    should work:
+      * backup the repo, then move it to `$BASE_REPO`
+      * copy `$GL_ADMINDIR/src/update-hook.pl` to
+        `[reponame].git/hooks/update` -- if you don't do this, per branch
+        restrictions will not work
+      * then update the keys and the config file and "compile"
+
+### Footnotes:
+
+[1] Actually, due to the way gitolite is architected, you can manage
+without `Data::Dumper` on the server if you have no choice.  Only
+`gl-compile-conf` needs it, so just run that on some other machine and copy
+the two output files across.  Cumbersome but doable... the advantage of
+separating all the hard work into a manually-run piece :)
+
+[2] If you have *only* pubkey access, and **no** password access, then your
+pubkey is already in the server's `~/.ssh/authorized_keys`.  If you also need
+to access git as a developer (clone, push, etc), do *not* submit this same
+pubkey to gitolite -- it won't work.
+
+Instead, create a different keypair for your "developer" role (by, e.g.,
+`ssh-keygen -t rsa -f ~/.ssh/gitdev`), then give `~/.ssh/gitdev.pub` to
+gitolite as "yourname.pub", just like you would do for any other user.
+
+Then you create a suitable `~/.ssh/config` to use the correct key
+automatically, something like this:
+
+    host gitadm
+         hostname my.server
+         user my_userid_on_server
+
+    host gitdev
+         hostname my.server
+         user my_userid_on_server
+         identityfile ~/.ssh/gitdev
+
+From now on, `ssh gitadm` will get you a command line on the server, to do
+gitolite admin and other work.  And your repository URLs would look like
+`gitdev:reponame.git`.  Very, very, simple...
+
+And as with gitosis, there's more "ssh" magic than "git" magic here :-)
+
+----
+
+gitolite is released under the GPL v2 license.  See COPYING for details
