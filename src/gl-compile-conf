@@ -60,7 +60,7 @@ unless (my $ret = do $glrc)
 # ----------------------------------------------------------------------------
 
 # command and options for authorized_keys
-my $AUTH_COMMAND="$GL_ADMINDIR/gl-auth-command";
+my $AUTH_COMMAND="$GL_ADMINDIR/src/gl-auth-command";
 my $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
 my $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);     # very simple pattern
 
@@ -192,7 +192,7 @@ for my $repo (keys %repos)
         mkdir("$repo.git") or die "mkdir $repo.git failed: $!";
         my_chdir("$repo.git");
         system("git init --bare");
-        system("cp $GL_ADMINDIR/update-hook.pl hooks/update");
+        system("cp $GL_ADMINDIR/src/update-hook.pl hooks/update");
         system("chmod 755 hooks/update");
         my_chdir("$ENV{HOME}/$REPO_BASE");
     }
@@ -237,7 +237,7 @@ system("rm  ~/.ssh/new_authkeys");
 my_chdir($GL_ADMINDIR);
 if (-d ".git")
 {
-    system("git add -A keydir");        # stage all changes in keydir
+    system("git add -A conf keydir");       # stage all operational data
     # and if there are any
     if (system("git diff --cached --quiet") )
     {
