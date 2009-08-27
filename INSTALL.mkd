@@ -1,3 +1,15 @@
+In this document:
+
+  * pre-requisites
+  * quickinstall
+  * install notes
+  * administer
+  * run
+  * special cases
+  * errors, warnings, etc
+
+----
+
 ### pre-requisites
 
 One of the big needs I'm trying to fill here is people who do not have root
@@ -71,7 +83,8 @@ commands; just copy and paste them into your shell:
     [here](http://sitaramc.github.com/0-installing/2-access-gitosis.html#generating_a_public_key))
     for how to do this
   * for each "user" in `$GL_CONF`, copy their public key to a file called
-    "user.pub" in `$GL_KEYDIR`
+    "user.pub" in `$GL_KEYDIR`.  For example, mine would be called
+    "sitaram.pub"
   * edit the config file (`$GL_CONF`) to add the new users in whatever way you
     like
   * backup your `~/.ssh/authorized_keys` file if you feel nervous :-)
@@ -105,6 +118,30 @@ Just use it as normal.  Every new repo mentioned has been created already, so
 
 And once in a while, if you're feeling particularly BOFH-ish, take a look at
 `$GL_ADMINDIR/log` :-)
+
+### special cases
+
+#### one user, many keys
+
+Sometimes the same user needs to access the server from differnt machines
+(like a desktop and a laptop, for instance).  Gitolite needs to be given all
+these public keys, but associate *all* of them with the same user.
+
+Recall from the "administer" section above that each "user" has one public key
+file called "user.pub", which seems to imply a one-to-one match.
+
+But this is not strictly true -- gitolite allows a *filename* to have a small
+"location" piece attached to it.  So you can have "sitaram@laptop.pub" and
+"sitaram@desktop.pub", for instance, and they'll all be treated as keys for
+"sitaram".  Just add both the files to "keydir/", and use the username
+"sitaram" (*without* the "@location" part) in your `gitolite.conf` file.
+
+Advantages: if a user reports *one of his keys* is lost or needs replacing,
+it's easy to remove or replace just that.
+
+(Gitosis keeps multiple entries in the same "user.pub", which means to delete
+or change one of the keys you have to edit the file and figure out which of
+the 2 or more long lines should be removed).
 
 ### errors, warnings, etc
 

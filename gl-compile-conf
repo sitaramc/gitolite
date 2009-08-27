@@ -218,7 +218,7 @@ print $newkeys_fh "# gitolite start\n";
 my_chdir($GL_KEYDIR);
 for my $pubkey (glob("*.pub"))
 {
-    my $user = $pubkey; $user =~ s/\.pub$//;
+    my $user = $pubkey; $user =~ s/(\@.+)?\.pub$//;
     print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";
     print $newkeys_fh `cat $pubkey`;
 }
