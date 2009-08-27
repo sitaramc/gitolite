@@ -65,9 +65,10 @@ my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 my $cmd = $ENV{SSH_ORIGINAL_COMMAND}
     or die "no SSH_ORIGINAL_COMMAND?  I'm not a shell, $user!";
 
-# we don't like newlines or semicolons in SSH_ORIGINAL_COMMAND
+# this check is largely for comic value if someone tries something outrageous;
+# $cmd gets split and the pieces examined more thoroughly later anyway
 die "$cmd???  you're a funny guy..."
-    if $cmd =~ /[;\n]/;
+    if $cmd =~ /[<>&|;\n]/;
 
 # split into command and arguments; the pattern allows old style as well as
 # new style: "git-subcommand arg" or "git subcommand arg", just like gitosis
@@ -77,7 +78,7 @@ die "$cmd???  you're a funny guy..."
 #   git-receive-pack 'reponame.git'
 # including the single quotes
 
-my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'(.*).git'/);
+my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*).git'/);
 die "$verb?  I don't do odd jobs, sorry..."
     unless $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS;
 
@@ -91,7 +92,9 @@ die "I don't like the look of $repo, sorry!"
 # we know the user and repo; we just need to know what perm he's trying
 my $perm = ($verb =~ $R_COMMANDS ? 'R' : 'W');
 
-die "access denied" unless $repos{$repo}{$perm}{$user};
+die "$perm access for $repo denied to $user"
+    unless $repos{$repo}{$perm}{$user}
+        or $repos{$repo}{$perm}{'@all'};
 
 # ----------------------------------------------------------------------------
 #       over to git now
