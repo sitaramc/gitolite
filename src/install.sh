@@ -21,5 +21,5 @@ mkdir                       ~/.gitolite
 mkdir                       ~/.gitolite/{src,conf,doc,keydir}
 
 # copy conf, src, doc
-cp -a src doc conf          ~/.gitolite
+cp -R src doc conf          ~/.gitolite
 cp conf/example.conf        ~/.gitolite/conf/gitolite.conf
