@@ -23,7 +23,7 @@ a typical $DAYJOB setting, there are some issues:
     and be done
   * often, "python-setuptools" isn't installed (and on a Solaris9 I was trying
     to help remotely, we never did manage to install it eventually)
-  * the most requested feature (see "what's extra?") had to be written anyway
+  * the most requested feature (see "what's new?") had to be written anyway
 
 ### what's gone
 
@@ -45,15 +45,17 @@ Per-branch permissions.  You will not believe how often I am asked this at
 $DAYJOB.  This is almost the single reason I started *thinking* about rolling
 my own gitosis in the first place.
 
+It's not just "read-only" versus "read-write".  Rewinding a branch (aka "non
+fast forward push") is potentially dangerous, but sometimes needed.  So is
+deleting a branch (which is really just an extreme form of rewind).  I needed
+something in between allowing anyone to do it (the default) and disabling it
+completely (`receive.denyNonFastForwards` or `receive.denyDeletes`).
+
 Take a look at the example config file in the repo to see how I do this.  I
 copied the basic idea from `update-hook-example.txt` (it's one of the "howto"s
-that come with the git source tree).  This includes not just who can push to
-what branch, but also whether they are allowed to rewind it or not (non-ff
-push).
-
-However, please note the difference in the size and complexity of the
-*operational code* between the update hook in that example, and in mine :-)
-The reason is in the next section.
+that come with the git source tree).  However, please note the difference in
+the size and complexity of the *operational code* between the update hook in
+that example, and in mine :-)  The reason is in the next section.
 
 ### the workflow
 
@@ -71,8 +73,7 @@ So I changed the workflow completely:
 
   * all admin changes happen *on the server*, in a special directory that
     contains the config and the users' pubkeys.  But there's no commit and
-    push afterward.  Nothing prevents you from version-controlling that
-    directory if you wish to, but it's not *required*
+    push afterward
   * instead, after making changes, you "compile" the configuration.  This
     refreshes `~/.ssh/authorized_keys`, as well as puts a parsed form of the
     access list in a file for the other two pieces to use.
@@ -80,15 +81,20 @@ So I changed the workflow completely:
 The pre-parsed form is basically a huge perl variable.  It's human readable
 too (never mind what the python guys say!)
 
-Advantages: all the complexity of parsing and error checking the parse is done
-away from the two places where the actual access control happens, which are:
+So the admin knows immediately if the config file had any problems, which is
+good.  Also, the relatively complex parse code is not part of the actual
+access control points, which are:
 
   * the program that is run via `~/.ssh/authorized_keys` (I call it
     `gl-auth-command`, equivalent to `gitosis-serve`); this decides whether
     git should even be allowed to run (basic R/W/no access)
   * the update-hook on each repo, which decides the per-branch permissions
 
-----
+### footnotes
 
 [1] I hate whitespace to mean anything significant except for text; this is a
 personal opinion *only*, so pythonistas please back off :-)
+
+### contact
+
+sitaramc@gmail.com
