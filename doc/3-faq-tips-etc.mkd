@@ -1,5 +1,14 @@
 # assorted faqs, tips, and notes on gitolite
 
+In this document:
+
+  * errors, warnings, notes...
+  * differences from gitosis
+      * one user, many keys
+      * who am I?
+  * cool ideas I want feedback on
+      * developer specific branches
+
 ### errors, warnings, notes...
 
   * cloning an empty repo is only possible with clients greater than 1.6.2.
@@ -13,26 +22,98 @@
   * once in a while, if you're feeling particularly BOFH-ish, take a look at
     `$GL_ADMINDIR/log` :-)
 
-### special cases
+### differences from gitosis
+
+Apart from the big ones listed in the top level README, and subjective ones
+like "better config file format", there are some small, but significant and
+concrete, differences from gitosis.
+
+#### built-in logging
+
+...just in case of emergency :-)
+
+Let's say you gave a dev the right to rewind a branch and he went and rewound
+it all the way, or pushed something drastically different on it.  Now you need
+to recover the commit that got wiped out.
+
+If you'd remembered to `git config core.logAllRefUpdates` for that repo, or
+globally, you'd be fine -- the reflog will tell you.  Otherwise you'd be left
+grubbing around in `git fsck --unreachable` a bit :-(
+
+And even if you recover the correct commit, you'll never know *who* did it --
+not unless you add a one-line patch to gitosis, plus a `post-receive` hook to
+every repository.
+
+With gitolite, there's a log file in `$GL_ADMINDIR` that contains lines like
+this [I have abbreviated the SHAs for brevity in this document; the actual log
+file will have all 40 characters]:
+
+    +: username reponame refs/heads/branchname d0188d1 c5c00b6
+
+The "+" at the start indicates a non-fast forward update, in this case from
+d0188d1 to c5c00b6  So d0188d1 is the one to restore!  Can it get easier?
 
 #### one user, many keys
 
-Sometimes the same user needs to access the server from differnt machines
-(like a desktop and a laptop, for instance).  Gitolite needs to be given all
-these public keys, but associate *all* of them with the same user.
+I have a laptop and a desktop I need to access the server from.  I have
+different private keys on them, but as far as gitolite is concerned both of
+them should be treated as "sitaram".  How does this work?
 
-Recall from the "admin" document that each "user" has one public key file
-called "user.pub", which seems to imply a one-to-one match.
+In gitosis, the admin creates a single "sitaram.pub" containing one line for
+each of my pubkeys.  In gitolite, we keep them separate: "sitaram@laptop.pub"
+and "sitaram@desktop.pub".  The part before the "@" is the username, so
+gitolite knows these two keys belong to the same person.
 
-But this is not strictly true -- gitolite allows a *filename* to have a small
-"location" piece attached to it.  So you can have "sitaram@laptop.pub" and
-"sitaram@desktop.pub", for instance, and they'll all be treated as keys for
-"sitaram".  Just add both the files to "keydir/", and use the username
-"sitaram" (*without* the "@location" part) in your `gitolite.conf` file.
+I think this is easier to maintain if you have to delete or change one of
+those keys.
 
-Advantages: if a user reports *one of his keys* is lost or needs replacing,
-it's easy to remove or replace just that.
+#### who am I?
 
-(Contrast with gitosis, which keeps multiple entries in the same "user.pub"
-file.  Deleting or changing one of the keys involves editing the file and
-figuring out which key is the right one!)
+As a developer, I send a file called "id_rsa.pub" to the gitolite admin.  He
+would rename it to "sitaram.pub" and put it in the key directory.  Then he'd
+add "sitaram" to the config file for the repos which I have access to.
+
+But he could have called me "foobar" instead of "sitaram" -- as long as he
+uses it consistently, it'll all work the same and look the same to me, because
+the public key is all that matters.
+
+So do I have no reason to know what the admin named me?  Well -- maybe (see
+next section for one possible use).  Anyway how do I find out?
+
+In gitolite, it's simple: just ask nicely :-)
+
+    $ ssh git@my.gitolite.server
+    PTY allocation request failed on channel 0
+    no SSH_ORIGINAL_COMMAND?  I'm not a shell, sitaram!
+
+### cool ideas
+
+#### developer specific branches
+
+So I know what gitolite calls me.  Big deal... who cares?
+
+Here is a cool idea: allow me to create, rewind, or delete any branch whose
+full name matches this pattern:
+
+    $PERSONAL_BRANCH_PREFIX/sitaram-.*
+
+The admin could set `$PERSONAL_BRANCH_PREFIX` in the rc file and communicate
+this to all users.  It could be something like `refs/heads/personal`, which
+means all such branches will show up in `git branch` lookups and `git clone`
+will fetch them.  Or he could use, say, `refs/personal`, which means it won't
+show up in any normal "branch-y" commands and stuff, and generally be much
+less noisy.
+
+Yes, I know git is all about allowing private branches, but in a corporate
+environment it's not always possible to pull from a co-worker, for the same
+reasons you don't have anonymous access (like the git:// protocol).  A normal
+developer workstation cannot do authentication, so how would they know who's
+pulling?  This is a perfect way to share code *without* cluttering the global
+namespace, and each developer controls his/her own set of branches!
+
+The amount of code needed?  *One line!*  I'll spend about 3x more on declaring
+and initialising the new variable, and 30x more on documenting it :-)
+
+**That** is how neatly gitolite is designed...
+
+/me pats himself on the back ;-)
