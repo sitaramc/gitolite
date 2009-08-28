@@ -68,8 +68,8 @@ $perm = '+' if $ref =~ m(refs/tags/) and $oldsha ne ('0' x 40);
 $perm = '+' if $ref =~ m(refs/heads/) and $oldsha ne $merge_base;
 
 my @allowed_refs;
-push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$perm}{$ENV{GL_USER}} };
-push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$perm}{'@all'} };
+push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$perm}{$ENV{GL_USER}} || [] };
+push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$perm}{'@all'} || [] };
 for my $refex (@allowed_refs)
 # refex?  sure -- a regex to match a ref against :)
 {
