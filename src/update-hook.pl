@@ -60,9 +60,9 @@ chomp($merge_base = `git merge-base $oldsha $newsha`)
 my $perm = 'W';
 # rewriting a tag is considered a rewind, in terms of permissions
 $perm = '+' if $ref =~ m(refs/tags/) and $oldsha ne ('0' x 40);
-# non-ff push to branch.  Notice that branch delete looks like a rewind, as it
-# should
-$perm = '+' if $ref =~ m(refs/heads/) and $oldsha ne $merge_base;
+# non-ff push to ref
+# notice that ref delete looks like a rewind, as it should
+$perm = '+' if $oldsha ne $merge_base;
 
 my @allowed_refs;
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$perm}{$ENV{GL_USER}} || [] };

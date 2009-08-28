@@ -10,12 +10,8 @@ If you managed to install git, you might already have what gitolite needs:
   * one user account on the server, with password access [2]
 
 A major objective is to allow use by people without root access, permissions
-to create other userids, etc.  If you have root, congratulations and all that,
-but go add a user just for gitolite and do all this from that user.  Really.
-I see no earthly reason for this to run as root.
-
-And don't bug me about wanting to install it in `/opt` or whatever if you
-haven't the time to read the docs or change a path in a config file.
+to create other userids, etc.  Even if you have root, please add a user just
+for gitolite and do all this from that user.
 
 ### quick install
 
