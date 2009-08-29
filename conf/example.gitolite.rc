@@ -1,6 +1,6 @@
 # this is meant to be pulled into a perl program using "do"
 
-# base directory for all the repos
+# base directory for all the repos (absolute, or relative to $HOME)
 $REPO_BASE="repositories";
 
 # gitolite admin directory, files, etc

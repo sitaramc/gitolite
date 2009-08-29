@@ -184,7 +184,10 @@ close $compiled_fh or die "close compiled-conf failed: $!";
 # did not have that luxury, so it was forced to detect the first push and
 # create it then
 
-my_chdir("$ENV{HOME}/$REPO_BASE");
+# repo-base needs to be an absolute path for this loop to work right
+# so if it was not already absolute, prefix $HOME.
+my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
+my_chdir("$repo_base_abs");
 for my $repo (keys %repos)
 {
     unless (-d "$repo.git")
@@ -194,7 +197,7 @@ for my $repo (keys %repos)
         system("git init --bare");
         system("cp $GL_ADMINDIR/src/update-hook.pl hooks/update");
         system("chmod 755 hooks/update");
-        my_chdir("$ENV{HOME}/$REPO_BASE");
+        my_chdir("$repo_base_abs");
     }
 }
 
