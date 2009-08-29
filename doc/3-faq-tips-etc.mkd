@@ -69,7 +69,7 @@ those keys.
 
 #### who am I?
 
-As a developer, I send a file called "id_rsa.pub" to the gitolite admin.  He
+As a developer, I send a file called `id_rsa.pub` to the gitolite admin.  He
 would rename it to "sitaram.pub" and put it in the key directory.  Then he'd
 add "sitaram" to the config file for the repos which I have access to.
 

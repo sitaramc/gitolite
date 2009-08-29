@@ -53,13 +53,13 @@ Here's how we migrated my work repos:
 
         cp ~/repositories/gitosis-admin.git/gitosis-export/keydir/* keydir
 
-9.  **Important: expand** any multi-key filess you may have.  See the "faq,
+9.  **Important: expand** any multi-key files you may have.  See the "faq,
     tips, etc" document in the doc directory for an explanation of what
     multi-keys are, how gitosis does them and how gitolite does it
     differently.
 
     You can split the keys manually, or use the following code (just
-    copy-paste it into you xterm):
+    copy-paste it into your xterm):
 
         wc -l keydir/*.pub | grep -v total | grep -v -w 1 | while read a b
         do
@@ -69,7 +69,7 @@ Here's how we migrated my work repos:
                 echo "$l" > ${b%.pub}@$i.pub
                 (( i++ ))
             done
-            v $b $b.done
+            mv $b $b.done
         done
 
     This will split each multi-key file (say "sitaram.pub") into individual
