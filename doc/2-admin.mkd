@@ -9,14 +9,28 @@
     sources (for example
     [here](http://sitaramc.github.com/0-installing/2-access-gitolite.html#generating_a_public_key))
     for how to do this
+
   * rename each public key according to the user's name, with a `.pub`
     extension, like `sitaram.pub` or `john-smith.pub`.  You can also use
     periods and underscores
+
   * copy all these `*.pub` files to `$GL_KEYDIR`
+
   * edit the config file (`$GL_CONF`) and give the new users permissions as
     required.  The users names should be exactly the same as their keyfile
     names, but without the `.pub` extension
+
   * backup your `~/.ssh/authorized_keys` file if you feel nervous :-)
+      * that's "backup" as in "copy", not "move".  The next step won't work if
+        the file doesn't exist.  Even an empty one is fine but it must be
+        present
+      * if you don't have an `~/.ssh/authorized_keys` file at all, you may
+        have logged in with a password, which in turn might mean you are not
+        familiar with ssh and authkeys etc.  If so, please read up at least
+        [this](http://sitaramc.github.com/0-installing/9-gitolite-basics.html#IMPORTANT_overview_of_ssh),
+        and preferably also the man pages for sshd and sshd\_config, to make
+        sure you understand the security implications of what you are doing
+
   * cd to `$GL_ADMINDIR` and run `src/gl-compile-conf`
 
 That should be it, really.  However, if you want to be doubly sure, or maybe
