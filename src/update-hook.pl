@@ -26,10 +26,7 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 our $GL_ADMINDIR;
-our $GL_CONF;
-our $GL_KEYDIR;
 our $GL_CONF_COMPILED;
-our $REPO_BASE;
 our %repos;
 
 my $glrc = $ENV{HOME} . "/.gitolite.rc";
