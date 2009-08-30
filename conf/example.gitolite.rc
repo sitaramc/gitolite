@@ -34,5 +34,15 @@ $GL_KEYDIR="$GL_ADMINDIR/keydir";
 $GL_CONF_COMPILED="$GL_ADMINDIR/conf/gitolite.conf-compiled.pm";
 
 # --------------------------------------
+# personal branch prefix; leave it as is (empty) if you don't want to use the
+# feature (see the "developer-specific branches" section in the "faq, tips,
+# etc" document)
+$PERSONAL="";
+# uncomment one of these if you do want it.  I recommend this:
+# $PERSONAL="refs/personal";
+# but if you want something more visible/noisy, use this:
+# $PERSONAL="refs/heads/personal";
+
+# --------------------------------------
 # per perl rules, this should be the last line in such a file:
 1;

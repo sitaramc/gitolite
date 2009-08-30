@@ -27,6 +27,7 @@ use warnings;
 
 our $GL_ADMINDIR;
 our $GL_CONF_COMPILED;
+our $PERSONAL;
 our %repos;
 
 my $glrc = $ENV{HOME} . "/.gitolite.rc";
@@ -67,6 +68,7 @@ $perm = '+' if $oldsha ne $merge_base;
 my @allowed_refs;
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$perm}{$ENV{GL_USER}} || [] };
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$perm}{'@all'} || [] };
+push @allowed_refs, "$PERSONAL/$ENV{GL_USER}-" if $PERSONAL;
 for my $refex (@allowed_refs)
 # refex?  sure -- a regex to match a ref against :)
 {
