@@ -232,8 +232,8 @@ close $newkeys_fh or die "close newkeys failed: $!";
 # system("vim -d ~/.ssh/authorized_keys ~/.ssh/new_authkeys");
 
 # all done; overwrite the file (use cat to avoid perm changes)
-system("cat ~/.ssh/new_authkeys > ~/.ssh/authorized_keys");
-system("rm  ~/.ssh/new_authkeys");
+system("cat $ENV{HOME}/.ssh/new_authkeys > $ENV{HOME}/.ssh/authorized_keys");
+system("rm  $ENV{HOME}/.ssh/new_authkeys");
 
 # if the gl admin directory (~/.gitolite) is itself a git repo, do an
 # autocheckin.  nothing fancy; this is a "just in case" type of thing.
