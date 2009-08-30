@@ -1,20 +1,38 @@
-# this is meant to be pulled into a perl program using "do"
+# default paths for gitolite
 
-# base directory for all the repos (absolute, or relative to $HOME)
+# please read comments before editing
+
+# this file is meant to be pulled into a perl program using "do" or "require".
+
+# You do NOT need to know perl to edit the paths; it should be fairly
+# self-explanatory
+
+# --------------------------------------
+
+# this is where the repos go.  If you provide a relative path (not starting
+# with "/"), it's relative to your $HOME.  You may want to put in something
+# like "/bigdisk" or whatever if your $HOME is too small for the repos, for
+# example
+
 $REPO_BASE="repositories";
+
+# --------------------------------------
+
+# I see no reason anyone may want to change the gitolite admin directory, but
+# feel free to do so
 
 # gitolite admin directory, files, etc
 $GL_ADMINDIR=$ENV{HOME} . "/.gitolite";
 
 # --------------------------------------
 
-# the ones below can be left as they are, unless for some reason you want them
-# elsewhere
+# I see even less reason to change these, since they're all relative to the
+# gitolite admin directory above, but hey it's *your* system...
 
 $GL_CONF="$GL_ADMINDIR/conf/gitolite.conf";
 $GL_KEYDIR="$GL_ADMINDIR/keydir";
 $GL_CONF_COMPILED="$GL_ADMINDIR/conf/gitolite.conf-compiled.pm";
 
 # --------------------------------------
-# this should be the last line in this file, per perl rules
+# per perl rules, this should be the last line in such a file:
 1;
