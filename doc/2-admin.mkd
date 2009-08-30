@@ -1,8 +1,7 @@
 # administering and running gitolite
 
-Note: some of the paths in this document use variable names.  Just refer to
-`~/.gitolite.rc` for the correct values, assuming you followed the
-instructions in the "INSTALL" document.
+*Note*: some of the paths in this document use variable names.  Just refer to
+`~/.gitolite.rc` for the correct values for *your* installation.
 
 ### administer
 
@@ -30,10 +29,8 @@ the first couple of times you use it, you may want to check these:
         not remove!).  The line should contain a "command=" pointing to a
         `$GL_ADMINDIR/src/gl-auth-command` file, then some sshd restrictions, the
         key, etc.
-      * `$GL_CONF_COMPILED` (default
-        `~/.gitolite/conf/gitolite.conf-compiled.pm`) should contain an
-        expanded list of the access control rules.  It may look a little long,
-        but it's fairly intuitive!
+      * `$GL_CONF_COMPILED` should contain an expanded list of the access
+        control rules.  It may look a little long, but it's fairly intuitive!
 
   * if the run threw up any "initialising empty repo" messages, check the
     individual repos (inside `$REPO_BASE`) if you wish.  Especially make sure

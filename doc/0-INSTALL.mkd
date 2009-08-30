@@ -2,47 +2,54 @@
 
 ### pre-requisites
 
-One of the big needs I'm trying to fill here is people who do not have root
-access, permissions to create other userids, etc.  This could be a typical
-hosting provider type of thing, or -- in a corporate setting -- a very tightly
-controlled server.
-
-Gitolite requires these:
+If you managed to install git, you might already have what gitolite needs:
 
   * git itself, the more recent the better
   * perl, typically installed with git, since git sort of needs it; any
     version that includes `Data::Dumper`[1] will do.
   * one user account on the server, with password access [2]
 
-### quickinstall
+A major objective is to allow use by people without root access, permissions
+to create other userids, etc.  If you have root, congratulations and all that,
+but go add a user just for gitolite and do all this from that user.  Really.
+I see no earthly reason for this to run as root.
 
-I assume all the files pertaining to this software are untarred and available
-in the current directory.
+And don't bug me about wanting to install it in `/opt` or whatever if you
+haven't the time to read the docs or change a path in a config file.
 
-A quick install, taking all the defaults, can be done with the `install.sh`
-script in the `src` directory.
+### quick install
 
-Note:
+  * cd to the directory where you unpacked the source
+  * run `src/install.pl` and follow the prompts
+
+**When you are told to edit some file, please read the comments in the file**.
+And if you can make some time to read the documentation, please do.
+Especially if you have problems.
+
+Notes:
 
   * At present the location of `~/.gitolite.rc` is fixed (maybe later I'll
-    change it to a "git config" variable).
+    change it to a "git config" variable but I don't see much need right now)
 
     If you edit it and change any paths, be sure to keep the perl syntax --
     you *don't* have to know perl to do so, it's fairly easy to guess in this
     limited case.  And of course, make sure you adjust the commands shown
     above to suit the new locations
 
-  * the config file is (by default) at `~/.gitolite/conf/gitolite.conf`.
-    Edit the file as you wish.  The comments in the file ought to be clear
-    enough but let me know if not
+  * the config file is (by default) at `~/.gitolite/conf/gitolite.conf`,
+    though you can change its location in the "rc" file.  Edit the file as you
+    wish.  The comments in the file ought to be clear enough but let me know
+    if not
 
   * if you want to bring in existing (bare, server) repos into gitolite, this
-    should work:
+    should work (refer to `~/.gitolite.rc` for *your* values of the pathnames
+    below):
       * backup the repo, then move it to `$BASE_REPO`
       * copy `$GL_ADMINDIR/src/update-hook.pl` to
         `[reponame].git/hooks/update` -- if you don't do this, per branch
         restrictions will not work
-      * then update the keys and the config file and "compile"
+      * then update the keys and the config file and "compile" (see "admin"
+        document)
 
 ### Footnotes:
 

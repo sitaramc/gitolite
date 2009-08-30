@@ -7,7 +7,8 @@ the same.  The differences are:
     You can choose to version that directory but it is not required that you
     do so
 
-Here's how we migrated my work repos:
+Here's how we migrated my work repos (note: substitute real paths, from your
+`~/.gitolite.rc`, for `$REPO_BASE` and `$GL_ADMINDIR` below):
 
 1.  login as the `git` user on the server, and get a bash shell prompt
 
@@ -18,7 +19,7 @@ Here's how we migrated my work repos:
 3.  For added safety, **delete** the post-update hook that gitosis-admin
     installed
 
-        rm ~/repositories/gitosis-admin.git/hooks/post-update
+        rm $REPO_BASE/gitosis-admin.git/hooks/post-update
 
     or at least rename it to `.sample` like all the other hooks hanging
     around, or edit it and comment out the line that calls `gitosis-run-hook
@@ -27,31 +28,29 @@ Here's how we migrated my work repos:
     If you do not do this, an accidental push to the gitosis-admin repo will
     mess up your `~/.ssh/authorized_keys` file
 
-4.  take a **backup** of the `~/repositories` directory
+4.  take a **backup** of the `$REPO_BASE` directory
 
 5.  untar gitolite to some temporary directory and follow the instructions to
-    **install** it.  Some of the steps (like `mkdir ~/repositories`) will
-    fail, but this is expected.  Once this is done, cd to the `$GL_ADMINDIR`
-    (by default `~/.gitolite`)
-
-        cd ~/.gitolite
+    **install** it using `src/install.pl`
 
 6.  **convert** your gitosis config file:
 
+        cd $GL_ADMINDIR
         src/conf-convert.pl < ~/.gitosis.conf > conf/gitolite.conf
 
     be sure to check the file to make sure it converted correctly
 
-7.  **copy** the update hook to each of the existing repos
+7.  **copy** the update hook to each of the existing repos (if you have repos
+    in subdirectories, this won't work as is; adapt it):
 
-        for i in ~/repositories/*.git
+        for i in $REPO_BASE/*.git
         do
             cp src/update-hook.pl $i/hooks/update
         done
 
 8.  **copy** the keys from gitosis's keydir
 
-        cp ~/repositories/gitosis-admin.git/gitosis-export/keydir/* keydir
+        cp $REPO_BASE/gitosis-admin.git/gitosis-export/keydir/* keydir
 
 9.  **Important: expand** any multi-key files you may have.  See the "faq,
     tips, etc" document in the doc directory for an explanation of what
@@ -61,6 +60,7 @@ Here's how we migrated my work repos:
     You can split the keys manually, or use the following code (just
     copy-paste it into your xterm):
 
+        cd $GL_ADMINDIR
         wc -l keydir/*.pub | grep -v total | grep -v -w 1 | while read a b
         do
             i=1
