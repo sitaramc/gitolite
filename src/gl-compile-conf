@@ -74,9 +74,13 @@ umask(0077);
 #       subroutines
 # ----------------------------------------------------------------------------
 
-sub my_chdir
-{
-    chdir($_[0]) or die "chdir $_[0] failed: $!";
+sub wrap_chdir {
+    chdir($_[0]) or die "chdir $_[0] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
+}
+
+sub wrap_open {
+    open (my $fh, $_[0], $_[1]) or die "open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
+    return $fh;
 }
 
 sub expand_userlist
@@ -106,8 +110,7 @@ sub expand_userlist
 #       "compile" GL conf
 # ----------------------------------------------------------------------------
 
-open my $conf_fh, "<", $GL_CONF
-    or die "open conf failed: $!";
+my $conf_fh = wrap_open( "<", $GL_CONF );
 
 # the syntax is fairly simple, so we parse it inline
 
@@ -171,8 +174,7 @@ while (<$conf_fh>)
     }
 }
 
-open my $compiled_fh, ">", $GL_CONF_COMPILED
-    or die "open compiled-conf failed: $!";
+my $compiled_fh = wrap_open( ">", $GL_CONF_COMPILED );
 print $compiled_fh Data::Dumper->Dump([\%repos], [qw(*repos)]);
 close $compiled_fh or die "close compiled-conf failed: $!";
 
@@ -187,17 +189,17 @@ close $compiled_fh or die "close compiled-conf failed: $!";
 # repo-base needs to be an absolute path for this loop to work right
 # so if it was not already absolute, prefix $HOME.
 my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
-my_chdir("$repo_base_abs");
+wrap_chdir("$repo_base_abs");
 for my $repo (keys %repos)
 {
     unless (-d "$repo.git")
     {
         mkdir("$repo.git") or die "mkdir $repo.git failed: $!";
-        my_chdir("$repo.git");
+        wrap_chdir("$repo.git");
         system("git init --bare");
         system("cp $GL_ADMINDIR/src/update-hook.pl hooks/update");
         system("chmod 755 hooks/update");
-        my_chdir("$repo_base_abs");
+        wrap_chdir("$repo_base_abs");
     }
 }
 
@@ -205,10 +207,8 @@ for my $repo (keys %repos)
 #       "compile" ssh authorized_keys
 # ----------------------------------------------------------------------------
 
-open my $authkeys_fh, "<", $ENV{HOME} . "/.ssh/authorized_keys"
-    or die "open authkeys failed: $!";
-open my $newkeys_fh, ">", $ENV{HOME} . "/.ssh/new_authkeys"
-    or die "open newkeys failed: $!";
+my $authkeys_fh = wrap_open( "<", $ENV{HOME} . "/.ssh/authorized_keys" );
+my $newkeys_fh = wrap_open( ">", $ENV{HOME} . "/.ssh/new_authkeys" );
 # save existing authkeys minus the GL-added stuff
 while (<$authkeys_fh>)
 {
@@ -218,7 +218,7 @@ while (<$authkeys_fh>)
 # add our "start" line, each key on its own line (prefixed by command and
 # options, in the standard ssh authorized_keys format), then the "end" line.
 print $newkeys_fh "# gitolite start\n";
-my_chdir($GL_KEYDIR);
+wrap_chdir($GL_KEYDIR);
 for my $pubkey (glob("*.pub"))
 {
     my $user = $pubkey; $user =~ s/(\@.+)?\.pub$//;
@@ -237,7 +237,7 @@ system("rm  $ENV{HOME}/.ssh/new_authkeys");
 
 # if the gl admin directory (~/.gitolite) is itself a git repo, do an
 # autocheckin.  nothing fancy; this is a "just in case" type of thing.
-my_chdir($GL_ADMINDIR);
+wrap_chdir($GL_ADMINDIR);
 if (-d ".git")
 {
     system("git add -A conf keydir");       # stage all operational data
