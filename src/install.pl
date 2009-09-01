@@ -51,3 +51,16 @@ unless (-f $GL_CONF) {
     (the "admin" document should help here...)
 EOF
 }
+
+# finally, any potential changes to src/update-hook.pl must be propagated to
+# all the repos' hook directories
+my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
+# err, no need to get all worked up if you can't CD there -- this may be the
+# very first run and it hasn't been created yet
+if (chdir("$repo_base_abs")) {
+    for my $repo (`find . -type d -name "*.git"`) {
+        chomp ($repo);
+        system("cp $GL_ADMINDIR/src/update-hook.pl $repo/hooks/update");
+        chmod 0755, "$repo/hooks/update";
+    }
+}
