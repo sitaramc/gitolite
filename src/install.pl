@@ -28,12 +28,7 @@ unless (-f $glrc) {
 }
 
 # ok now $glrc exists; read it to get the other paths
-unless (my $ret = do $glrc)
-{
-    die "parse $glrc failed: $@" if $@;
-    die "couldn't do $glrc: $!"  unless defined $ret;
-    die "couldn't run $glrc"     unless $ret;
-}
+die "parse $glrc failed: " . ($! or $@) unless do $glrc;
 
 # mkdir $REPO_BASE, $GL_ADMINDIR if they don't already exist
 wrap_mkdir( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );

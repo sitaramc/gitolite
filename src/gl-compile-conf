@@ -48,12 +48,7 @@ our $GL_CONF_COMPILED;
 our $REPO_BASE;
 
 my $glrc = $ENV{HOME} . "/.gitolite.rc";
-unless (my $ret = do $glrc)
-{
-    die "parse $glrc failed: $@" if $@;
-    die "couldn't do $glrc: $!"  unless defined $ret;
-    die "couldn't run $glrc"     unless $ret;
-}
+die "parse $glrc failed: " . ($! or $@) unless do $glrc;
 
 # ----------------------------------------------------------------------------
 #       definitions specific to this program

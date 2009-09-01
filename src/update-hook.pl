@@ -31,14 +31,8 @@ our $PERSONAL;
 our %repos;
 
 my $glrc = $ENV{HOME} . "/.gitolite.rc";
-unless (my $ret = do $glrc)
-{
-    die "parse $glrc failed: $@" if $@;
-    die "couldn't do $glrc: $!"  unless defined $ret;
-    die "couldn't run $glrc"     unless $ret;
-}
-
-die "couldnt do perms file" unless (my $ret = do $GL_CONF_COMPILED);
+die "parse $glrc failed: "             . ($! or $@) unless do $glrc;
+die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
 
 # ----------------------------------------------------------------------------
 #       start...
