@@ -193,7 +193,7 @@ for my $repo (keys %repos)
         wrap_chdir("$repo.git");
         system("git init --bare");
         system("cp $GL_ADMINDIR/src/update-hook.pl hooks/update");
-        system("chmod 755 hooks/update");
+        chmod 0755, "hooks/update";
         wrap_chdir("$repo_base_abs");
     }
 }
@@ -223,10 +223,8 @@ for my $pubkey (glob("*.pub"))
 print $newkeys_fh "# gitolite end\n";
 close $newkeys_fh or die "close newkeys failed: $!";
 
-# check what changes are being made; just a comfort factor
-# system("vim -d ~/.ssh/authorized_keys ~/.ssh/new_authkeys");
-
 # all done; overwrite the file (use cat to avoid perm changes)
+system("cat $ENV{HOME}/.ssh/authorized_keys > $ENV{HOME}/.ssh/old_authkeys");
 system("cat $ENV{HOME}/.ssh/new_authkeys > $ENV{HOME}/.ssh/authorized_keys");
 system("rm  $ENV{HOME}/.ssh/new_authkeys");
 
