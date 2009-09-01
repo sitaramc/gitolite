@@ -19,7 +19,8 @@ $REPO_BASE="repositories";
 # --------------------------------------
 
 # I see no reason anyone may want to change the gitolite admin directory, but
-# feel free to do so
+# feel free to do so.  However, please note that it *must* be an *absolute*
+# path (i.e., starting with a "/" character)
 
 # gitolite admin directory, files, etc
 $GL_ADMINDIR=$ENV{HOME} . "/.gitolite";

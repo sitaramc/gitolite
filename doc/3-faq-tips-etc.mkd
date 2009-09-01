@@ -22,6 +22,12 @@ In this document:
   * once in a while, if you're feeling particularly BOFH-ish, take a look at
     `$GL_ADMINDIR/log` :-)
 
+  * if you specify a repo that is not at the top level `$REPO_BASE`, be sure
+    to manually create the intermediate directories first.  For instance if
+    you specify a new repo called "a/b/c" to the config file and "compile",
+    the "compile" script will just `mkdir a/b/c.git`, assuming "a/b" has
+    already been created
+
 ### differences from gitosis
 
 Apart from the big ones listed in the top level README, and subjective ones
