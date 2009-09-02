@@ -98,10 +98,11 @@ In gitolite, it's simple: just ask nicely :-)
 
 So I know what gitolite calls me.  Big deal... who cares?
 
-Here is a cool idea: allow me to create, rewind, or delete any branch whose
-full name matches this pattern:
+Here is an idea: give every developer a personal "scratch" namespace within
+which she can create, rewind, or delete any branch.  For example, I would own
+anything under
 
-    $PERSONAL_BRANCH_PREFIX/sitaram-.*
+    $PERSONAL_BRANCH_PREFIX/sitaram/
 
 The admin could set `$PERSONAL_BRANCH_PREFIX` in the rc file and communicate
 this to all users.  It could be something like `refs/heads/personal`, which
