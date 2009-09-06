@@ -1,0 +1,52 @@
+# upgrading gitolite atomically
+
+### general upgrade notes
+
+If you follow the steps below, you can make the upgrade "atomic", so you don't
+have to do it at a "quiet" time or something.
+
+1.  untar the new version to some temp directory and `cd` to it
+
+2.  *prepare* the new version of `~/.gitolite.rc`.  It **must** have **all**
+    the variables defined in `conf/example.gitolite.rc` (the "new" rc file),
+    because the new versions of the programs will be depending on seeing these
+    variables.
+
+    However, it must also retain any customisations you made to the **old**
+    variables.
+
+    So this is what you do:
+
+      * make a copy of `conf/example.gitolite.rc` as `~/glrc.new`
+      * if your current `~/.gitolite.rc` had any customisations (where you
+        changed the defaults in some way), edit `~/glrc.new` and make those
+        same changes there
+
+3.  upgrade the rc file first
+
+        cp ~/glrc.new ~/.gitolite.rc
+
+4.  upgrade the software
+
+        src/install.pl
+
+And you're done.
+
+### upgrade notes for specific versions
+
+If any extra steps beyond the generic ones above are needed, they will be
+listed here, newest first.
+
+#### upgrading from abb4580
+
+Two new features (personal branches, and customisable logfile names/locations)
+have been added between abb4580 and this version.
+
+  * if you want to enable the personal branches feature, choose one of the
+    alternative values given for `$PERSONAL` or change it to something you
+    like; by default it is empty, which disables the feature
+
+  * if you want the log files named or grouped differently, choose one of the
+    alternative values for `$GL_LOGT`.  **Note** that if you choose to put
+    them in some other directory than the default, you **must** create that
+    directory (`mkdir`) yourself; gitolite will not do that for you

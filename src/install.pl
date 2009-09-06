@@ -3,9 +3,7 @@
 use strict;
 use warnings;
 
-our $REPO_BASE;
-our $GL_ADMINDIR;
-our $GL_CONF;
+our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF);
 
 # wrapper around mkdir; it's not an error if the directory exists, but it is
 # an error if it doesn't exist and we can't create it
@@ -31,10 +29,11 @@ unless (-f $glrc) {
 die "parse $glrc failed: " . ($! or $@) unless do $glrc;
 
 # mkdir $REPO_BASE, $GL_ADMINDIR if they don't already exist
-wrap_mkdir( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
+my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
+wrap_mkdir($repo_base_abs);
 wrap_mkdir($GL_ADMINDIR);
 # mkdir $GL_ADMINDIR's subdirs
-for my $dir qw(conf doc keydir src) {
+for my $dir qw(conf doc keydir logs src) {
     wrap_mkdir("$GL_ADMINDIR/$dir");
 }
 
@@ -54,13 +53,9 @@ EOF
 
 # finally, any potential changes to src/update-hook.pl must be propagated to
 # all the repos' hook directories
-my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
-# err, no need to get all worked up if you can't CD there -- this may be the
-# very first run and it hasn't been created yet
-if (chdir("$repo_base_abs")) {
-    for my $repo (`find . -type d -name "*.git"`) {
-        chomp ($repo);
-        system("cp $GL_ADMINDIR/src/update-hook.pl $repo/hooks/update");
-        chmod 0755, "$repo/hooks/update";
-    }
+chdir("$repo_base_abs") or die "chdir $repo_base_abs failed: $!\n";
+for my $repo (`find . -type d -name "*.git"`) {
+    chomp ($repo);
+    system("cp $GL_ADMINDIR/src/update-hook.pl $repo/hooks/update");
+    chmod 0755, "$repo/hooks/update";
 }

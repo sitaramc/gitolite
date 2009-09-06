@@ -1,4 +1,4 @@
-# default paths for gitolite
+# paths and configuration variables for gitolite
 
 # please read comments before editing
 
@@ -23,7 +23,24 @@ $REPO_BASE="repositories";
 # path (i.e., starting with a "/" character)
 
 # gitolite admin directory, files, etc
+
 $GL_ADMINDIR=$ENV{HOME} . "/.gitolite";
+
+# --------------------------------------
+
+# templates for location of the log files and format of their names
+
+# I prefer this template (note the %y and %m placeholders)
+# it produces files like `~/.gitolite/logs/gitolite-2009-09.log`
+
+$GL_LOGT="$GL_ADMINDIR/logs/gitolite-%y-%m.log";
+
+# other choices are below, or you can make your own -- but PLEASE MAKE SURE
+# the directory exists and is writable; gitolite won't do that for you (unless
+# it is the default, which is "$GL_ADMINDIR/logs")
+
+# $GL_LOGT="$GL_ADMINDIR/logs/gitolite-%y-%m-%d.log";
+# $GL_LOGT="$GL_ADMINDIR/logs/gitolite-%y.log";
 
 # --------------------------------------
 
@@ -35,15 +52,24 @@ $GL_KEYDIR="$GL_ADMINDIR/keydir";
 $GL_CONF_COMPILED="$GL_ADMINDIR/conf/gitolite.conf-compiled.pm";
 
 # --------------------------------------
+
 # personal branch prefix; leave it as is (empty) if you don't want to use the
 # feature (see the "developer-specific branches" section in the "faq, tips,
 # etc" document)
+
 $PERSONAL="";
+
 # uncomment one of these if you do want it.  I recommend this:
 # $PERSONAL="refs/personal";
+
 # but if you want something more visible/noisy, use this:
 # $PERSONAL="refs/heads/personal";
+
+# NOTE: whatever value you choose, for security reasons it is better to make
+# it fully qualified -- that is, starting with "refs/"
 
 # --------------------------------------
 # per perl rules, this should be the last line in such a file:
 1;
+
+# vim: set syn=perl:

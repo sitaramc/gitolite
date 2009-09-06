@@ -23,9 +23,8 @@ use warnings;
 #       common definitions
 # ----------------------------------------------------------------------------
 
-our $GL_ADMINDIR;
-our $GL_CONF_COMPILED;
-our $REPO_BASE;
+
+our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE);
 our %repos;
 
 my $glrc = $ENV{HOME} . "/.gitolite.rc";
@@ -89,18 +88,36 @@ die "$perm access for $repo denied to $user"
         or $repos{$repo}{$perm}{'@all'};
 
 # ----------------------------------------------------------------------------
-#       over to git now
+#       logging, timestamp.  also setup env vars for later
 # ----------------------------------------------------------------------------
 
-# ( but first save the reponame; we can save some time later in the hook )
+# reponame
 $ENV{GL_REPO}=$repo;
+
+# timestamp
+my ($s, $min, $h, $d, $m, $y) = (localtime)[0..5];
+$y += 1900; $m++;               # usual adjustments
+for ($s, $min, $h, $d, $m) {
+    $_ = "0$_" if $_ < 10;
+}
+$ENV{GL_TS} = "$y-$m-$d.$h:$min:$s";
+
+# substitute template parameters and set the logfile name 
+$GL_LOGT =~ s/%y/$y/g;
+$GL_LOGT =~ s/%m/$m/g;
+$GL_LOGT =~ s/%d/$d/g;
+$ENV{GL_LOG} = $GL_LOGT;
 
 # if log failure isn't important enough to block access, get rid of all the
 # error checking
-open my $log_fh, ">>", "$GL_ADMINDIR/log"
+open my $log_fh, ">>", $ENV{GL_LOG}
     or die "open log failed: $!";
-print $log_fh "\n", scalar(localtime), " $ENV{SSH_ORIGINAL_COMMAND} $user\n";
+print $log_fh "$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$user\n";
 close $log_fh or die "close log failed: $!";
+
+# ----------------------------------------------------------------------------
+#       over to git now
+# ----------------------------------------------------------------------------
 
 $repo = "'$REPO_BASE/$repo.git'";
 exec("git", "shell", "-c", "$verb $repo");

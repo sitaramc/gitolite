@@ -25,9 +25,7 @@ use warnings;
 #       common definitions
 # ----------------------------------------------------------------------------
 
-our $GL_ADMINDIR;
-our $GL_CONF_COMPILED;
-our $PERSONAL;
+our ($GL_CONF_COMPILED, $PERSONAL);
 our %repos;
 
 my $glrc = $ENV{HOME} . "/.gitolite.rc";
@@ -70,9 +68,11 @@ for my $refex (@allowed_refs)
     {
         # if log failure isn't important enough to block pushes, get rid of
         # all the error checking
-        open my $log_fh, ">>", "$GL_ADMINDIR/log"
+        open my $log_fh, ">>", $ENV{GL_LOG}
             or die "open log failed: $!";
-        print $log_fh "$perm: $ENV{GL_USER} $ENV{GL_REPO} $ref $oldsha $newsha\n";
+        print $log_fh "$ENV{GL_TS}  $perm\t" .
+            substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
+            "\t$ENV{GL_REPO}\t$ref\t$ENV{GL_USER}\n";
         close $log_fh or die "close log failed: $!";
         exit 0;
     }

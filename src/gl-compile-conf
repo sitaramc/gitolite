@@ -41,11 +41,7 @@ use Data::Dumper;
 #       common definitions
 # ----------------------------------------------------------------------------
 
-our $GL_ADMINDIR;
-our $GL_CONF;
-our $GL_KEYDIR;
-our $GL_CONF_COMPILED;
-our $REPO_BASE;
+our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE);
 
 my $glrc = $ENV{HOME} . "/.gitolite.rc";
 die "parse $glrc failed: " . ($! or $@) unless do $glrc;

@@ -1,5 +1,10 @@
 # gitolite
 
+>   [IMPORTANT: There is now an "upgrade" document in the "doc" directory;
+>   please read if upgrading gitolite]
+
+----
+
 Gitolite is the bare essentials of gitosis, with a completely different
 config file that allows (at last!) access control down to the branch level,
 including specifying who can and cannot *rewind* a given branch.  It is
