@@ -70,11 +70,9 @@ die "$cmd???  you're a funny guy..."
 # including the single quotes
 
 my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*).git'/);
-die "$verb?  I don't do odd jobs, sorry..."
-    unless $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS;
-
-die "I don't like the look of $repo, sorry!"
-    unless $repo =~ $REPONAME_PATT;
+die "Sorry, I don't like the command you gave me: $cmd\n"
+    unless ( ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS )
+        and  $repo =~ $REPONAME_PATT );
 
 # ----------------------------------------------------------------------------
 #       first level permissions check

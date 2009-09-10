@@ -10,7 +10,12 @@ our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF);
 sub wrap_mkdir
 {
     my $dir = shift;
-    -d $dir or mkdir($dir) or die "mkdir $dir failed: $!\n";
+    if ( -d $dir ) {
+        print STDERR "$dir already exists\n";
+        return;
+    }
+    mkdir($dir) or die "mkdir $dir failed: $!\n";
+    print STDERR "created $dir\n";
 }
 
 # the only path that is *fixed* (can't be changed without changing all 3
@@ -21,7 +26,7 @@ unless (-f $glrc) {
     # doesn't exist.  Copy it across, tell user to edit it and come back
     system("cp conf/example.gitolite.rc $glrc");
     print STDERR "created $glrc\n";
-    print STDERR "please edit it, set the paths as you like, and rerun this script\n";
+    print STDERR "please edit it, change the paths if you wish to, and RERUN THIS SCRIPT\n";
     exit;
 }
 
