@@ -4,6 +4,7 @@ In this document:
 
   * errors, warnings, notes...
   * differences from gitosis
+      * error checking the config file
       * one user, many keys
       * who am I?
   * cool ideas I want feedback on
@@ -33,6 +34,16 @@ In this document:
 Apart from the big ones listed in the top level README, and subjective ones
 like "better config file format", there are some small, but significant and
 concrete, differences from gitosis.
+
+#### error checking the config file
+
+gitosis does not do any.  I just found out that if you mis-spell `members` as
+`member`, gitosis will silently ignore it, and leave you wondering why access
+was denied.
+
+In gitolite, you have to "compile" the config file first (this step takes the
+place of the commit+push in gitosis), and keyword typos *are* caught so you
+know right away.
 
 #### built-in logging
 
