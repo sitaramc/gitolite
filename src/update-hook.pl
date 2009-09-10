@@ -69,11 +69,11 @@ for my $refex (@allowed_refs)
         # if log failure isn't important enough to block pushes, get rid of
         # all the error checking
         open my $log_fh, ">>", $ENV{GL_LOG}
-            or die "open log failed: $!";
+            or die "open log failed: $!\n";
         print $log_fh "$ENV{GL_TS}  $perm\t" .
             substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
             "\t$ENV{GL_REPO}\t$ref\t$ENV{GL_USER}\n";
-        close $log_fh or die "close log failed: $!";
+        close $log_fh or die "close log failed: $!\n";
         exit 0;
     }
 }

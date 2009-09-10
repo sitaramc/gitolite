@@ -84,7 +84,7 @@ sub expand_userlist
         die "bad user $item\n" unless $item =~ $USERNAME_PATT;
         if ($item =~ /^@/)      # nested group
         {
-            die "undefined group $item" unless $groups{$item};
+            die "undefined group $item\n" unless $groups{$item};
             # add those names to the list
             push @new_list, @{ $groups{$item} };
         }
@@ -167,7 +167,7 @@ while (<$conf_fh>)
 
 my $compiled_fh = wrap_open( ">", $GL_CONF_COMPILED );
 print $compiled_fh Data::Dumper->Dump([\%repos], [qw(*repos)]);
-close $compiled_fh or die "close compiled-conf failed: $!";
+close $compiled_fh or die "close compiled-conf failed: $!\n";
 
 # ----------------------------------------------------------------------------
 #       any new repos created?
@@ -185,7 +185,7 @@ for my $repo (keys %repos)
 {
     unless (-d "$repo.git")
     {
-        mkdir("$repo.git") or die "mkdir $repo.git failed: $!";
+        mkdir("$repo.git") or die "mkdir $repo.git failed: $!\n";
         wrap_chdir("$repo.git");
         system("git init --bare");
         system("cp $GL_ADMINDIR/src/update-hook.pl hooks/update");
@@ -217,7 +217,7 @@ for my $pubkey (glob("*.pub"))
     print $newkeys_fh `cat $pubkey`;
 }
 print $newkeys_fh "# gitolite end\n";
-close $newkeys_fh or die "close newkeys failed: $!";
+close $newkeys_fh or die "close newkeys failed: $!\n";
 
 # all done; overwrite the file (use cat to avoid perm changes)
 system("cat $ENV{HOME}/.ssh/authorized_keys > $ENV{HOME}/.ssh/old_authkeys");
@@ -234,9 +234,9 @@ if (-d ".git")
     if (system("git diff --cached --quiet") )
     {
         open my $commit_ph, "|-", "git commit -F -"
-            or die "open commit failed: $!";
+            or die "open commit failed: $!\n";
         print $commit_ph "keydir changed\n\n";
         print $commit_ph `git diff --cached --name-status`;
-        close $commit_ph or die "close commit failed: $!";
+        close $commit_ph or die "close commit failed: $!\n";
     }
 }

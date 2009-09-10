@@ -22,7 +22,7 @@ my $groupname;
 # a gitosis.conf stanza ends when a new "[group name]" line shows up, so you
 # can't write as you go; you have to accumulate and flush
 sub flush {
-    die "repos but no users?" if (not @users and (@repos or @RO_repos));
+    die "repos but no users?\n" if (not @users and (@repos or @RO_repos));
     # just a groupname
     if (@users and not (@repos or @RO_repos)) {
         print "\@$groupname = ", join(" ", @users), "\n";

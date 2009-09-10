@@ -54,11 +54,11 @@ my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 # that in the message so people saying "ssh git@server" can see which gitosis
 # user he is being recognised as
 my $cmd = $ENV{SSH_ORIGINAL_COMMAND}
-    or die "no SSH_ORIGINAL_COMMAND?  I'm not a shell, $user!";
+    or die "no SSH_ORIGINAL_COMMAND?  I'm not a shell, $user!\n";
 
 # this check is largely for comic value if someone tries something outrageous;
 # $cmd gets split and the pieces examined more thoroughly later anyway
-die "$cmd???  you're a funny guy..."
+die "$cmd???  you're a funny guy...\n"
     if $cmd =~ /[<>&|;\n]/;
 
 # split into command and arguments; the pattern allows old style as well as
@@ -81,7 +81,7 @@ die "Sorry, I don't like the command you gave me: $cmd\n"
 # we know the user and repo; we just need to know what perm he's trying
 my $perm = ($verb =~ $R_COMMANDS ? 'R' : 'W');
 
-die "$perm access for $repo denied to $user"
+die "$perm access for $repo denied to $user\n"
     unless $repos{$repo}{$perm}{$user}
         or $repos{$repo}{$perm}{'@all'};
 
@@ -109,9 +109,9 @@ $ENV{GL_LOG} = $GL_LOGT;
 # if log failure isn't important enough to block access, get rid of all the
 # error checking
 open my $log_fh, ">>", $ENV{GL_LOG}
-    or die "open log failed: $!";
+    or die "open log failed: $!\n";
 print $log_fh "$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$user\n";
-close $log_fh or die "close log failed: $!";
+close $log_fh or die "close log failed: $!\n";
 
 # ----------------------------------------------------------------------------
 #       over to git now
