@@ -2,7 +2,8 @@
 
 In this document:
 
-  * errors, warnings, notes...
+  * common errors and mistakes
+  * other errors, warnings, notes...
   * differences from gitosis
       * error checking the config file
       * one user, many keys
@@ -10,7 +11,20 @@ In this document:
   * cool ideas I want feedback on
       * developer specific branches
 
-### errors, warnings, notes...
+### common errors and mistakes
+
+  * forgetting to suffix `.git` to the end of the reponame in the `git clone`.
+    This suffix is *not* used in the gitolite config file for the sake of
+    clarity and cleaner syntax, but don't let that fool you.  It's a
+    convention in the git world that **bare repos** end with `.git`.
+
+  * adding `repositories/` at the start of the repo name in the `git clone`.
+    This error is typically made by the *admin* himself -- because he knows
+    what `$REPO_BASE` is set to and thinks he has to provide that prefix on
+    the client side also :-)  In fact gitolite prepends `$REPO_BASE` when it
+    is required anyway, so you shouldn't do the same thing!
+
+### other errors, warnings, notes...
 
   * cloning an empty repo is only possible with clients greater than 1.6.2.
     So at least one of your clients needs to have a recent git.  Once at least
