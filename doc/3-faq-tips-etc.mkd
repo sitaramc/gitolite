@@ -33,6 +33,7 @@ In this document:
   * when you clone an empty repo, git seems to complain about the remote
     hanging up or something.  I have no idea what that is, but it doesn't seem
     to hurt anything.  This happens even in normal git, not just gitolite.
+    [Update 2009-09-14; this has been fixed in git 1.6.4.3]
 
   * once in a while, if you're feeling particularly BOFH-ish, take a look at
     `$GL_ADMINDIR/log` :-)

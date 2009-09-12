@@ -28,6 +28,7 @@ a typical $DAYJOB setting, there are some issues:
     and be done
   * often, "python-setuptools" isn't installed (and on a Solaris9 I was trying
     to help remotely, we never did manage to install it eventually)
+  * or you don't have root access, or the ability to add users
   * the most requested feature (see "what's new?") had to be written anyway
 
 ### what's gone
