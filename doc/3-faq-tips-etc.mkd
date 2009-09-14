@@ -5,6 +5,7 @@ In this document:
   * common errors and mistakes
   * other errors, warnings, notes...
   * differences from gitosis
+      * two levels of access rights checking
       * error checking the config file
       * one user, many keys
       * who am I?
@@ -49,6 +50,34 @@ In this document:
 Apart from the big ones listed in the top level README, and subjective ones
 like "better config file format", there are some small, but significant and
 concrete, differences from gitosis.
+
+#### two levels of access rights checking
+
+Gitolite has two levels of access checks.  The **first check** is what I will
+call the **pre-git** level (this is the only check that gitosis has).  At this
+stage, the `gl-auth-command` has been invoked by `sshd`, and it knows just
+three things:
+
+  * who,
+  * what repository, and
+  * what type of access (R or W)
+
+Note that at this point no git program has entered the picture, and we have no
+way of knowing what **ref** (branch, tag, etc) he is trying to update, even if
+it is a "write" operation.
+
+For a "read" operation to pass this check, the username (or `@all`) must be
+mentioned on some line in the config for this repo.
+
+For a "write" operation, there is an additional restriction: lines specifying
+only `R` (read access) don't count.  *The user must have write access to
+**some** ref in the repo in order to pass this stage!*
+
+The **second check** is via a git `update hook`.  This check only happens for
+write operations.  By this time we know what "ref" he is trying to update, as
+well as the old and the new SHAs of that ref (by which we can also deduce
+whether it's a fast forward or not).  This is where the "per-branch"
+permissions come into play.
 
 #### error checking the config file
 
@@ -147,6 +176,31 @@ namespace, and each developer controls his/her own set of branches!
 The amount of code needed?  *One line!*  I'll spend about 3x more on declaring
 and initialising the new variable, and 30x more on documenting it :-)
 
-**That** is how neatly gitolite is designed...
+**Note that a user who has NO write access cannot have personal branches**; if
+you read the section (above) on "two levels of access rights checking" you'll
+understand why.
 
-/me pats himself on the back ;-)
+For instance, in the following example, `user3` cannot push to any
+`refs/heads/personal/user3/*` branches because the first level check stops him
+cold:
+
+    # assume $PERSONAL = 'refs/heads/personal' in ~/.gitolite.rc
+    repo myrepo
+        RW+ master      = sitaram
+        RW+ release     = qa_guy
+        RW              = user1 user2
+        R               = user3
+
+If we relax that check, *any* access becomes *write* access.  Yes it will be
+caught later, by the hook, but it's good practice to catch things in multiple
+places.
+
+If you want `user3` to have his own personal branch, but without write access
+to any of the "real" branches (like "master", "release", etc.), just use a
+dummy branch.  Choose a name that will never exist in practice, or even if
+someone creates it, we don't care.  For example, this will get him past the
+first check:
+
+        RW dummy        = user3
+
+Just don't *show* the user this config file; it might sound insulting :-)
