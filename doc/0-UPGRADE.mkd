@@ -37,6 +37,13 @@ And you're done.
 If any extra steps beyond the generic ones above are needed, they will be
 listed here, newest first.
 
+#### upgrading from 5758f69
+
+Between 5758f69 and this version, gitolite learnt to allow "groupnames" for
+repos as well.  The `conf/example.conf` has been recommented to explain the
+syntax but it's really a no-brainer: what you could previously do only for
+usernames, you can now do for reponames also.
+
 #### upgrading from abb4580
 
 Two new features (personal branches, and customisable logfile names/locations)

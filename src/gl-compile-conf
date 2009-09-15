@@ -58,8 +58,11 @@ die "$ATTN parse $glrc failed: " . ($! or $@) unless do $glrc;
 # command and options for authorized_keys
 my $AUTH_COMMAND="$GL_ADMINDIR/src/gl-auth-command";
 my $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
-my $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);     # very simple pattern
+# note that REPONAME_PATT allows a "/" also, which USERNAME_PATT doesn't
+my $REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._/-]*$);     # very simple pattern
+my $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);      # very simple pattern
 
+# groups can now represent user groups or repo groups
 my %groups = ();
 my %repos = ();
 
@@ -80,14 +83,16 @@ sub wrap_open {
     return $fh;
 }
 
-sub expand_userlist
+sub expand_list
 {
     my @list = @_;
     my @new_list = ();
 
     for my $item (@list)
     {
-        die "$ATTN bad user $item\n" unless $item =~ $USERNAME_PATT;
+        # we test with the slightly more relaxed pattern here; we'll catch the
+        # "/" in user name thing later; it doesn't affect security anyway
+        die "$ATTN bad user or repo name $item\n" unless $item =~ $REPONAME_PATT;
         if ($item =~ /^@/)      # nested group
         {
             die "$ATTN undefined group $item\n" unless $groups{$item};
@@ -124,16 +129,19 @@ while (<$conf_fh>)
     # and blank lines
     next unless /\S/;
 
-    # user groups
+    # user or repo groups
     if (/^(@\S+) = (.*)/)
     {
-        push @{ $groups{$1} }, expand_userlist( split(' ', $2) );
-        die "$ATTN bad group $1\n" unless $1 =~ $USERNAME_PATT;
+        push @{ $groups{$1} }, expand_list( split(' ', $2) );
+        # again, we take the more "relaxed" pattern
+        die "$ATTN bad group $1\n" unless $1 =~ $REPONAME_PATT;
     }
     # repo(s)
     elsif (/^repo (.*)/)
     {
-        @repos = split(' ', $1);
+        # grab the list and expand any @stuff in it
+        @repos = split ' ', $1;
+        @repos = expand_list ( @repos );
     }
     # actual permission line
     elsif (/^(R|RW|RW\+) (.* )?= (.+)/)
@@ -150,8 +158,9 @@ while (<$conf_fh>)
         @refs = map { m(^refs/) or s(^)(refs/heads/); $_ } @refs;
 
         # expand the user list, unless it is just "@all"
-        @users = expand_userlist ( @users )
+        @users = expand_list ( @users )
             unless (@users == 1 and $users[0] eq '@all');
+        do  { die "$ATTN bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
 
         # ok, we can finally populate the %repos hash
         for my $repo (@repos)       # each repo in the current stanza
