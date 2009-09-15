@@ -43,8 +43,13 @@ use Data::Dumper;
 
 our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE);
 
+# now that this thing *may* be run via "push to admin", any errors have to
+# grab the admin's ATTENTION so he won't miss them among the other messages a
+# typical push generates
+my $ATTN = "\n\t\t***** ERROR ***** ";
+
 my $glrc = $ENV{HOME} . "/.gitolite.rc";
-die "parse $glrc failed: " . ($! or $@) unless do $glrc;
+die "$ATTN parse $glrc failed: " . ($! or $@) unless do $glrc;
 
 # ----------------------------------------------------------------------------
 #       definitions specific to this program
@@ -66,11 +71,11 @@ umask(0077);
 # ----------------------------------------------------------------------------
 
 sub wrap_chdir {
-    chdir($_[0]) or die "chdir $_[0] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
+    chdir($_[0]) or die "$ATTN chdir $_[0] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
 }
 
 sub wrap_open {
-    open (my $fh, $_[0], $_[1]) or die "open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
+    open (my $fh, $_[0], $_[1]) or die "$ATTN open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
     return $fh;
 }
 
@@ -81,10 +86,10 @@ sub expand_userlist
 
     for my $item (@list)
     {
-        die "bad user $item\n" unless $item =~ $USERNAME_PATT;
+        die "$ATTN bad user $item\n" unless $item =~ $USERNAME_PATT;
         if ($item =~ /^@/)      # nested group
         {
-            die "undefined group $item\n" unless $groups{$item};
+            die "$ATTN undefined group $item\n" unless $groups{$item};
             # add those names to the list
             push @new_list, @{ $groups{$item} };
         }
@@ -122,7 +127,7 @@ while (<$conf_fh>)
     if (/^(@\S+) = (.*)/)
     {
         push @{ $groups{$1} }, expand_userlist( split(' ', $2) );
-        die "bad group $1\n" unless $1 =~ $USERNAME_PATT;
+        die "$ATTN bad group $1\n" unless $1 =~ $USERNAME_PATT;
     }
     # repo(s)
     elsif (/^repo (.*)/)
@@ -161,13 +166,13 @@ while (<$conf_fh>)
     }
     else
     {
-        die "can't make head or tail of '$_'\n";
+        die "$ATTN can't make head or tail of '$_'\n";
     }
 }
 
 my $compiled_fh = wrap_open( ">", $GL_CONF_COMPILED );
 print $compiled_fh Data::Dumper->Dump([\%repos], [qw(*repos)]);
-close $compiled_fh or die "close compiled-conf failed: $!\n";
+close $compiled_fh or die "$ATTN close compiled-conf failed: $!\n";
 
 # ----------------------------------------------------------------------------
 #       any new repos created?
@@ -185,7 +190,7 @@ for my $repo (keys %repos)
 {
     unless (-d "$repo.git")
     {
-        mkdir("$repo.git") or die "mkdir $repo.git failed: $!\n";
+        mkdir("$repo.git") or die "$ATTN mkdir $repo.git failed: $!\n";
         wrap_chdir("$repo.git");
         system("git init --bare");
         system("cp $GL_ADMINDIR/src/update-hook.pl hooks/update");
@@ -217,7 +222,7 @@ for my $pubkey (glob("*.pub"))
     print $newkeys_fh `cat $pubkey`;
 }
 print $newkeys_fh "# gitolite end\n";
-close $newkeys_fh or die "close newkeys failed: $!\n";
+close $newkeys_fh or die "$ATTN close newkeys failed: $!\n";
 
 # all done; overwrite the file (use cat to avoid perm changes)
 system("cat $ENV{HOME}/.ssh/authorized_keys > $ENV{HOME}/.ssh/old_authkeys");
@@ -234,9 +239,9 @@ if (-d ".git")
     if (system("git diff --cached --quiet") )
     {
         open my $commit_ph, "|-", "git commit -F -"
-            or die "open commit failed: $!\n";
+            or die "$ATTN open commit failed: $!\n";
         print $commit_ph "keydir changed\n\n";
         print $commit_ph `git diff --cached --name-status`;
-        close $commit_ph or die "close commit failed: $!\n";
+        close $commit_ph or die "$ATTN close commit failed: $!\n";
     }
 }
