@@ -45,6 +45,14 @@ In this document:
     the "compile" script will just `mkdir a/b/c.git`, assuming "a/b" has
     already been created
 
+  * if you run `git init` inside `$GL_ADMINDIR` (that is, make it a normal,
+    non-bare, repo), then, everytime you "compile" (run
+    `src/gl-compile-conf`), any changes to `conf` and `keydir` will
+    automatically be committed.  This is a simple safety net in case you
+    accidentally delete the whole config or something.  Also see
+    [4-push-to-admin.mkd](http://github.com/sitaramc/gitolite/blob/pu/doc/4-push-to-admin.mkd)
+    if you really know what you're doing and want "push to admin".
+
 ### differences from gitosis
 
 Apart from the big ones listed in the top level README, and subjective ones

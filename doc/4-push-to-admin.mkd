@@ -1,0 +1,79 @@
+# "push to admin" in gitolite
+
+----
+
+Gitosis's default mode of admin is by cloning and pushing the `gitosis-admin`
+repo.  I call this "push to admin".  It's a very cool/cute feature, and I
+loved it at first.
+
+But it's a ***support nightmare***.  Half the gitosis angst on `#git` is
+because of this feature.  Gitolite does not use or endorse this method for
+people new to git, or ssh or (worse) both.
+
+However, ***if*** you know git and ssh really, *really*, well and you know
+what you're doing, this is a pretty nice thing to have -- does make life
+easier, I admit.
+
+So, here is how to make PTA (hey nice acronym, just missing an "I") work on
+gitolite as well.  But remember, there is NO SUPPORT!  Go away.  Leave me
+alone...  Anything else on gitolite I will help but not this, ok? :-)
+
+The instructions are presented as shell commands; they should be fairly
+obvious.  All paths are from the default `~/.gitolite.rc`; if you changed any,
+make the same changes below.
+
+----
+
+First, on the server, log on to the `git` userid, add a new repo called
+`gitolite-admin` to the config file, give yourself `RW` or `RW+` rights to it,
+and "compile":
+
+    cd ~/.gitolite
+    vim conf/gitolite.conf      # add gitolite-admin repo, etc
+    src/gl-compile-conf
+
+Now, if you look at the "compile" script, it has an *automatic* local commit
+inside, just for safety, which kicks in every time you compile.  This only
+works if it finds a ".git" directory, and it was designed as an "automatic
+backup/safety net" type of thing, in case I accidentally deleted the whole
+config file or something.
+
+We need to disable this, because now we have a *better* repo, one that is
+manually pushed, and presumably has proper commit messages!
+
+    mv .git .disable.git        # yeah it's a hack, sue me
+
+Now the compile command created an empty, bare, "gitolite-admin" repo, so we
+seed it with the current contents of the config and keys.  (A note on the
+`GIT_WORK_TREE` variable: I avoid setting these variables in the normal way
+because I always forget to unset them later, and then when I `cd` to other
+repos they play havoc with my git commands, so this is how I do it)
+
+    cd ~/repositories/gitolite-admin.git
+    GIT_WORK_TREE=/home/git/.gitolite git add conf/gitolite.conf keydir
+    GIT_WORK_TREE=/home/git/.gitolite git commit -am start
+
+Now we have to setup the post-update hook for push-to-admin to work.  The
+hook should (1) make a forced checkout in the "live" config directory (which
+is `~/.gitolite`), and (2) run the compile script.  So we create a hook with
+the appropriate code in it, and then make it executable
+
+    cat <<EOFPU > hooks/post-update
+    #!/bin/sh
+
+    GIT_WORK_TREE=/home/git/.gitolite git checkout -f
+
+    cd /home/git/.gitolite
+    src/gl-compile-conf
+    EOFPU
+
+    chmod +x hooks/post-update
+
+----
+
+Now get to your workstation, and
+
+    git clone git@server:gitolite-admin.git
+
+That's it, we're done.  You're in gitosis land as far as this is concerned
+now.  So knock yourself out.  Or lock yourself out... :-)
