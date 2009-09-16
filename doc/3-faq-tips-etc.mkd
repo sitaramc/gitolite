@@ -8,10 +8,13 @@ In this document:
   * differences from gitosis
       * two levels of access rights checking
       * error checking the config file
+      * built-in logging
       * one user, many keys
       * who am I?
   * other cool things
       * developer specific branches
+  * design choices
+      * why we don't do "excludes"
 
 ### common errors and mistakes
 
@@ -249,3 +252,52 @@ first check:
         RW dummy        = user3
 
 Just don't *show* the user this config file; it might sound insulting :-)
+
+### design choices
+
+#### why we don't do "excludes"
+
+I found an error in the example conf file.  This snippet *seems* to say that
+"bruce" can write versioned tags (`refs/tags/v[0-9].*`), but the other
+staffers can't:
+
+        @staff = bruce whitfield martin
+                [... and later ...]
+        RW refs/tags/v[0-9].*   = bruce
+        RW refs/tags            = @staff
+
+But that's not how the matching works.  As long as any refex matches the
+refname being updated, it's a "yes".  So the second refex lets anyone on
+`@staff` create versioned tags, not just Bruce.
+
+One way to fix this is to allow "excludes" -- some changes in syntax, combined
+with a rigorous, ordered, interpretation would do it.
+
+But if you're ever played with squid ACLs, or the include/exclude rules for
+rsync, or rdiff-backup, or even git's own ignore mechanism, you'll see why I
+won't do this.  It bloats the code and the docs, and, despite all the docs,
+*still* confuses people, which may then *reduce* security!
+
+Squid, rsync, gitignore, and all *need* the feature and so tolerate all this;
+but we don't need it.  All we need to do is make the refexes *disjoint* in
+what they match (i.e., ensure that no refname can be matched by more than one
+refex):
+
+        RW refs/tags/v[0-9].*   = bruce
+        RW refs/tags/staff/     = @staff
+
+In general, you probably want to control the refnames writable by devs anyway,
+if at least to maintain some sanity, so being forced to make the refexes
+disjoint is not a big problem.  Here's an example: only the `project_lead` can
+make arbitrarily named refs, while the rest have to stay within their assigned
+namespaces:
+
+        RW+                     =   project_lead
+        RW  refs/tags/qa/       =   @qa_team
+        RW  bugID/              =   @dev_team
+        RW  trac/               =   @dev_team
+
+The lack of overlap between refexes ensures ***no confusion*** in specifying,
+understanding, and ***auditing***, what is allowed and what is not.
+
+And in security, "no confusion" is a good thing :-)
