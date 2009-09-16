@@ -10,7 +10,7 @@ In this document:
       * error checking the config file
       * one user, many keys
       * who am I?
-  * cool ideas I want feedback on
+  * other cool things
       * developer specific branches
 
 ### common errors and mistakes
@@ -117,8 +117,12 @@ only `R` (read access) don't count.  *The user must have write access to
 The **second check** is via a git `update hook`.  This check only happens for
 write operations.  By this time we know what "ref" he is trying to update, as
 well as the old and the new SHAs of that ref (by which we can also deduce
-whether it's a fast forward or not).  This is where the "per-branch"
-permissions come into play.
+whether it's a rewind or not).  This is where the "per-branch" permissions
+come into play.
+
+Each refex that allows `W` access (or `+` if this is a rewind) for *this*
+user, on *this* repo, is matched against the actual refname being updated.  If
+any of the refexes match, the push succeeds.  If none of them match, it fails.
 
 #### error checking the config file
 
@@ -188,7 +192,7 @@ In gitolite, it's simple: just ask nicely :-)
     PTY allocation request failed on channel 0
     no SSH_ORIGINAL_COMMAND?  I'm not a shell, sitaram!
 
-### cool ideas
+### other cool things
 
 #### developer specific branches
 
