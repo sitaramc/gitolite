@@ -5,6 +5,14 @@
 
 ### administer
 
+First of all, ***do NOT add new repos manually***, unless you know how to add
+the required hook as well.  Without the hook, branch-level access control will
+not work for that repo, which sorta defeats the idea of using gitolite :-)
+
+Please read on to see how to do this correctly.
+
+#### adding users and repos
+
   * ask each user who will get access to send you a public key.  See other
     sources (for example
     [here](http://sitaramc.github.com/0-installing/2-access-gitolite.html#generating_a_public_key))
@@ -16,9 +24,15 @@
 
   * copy all these `*.pub` files to `$GL_KEYDIR`
 
-  * edit the config file (`$GL_CONF`) and give the new users permissions as
-    required.  The users names should be exactly the same as their keyfile
-    names, but without the `.pub` extension
+  * the config file (`$GL_CONF`) is very well commented, please take a couple
+    of minutes to read it.  Then edit it and
+
+      * add new repos as needed
+      * add new users and give them permissions as required.  The users names
+        should be exactly the same as their keyfile names, but without the
+        `.pub` extension
+
+#### compiling
 
   * backup your `~/.ssh/authorized_keys` file if you feel nervous :-)
       * that's "backup" as in "copy", not "move".  The next step won't work if

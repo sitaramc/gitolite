@@ -22,6 +22,16 @@ The instructions are presented as shell commands; they should be fairly
 obvious.  All paths are from the default `~/.gitolite.rc`; if you changed any,
 make the same changes below.
 
+>   ----
+
+>   **WARNING**: the "compilation" runs via a `post-update` hook.  Which, by
+>   definition, runs *after* the push has successfully completed.  As a
+>   result, a *compilation error* will be visible to the admin doing the `git
+>   push` but will not otherwise look like an error to client-side git (in
+>   terms of return codes, scripting, etc., or even the "git gui" if you
+>   happen to use that for pushing).  So be sure to watch out for compile
+>   error messages on push when you do this.
+
 ----
 
 First, on the server, log on to the `git` userid, add a new repo called
