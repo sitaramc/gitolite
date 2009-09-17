@@ -29,7 +29,9 @@
         familiar with ssh and authkeys etc.  If so, please read up at least
         [this](http://sitaramc.github.com/0-installing/9-gitolite-basics.html#IMPORTANT_overview_of_ssh),
         and preferably also the man pages for sshd and sshd\_config, to make
-        sure you understand the security implications of what you are doing
+        sure you understand the security implications of what you are doing.
+        Once you have understood that, create at least an empty
+        `~/.ssh/authorized_keys` file before proceeding to the next step
 
   * cd to `$GL_ADMINDIR` and run `src/gl-compile-conf`
 

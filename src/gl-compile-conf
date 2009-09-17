@@ -46,7 +46,7 @@ our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE);
 # now that this thing *may* be run via "push to admin", any errors have to
 # grab the admin's ATTENTION so he won't miss them among the other messages a
 # typical push generates
-my $ATTN = "\n\t\t***** ERROR ***** ";
+my $ATTN = "\n\t\t***** ERROR *****\n       ";
 
 my $glrc = $ENV{HOME} . "/.gitolite.rc";
 die "$ATTN parse $glrc failed: " . ($! or $@) unless do $glrc;
@@ -75,7 +75,8 @@ sub wrap_chdir {
 }
 
 sub wrap_open {
-    open (my $fh, $_[0], $_[1]) or die "$ATTN open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
+    open (my $fh, $_[0], $_[1]) or die "$ATTN open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n" .
+            ( $_[2] || '' );    # suffix custom error message if given
     return $fh;
 }
 
@@ -203,7 +204,9 @@ for my $repo (keys %repos)
 #       "compile" ssh authorized_keys
 # ----------------------------------------------------------------------------
 
-my $authkeys_fh = wrap_open( "<", $ENV{HOME} . "/.ssh/authorized_keys" );
+my $authkeys_fh = wrap_open( "<", $ENV{HOME} . "/.ssh/authorized_keys",
+    "\tFor security reasons, gitolite will not *create* this file if it does\n" .
+    "\tnot already exist.  Please see the \"admin\" document for details\n");
 my $newkeys_fh = wrap_open( ">", $ENV{HOME} . "/.ssh/new_authkeys" );
 # save existing authkeys minus the GL-added stuff
 while (<$authkeys_fh>)
