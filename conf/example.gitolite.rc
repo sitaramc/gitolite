@@ -67,10 +67,13 @@ $GL_CONF_COMPILED="$GL_ADMINDIR/conf/gitolite.conf-compiled.pm";
 
 $PERSONAL="";
 
-# uncomment one of these if you do want it.  I recommend this:
+# uncomment one of these if you do want it.  If you change it, remember it
+# MUST start with "refs/"
+
+# I recommend this:
 # $PERSONAL="refs/personal";
 
-# but if you want something more visible/noisy, use this:
+# if you want something more visible/noisy, use this:
 # $PERSONAL="refs/heads/personal";
 
 # NOTE: whatever value you choose, for security reasons it is better to make
