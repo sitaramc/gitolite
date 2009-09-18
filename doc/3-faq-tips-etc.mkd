@@ -22,6 +22,7 @@ In this document:
   * design choices
       * keeping the parser and the access control separate
       * why we don't do "excludes"
+      * how the rebel edition does it anyway :)
 
 ### common errors and mistakes
 
@@ -527,3 +528,52 @@ The lack of overlap between refexes ensures ***no confusion*** in specifying,
 understanding, and ***auditing***, what is allowed and what is not.
 
 And in security, "no confusion" is a good thing :-)
+
+#### how the rebel edition does it anyway :)
+
+Well, reuss on #git asked, I pointed him to the discussion above and said
+"no", and he was nice enough to agree.  But then I started thinking that maybe
+not everyone needs such "safe" environments.  And so, as the README says:
+
+>   The paranoid half of Sitaram's brain would like to warn you that the other
+>   half rebelled and created this fork.
+
+Let's recap the **existing semantics**:
+
+>   the first matching refex that has the permission you're looking for (`W`
+>   or `+`), results in success.  A fallthrough results in failure
+
+First I changed the format of the compiled config file (an internal file that
+the user doesn't have to worry about, as long as he remembers to run the
+compile script on every upgrade).  The format change kept the existing syntax
+and semantics of the config file, but it laid the ground work for allowing
+"excludes" using **just one extra line of code** (and a very slight change to
+another)!
+
+This extremely small delta between the rebel edition and the main one will
+make it trivial to maintain it as a separate branch, regardless of what other
+changes happen in the mainline, because I honestly don't see rebel merging
+into the mainline.
+
+Yet ;-)
+
+Here are the **rebel semantics**, with changes from the "main" one in bold:
+
+>   the first matching refex that has the permission you're looking for (`W`
+>   or `+`) **or a minus (`-`)**, results in success **or failure,
+>   respectively**.  A fallthrough **also** results in failure
+
+So the example we started with becomes, in the rebel edition:
+
+        RW refs/tags/v[0-9].*   = bruce
+        -  refs/tags/v[0-9].*   = @staff
+        RW refs/tags            = @staff
+
+And here's how it works:
+
+  * for non-version tags, only the 3rd rule matches, so anyone on staff can
+    push them
+  * for version tags by bruce, the first rule matches so he can push them
+  * for version tags by staffers *other than bruce*, the second rule matches
+    before the third one, and it has a `-` as the permission, so the push
+    fails

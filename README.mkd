@@ -3,6 +3,27 @@
 >   [Update 2009-10-28: apart from all the nifty new features, there's now an
 >   "easy install" script in the src directory.  This script can be used to
 >   install as well as upgrade a gitolite install.  Please see the INSTALL
+
+>   ----
+
+>   ***REBEL FORK WARNING***
+
+>   The paranoid half of Sitaram's brain would like to warn you that the other
+>   half rebelled and created this fork.
+
+>   1.  please read the "design choices" section in the [faqs, tips, etc]
+>       [fted] document for background
+>   2.  please read the comments in the example.conf file carefully before
+>       creating your own config file
+>   3.  please test your configuration carefully
+>   4.  if you still have problems and contact me, please mention right up
+>       front that you're using the ***rebel edition***; makes it easier to
+>       troubleshoot
+
+[fted]: http://github.com/sitaramc/gitolite/blob/rebel/doc/3-faq-tips-etc.mkd
+
+----
+
 >   document in the doc directory for details]
 
 ----

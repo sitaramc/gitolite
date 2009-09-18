@@ -186,7 +186,7 @@ sub parse_conf_file
             @repos = expand_list ( @repos );
         }
         # actual permission line
-        elsif (/^(R|RW|RW\+) (.* )?= (.+)/)
+        elsif (/^(-|R|RW|RW\+) (.* )?= (.+)/)
         {
             my $perms = $1;
             my @refs; @refs = split(' ', $2) if $2;
