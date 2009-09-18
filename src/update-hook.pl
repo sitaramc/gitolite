@@ -58,13 +58,17 @@ $perm = '+' if $ref =~ m(refs/tags/) and $oldsha ne ('0' x 40);
 $perm = '+' if $oldsha ne $merge_base;
 
 my @allowed_refs;
-push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$perm}{$ENV{GL_USER}} || [] };
-push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$perm}{'@all'} || [] };
-push @allowed_refs, "$PERSONAL/$ENV{GL_USER}/" if $PERSONAL;
-for my $refex (@allowed_refs)
-# refex?  sure -- a regex to match a ref against :)
+# personal stuff -- right at the start in the new regime, I guess!
+push @allowed_refs, { "$PERSONAL/$ENV{GL_USER}/" => "RW+" } if $PERSONAL;
+# we want specific perms to override @all, so they come first
+push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$ENV{GL_USER}} || [] };
+push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{'@all'} || [] };
+for my $ar (@allowed_refs)
 {
-    if ($ref =~ /$refex/)
+    my $refex = (keys %$ar)[0];
+    # refex?  sure -- a regex to match a ref against :)
+    next unless $ref =~ /$refex/;
+    if ($ar->{$refex} =~ /\Q$perm/)
     {
         # if log failure isn't important enough to block pushes, get rid of
         # all the error checking
@@ -72,9 +76,9 @@ for my $refex (@allowed_refs)
             or die "open log failed: $!\n";
         print $log_fh "$ENV{GL_TS}  $perm\t" .
             substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
-            "\t$ENV{GL_REPO}\t$ref\t$ENV{GL_USER}\n";
+            "\t$ENV{GL_REPO}\t$ref\t$ENV{GL_USER}\t$refex\n";
         close $log_fh or die "close log failed: $!\n";
         exit 0;
     }
 }
-exit 1;
+die "$perm $ref $ENV{GL_USER} DENIED by fallthru\n";

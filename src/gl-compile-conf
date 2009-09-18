@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
+$Data::Dumper::Indent = 1;
 
 # === add-auth-keys ===
 
@@ -146,8 +147,7 @@ while (<$conf_fh>)
     # actual permission line
     elsif (/^(R|RW|RW\+) (.* )?= (.+)/)
     {
-        # split perms to separate out R, W, and +
-        my @perms = split //, $1;
+        my $perms = $1;
         my @refs; @refs = split(' ', $2) if $2;
         my @users = split ' ', $3;
 
@@ -165,11 +165,16 @@ while (<$conf_fh>)
         # ok, we can finally populate the %repos hash
         for my $repo (@repos)       # each repo in the current stanza
         {
-            for my $perm (@perms)
+            for my $user (@users)
             {
-                for my $user (@users)
+                # for 1st level check (see faq/tips doc)
+                $repos{$repo}{R}{$user} = 1 if $perms =~ /R/;
+                $repos{$repo}{W}{$user} = 1 if $perms =~ /W/;
+
+                # for 2nd level check, store each "ref, perms" pair in order
+                for my $ref (@refs)
                 {
-                    push @{ $repos{$repo}{$perm}{$user} }, @refs;
+                    push @{ $repos{$repo}{$user} }, { $ref => $perms };
                 }
             }
         }
