@@ -30,6 +30,11 @@ have to do it at a "quiet" time or something.
 
         src/install.pl
 
+5.  compile the config once again, in case the *internal* format of the
+    compiled config file (`$GL_CONF_COMPILED`) has changed
+
+        src/gl-compile-conf
+
 And you're done.
 
 ### upgrade notes for specific versions
