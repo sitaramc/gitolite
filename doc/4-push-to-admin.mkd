@@ -12,17 +12,24 @@ people new to git, or ssh or (worse) both.
 
 However, ***if*** you know git and ssh really, *really*, well and you know
 what you're doing, this is a pretty nice thing to have -- does make life
-easier, I admit.
+easier, I admit.  So, here is how to make PTA (hey nice acronym, just missing
+an "I") work on gitolite as well.
 
-So, here is how to make PTA (hey nice acronym, just missing an "I") work on
-gitolite as well.  But remember, there is NO SUPPORT!  Go away.  Leave me
-alone...  Anything else on gitolite I will help but not this, ok? :-)
+Note:
+
+  * unlike the rest of gitolite, I can't help you with this unless you
+    convince me very quickly it's not a layer 8 problem :-)
+
+  * here's a test to see if you should use this feature: after reading this
+    document, think about how you would switch back and forth between the
+    normal method and push-to-admin.  If you can't immediately see what you
+    would need to do, please don't use it :-)
 
 The instructions are presented as shell commands; they should be fairly
 obvious.  All paths are from the default `~/.gitolite.rc`; if you changed any,
 make the same changes below.
 
->   ----
+----
 
 >   **WARNING**: the "compilation" runs via a `post-update` hook.  Which, by
 >   definition, runs *after* the push has successfully completed.  As a
