@@ -69,9 +69,6 @@ normal way, since it's not empty anymore.
     to hurt anything.  This happens even in normal git, not just gitolite.
     [Update 2009-09-14; this has been fixed in git 1.6.4.3]
 
-  * once in a while, if you're feeling particularly BOFH-ish, take a look at
-    `$GL_ADMINDIR/log` :-)
-
   * if you specify a repo that is not at the top level `$REPO_BASE`, be sure
     to manually create the intermediate directories first.  For instance if
     you specify a new repo called "a/b/c" to the config file and "compile",
@@ -154,13 +151,17 @@ not unless you add a one-line patch to gitosis, plus a `post-receive` hook to
 every repository.
 
 With gitolite, there's a log file in `$GL_ADMINDIR` that contains lines like
-this [I have abbreviated the SHAs for brevity in this document; the actual log
-file will have all 40 characters]:
+this:
 
-    +: username reponame refs/heads/branchname d0188d1 c5c00b6
+    2009-09-19.10:24:37  +  b4e76569659939  4fb16f2a88d8b5  myrepo refs/heads/master       user2   refs/heads/master
 
 The "+" at the start indicates a non-fast forward update, in this case from
-d0188d1 to c5c00b6  So d0188d1 is the one to restore!  Can it get easier?
+b4e76569659939 to 4fb16f2a88d8b5.  So b4e76569659939 is the one to restore!
+Can it get easier?
+
+The other parts of the log line are the name of the repo, the refname being
+updated, the user updating it, and the refex pattern (from the config file)
+that matched, in case you need to debug the config file itself.
 
 #### one user, many keys
 
