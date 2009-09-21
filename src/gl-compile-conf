@@ -41,7 +41,7 @@ use Data::Dumper;
 #       common definitions
 # ----------------------------------------------------------------------------
 
-our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE);
+our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK);
 
 # now that this thing *may* be run via "push to admin", any errors have to
 # grab the admin's ATTENTION so he won't miss them among the other messages a
@@ -66,8 +66,8 @@ my $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);      # very simple patter
 my %groups = ();
 my %repos = ();
 
-# set a restrictive umask, just in case
-umask(0077);
+# set the umask before creating any files
+umask($REPO_UMASK);
 
 # ----------------------------------------------------------------------------
 #       subroutines

@@ -16,6 +16,14 @@
 
 $REPO_BASE="repositories";
 
+# the default umask for repositories is 0077; change this if you run stuff
+# like gitweb and find it can't read the repos.  Please note the syntax;  the
+# leading 0 is required
+
+$REPO_UMASK = 0077;         # gets you 'rwx------'
+# $REPO_UMASK = 0027;       # gets you 'rwxr-x---'
+# $REPO_UMASK = 0022;       # gets you 'rwxr-xr-x'
+
 # --------------------------------------
 
 # I see no reason anyone may want to change the gitolite admin directory, but
