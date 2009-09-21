@@ -192,6 +192,13 @@ close $compiled_fh or die "$ATTN close compiled-conf failed: $!\n";
 # did not have that luxury, so it was forced to detect the first push and
 # create it then
 
+# but it turns out not everyone has "modern" gits :)
+my $git_version = `git --version`;
+my ($gv_maj, $gv_min, $gv_patchrel) = ($git_version =~ m/git version (\d+)\.(\d+)\.(\d+)/);
+die "$ATTN I can't understand $git_version\n" unless ($gv_maj >= 1);
+$git_version = $gv_maj*10000 + $gv_min*100 + $gv_patchrel;  # now it's "normalised"
+my $git_too_old = 0;
+
 # repo-base needs to be an absolute path for this loop to work right
 # so if it was not already absolute, prefix $HOME.
 my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
@@ -202,12 +209,18 @@ for my $repo (keys %repos)
     {
         mkdir("$repo.git") or die "$ATTN mkdir $repo.git failed: $!\n";
         wrap_chdir("$repo.git");
-        system("git init --bare");
+        system("git --bare init");
         system("cp $GL_ADMINDIR/src/update-hook.pl hooks/update");
         chmod 0755, "hooks/update";
         wrap_chdir("$repo_base_abs");
+        $git_too_old++ if $git_version < 10602;     # that's 1.6.2 to you
     }
 }
+warn "\n\t\t***** WARNING *****\n" .
+    "\tyour git version is older than 1.6.2\n" .
+    "\tgitolite will work but you MUST read the section on\n" .
+    "\t\"git version dependency\" in doc/3-faq-tips-etc.mkd\n"
+    if $git_too_old;
 
 # ----------------------------------------------------------------------------
 #       "compile" ssh authorized_keys

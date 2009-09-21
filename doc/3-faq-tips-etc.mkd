@@ -3,6 +3,7 @@
 In this document:
 
   * common errors and mistakes
+  * git version dependency
   * other errors, warnings, notes...
   * differences from gitosis
       * two levels of access rights checking
@@ -24,6 +25,35 @@ In this document:
     what `$REPO_BASE` is set to and thinks he has to provide that prefix on
     the client side also :-)  In fact gitolite prepends `$REPO_BASE` when it
     is required anyway, so you shouldn't do the same thing!
+
+### git version dependency
+
+Here's a workaround for a version dependency that the normal flow of gitolite
+has.
+
+When you edit your config file to create a new repo, and run
+`src/gl-compile-conf`, gitolite creates an empty, bare repo for you.
+Normally, you're expected to clone this on the client side, and start working
+-- make your first commit(s), then push, etc.
+
+However, cloning an empty repo requires a server side git version that is at
+least 1.6.2.  Gitolite detects this when creating a repo, and warns you.
+
+The workaround is to use the older (gitosis-style) method on the client:
+create an empty repo locally, make a commit or two, set an "origin" remote,
+and then push.  Something like:
+
+    mkdir my-new-project
+    cd    my-new-project
+    git init
+    git commit --allow-empty -m 'Initial repository'
+    # or, if your client side git is too old for --allow-empty, just make some
+    # files, "git add" them, then "git commit"
+    git remote add origin git@gitolite-server:my-new-project.git
+    git push origin master:master
+
+Once this is done, the repo is available for cloning by anyone else in the
+normal way, since it's not empty anymore.
 
 ### other errors, warnings, notes...
 
