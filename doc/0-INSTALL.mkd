@@ -13,9 +13,19 @@ A major objective is to allow use by people without root access, permissions
 to create other userids, etc.  Even if you have root, please add a user just
 for gitolite and do all this from that user.
 
-### quick install
+### getting a tar file from a clone
 
-  * cd to the directory where you unpacked the source
+You can clone the repo from github, then execute a make command to extract a
+tar file of the branch you want.  Please use the make command, not a plain
+"git archive".  The comments in the `Makefile` will explain why.
+
+    git clone git://github.com/sitaramc/gitolite.git
+    make master.tar
+    # or maybe "make rebel.tar" or "make pu.tar"
+
+### quick install from tar file
+
+  * make a temp directory somewhere, cd to it, and unpack the tar file
   * run `src/install.pl` and follow the prompts
 
 **When you are told to edit some file, please read the comments in the file**.
