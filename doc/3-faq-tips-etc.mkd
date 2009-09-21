@@ -59,7 +59,7 @@ normal way, since it's not empty anymore.
 
   * cloning an empty repo is only possible with clients greater than 1.6.2.
     So at least one of your clients needs to have a recent git.  Once at least
-    one commit has been made, older clients can also use it.
+    one commit has been made, older clients can also use it
 
   * when you clone an empty repo, git seems to complain about the remote
     hanging up or something.  I have no idea what that is, but it doesn't seem
@@ -81,7 +81,10 @@ normal way, since it's not empty anymore.
     automatically be committed.  This is a simple safety net in case you
     accidentally delete the whole config or something.  Also see
     [4-push-to-admin.mkd](http://github.com/sitaramc/gitolite/blob/pu/doc/4-push-to-admin.mkd)
-    if you really know what you're doing and want "push to admin".
+    if you really know what you're doing and want "push to admin"
+
+  * gitweb not able to read your repos?  You can change the umask for newly
+    created repos to something more relaxed -- see the `~/.gitolite.rc` file
 
 ### differences from gitosis
 
