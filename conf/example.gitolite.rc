@@ -24,6 +24,11 @@ $REPO_UMASK = 0077;         # gets you 'rwx------'
 # $REPO_UMASK = 0027;       # gets you 'rwxr-x---'
 # $REPO_UMASK = 0022;       # gets you 'rwxr-xr-x'
 
+# part of the setup of gitweb is a variable called $projects_list (please see
+# gitweb documentation for more on this).  Set this to the same value:
+
+$PROJECTS_LIST = "/home/git/projects.list";
+
 # --------------------------------------
 
 # I see no reason anyone may want to change the gitolite admin directory, but

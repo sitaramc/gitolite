@@ -38,7 +38,11 @@ that:
 
   * no one in $DAYJOB type environments will use or approve access methods
     that work without any authentication, so I didn't need gitweb/daemon
-    support in the tool or in the config file
+    support in the tool or in the config file.
+
+    Update 2009-09-24: I don't use this feature but someone wanted it, so I
+    added it... see the "faq, tips, etc" document for more
+
   * the idea that you admin it by pushing to a special repo is nice, but not
     really necessary because of how rarely these changes are made, especially
     considering how much code is involved in that piece

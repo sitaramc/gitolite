@@ -42,6 +42,12 @@ And you're done.
 If any extra steps beyond the generic ones above are needed, they will be
 listed here, newest first.
 
+#### upgrading from 8217ef9
+
+Between 8217ef9 and this version, gitolite learnt to handle gitweb/daemon
+access.  As a result, the rc file acquired a new variable, `$PROJECTS_LIST`,
+which you have to set to whatever your gitweb installation requires.
+
 #### upgrading from 86faae4
 
 Between 86faae4 and this version, gitolite had a *major* change in the

@@ -1,5 +1,7 @@
 # migrating from gitosis to gitolite
 
+[TODO: make the migration tool fix up gitweb and daemon control also...]
+
 Migrating from gitosis to gitolite is pretty easy, because the basic design is
 the same.  The differences are:
 

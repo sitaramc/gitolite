@@ -6,8 +6,10 @@ In this document:
   * git version dependency
   * other errors, warnings, notes...
   * differences from gitosis
+      * simpler syntax
       * two levels of access rights checking
       * error checking the config file
+      * easier to specify gitweb/daemon access
       * built-in logging
       * one user, many keys
       * who am I?
@@ -92,6 +94,49 @@ Apart from the big ones listed in the top level README, and subjective ones
 like "better config file format", there are some small, but significant and
 concrete, differences from gitosis.
 
+#### simpler syntax
+
+The basic syntax is simpler and cleaner but it goes beyond that: **you can
+specify access in bits and pieces**, even if they overlap.
+
+Some access needs are best grouped by repo, some by username, and some by
+both.  So just do all of them, and gitolite will combine all the access lists!
+Here's an example:
+
+    # define groups of people
+    @bosses     = phb1 phb2 phb3
+    @devs       = dev1 dev2 dev3
+    @interns    = int1 int2 int3
+
+    # define groups of projects
+    @open       = git gitolite linux rakudo
+    @closed     = c1 c2 c3
+    @topsecret  = ts1 ts2 ts3
+
+    # all bosses have read access to all projects
+    repo @open @closed @topsecret
+        R   =   @bosses
+
+    # everyone has read access to "open" projects
+    repo @open
+        R   =   @bosses @devs @interns
+
+    [...or any other combination you want...]
+
+    # later in the file:
+
+    # specify access for individual repos (like RW, RW+, etc)
+    repo c1
+        [...]
+
+    [...etc...]
+
+If you notice that `@bosses` are given read access to `@open` via both rules,
+do not worry that this causes some duplication or inefficiency.  It doesn't
+:-)
+
+See the "specify gitweb/daemon access" section below for one more example.
+
 #### two levels of access rights checking
 
 Gitolite has two levels of access checks.  The **first check** is what I will
@@ -133,6 +178,38 @@ was denied.
 In gitolite, you have to "compile" the config file first (this step takes the
 place of the commit+push in gitosis), and keyword typos *are* caught so you
 know right away.
+
+#### easier to specify gitweb/daemon access
+
+Specifying gitweb and/or daemon access for a repo is simple: give "read"
+permissions to two special usernames: `gitweb` and `daemon`.
+
+You can also keep these pieces separate from the detailed, branch level access
+for each repo, if you like, since you can write the access control specs in
+bits and pieces.  Here's an example, using short repo names for convenience:
+
+    # maybe near the top of the file, for ease of access:
+
+    @only_web       = r1 r2 r3
+    @only_daemon    = r4 r5 r6
+    @web_and_daemon = r7 r8 r9
+
+    repo @only_web
+        R   = gitweb
+    repo @only_daemon
+        R   = daemon
+    repo @web_and_daemon
+        R   = gitweb
+        R   = daemon
+
+    # ...maybe much later in the file:
+
+    repo r1
+        # normal developer access lists for r1 and its branches/tags in the
+        # usual way
+
+    repo r2
+    # ...and so on...
 
 #### built-in logging
 

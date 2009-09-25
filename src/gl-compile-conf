@@ -15,6 +15,11 @@ $Data::Dumper::Indent = 1;
 #       (gl-)update hook need this, and it seems easier to do this than
 #       replicate the parsing code in both those places.  As a bonus, it's
 #       probably more efficient.
+# (3) - finally does what I have resisted doing all along -- handle gitweb and
+#       git-daemon access.  It won't *setup* gitweb/daemon for you -- you have
+#       to that yourself.  What this does is make sure that "repo.git"
+#       contains the file "git-daemon-export-ok" (for daemon case) and the
+#       line "repo.git" exists in the "projects.list" file (for gitweb case).
 
 # how run:      manual, by GL admin
 # when:
@@ -42,7 +47,7 @@ $Data::Dumper::Indent = 1;
 #       common definitions
 # ----------------------------------------------------------------------------
 
-our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK);
+our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST);
 
 # now that this thing *may* be run via "push to admin", any errors have to
 # grab the admin's ATTENTION so he won't miss them among the other messages a
@@ -226,6 +231,73 @@ warn "\n\t\t***** WARNING *****\n" .
     "\tgitolite will work but you MUST read the section on\n" .
     "\t\"git version dependency\" in doc/3-faq-tips-etc.mkd\n"
     if $git_too_old;
+
+# ----------------------------------------------------------------------------
+#       handle gitweb and daemon
+# ----------------------------------------------------------------------------
+
+# How you specify gitweb and daemon access is quite different from gitosis.  I
+# just assume you'll never have any *real* users called "gitweb" or "daemon"
+# :-)  These are now "pseduo users" -- giving them "R" access to a repo is all
+# you have to do
+
+wrap_chdir("$repo_base_abs");
+
+# get the current project list; note that the file may not yet exist if no
+# gitweb access has been specified so far
+my %projlist = ();
+if (-f $PROJECTS_LIST) {
+    my $projlist_fh = wrap_open( "<", $PROJECTS_LIST);
+    while(<$projlist_fh>) {
+        chomp;
+        $projlist{$_} = 1;
+    }
+    close $projlist_fh;
+}
+my $projlist_changed = 0;
+
+# daemons first...
+for my $repo (sort keys %repos) {
+    my $export_ok = "$repo.git/git-daemon-export-ok";
+    if ($repos{$repo}{'R'}{'daemon'}) {
+        unless (-f $export_ok) {
+            system("touch $export_ok");
+            print STDERR "daemon add $repo.git\n";
+        }
+    } else {
+        if (-f $export_ok) {
+            unlink($export_ok);
+            print STDERR "daemon del $repo.git\n";
+        }
+    }
+}
+
+# ...then gitwebs
+for my $repo (sort keys %repos) {
+    if ($repos{$repo}{'R'}{'gitweb'}) {
+        unless ($projlist{"$repo.git"}) {
+            # not in the old list; add it to the new one
+            $projlist{"$repo.git"} = 1;
+            $projlist_changed = 1;
+            print STDERR "gitweb add $repo.git\n";
+        }
+    } else {
+        if ($projlist{"$repo.git"}) {
+            # delete it from new list
+            delete $projlist{"$repo.git"};
+            $projlist_changed = 1;
+            print STDERR "gitweb del $repo.git\n";
+        }
+    }
+}
+
+# has there been a change?
+if ($projlist_changed) {
+    print STDERR "updating gitweb project list $PROJECTS_LIST\n";
+    my $projlist_fh = wrap_open( ">", $PROJECTS_LIST);
+    print $projlist_fh join("\n", sort keys %projlist), "\n" if %projlist;
+    close $projlist_fh;
+}
 
 # ----------------------------------------------------------------------------
 #       "compile" ssh authorized_keys
