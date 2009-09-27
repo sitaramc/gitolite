@@ -71,6 +71,7 @@ my $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);      # very simple patter
 # groups can now represent user groups or repo groups
 my %groups = ();
 my %repos = ();
+my %user_list = ();     # only to catch lint; search for "lint" below
 
 # set the umask before creating any files
 umask($REPO_UMASK);
@@ -172,6 +173,8 @@ while (<$conf_fh>)
         {
             for my $user (@users)
             {
+                $user_list{$user}++;    # only to catch lint, see later
+
                 # for 1st level check (see faq/tips doc)
                 $repos{$repo}{R}{$user} = 1 if $perms =~ /R/;
                 $repos{$repo}{W}{$user} = 1 if $perms =~ /W/;
@@ -195,7 +198,7 @@ print $compiled_fh Data::Dumper->Dump([\%repos], [qw(*repos)]);
 close $compiled_fh or die "$ATTN close compiled-conf failed: $!\n";
 
 # ----------------------------------------------------------------------------
-#       any new repos created?
+#       any new repos to be created?
 # ----------------------------------------------------------------------------
 
 # modern gits allow cloning from an empty repo, so we just create it.  Gitosis
@@ -291,7 +294,7 @@ for my $repo (sort keys %repos) {
     }
 }
 
-# has there been a change?
+# has there been a change in the gitweb projects list?
 if ($projlist_changed) {
     print STDERR "updating gitweb project list $PROJECTS_LIST\n";
     my $projlist_fh = wrap_open( ">", $PROJECTS_LIST);
@@ -317,12 +320,29 @@ while (<$authkeys_fh>)
 # options, in the standard ssh authorized_keys format), then the "end" line.
 print $newkeys_fh "# gitolite start\n";
 wrap_chdir($GL_KEYDIR);
-for my $pubkey (glob("*.pub"))
+for my $pubkey (glob("*"))
 {
+    # lint check 1
+    unless ($pubkey =~ /\.pub$/)
+    {
+        print STDERR "WARNING: pubkey files should end with \".pub\", ignoring $pubkey\n";
+        next;
+    }
     my $user = $pubkey; $user =~ s/(\@.+)?\.pub$//;
+    # lint check 2
+    print STDERR "WARNING: pubkey $pubkey exists but user $user not in config\n"
+        unless $user_list{$user};
+    $user_list{$user} = 'has pubkey';
     print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";
     print $newkeys_fh `cat $pubkey`;
 }
+# lint check 3; a little more severe than the first two I guess...
+for my $user (sort keys %user_list)
+{
+    next if $user eq '@all' or $user_list{$user} eq 'has pubkey';
+    print STDERR "$ATTN user $user in config, but has no pubkey!\n";
+}
+
 print $newkeys_fh "# gitolite end\n";
 close $newkeys_fh or die "$ATTN close newkeys failed: $!\n";
 

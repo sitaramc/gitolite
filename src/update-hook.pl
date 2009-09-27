@@ -81,4 +81,4 @@ for my $ar (@allowed_refs)
         exit 0;
     }
 }
-die "$perm $ref $ENV{GL_USER} DENIED by fallthru\n";
+die "$perm $ref $ENV{GL_REPO} $ENV{GL_USER} DENIED by fallthru\n";

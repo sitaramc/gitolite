@@ -51,7 +51,7 @@ my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 # ----------------------------------------------------------------------------
 
 # SSH_ORIGINAL_COMMAND must exist.  Since we also captured $user, we print
-# that in the message so people saying "ssh git@server" can see which gitosis
+# that in the message so people saying "ssh git@server" can see which gitolite
 # user he is being recognised as
 my $cmd = $ENV{SSH_ORIGINAL_COMMAND}
     or die "no SSH_ORIGINAL_COMMAND?  I'm not a shell, $user!\n";
