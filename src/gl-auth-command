@@ -56,11 +56,6 @@ my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 my $cmd = $ENV{SSH_ORIGINAL_COMMAND}
     or die "no SSH_ORIGINAL_COMMAND?  I'm not a shell, $user!\n";
 
-# this check is largely for comic value if someone tries something outrageous;
-# $cmd gets split and the pieces examined more thoroughly later anyway
-die "$cmd???  you're a funny guy...\n"
-    if $cmd =~ /[<>&|;\n]/;
-
 # split into command and arguments; the pattern allows old style as well as
 # new style: "git-subcommand arg" or "git subcommand arg", just like gitosis
 # does, although I'm not sure how necessary that is
@@ -70,9 +65,10 @@ die "$cmd???  you're a funny guy...\n"
 # including the single quotes
 
 my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*).git'/);
-die "Sorry, I don't like the command you gave me: $cmd\n"
-    unless ( ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS )
-        and  $repo =~ $REPONAME_PATT );
+die "bad command: $cmd.  Make sure the repo name is exactly\n" .
+    "as in your config (no extra stuff before the name), plus a \".git\" at the end\n"
+    unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS )
+        and  $repo and   $repo =~ $REPONAME_PATT );
 
 # ----------------------------------------------------------------------------
 #       first level permissions check
