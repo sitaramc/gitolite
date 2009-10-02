@@ -119,79 +119,85 @@ sub expand_list
 #       "compile" GL conf
 # ----------------------------------------------------------------------------
 
-my $conf_fh = wrap_open( "<", $GL_CONF );
-
-# the syntax is fairly simple, so we parse it inline
-
-my @repos;
-while (<$conf_fh>)
+sub parse_conf_file
 {
-    # normalise whitespace; keeps later regexes very simple
-    s/=/ = /;
-    s/\s+/ /g;
-    s/^ //;
-    s/ $//;
-    # kill comments
-    s/#.*//;
-    # and blank lines
-    next unless /\S/;
+    my ($conffile) = @_;
+    my $conf_fh = wrap_open( "<", $conffile );
 
-    # user or repo groups
-    if (/^(@\S+) = (.*)/)
+    # the syntax is fairly simple, so we parse it inline
+
+    my @repos;
+    while (<$conf_fh>)
     {
-        do { $groups{$1}{$_} = 1 } for ( expand_list( split(' ', $2) ) );
-        # again, we take the more "relaxed" pattern
-        die "$ATTN bad group $1\n" unless $1 =~ $REPONAME_PATT;
-    }
-    # repo(s)
-    elsif (/^repo (.*)/)
-    {
-        # grab the list and expand any @stuff in it
-        @repos = split ' ', $1;
-        @repos = expand_list ( @repos );
-    }
-    # actual permission line
-    elsif (/^(R|RW|RW\+) (.* )?= (.+)/)
-    {
-        my $perms = $1;
-        my @refs; @refs = split(' ', $2) if $2;
-        my @users = split ' ', $3;
+        # normalise whitespace; keeps later regexes very simple
+        s/=/ = /;
+        s/\s+/ /g;
+        s/^ //;
+        s/ $//;
+        # kill comments
+        s/#.*//;
+        # and blank lines
+        next unless /\S/;
 
-        # if no ref is given, this PERM applies to all refs
-        @refs = qw(refs/.*) unless @refs;
-        # fully qualify refs that dont start with "refs/"; prefix them with
-        # "refs/heads/"
-        @refs = map { m(^refs/) or s(^)(refs/heads/); $_ } @refs;
-
-        # expand the user list, unless it is just "@all"
-        @users = expand_list ( @users )
-            unless (@users == 1 and $users[0] eq '@all');
-        do  { die "$ATTN bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
-
-        # ok, we can finally populate the %repos hash
-        for my $repo (@repos)       # each repo in the current stanza
+        # user or repo groups
+        if (/^(@\S+) = (.*)/)
         {
-            for my $user (@users)
+            do { $groups{$1}{$_} = 1 } for ( expand_list( split(' ', $2) ) );
+            # again, we take the more "relaxed" pattern
+            die "$ATTN bad group $1\n" unless $1 =~ $REPONAME_PATT;
+        }
+        # repo(s)
+        elsif (/^repo (.*)/)
+        {
+            # grab the list and expand any @stuff in it
+            @repos = split ' ', $1;
+            @repos = expand_list ( @repos );
+        }
+        # actual permission line
+        elsif (/^(R|RW|RW\+) (.* )?= (.+)/)
+        {
+            my $perms = $1;
+            my @refs; @refs = split(' ', $2) if $2;
+            my @users = split ' ', $3;
+
+            # if no ref is given, this PERM applies to all refs
+            @refs = qw(refs/.*) unless @refs;
+            # fully qualify refs that dont start with "refs/"; prefix them with
+            # "refs/heads/"
+            @refs = map { m(^refs/) or s(^)(refs/heads/); $_ } @refs;
+
+            # expand the user list, unless it is just "@all"
+            @users = expand_list ( @users )
+                unless (@users == 1 and $users[0] eq '@all');
+            do  { die "$ATTN bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
+
+            # ok, we can finally populate the %repos hash
+            for my $repo (@repos)       # each repo in the current stanza
             {
-                $user_list{$user}++;    # only to catch lint, see later
-
-                # for 1st level check (see faq/tips doc)
-                $repos{$repo}{R}{$user} = 1 if $perms =~ /R/;
-                $repos{$repo}{W}{$user} = 1 if $perms =~ /W/;
-
-                # for 2nd level check, store each "ref, perms" pair in order
-                for my $ref (@refs)
+                for my $user (@users)
                 {
-                    push @{ $repos{$repo}{$user} }, { $ref => $perms };
+                    $user_list{$user}++;    # only to catch lint, see later
+
+                    # for 1st level check (see faq/tips doc)
+                    $repos{$repo}{R}{$user} = 1 if $perms =~ /R/;
+                    $repos{$repo}{W}{$user} = 1 if $perms =~ /W/;
+
+                    # for 2nd level check, store each "ref, perms" pair in order
+                    for my $ref (@refs)
+                    {
+                        push @{ $repos{$repo}{$user} }, { $ref => $perms };
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        die "$ATTN can't make head or tail of '$_'\n";
+        else
+        {
+            die "$ATTN can't make head or tail of '$_'\n";
+        }
     }
 }
+
+parse_conf_file($GL_CONF);
 
 my $compiled_fh = wrap_open( ">", $GL_CONF_COMPILED );
 print $compiled_fh Data::Dumper->Dump([\%repos], [qw(*repos)]);
