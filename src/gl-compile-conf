@@ -104,7 +104,7 @@ sub expand_list
         {
             die "$ATTN undefined group $item\n" unless $groups{$item};
             # add those names to the list
-            push @new_list, @{ $groups{$item} };
+            push @new_list, sort keys %{ $groups{$item} };
         }
         else
         {
@@ -139,7 +139,7 @@ while (<$conf_fh>)
     # user or repo groups
     if (/^(@\S+) = (.*)/)
     {
-        push @{ $groups{$1} }, expand_list( split(' ', $2) );
+        do { $groups{$1}{$_} = 1 } for ( expand_list( split(' ', $2) ) );
         # again, we take the more "relaxed" pattern
         die "$ATTN bad group $1\n" unless $1 =~ $REPONAME_PATT;
     }
