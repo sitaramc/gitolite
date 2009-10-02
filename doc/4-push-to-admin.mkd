@@ -70,20 +70,15 @@ repos they play havoc with my git commands, so this is how I do it)
     GIT_WORK_TREE=/home/git/.gitolite git add conf/gitolite.conf keydir
     GIT_WORK_TREE=/home/git/.gitolite git commit -am start
 
-Now we have to setup the post-update hook for push-to-admin to work.  The
-hook should (1) make a forced checkout in the "live" config directory (which
-is `~/.gitolite`), and (2) run the compile script.  So we create a hook with
-the appropriate code in it, and then make it executable
+Now we have to setup the post-update hook for push-to-admin to work.  The hook
+should (1) make a forced checkout in the "live" config directory (which is
+`~/.gitolite`), and (2) run the compile script.
 
-    cat <<EOFPU > hooks/post-update
-    #!/bin/sh
+`src/pta-hook.sh` has the code you need; just copy it to the right place with
+the right name and make sure it is executable:
 
-    GIT_WORK_TREE=/home/git/.gitolite git checkout -f
-
-    cd /home/git/.gitolite
-    src/gl-compile-conf
-    EOFPU
-
+    # (assuming pwd is still ~/repositories/gitolite-admin.git)
+    cp ~/.gitolite/src/pta-hook.sh hooks/post-update
     chmod +x hooks/post-update
 
 ----
