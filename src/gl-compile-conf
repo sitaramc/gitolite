@@ -339,7 +339,7 @@ for my $pubkey (glob("*"))
 # lint check 3; a little more severe than the first two I guess...
 for my $user (sort keys %user_list)
 {
-    next if $user eq '@all' or $user_list{$user} eq 'has pubkey';
+    next if $user =~ /^(gitweb|daemon|\@all)$/ or $user_list{$user} eq 'has pubkey';
     print STDERR "$ATTN user $user in config, but has no pubkey!\n";
 }
 
