@@ -1,0 +1,135 @@
+# delegating access control responsibilities
+
+[Thanks to jeromeag for forcing me to think through this...]
+
+### lots of repos, lots of users
+
+Gitolite tries to make it easy to manage access to lots of users and repos,
+exploiting commonalities wherever possible.  (The example under "simpler, more
+powerful syntax" [here][ml] should give you an idea).  As you can see, it lets
+you specify bits and pieces of the access control separately -- i.e., *all*
+the access specs for a certain repo need not be together; they can be
+scattered, which makes it easier to manage the sort of slice and dice needed
+in that example.
+
+[ml]: http://github.com/sitaramc/gitolite/blob/ml/update.mkd
+
+But eventually the config file will become too big.  If you let only one
+person have control, he could become a bottleneck.  If you give it to multiple
+people, they might make mistakes or stomp on each others' work accidentally.
+
+The best way is to divide up the config file and give parts of it to different
+people.  Ideally, we would delegate authority for *groups* of repos, not
+individual repos, otherwise it doesn't scale.
+
+It would also be nice if we could specify what repos can be delegated to a
+particular admin, and prevent him/her from specifying access control for any
+other repos.  This would be a nice "security" feature.
+
+### splitting up the config file into fragments
+
+To start with, recall that gitolite allows you to specify **groups** (of users
+or repos, same syntax).  So the basic idea is that the main config file
+(`~/.gitolite/conf/gitolite.conf` by default) will specify some repo groups:
+
+    # group your projects/repos however you want
+    @webbrowser_repos           = firefox lynx
+    @webserver_repos            = apache nginx
+    @malware_repos              = conficker storm
+
+    # any other config as usual, including access control lines for any of the
+    # above projects or groups
+
+Now just create these files (assuming default `$GL_ADMINDIR` location):
+
+    ~/.gitolite/conf/fragments/webbrowser_repos.conf
+    ~/.gitolite/conf/fragments/webserver_repos.conf
+    ~/.gitolite/conf/fragments/malware_repos.conf
+
+Within each of those files put in whatever access control rules you want for
+the repos that are members of that group.  Notice that the basenames of the
+files must be exactly the same as the name of the corresponding repo group in
+the main config file.
+
+For instance, `~/.gitolite/conf/fragments/webbrowser_repos.conf` would only
+contain access control for firefox and lynx.  If it referenced any other repo
+(say "storm") those lines would be ignored (and a warning message generated).
+
+When you run the compile script (`src/gl-compile-conf`), the **net effect is
+as if you appended the contents of all the "fragment" files, in alphabetical
+order, to the bottom of the main file**.
+
+(Except of course, while processing a fragment, it will ignore attempts to set
+permissions for repos that are not members of the same-named "repo group").
+
+And that's basically it, in the simplest usage.
+
+["But WAIT, there's MORE!"][bwtm]
+
+[bwtm]: http://en.wikipedia.org/wiki/Ed_Valenti#But_Wait.21_There.27s_More
+
+### delegating ownership of fragments
+
+Splitting up the file does help, but there's also that little security issue
+-- anyone can make any change to any "fragment", unless you (once again) go
+back to Unix permissions to keep them separate.
+
+Fixing that requires using "push-to-admin".
+
+The page on [push-to-admin][ptd] explains clearly how to set it up.  Unlike
+gitosis, I refuse to make it the default because it's a support nightmare.
+Don't get me wrong -- it's a great feature, and I use it myself, but the
+learning curve is too steep to make it *required*.
+
+[ptd]: http://github.com/sitaramc/gitolite/blob/pu/doc/4-push-to-admin.mkd
+
+So, having setup push-to-admin, you add these lines to the main config file,
+assuming Alice is in charge of all web browser development projects, Bob takes
+care of web servers, and Mallory, as [tradition][abe] dictates, is in charge
+of malware ;-)
+
+[abe]: http://en.wikipedia.org/wiki/Alice_and_Bob#List_of_characters
+
+    # you probably added these two lines while setting up push-to-admin
+    repo gitolite-admin
+        RW+                     = sitaram
+    # now add these 3 lines
+        RW  webbrowser_repos    = alice
+        RW  webserver_repos     = bob
+        RW  malware_repos       = mallory
+
+As you can see, for each repo group you want to delegate authority over,
+there's a **branch** in the `gitolite-admin` repo with the same name.  Whoever
+has write access to that branch, is allowed to define rules for repos in the
+corresponding "repo group".
+
+In other words, **we use gitolite's per-branch permissions to "enforce" the
+separation between the delegated configs!**
+
+Here's how to use this in practice:
+
+  * Alice clones the `gitolite-admin` repo, creates (if not already created) and
+    checks out a new branch called `webbrowser_repos`, and adds a file called
+    `conf/fragments/webbrowser_repos.conf` in that branch
+
+      * (the rest of the contents of that branch do not matter; she can keep
+        all the other files or delete all of them -- it doesn't make any
+        difference.  Only that one specific file is used).
+
+  * she writes in this file any access control rules for the "firefox" and
+    "lynx" repos.  She should not write access rules for any other project --
+    they will be ignored
+
+  * Alice then commits and pushes this branch to the `gitolite-admin` repo
+
+Naturally, a successful push invokes the post-update hook that you installed
+(while setting up [push-to-admin][ptd]).  Here's what it does:
+
+  * for each branch, say `br`, of the `gitolite-admin` repo, it checks if
+    there is a file called `conf/fragments/br.conf`
+
+  * if there is, it extracts it and copies it with the exact same name and
+    path, into the `$GL_ADMINDIR` directory (`~/.gitolite` by default)
+
+After that, it runs the compile script, and things work the same as described
+in the previous section.

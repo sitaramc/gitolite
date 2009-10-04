@@ -41,51 +41,60 @@ make the same changes below.
 
 ----
 
-First, on the server, log on to the `git` userid, add a new repo called
-`gitolite-admin` to the config file, give yourself `RW` or `RW+` rights to it,
-and "compile":
+#### server side setup
 
-    cd ~/.gitolite
-    vim conf/gitolite.conf      # add gitolite-admin repo, etc
-    src/gl-compile-conf
+1.  First, on the server, log on to the `git` userid, add a new repo called
+    `gitolite-admin` to the config file, give yourself `RW` or `RW+` rights to it,
+    and "compile":
 
-Now, if you look at the "compile" script, it has an *automatic* local commit
-inside, just for safety, which kicks in every time you compile.  This only
-works if it finds a ".git" directory, and it was designed as an "automatic
-backup/safety net" type of thing, in case I accidentally deleted the whole
-config file or something.
+        cd ~/.gitolite
+        vim conf/gitolite.conf      # add gitolite-admin repo, etc
+        src/gl-compile-conf
 
-We need to disable this, because now we have a *better* repo, one that is
-manually pushed, and presumably has proper commit messages!
+2.  Now, if you look at the "compile" script, it has an *automatic* local commit
+    inside, just for safety, which kicks in every time you compile.  This only
+    works if it finds a ".git" directory, and it was designed as an "automatic
+    backup/safety net" type of thing, in case I accidentally deleted the whole
+    config file or something.
 
-    mv .git .disable.git        # yeah it's a hack, sue me
+    We need to disable this, because now we have a *better* repo, one that is
+    manually pushed, and presumably has proper commit messages!
 
-Now the compile command created an empty, bare, "gitolite-admin" repo, so we
-seed it with the current contents of the config and keys.  (A note on the
-`GIT_WORK_TREE` variable: I avoid setting these variables in the normal way
-because I always forget to unset them later, and then when I `cd` to other
-repos they play havoc with my git commands, so this is how I do it)
+        mv .git .disable.git        # yeah it's a hack, sue me
 
-    cd ~/repositories/gitolite-admin.git
-    GIT_WORK_TREE=/home/git/.gitolite git add conf/gitolite.conf keydir
-    GIT_WORK_TREE=/home/git/.gitolite git commit -am start
+3.  Now the compile command created an empty, bare, "gitolite-admin" repo, so we
+    seed it with the current contents of the config and keys.  (A note on the
+    `GIT_WORK_TREE` variable: I avoid setting these variables in the normal way
+    because I always forget to unset them later, and then when I `cd` to other
+    repos they play havoc with my git commands, so this is how I do it)
 
-Now we have to setup the post-update hook for push-to-admin to work.  The hook
-should (1) make a forced checkout in the "live" config directory (which is
-`~/.gitolite`), and (2) run the compile script.
+        cd ~/repositories/gitolite-admin.git
+        GIT_WORK_TREE=/home/git/.gitolite git add conf/gitolite.conf keydir
+        GIT_WORK_TREE=/home/git/.gitolite git commit -am start
 
-`src/pta-hook.sh` has the code you need; just copy it to the right place with
-the right name and make sure it is executable:
+4.  Now we have to setup the post-update hook for push-to-admin to work.  The hook
+    should (1) make a forced checkout in the "live" config directory (which is
+    `~/.gitolite`), and (2) run the compile script.
 
-    # (assuming pwd is still ~/repositories/gitolite-admin.git)
-    cp ~/.gitolite/src/pta-hook.sh hooks/post-update
-    chmod +x hooks/post-update
+    `src/pta-hook.sh` has the code you need; just copy it to the right place with
+    the right name, change the first line if needed, and make it executable:
+
+        # (assuming pwd is still ~/repositories/gitolite-admin.git)
+        cp ~/.gitolite/src/pta-hook.sh hooks/post-update
+
+        # if you changed $GL_ADMINDIR in ~/.gitolite.conf, then edit the hooks
+        # and change the first line:
+        vim hooks/post-update
+
+        chmod +x hooks/post-update
 
 ----
 
-Now get to your workstation, and
+#### client side setup
 
-    git clone git@server:gitolite-admin.git
+1.  Now get to your workstation, and
 
-That's it, we're done.  You're in gitosis land as far as this is concerned
-now.  So knock yourself out.  Or lock yourself out... :-)
+        git clone git@server:gitolite-admin.git
+
+    That's it, we're done.  You're in gitosis land as far as this is concerned
+    now.  So knock yourself out.  Or lock yourself out... :-)

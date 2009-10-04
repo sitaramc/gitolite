@@ -9,6 +9,7 @@ In this document:
       * simpler syntax
       * two levels of access rights checking
       * error checking the config file
+      * delegating parts of the config file
       * easier to specify gitweb/daemon access
       * built-in logging
       * one user, many keys
@@ -178,6 +179,13 @@ was denied.
 In gitolite, you have to "compile" the config file first (this step takes the
 place of the commit+push in gitosis), and keyword typos *are* caught so you
 know right away.
+
+#### delegating parts of the config file
+
+You can now split up the config file and delegate the authority to specify
+access control for their own pieces.  See
+[doc/5-delegation.mkd](http://github.com/sitaramc/gitolite/blob/pu/doc/5-delegation.mkd)
+for details.
 
 #### easier to specify gitweb/daemon access
 
