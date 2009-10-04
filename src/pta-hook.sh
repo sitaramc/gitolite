@@ -7,8 +7,12 @@ export GL_ADMINDIR=/home/git/.gitolite
 # checkout the master branch to $GL_ADMINDIR
 GIT_WORK_TREE=$GL_ADMINDIR git checkout -f master
 
+# remove all fragments.  otherwise, you get spurious error messages when you
+# take away someone's delegation in the main config but the fragment is still
+# hanging around.  The ones that are valid will get re-created anyway
+rm -rf $GL_ADMINDIR/conf/fragments
 # collect all the delegated fragments
-mkdir -p $GL_ADMINDIR/conf/fragments
+mkdir  $GL_ADMINDIR/conf/fragments
 for br in $(git for-each-ref --format='%(refname:short)')
 do
     # skip master (duh!)
