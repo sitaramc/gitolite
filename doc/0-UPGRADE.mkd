@@ -35,6 +35,9 @@ have to do it at a "quiet" time or something.
 
         src/gl-compile-conf
 
+    (if you've already setup "push-to-admin", this step should be replaced by
+    a "git push".  Make a dummy commit if needed, to make the push happen).
+
 And you're done.
 
 ### upgrade notes for specific versions

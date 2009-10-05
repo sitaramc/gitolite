@@ -64,3 +64,9 @@ for my $repo (`find . -type d -name "*.git"`) {
     system("cp $GL_ADMINDIR/src/update-hook.pl $repo/hooks/update");
     chmod 0755, "$repo/hooks/update";
 }
+
+# oh and one of those repos is a bit more special and has an extra hook :)
+system("cp $GL_ADMINDIR/src/pta-hook.sh gitolite-admin.git/hooks/post-update");
+system("perl", "-i", "-p", "-e", "s(export GL_ADMINDIR=.*)(export GL_ADMINDIR=$GL_ADMINDIR)",
+    "gitolite-admin.git/hooks/post-update");
+chmod 0755, "gitolite-admin.git/hooks/post-update";

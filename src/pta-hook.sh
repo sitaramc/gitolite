@@ -16,7 +16,8 @@ mkdir  $GL_ADMINDIR/conf/fragments
 for br in $(git for-each-ref --format='%(refname:short)')
 do
     # skip master (duh!)
-    [[ $br == master ]] && continue
+    [ "$br" = "master" ] && continue
+
     # all other branches *should* contain a file called <branchname>.conf
     # inside conf/fragments; if so copy it
     if git show $br:conf/fragments/$br.conf > /dev/null 2>&1
