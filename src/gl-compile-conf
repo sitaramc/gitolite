@@ -68,10 +68,30 @@ my $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pt
 my $REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._/-]*$);     # very simple pattern
 my $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);      # very simple pattern
 
-# groups can now represent user groups or repo groups
+# groups can now represent user groups or repo groups.
+
+# $groups{group}{member} = "master" (or name of fragment file in which the
+# group is defined).
 my %groups = ();
+
+# %repos has two functions.
+
+# $repos{repo}{R|W}{user} = 1 if user has R (or W) permissions for at least
+# one branch in repo.  This is used by the "level 1 check" (see faq)
+
+# $repos{repo}{user} is a list of {ref, perms} pairs.  This is used by the
+# level 2 check.  In order to allow "exclude" rules, the order of rules now
+# matters, so what used to be entirely "hash of hash of hash" now has a list
+# in between :)
 my %repos = ();
-my %user_list = ();     # only to catch lint; search for "lint" below
+
+# <sigh>...  having been forced to use a list as described above, we lose some
+# efficiency due to the possibility of the same {ref, perms} pair showing up
+# multiple times for the same repo+user.  So...
+my %rurp_seen = ();
+
+# catch usernames<->pubkeys mismatches; search for "lint" below
+my %user_list = ();
 
 # set the umask before creating any files
 umask($REPO_UMASK);
@@ -210,7 +230,8 @@ sub parse_conf_file
                     # for 2nd level check, store each "ref, perms" pair in order
                     for my $ref (@refs)
                     {
-                        push @{ $repos{$repo}{$user} }, { $ref => $perms };
+                        push @{ $repos{$repo}{$user} }, { $ref => $perms }
+                            unless $rurp_seen{$repo}{$user}{$ref}{$perms}++;
                     }
                 }
             }
