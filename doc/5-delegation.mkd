@@ -19,14 +19,21 @@ person have control, he could become a bottleneck.  If you give it to multiple
 people, they might make mistakes or stomp on each others' work accidentally.
 
 The best way is to divide up the config file and give parts of it to different
-people.  Ideally, we would delegate authority for *groups* of repos, not
-individual repos, otherwise it doesn't scale.
+people.
 
-It would also be nice if we could specify what repos can be delegated to a
-particular admin, and prevent him/her from specifying access control for any
-other repos.  This would be a nice "security" feature.
+Ideally, we would delegate authority for *groups* of repos, not individual
+repos, otherwise it doesn't scale.  It would also be nice if we could prevent
+an admin from creating access rules for *any* repo in the system -- i.e., set
+limits on what repos he can control.  This would be a nice "security" feature.
+
+Delegation offers a way to do all that.  Note that delegated admins cannot
+create or remove users, not can they define new repos.  They can only define
+access control rules for a set of repos they have been given authority for.
 
 ### splitting up the config file into fragments
+
+It's easier to show how it all works with an example instead of long
+descriptions.
 
 To start with, recall that gitolite allows you to specify **groups** (of users
 or repos, same syntax).  So the basic idea is that the main config file
@@ -98,13 +105,19 @@ of malware ;-)
         RW  webserver_repos     = bob
         RW  malware_repos       = mallory
 
-As you can see, for each repo group you want to delegate authority over,
-there's a **branch** in the `gitolite-admin` repo with the same name.  Whoever
-has write access to that branch, is allowed to define rules for repos in the
-corresponding "repo group".
+    # you need these lines too -- they define what repos alice/bob/mallory are
+    # allowed to control
+    @webbrowser_repos           = firefox lynx
+    @webserver_repos            = apache nginx
+    @malware_repos              = conficker storm
 
-In other words, **we use gitolite's per-branch permissions to "enforce" the
-separation between the delegated configs!**
+**As you can see, for each repo group you want to delegate authority over,
+there's a *branch* in the `gitolite-admin` repo with the same name.  If you
+have write access to that branch, you are allowed to define rules for repos in
+that repo group.**
+
+In other words, we use gitolite's per-branch permissions to "enforce" the
+separation between the delegated configs!
 
 Here's how to use this in practice:
 
