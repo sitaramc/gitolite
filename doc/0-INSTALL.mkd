@@ -20,6 +20,7 @@ tar file of the branch you want.  Please use the make command, not a plain
 "git archive".  The comments in the `Makefile` will explain why.
 
     git clone git://github.com/sitaramc/gitolite.git
+    cd gitolite
     make master.tar
     # or maybe "make rebel.tar" or "make pu.tar"
 
