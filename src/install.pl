@@ -66,7 +66,10 @@ for my $repo (`find . -type d -name "*.git"`) {
 }
 
 # oh and one of those repos is a bit more special and has an extra hook :)
-system("cp $GL_ADMINDIR/src/pta-hook.sh gitolite-admin.git/hooks/post-update");
-system("perl", "-i", "-p", "-e", "s(export GL_ADMINDIR=.*)(export GL_ADMINDIR=$GL_ADMINDIR)",
-    "gitolite-admin.git/hooks/post-update");
-chmod 0755, "gitolite-admin.git/hooks/post-update";
+if ( -d "gitolite-admin.git/hooks" ) {
+    print STDERR "copying post-update hook to gitolite-admin repo...\n";
+    system("cp -v $GL_ADMINDIR/src/pta-hook.sh gitolite-admin.git/hooks/post-update");
+    system("perl", "-i", "-p", "-e", "s(export GL_ADMINDIR=.*)(export GL_ADMINDIR=$GL_ADMINDIR)",
+        "gitolite-admin.git/hooks/post-update");
+    chmod 0755, "gitolite-admin.git/hooks/post-update";
+}
