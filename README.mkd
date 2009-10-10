@@ -3,6 +3,10 @@
 >   [IMPORTANT: There is now an "upgrade" document in the "doc" directory;
 >   please read if upgrading gitolite]
 
+>   [Update 2009-10-10: apart from all the nifty new features, there's now an
+>   "easy install" script in the src directory.  Please see the INSTALL
+>   document in the doc directory for details]
+
 ----
 
 Gitolite is the bare essentials of gitosis, with a completely different

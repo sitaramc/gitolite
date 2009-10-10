@@ -1,6 +1,52 @@
 # installing gitolite
 
-### pre-requisites
+### easy install
+
+There is now an easy install script that makes installing very easy for the
+common case.  **This script is meant to be run on your workstation, not on the
+server!**  It will take care of all the server side work, *and* get you
+"push-to-admin" too :-)  In short, it does **everything**!
+
+Assumptions:
+
+  * you have a server to host gitolite
+  * git is installed on that server (and so is perl)
+  * you have a userid on that server
+  * you have ssh-pubkey (password-less) login to that userid
+      * (if you have only password access, run `ssh-keygen -t rsa` to create a
+        new keypair if needed, then run `ssh-copy-id user@host`)
+  * you have a clone or an archive of gitolite somewhere on your workstation
+
+If so, just `cd` to that clone and run `src/00-easy-install.sh` and follow the
+prompts!  (Running it without any arguments shows you usage plus other useful
+info).
+
+#### advantages over the older install methods
+
+  * all ssh problems reduced to **just one pre-requisite**: enable ssh pubkey
+    (password-less) access to the server from your workstation first
+  * the script takes care of all the server side work
+  * when done:
+      * you get two different pubkeys (the original one for command line
+        access as before, plus a new one, created by the script, for gitolite
+        access)
+      * you can admin gitolite by commit+push a "gitolite-admin" repo, just
+        like gitosis (i.e., full "push to admin" power!)
+
+#### disadvantages
+
+  * has been tested only with Linux.  However, the script now makes a much
+    better "document" on what actually needs to be done, so people installing
+    on non-Linux machines can probably follow the steps in the script and
+    install if they wish.  Sort of "simulate" it... :)
+
+### manual install
+
+If for some reason you cannot use the easy-install method, (for example,
+you're on a non-Linux machine) read on.  Unlike the easy install, all the
+below stuff is meant to be run on the server.
+
+#### pre-requisites on the server
 
 If you managed to install git, you might already have what gitolite needs:
 
@@ -13,7 +59,7 @@ A major objective is to allow use by people without root access, permissions
 to create other userids, etc.  Even if you have root, please add a user just
 for gitolite and do all this from that user.
 
-### getting a tar file from a clone
+#### getting a tar file from a clone
 
 You can clone the repo from github, then execute a make command to extract a
 tar file of the branch you want.  Please use the make command, not a plain
@@ -24,7 +70,7 @@ tar file of the branch you want.  Please use the make command, not a plain
     make master.tar
     # or maybe "make rebel.tar" or "make pu.tar"
 
-### quick install from tar file
+#### install from tar file
 
   * make a temp directory somewhere, cd to it, and unpack the tar file
   * run `src/install.pl` and follow the prompts
