@@ -179,6 +179,9 @@ Each refex that allows `W` access (or `+` if this is a rewind) for *this*
 user, on *this* repo, is matched against the actual refname being updated.  If
 any of the refexes match, the push succeeds.  If none of them match, it fails.
 
+The normal gitolite does not allow "exclude" or "deny" rules.  But see the
+"how the rebel edition does it anyway" below.
+
 #### error checking the config file
 
 gitosis does not do any.  I just found out that if you mis-spell `members` as
