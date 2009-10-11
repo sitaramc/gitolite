@@ -26,9 +26,10 @@ prompt() {
 }
 usage() {
     cat <<EOFU
-Usage: $0 user host admin_name
+Usage: $0 user host port admin_name
   - "user" is the username on the server where you will be installing gitolite
   - "host" is that server's hostname (or IP address is also fine)
+  - "port" is optional
   - "admin_name" is *your* name as you want it to appear in the eventual
     gitolite config file
 
@@ -61,18 +62,24 @@ EOFU
     exit 1;
 }
 
-[[ -z $1 ]] && usage
 [[ -z $3 ]] && usage
-
-[[ "$1" =~ [^a-zA-Z0-9._-] ]] && die "user '$1' invalid"
-[[ "$3" =~ [^a-zA-Z0-9._-] ]] && die "admin_name '$3' invalid"
-
-# MANUAL: (info) we'll use "git" as the user, "server" as the host, and
-# "sitaram" as the admin_name in example commands shown below, if any
-
 user=$1
 host=$2
 admin_name=$3
+# but if the 3rd arg is a number, that's a port number, and the 4th arg is the
+# admin_name
+port=22
+[[ $3 =~ ^[0-9]+$ ]] && {
+    port=$3
+    [[ -z $4 ]] && usage
+    admin_name=$4
+}
+
+[[ "$user" =~ [^a-zA-Z0-9._-] ]] && die "user '$user' invalid"
+[[ "$admin_name" =~ [^a-zA-Z0-9._-] ]] && die "admin_name '$admin_name' invalid"
+
+# MANUAL: (info) we'll use "git" as the user, "server" as the host, and
+# "sitaram" as the admin_name in example commands shown below, if any
 
 # ----------------------------------------------------------------------
 # basic sanity checks
@@ -93,7 +100,7 @@ ls src/gl-auth-command  \
 # is, running "ssh git@server" should log in straight away, without asking for
 # a password
 
-ssh -o PasswordAuthentication=no $user@$host pwd >/dev/null ||
+ssh -p $port -o PasswordAuthentication=no $user@$host pwd >/dev/null ||
     die "pubkey access didn't work; please set it up using 'ssh-copy-id' or something"
 
 # MANUAL: make sure there's no "gitolite-admin" directory in $HOME (actually
@@ -152,14 +159,16 @@ fi
 # The lines to be included look like this:
 
 #   host gitolite
-#       hostname server
 #       user git
+#       hostname server
+#       port 22
 #       identityfile ~/.ssh/sitaram
 
 echo "
 host gitolite
-     hostname $host
      user $user
+     hostname $host
+     port $port
      identityfile ~/.ssh/$admin_name" > $HOME/.ssh/.gl-stanza
 
 if grep 'host  *gitolite' $HOME/.ssh/config &>/dev/null
@@ -191,8 +200,8 @@ rm  $HOME/.ssh/.gl-stanza
 # server, to a directory called (for example) "gitolite-install".  You may
 # have to create the directory first.
 
-ssh $user@$host mkdir -p gitolite-install
-rsync -a src conf doc $user@$host:gitolite-install/
+ssh -p $port $user@$host mkdir -p gitolite-install
+rsync -e "ssh -p $port" -a src conf doc $user@$host:gitolite-install/
 
 # MANUAL: now log on to the server (ssh git@server) and get a command line.
 # This step is for your convenience; the script does it all from the client
@@ -219,20 +228,20 @@ that all the paths etc. represent paths on the server!"
 ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
 
 # copy the rc across
-scp .gitolite.rc $user@$host:
+scp -P $port .gitolite.rc $user@$host:
 
 prompt "ignore any 'please edit this file' or 'run this command' type
 lines in the next set of command outputs coming up.  They're only
 relevant for a manual install, not this one..."
 
 # extract the GL_ADMINDIR and REPO_BASE locations
-GL_ADMINDIR=$(ssh $user@$host "perl -e 'do \".gitolite.rc\"; print \$GL_ADMINDIR'")
-REPO_BASE=$(  ssh $user@$host "perl -e 'do \".gitolite.rc\"; print \$REPO_BASE'")
+GL_ADMINDIR=$(ssh -p $port $user@$host "perl -e 'do \".gitolite.rc\"; print \$GL_ADMINDIR'")
+REPO_BASE=$(  ssh -p $port $user@$host "perl -e 'do \".gitolite.rc\"; print \$REPO_BASE'")
 
 # MANUAL: still in the "gitolite-install" directory?  Good.  Run
 # "src/install.pl"
 
-ssh $user@$host "cd gitolite-install; src/install.pl"
+ssh -p $port $user@$host "cd gitolite-install; src/install.pl"
 
 # MANUAL: setup the initial config file.  Edit $GL_ADMINDIR/conf/gitolite.conf
 # and add at least the following lines to it:
@@ -252,13 +261,13 @@ repo testing
 " > gitolite.conf
 
 # send the config and the key to the remote
-scp gitolite.conf $user@$host:$GL_ADMINDIR/conf/
+scp -P $port gitolite.conf $user@$host:$GL_ADMINDIR/conf/
 
-scp $HOME/.ssh/$admin_name.pub $user@$host:$GL_ADMINDIR/keydir
+scp -P $port $HOME/.ssh/$admin_name.pub $user@$host:$GL_ADMINDIR/keydir
 
 # MANUAL: cd to $GL_ADMINDIR and run "src/gl-compile-conf"
 
-ssh $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf"
+ssh -p $port $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf"
 
 # ----------------------------------------------------------------------
 # hey lets go the whole hog on this; setup push-to-admin!
@@ -278,13 +287,13 @@ ssh $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf"
 echo "cd $REPO_BASE/gitolite-admin.git
 GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
 GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
-" | ssh $user@$host
+" | ssh -p $port $user@$host
 
 # MANUAL: now that the admin repo is created, you have to set the hooks
 # properly.  The install program does this.  So cd back to the
 # "gitolite-install" directory and run "src/install.pl"
 
-ssh $user@$host "cd gitolite-install; src/install.pl"
+ssh -p $port $user@$host "cd gitolite-install; src/install.pl"
 
 prompt "now we will clone the gitolite-admin repo to your workstation
 and see if it all hangs together.  We'll do this in your \$HOME for now,
