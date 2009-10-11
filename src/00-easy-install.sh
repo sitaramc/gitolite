@@ -2,7 +2,8 @@
 
 # easy install for gitolite
 
-# this is the client side piece.  This gets run *before* the server side piece
+# this runs on the client side, and itself takes care of all the server side
+# work.  You don't have to do anything on the server side directly
 
 # run without any arguments for "usage" info
 
