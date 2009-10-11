@@ -2,8 +2,12 @@
 
 # easy install for gitolite
 
-# this runs on the client side, and itself takes care of all the server side
+# you run this on the client side, and it takes care of all the server side
 # work.  You don't have to do anything on the server side directly
+
+# to do a manual install (since I have tested this only on Linux), open this
+# script in a nice, syntax coloring, text editor and follow the instructions
+# prefixed by the word "MANUAL" in the comments below :-)
 
 # run without any arguments for "usage" info
 
@@ -63,6 +67,9 @@ EOFU
 [[ "$1" =~ [^a-zA-Z0-9._-] ]] && die "user '$1' invalid"
 [[ "$3" =~ [^a-zA-Z0-9._-] ]] && die "admin_name '$3' invalid"
 
+# MANUAL: (info) we'll use "git" as the user, "server" as the host, and
+# "sitaram" as the admin_name in example commands shown below, if any
+
 user=$1
 host=$2
 admin_name=$3
@@ -71,8 +78,9 @@ admin_name=$3
 # basic sanity checks
 # ----------------------------------------------------------------------
 
-# are we in the right directory?  We should have all the gitolite sources
-# here...
+# MANUAL: make sure you're in the gitolite directory, at the top level.
+# The following files should all be visible:
+
 ls src/gl-auth-command  \
     src/gl-compile-conf \
     src/install.pl  \
@@ -81,16 +89,23 @@ ls src/gl-auth-command  \
     conf/example.gitolite.rc    >/dev/null ||
     die "cant find at least some files in gitolite sources/config; aborting"
 
-# do we have pubkey auth on the server
+# MANUAL: make sure you have password-less (pubkey) auth on the server.  That
+# is, running "ssh git@server" should log in straight away, without asking for
+# a password
+
 ssh -o PasswordAuthentication=no $user@$host pwd >/dev/null ||
     die "pubkey access didn't work; please set it up using 'ssh-copy-id' or something"
 
-# can the "gitolite-admin" repo be safely created in $HOME
+# MANUAL: make sure there's no "gitolite-admin" directory in $HOME (actually
+# for the manual flow this doesn't matter so much!)
+
 [[ -d $HOME/gitolite-admin ]] &&
     die "please delete or move aside the \$HOME/gitolite-admin directory"
 
-# cool; now let's create a new key for you as a "gitolite user" (as opposed to
-# a gitolite admin who needs to login to the server and get a command line)
+# MANUAL: create a new key for you as a "gitolite user" (as opposed to you as
+# the "gitolite admin" who needs to login to the server and get a command
+# line).  For example, "ssh-keygen -t rsa ~/.ssh/sitaram"; this would create
+# two files in ~/.ssh (sitaram and sitaram.pub)
 
 [[ -f $HOME/.ssh/$admin_name.pub ]] && die "pubkey $HOME/.ssh/$admin_name.pub exists; can't proceed"
 prompt "the next command will create a new keypair for your gitolite access
@@ -111,6 +126,15 @@ prompt "the next command will create a new keypair for your gitolite access
 
 ssh-keygen -t rsa -f $HOME/.ssh/$admin_name || die "ssh-keygen failed for some reason..."
 
+# MANUAL: copy the pubkey created to the server, say to /tmp.  This would be
+# "scp ~/.ssh/sitaram.pub git@server:/tmp" (the script does this at a later
+# stage, you do it now for convenience).  Note: only the pubkey (sitaram.pub).
+# Do NOT copy the ~/.ssh/sitaram file -- that is a private key!
+
+# MANUAL: if you're running ssh-agent (see if you have an environment variable
+# called SSH_AGENT_PID in your "env"), you should add this new key.  The
+# command is "ssh-add ~/.ssh/sitaram"
+
 if [[ -n $SSH_AGENT_PID ]]
 then
     prompt "you're running ssh-agent.  We'll try and do an ssh-add of the
@@ -121,7 +145,17 @@ then
     ssh-add $HOME/.ssh/$admin_name
 fi
 
-# ok the gitolite key is done; create a stanza for it in ~/.ssh/config
+# MANUAL: you now need to add some lines to the end of your ~/.ssh/config
+# file.  If the file doesn't exist, create it.  Make sure the file is "chmod
+# 644".
+
+# The lines to be included look like this:
+
+#   host gitolite
+#       hostname server
+#       user git
+#       identityfile ~/.ssh/sitaram
+
 echo "
 host gitolite
      hostname $host
@@ -153,9 +187,21 @@ rm  $HOME/.ssh/.gl-stanza
 # client side stuff almost done; server side now
 # ----------------------------------------------------------------------
 
-# setup the gitolite sources and conf on the server
+# MANUAL: copy the gitolite directories "src", "conf", and "doc" to the
+# server, to a directory called (for example) "gitolite-install".  You may
+# have to create the directory first.
+
 ssh $user@$host mkdir -p gitolite-install
 rsync -a src conf doc $user@$host:gitolite-install/
+
+# MANUAL: now log on to the server (ssh git@server) and get a command line.
+# This step is for your convenience; the script does it all from the client
+# side but that may be too much typing for manual use ;-)
+
+# MANUAL: cd to the "gitolite-install" directory where the sources are.  Then
+# copy conf/example.gitolite.rc as ~/.gitolite.rc and edit it if you wish to
+# change any paths.  Make a note of the GL_ADMINDIR and REPO_BASE paths; you
+# will need them later
 
 # give the user an opportunity to change the rc
 cp conf/example.gitolite.rc .gitolite.rc
@@ -183,10 +229,17 @@ relevant for a manual install, not this one..."
 GL_ADMINDIR=$(ssh $user@$host "perl -e 'do \".gitolite.rc\"; print \$GL_ADMINDIR'")
 REPO_BASE=$(  ssh $user@$host "perl -e 'do \".gitolite.rc\"; print \$REPO_BASE'")
 
-# run the install script on the server
+# MANUAL: still in the "gitolite-install" directory?  Good.  Run
+# "src/install.pl"
+
 ssh $user@$host "cd gitolite-install; src/install.pl"
 
-# setup the initial config file
+# MANUAL: setup the initial config file.  Edit $GL_ADMINDIR/conf/gitolite.conf
+# and add at least the following lines to it:
+
+#   repo gitolite-admin
+#       RW+                 = sitaram
+
 echo "#gitolite conf
 #please see conf/example.conf for details on syntax and features
 
@@ -203,18 +256,33 @@ scp gitolite.conf $user@$host:$GL_ADMINDIR/conf/
 
 scp $HOME/.ssh/$admin_name.pub $user@$host:$GL_ADMINDIR/keydir
 
-# run the compile script on the server
+# MANUAL: cd to $GL_ADMINDIR and run "src/gl-compile-conf"
+
 ssh $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf"
 
 # ----------------------------------------------------------------------
 # hey lets go the whole hog on this; setup push-to-admin!
 # ----------------------------------------------------------------------
 
-# setup the initial commit for the admin repo
+# MANUAL: make the first commit in the admin repo.  This is a little more
+# complex, so read carefully and substitute the correct paths.  What you have
+# to do is:
+
+#   cd $REPO_BASE/gitolite-admin.git
+#   GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
+#   GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
+
+# Substitute $GL_ADMINDIR and $REPO_BASE appropriately.  Note there is no
+# space around the "=" in the second and third lines.
+
 echo "cd $REPO_BASE/gitolite-admin.git
 GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
 GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
 " | ssh $user@$host
+
+# MANUAL: now that the admin repo is created, you have to set the hooks
+# properly.  The install program does this.  So cd back to the
+# "gitolite-install" directory and run "src/install.pl"
 
 ssh $user@$host "cd gitolite-install; src/install.pl"
 
@@ -222,8 +290,13 @@ prompt "now we will clone the gitolite-admin repo to your workstation
 and see if it all hangs together.  We'll do this in your \$HOME for now,
 and you can move it elsewhere later if you wish to."
 
+# MANUAL: you're done!  Log out of the server, come back to your workstation,
+# and clone the admin repo using "git clone gitolite:gitolite-admin.git"!
+
 cd $HOME
 git clone gitolite:gitolite-admin.git
+
+# MANUAL: be sure to read the message below; this applies to you too...
 
 echo
 echo

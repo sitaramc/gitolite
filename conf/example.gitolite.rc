@@ -5,7 +5,7 @@
 # this file is meant to be pulled into a perl program using "do" or "require".
 
 # You do NOT need to know perl to edit the paths; it should be fairly
-# self-explanatory
+# self-explanatory and easy to maintain perl syntax :-)
 
 # --------------------------------------
 

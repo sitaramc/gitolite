@@ -1,5 +1,10 @@
 # "push to admin" in gitolite
 
+**WARNING: THIS DOCUMENT IS OBSOLETE.  DO NOT USE.  IT IS RETAINED ONLY FOR
+HISTORICAL PURPOSES**.  Gitolite now does "push-to-admin" by default, and does
+it very easily and simply by front-loading the ssh problem.  See the install
+doc for details.
+
 ----
 
 Gitosis's default mode of admin is by cloning and pushing the `gitosis-admin`

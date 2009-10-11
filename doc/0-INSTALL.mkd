@@ -1,9 +1,24 @@
 # installing gitolite
 
+This document tells you how to install gitolite.  After the install is done,
+you may want to see the "admin" document for adding users, repos, etc.
+
+There's an easy install script for Linux, and for other Unixes there's a
+slightly more manual process.  Both are explained here.
+
+In this document:
+
+  * easy install
+  * manual install
+  * other notes
+  * next steps
+
+----
+
 ### easy install
 
-There is now an easy install script that makes installing very easy for the
-common case.  **This script is meant to be run on your workstation, not on the
+There is an easy install script that makes installing very easy for the common
+case.  **This script is meant to be run on your workstation, not on the
 server!**  It will take care of all the server side work, *and* get you
 "push-to-admin" too :-)  In short, it does **everything**!
 
@@ -35,110 +50,26 @@ info).
 
 #### disadvantages
 
-  * has been tested only with Linux.  However, the script now makes a much
-    better "document" on what actually needs to be done, so people installing
-    on non-Linux machines can probably follow the steps in the script and
-    install if they wish.  Sort of "simulate" it... :)
+  * has been tested only with Linux
 
 ### manual install
 
 If for some reason you cannot use the easy-install method, (for example,
-you're on a non-Linux machine) read on.  Unlike the easy install, all the
-below stuff is meant to be run on the server.
+you're on a non-Linux machine), it's not very complicated.  Just open the file
+`src/00-easy-install.sh` in a nice, syntax coloring, text editor, and follow
+the instructions marked "MANUAL" :-)
 
-#### pre-requisites on the server
+### other notes
 
-If you managed to install git, you might already have what gitolite needs:
-
-  * git itself, the more recent the better
-  * perl, typically installed with git, since git sort of needs it; any
-    version that includes `Data::Dumper`[1] will do.
-  * one user account on the server, with password access [2]
-
-A major objective is to allow use by people without root access, permissions
-to create other userids, etc.  Even if you have root, please add a user just
-for gitolite and do all this from that user.
-
-#### getting a tar file from a clone
-
-You can clone the repo from github, then execute a make command to extract a
-tar file of the branch you want.  Please use the make command, not a plain
-"git archive".  The comments in the `Makefile` will explain why.
-
-    git clone git://github.com/sitaramc/gitolite.git
-    cd gitolite
-    make master.tar
-    # or maybe "make rebel.tar" or "make pu.tar"
-
-#### install from tar file
-
-  * make a temp directory somewhere, cd to it, and unpack the tar file
-  * run `src/install.pl` and follow the prompts
-
-**When you are told to edit some file, please read the comments in the file**.
-And if you can make some time to read the documentation, please do.
-Especially if you have problems.
-
-Notes:
-
-  * At present the location of `~/.gitolite.rc` is fixed (maybe later I'll
-    change it to a "git config" variable but I don't see much need right now)
-
-    If you edit it and change any paths, be sure to keep the perl syntax --
-    you *don't* have to know perl to do so, it's fairly easy to guess in this
-    limited case.  And of course, make sure you adjust the commands shown
-    above to suit the new locations
+  * If you edit `~/.gitolite.rc` and change any paths, be sure to keep the
+    perl syntax -- you *don't* have to know perl to do so, it's fairly easy to
+    guess in this limited case
 
   * the config file is (by default) at `~/.gitolite/conf/gitolite.conf`,
     though you can change its location in the "rc" file.  Edit the file as you
-    wish.  The comments in the file ought to be clear enough but let me know
-    if not
+    wish.  The comments in the example file (`conf/example.conf`) ought to be
+    clear enough but let me know if not
 
-  * if you want to bring in existing (bare, server) repos into gitolite, this
-    should work (refer to `~/.gitolite.rc` for *your* values of the pathnames
-    below):
-      * backup the repo, then move it to `$BASE_REPO`
-      * copy `$GL_ADMINDIR/src/update-hook.pl` to
-        `[reponame].git/hooks/update` -- if you don't do this, per branch
-        restrictions will not work
-      * then update the keys and the config file and "compile" (see "admin"
-        document)
+### next steps
 
-### Footnotes:
-
-[1] Actually, due to the way gitolite is architected, you can manage
-without `Data::Dumper` on the server if you have no choice.  Only
-`gl-compile-conf` needs it, so just run that on some other machine and copy
-the two output files across.  Cumbersome but doable... the advantage of
-separating all the hard work into a manually-run piece :)
-
-[2] If you have *only* pubkey access, and **no** password access, then your
-pubkey is already in the server's `~/.ssh/authorized_keys`.  If you also need
-to access git as a developer (clone, push, etc), do *not* submit this same
-pubkey to gitolite -- it won't work.
-
-Instead, create a different keypair for your "developer" role (by, e.g.,
-`ssh-keygen -t rsa -f ~/.ssh/gitdev`), then give `~/.ssh/gitdev.pub` to
-gitolite as "yourname.pub", just like you would do for any other user.
-
-Then you create a suitable `~/.ssh/config` to use the correct key
-automatically, something like this:
-
-    host gitadm
-         hostname my.server
-         user my_userid_on_server
-
-    host gitdev
-         hostname my.server
-         user my_userid_on_server
-         identityfile ~/.ssh/gitdev
-
-From now on, `ssh gitadm` will get you a command line on the server, to do
-gitolite admin and other work.  And your repository URLs would look like
-`gitdev:reponame.git`.  Very, very, simple...
-
-And as with gitosis, there's more "ssh" magic than "git" magic here :-)
-
-----
-
-gitolite is released under the GPL v2 license.  See COPYING for details
+See the "admin" document for how to add users, etc.

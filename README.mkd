@@ -9,17 +9,16 @@
 
 ----
 
-Gitolite is the bare essentials of gitosis, with a completely different
-config file that allows (at last!) access control down to the branch level,
-including specifying who can and cannot *rewind* a given branch.  It is
-released under GPL v2.  See COPYING for details.
+Gitolite is a rewrite of gitosis, with a completely different config file that
+allows (at last!) access control down to the branch level, including
+specifying who can and cannot *rewind* a given branch.
 
 In this document:
 
   * why
-  * what's gone
-  * what's new
-  * the workflow
+  * what's extra
+  * security
+  * contact and license
 
 ----
 
@@ -32,30 +31,15 @@ a typical $DAYJOB setting, there are some issues:
     and be done
   * often, "python-setuptools" isn't installed (and on a Solaris9 I was trying
     to help remotely, we never did manage to install it eventually)
-  * or you don't have root access, or the ability to add users
+  * you don't have root access, or the ability to add users (this is also true
+    for people who have just one userid on a hosting provider)
   * the most requested feature (see "what's new?") had to be written anyway
-
-### what's gone
-
-While I was pondering the need to finally learn python[1] , I also realised
-that:
-
-  * no one in $DAYJOB type environments will use or approve access methods
-    that work without any authentication, so I didn't need gitweb/daemon
-    support in the tool or in the config file.
-
-    Update 2009-09-24: I don't use this feature but someone wanted it, so I
-    added it... see the "faq, tips, etc" document for more
-
-  * the idea that you admin it by pushing to a special repo is nice, but not
-    really necessary because of how rarely these changes are made, especially
-    considering how much code is involved in that piece
 
 All of this pointed to a rewrite.  In perl, naturally :-)
 
-### what's new
+### what's extra
 
-Per-branch permissions.  You will not believe how often I am asked this at
+**Per-branch permissions**.  You will not believe how often I am asked this at
 $DAYJOB.  This is almost the single reason I started *thinking* about rolling
 my own gitosis in the first place.
 
@@ -65,50 +49,42 @@ deleting a branch (which is really just an extreme form of rewind).  I needed
 something in between allowing anyone to do it (the default) and disabling it
 completely (`receive.denyNonFastForwards` or `receive.denyDeletes`).
 
-Take a look at the example config file in the repo to see how I do this.  I
-copied the basic idea from `update-hook-example.txt` (it's one of the "howto"s
-that come with the git source tree).  However, please note the difference in
-the size and complexity of the *operational code* between the update hook in
-that example, and in mine :-)  The reason is in the next section.
+Here're **some more features**.  All of them are documented in detail
+somewhere in the `doc/` subdirectory.
 
-### the workflow
+  * simpler, yet far more powerful, config file syntax, including specifying
+    gitweb/daemon access.  You'll need this power if you manage lots of users
+    + repos + combinations of access
+  * config file syntax gets checked upfront, and much more thoroughly
+  * if your requirements are still too complex, you can split up the config
+    file and delegate authority over parts of it
+  * more comprehensive logging [aka: management does not think "blame" is just
+    a synonym for "annotate" :-)]
+  * "personal namespace" prefix for each dev
+  * migration guide and simple converter for gitosis conf file
+  * "exclude" (or "deny" rights in the config file) -- this is the "rebel"
+    branch in the repository, and always will be ;-)
 
-In order to get per-branch access, you *must* use an update hook.  However,
-that only gets invoked on a push; "read" access still has to be controlled
-right at the beginning, before git even enters the scene (just the way gitosis
-currently works).
+### security
 
-So: either split the access control into two config files, or have two
-completely different programs *both* parse the same one and pick what they
-want.  Crap... I definitely don't want the hook doing any parsing, (and it
-would be nice if the auth-control program didn't have to either).
+Due to the environment in which this was created and the need it fills, I
+consider this a "security" program, albeit a very modest one.  The code is
+very small and easily reviewable -- the 2 programs that actually control
+access when a user logs in total about 200 lines of code (about
+80 lines according to "sloccount").
 
-So I changed the workflow completely:
+For the first person to find a security hole in it, defined as allowing a
+normal user (not the gitolite admin) to read a repo, or write/rewind a ref,
+that the config file says he shouldn't, and caused by a bug in *code* that is
+in the "master" branch, (not in the other branches, or the configuration file
+or in Unix, perl, shell, etc.)...  well I can't afford 1000 USD rewards like
+djb, so you'll have to settle for 1000 INR (Indian Rupees) as a "token" prize
+:-)
 
-  * all admin changes happen *on the server*, in a special directory that
-    contains the config and the users' pubkeys.  But there's no commit and
-    push afterward
-  * instead, after making changes, you "compile" the configuration.  This
-    refreshes `~/.ssh/authorized_keys`, as well as puts a parsed form of the
-    access list in a file for the other two pieces to use.
+----
 
-The pre-parsed form is basically a huge perl variable.  It's human readable
-too (never mind what the python guys say!)
+### contact and license
 
-So the admin knows immediately if the config file had any problems, which is
-good.  Also, the relatively complex parse code is not part of the actual
-access control points, which are:
-
-  * the program that is run via `~/.ssh/authorized_keys` (I call it
-    `gl-auth-command`, equivalent to `gitosis-serve`); this decides whether
-    git should even be allowed to run (basic R/W/no access)
-  * the update-hook on each repo, which decides the per-branch permissions
-
-### footnotes
-
-[1] I hate whitespace to mean anything significant except for text; this is a
-personal opinion *only*, so pythonistas please back off :-)
-
-### contact
+Gitolite is released under GPL v2.  See COPYING for details.
 
 sitaramc@gmail.com

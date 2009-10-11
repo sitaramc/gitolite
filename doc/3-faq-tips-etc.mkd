@@ -5,19 +5,21 @@ In this document:
   * common errors and mistakes
   * git version dependency
   * other errors, warnings, notes...
+  * getting a tar file from a clone
   * differences from gitosis
       * simpler syntax
       * two levels of access rights checking
       * error checking the config file
       * delegating parts of the config file
       * easier to specify gitweb/daemon access
-      * built-in logging
+      * better logging
       * one user, many keys
       * who am I?
   * other cool things
-      * developer specific branches
+      * "personal" branches
   * design choices
       * why we don't do "excludes"
+      * keeping the parser and the access control separate
 
 ### common errors and mistakes
 
@@ -37,10 +39,10 @@ In this document:
 Here's a workaround for a version dependency that the normal flow of gitolite
 has.
 
-When you edit your config file to create a new repo, and run
-`src/gl-compile-conf`, gitolite creates an empty, bare repo for you.
-Normally, you're expected to clone this on the client side, and start working
--- make your first commit(s), then push, etc.
+When you edit your config file to create a new repo, and push the changes to
+the server, gitolite creates an empty, bare repo for you.  Normally, you're
+expected to clone this on the client side, and start working -- make your
+first commit(s), then push, etc.
 
 However, cloning an empty repo requires a server side git version that is at
 least 1.6.2.  Gitolite detects this when creating a repo, and warns you.
@@ -74,20 +76,26 @@ normal way, since it's not empty anymore.
 
   * if you specify a repo that is not at the top level `$REPO_BASE`, be sure
     to manually create the intermediate directories first.  For instance if
-    you specify a new repo called "a/b/c" to the config file and "compile",
-    the "compile" script will just `mkdir a/b/c.git`, assuming "a/b" has
-    already been created
-
-  * if you run `git init` inside `$GL_ADMINDIR` (that is, make it a normal,
-    non-bare, repo), then, everytime you "compile" (run
-    `src/gl-compile-conf`), any changes to `conf` and `keydir` will
-    automatically be committed.  This is a simple safety net in case you
-    accidentally delete the whole config or something.  Also see
-    [4-push-to-admin.mkd](http://github.com/sitaramc/gitolite/blob/pu/doc/4-push-to-admin.mkd)
-    if you really know what you're doing and want "push to admin"
+    you specify a new repo called "a/b/c" to the config file and push, the
+    "compile" script will just `mkdir a/b/c.git`, assuming "a/b" has already
+    been created
 
   * gitweb not able to read your repos?  You can change the umask for newly
     created repos to something more relaxed -- see the `~/.gitolite.rc` file
+
+### getting a tar file from a clone
+
+You can clone the repo from github or indefero, then execute a make command to
+extract a tar file of the branch you want.  Please use the make command, not a
+plain "git archive", because the Makefile adds a file called
+`.GITOLITE-VERSION` that will help you identify which version you are using.
+
+    git clone git://github.com/sitaramc/gitolite.git
+            # (OR)
+    git clone git://sitaramc.indefero.net/sitaramc/gitolite.git
+    cd gitolite
+    make master.tar
+    # or maybe "make rebel.tar" or "make pu.tar"
 
 ### differences from gitosis
 
@@ -176,9 +184,8 @@ gitosis does not do any.  I just found out that if you mis-spell `members` as
 `member`, gitosis will silently ignore it, and leave you wondering why access
 was denied.
 
-In gitolite, you have to "compile" the config file first (this step takes the
-place of the commit+push in gitosis), and keyword typos *are* caught so you
-know right away.
+Gitolite "compiles" the config file first and keyword typos *are* caught so
+you know right away.
 
 #### delegating parts of the config file
 
@@ -219,24 +226,21 @@ bits and pieces.  Here's an example, using short repo names for convenience:
     repo r2
     # ...and so on...
 
-#### built-in logging
+### better logging
 
-...just in case of emergency :-)
+If you have been too liberal with the permission to rewind, it has built-in
+logging as an emergency fallback if someone goes too far, or for audit
+purposes [`*`].  The logfile names and location are configurable, and can
+include the year/month/day etc in the filename for easy archival or further
+processing.  The log file even tells you which pattern in the config file
+matched to allow that specific access to proceed.
 
-Let's say you gave a dev the right to rewind a branch and he went and rewound
-it all the way, or pushed something drastically different on it.  Now you need
-to recover the commit that got wiped out.
+>   [`*`] setting `core.logAllRefUpdates true` does provide a safety net
+>   against over-zealous rewinds, but it does not tell you "who".  And
+>   strangely, management does not seem to share the view that "blame" is just
+>   a synonym for "annotate" ;-)]
 
-If you'd remembered to `git config core.logAllRefUpdates` for that repo, or
-globally, you'd be fine -- the reflog will tell you.  Otherwise you'd be left
-grubbing around in `git fsck --unreachable` a bit :-(
-
-And even if you recover the correct commit, you'll never know *who* did it --
-not unless you add a one-line patch to gitosis, plus a `post-receive` hook to
-every repository.
-
-With gitolite, there's a log file in `$GL_ADMINDIR` that contains lines like
-this:
+The log lines look like this:
 
     2009-09-19.10:24:37  +  b4e76569659939  4fb16f2a88d8b5  myrepo refs/heads/master       user2   refs/heads/master
 
@@ -283,32 +287,30 @@ In gitolite, it's simple: just ask nicely :-)
 
 ### other cool things
 
-#### developer specific branches
+### "personal" branches
 
-So I know what gitolite calls me.  Big deal... who cares?
+"personal" branches are great for corporate environments, where
+unauthenticated pull/clone is a no-no.  Since a dev workstation cannot do
+authentication, even work shared just between 2 devs has to go *via* the
+server.  This causes the same branch name clutter as in a centralised VCS,
+plus setting up permissions for this becomes a chore for the admin.
 
-Here is an idea: give every developer a personal "scratch" namespace within
-which she can create, rewind, or delete any branch.  For example, I would own
-anything under
+gitolite lets you define a "personal" or "scratch" namespace prefix for
+each developer (e.g., `refs/personal/<devname>/*`), with full
+permissions for that dev and read-only for everyone else.  And you get
+this without adding a single line to the access config file -- pretty
+much fire and forget as far as the admin is concerned, even if there is
+constant churn in the project teams.
 
-    $PERSONAL_BRANCH_PREFIX/sitaram/
+Not bad for something that took just *one* line of code to implement.
+And that's one clean, readable, line, by the way ;-)
 
-The admin could set `$PERSONAL_BRANCH_PREFIX` in the rc file and communicate
+The admin would set `$PERSONAL_BRANCH_PREFIX` in the rc file and communicate
 this to all users.  It could be something like `refs/heads/personal`, which
 means all such branches will show up in `git branch` lookups and `git clone`
 will fetch them.  Or he could use, say, `refs/personal`, which means it won't
 show up in any normal "branch-y" commands and stuff, and generally be much
 less noisy.
-
-Yes, I know git is all about allowing private branches, but in a corporate
-environment it's not always possible to pull from a co-worker, for the same
-reasons you don't have anonymous access (like the git:// protocol).  A normal
-developer workstation cannot do authentication, so how would they know who's
-pulling?  This is a perfect way to share code *without* cluttering the global
-namespace, and each developer controls his/her own set of branches!
-
-The amount of code needed?  *One line!*  I'll spend about 3x more on declaring
-and initialising the new variable, and 30x more on documenting it :-)
 
 **Note that a user who has NO write access cannot have personal branches**; if
 you read the section (above) on "two levels of access rights checking" you'll
@@ -342,6 +344,9 @@ Just don't *show* the user this config file; it might sound insulting :-)
 ### design choices
 
 #### why we don't do "excludes"
+
+[umm... having said all this, I implemented it anyway; see the "rebel"
+branch!]
 
 I found an error in the example conf file.  This snippet *seems* to say that
 "bruce" can write versioned tags (`refs/tags/v[0-9].*`), but the other
@@ -387,3 +392,24 @@ The lack of overlap between refexes ensures ***no confusion*** in specifying,
 understanding, and ***auditing***, what is allowed and what is not.
 
 And in security, "no confusion" is a good thing :-)
+
+#### keeping the parser and the access control separate
+
+There are two programs concerned with access control:
+
+  * `gl-auth-command`, the program that is run via `~/.ssh/authorized_keys`;
+    this decides whether git should even be allowed to run (basic R/W/no
+    access).  (This one cannot decide on the branch-level access; it is not
+    known at this point what branch is being accessed)
+  * the update-hook on each repo, which decides the per-branch permissions
+
+I have chosen to keep the relatively complex task of parsing the config file
+out of them to keep them simpler (and faster).  So any changes to the config
+have to be first "compiled", and the access control programs use this
+"compiled" version of the config.  (The compile step also refreshes
+`~/.ssh/authorized_keys`).
+
+If you choose the "easy install" method, all this is quite transparent to you
+anyway.  If you cannot use the easy install and must install manually, I have
+clear instructions on how to set it up.
+
