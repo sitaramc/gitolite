@@ -124,7 +124,6 @@ ssh -p $port -o PasswordAuthentication=no $user@$host pwd >/dev/null ||
 # line).  For example, "ssh-keygen -t rsa ~/.ssh/sitaram"; this would create
 # two files in ~/.ssh (sitaram and sitaram.pub)
 
-[[ -f $HOME/.ssh/$admin_name.pub ]] && die "pubkey $HOME/.ssh/$admin_name.pub exists; can't proceed"
 prompt "the next command will create a new keypair for your gitolite access
 
     The pubkey will be $HOME/.ssh/$admin_name.pub.  You will have to
@@ -141,7 +140,13 @@ prompt "the next command will create a new keypair for your gitolite access
 
     This makes using passphrases very convenient."
 
-ssh-keygen -t rsa -f $HOME/.ssh/$admin_name || die "ssh-keygen failed for some reason..."
+if [[ -f $HOME/.ssh/$admin_name.pub ]]
+then
+    prompt "Hmmm... pubkey $HOME/.ssh/$admin_name.pub exists; should I just re-use it?
+    Be sure you remember the passphrase, if you gave one when you created it!"
+else
+    ssh-keygen -t rsa -f $HOME/.ssh/$admin_name || die "ssh-keygen failed for some reason..."
+fi
 
 # MANUAL: copy the pubkey created to the server, say to /tmp.  This would be
 # "scp ~/.ssh/sitaram.pub git@server:/tmp" (the script does this at a later
@@ -185,7 +190,7 @@ if grep 'host  *gitolite' $HOME/.ssh/config &>/dev/null
 then
     prompt "your \$HOME/.ssh/config already has settings for gitolite.  I will
     assume they're correct, but if they're not, please edit that file, delete
-    that paragraph (that line and the following few lines), and rerun.
+    that paragraph (that line and the following few lines), Ctrl-C, and rerun.
 
     In case you want to check right now (from another terminal) if they're
     correct, here's what they are *supposed* to look like:
@@ -222,10 +227,6 @@ rsync -e "ssh -p $port" -a src conf doc $user@$host:gitolite-install/
 # change any paths.  Make a note of the GL_ADMINDIR and REPO_BASE paths; you
 # will need them later
 
-# give the user an opportunity to change the rc
-cp conf/example.gitolite.rc .gitolite.rc
-    # hey here it means "release candidate" ;-)
-
 prompt "the gitolite rc file needs to be edited by hand.  The defaults
 are sensible, so if you wish, you can just exit the editor.
 
@@ -234,6 +235,15 @@ understand what is what -- the rc file's documentation is inline.
 
 Please remember this file will actually be copied to the server, and
 that all the paths etc. represent paths on the server!"
+
+# lets try and get the file from there first
+if scp -P $port $user@$host:.gitolite.rc .
+then
+    prompt "Oh hey... you already had a '.gitolite.rc' file on the server.  I'll use
+    that instead of the default one..."
+else
+    cp conf/example.gitolite.rc .gitolite.rc
+fi
 
 ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
 
@@ -296,7 +306,7 @@ ssh -p $port $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf"
 
 echo "cd $REPO_BASE/gitolite-admin.git
 GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
-GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
+GIT_WORK_TREE=$GL_ADMINDIR git commit -am start --allow-empty
 " | ssh -p $port $user@$host
 
 # MANUAL: now that the admin repo is created, you have to set the hooks
