@@ -20,7 +20,7 @@ prompt() {
     echo
     echo
     echo ------------------------------------------------------------------------
-    echo "$1"
+    echo "    $1"
     echo
     read -p '...press enter to continue or Ctrl-C to bail out'
 }
@@ -228,13 +228,13 @@ rsync -e "ssh -p $port" -a src conf doc $user@$host:gitolite-install/
 # will need them later
 
 prompt "the gitolite rc file needs to be edited by hand.  The defaults
-are sensible, so if you wish, you can just exit the editor.
+    are sensible, so if you wish, you can just exit the editor.
 
-Otherwise, make any changes you wish and save it.  Read the comments to
-understand what is what -- the rc file's documentation is inline.
+    Otherwise, make any changes you wish and save it.  Read the comments to
+    understand what is what -- the rc file's documentation is inline.
 
-Please remember this file will actually be copied to the server, and
-that all the paths etc. represent paths on the server!"
+    Please remember this file will actually be copied to the server, and that
+    all the paths etc. represent paths on the server!"
 
 # lets try and get the file from there first
 if scp -P $port $user@$host:.gitolite.rc .
@@ -251,8 +251,8 @@ ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
 scp -P $port .gitolite.rc $user@$host:
 
 prompt "ignore any 'please edit this file' or 'run this command' type
-lines in the next set of command outputs coming up.  They're only
-relevant for a manual install, not this one..."
+    lines in the next set of command outputs coming up.  They're only relevant
+    for a manual install, not this one..."
 
 # extract the GL_ADMINDIR and REPO_BASE locations
 GL_ADMINDIR=$(ssh -p $port $user@$host "perl -e 'do \".gitolite.rc\"; print \$GL_ADMINDIR'")
@@ -316,8 +316,8 @@ GIT_WORK_TREE=$GL_ADMINDIR git commit -am start --allow-empty
 ssh -p $port $user@$host "cd gitolite-install; src/install.pl"
 
 prompt "now we will clone the gitolite-admin repo to your workstation
-and see if it all hangs together.  We'll do this in your \$HOME for now,
-and you can move it elsewhere later if you wish to."
+    and see if it all hangs together.  We'll do this in your \$HOME for now,
+    and you can move it elsewhere later if you wish to."
 
 # MANUAL: you're done!  Log out of the server, come back to your workstation,
 # and clone the admin repo using "git clone gitolite:gitolite-admin.git"!
