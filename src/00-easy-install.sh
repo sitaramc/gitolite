@@ -15,7 +15,7 @@
 # command!)
 set -e
 
-die() { echo "$@"; echo "run $0 again without any arguments for help and tips"; exit 1; }
+die() { echo "$@"; echo; echo "run $0 again without any arguments for help and tips"; exit 1; }
 prompt() {
     echo
     echo
@@ -47,7 +47,7 @@ Notes:
 
 Pre-requisites:
   - you must run this from the gitolite working tree top level directory.
-    This means you run this as "src/00-easy-install-clientside.sh"
+    This means you run this as "src/00-easy-install.sh"
   - you must already have pubkey based access to user@host.  If you currently
     only have password access, use "ssh-copy-id" or something.  Somehow get to
     the point where you can type "ssh user@host" and get a command line.  Run
@@ -61,6 +61,23 @@ Errors:
 EOFU
     exit 1;
 }
+
+# ----------------------------------------------------------------------
+# basic sanity / argument checks
+# ----------------------------------------------------------------------
+
+# MANUAL: this *must* be run as "src/00-easy-install.sh", not by cd-ing to src
+# and then running "./00-easy-install.sh"
+
+[[ $0 =~ ^src/00-easy-install.sh$ ]] ||
+{
+    echo "please cd to the gitolite repo top level directory and run this as
+    'src/00-easy-install.sh'"
+    exit 1;
+}
+
+# MANUAL: (info) we'll use "git" as the user, "server" as the host, and
+# "sitaram" as the admin_name in example commands shown below, if any
 
 [[ -z $3 ]] && usage
 user=$1
@@ -77,13 +94,6 @@ port=22
 
 [[ "$user" =~ [^a-zA-Z0-9._-] ]] && die "user '$user' invalid"
 [[ "$admin_name" =~ [^a-zA-Z0-9._-] ]] && die "admin_name '$admin_name' invalid"
-
-# MANUAL: (info) we'll use "git" as the user, "server" as the host, and
-# "sitaram" as the admin_name in example commands shown below, if any
-
-# ----------------------------------------------------------------------
-# basic sanity checks
-# ----------------------------------------------------------------------
 
 # MANUAL: make sure you're in the gitolite directory, at the top level.
 # The following files should all be visible:
