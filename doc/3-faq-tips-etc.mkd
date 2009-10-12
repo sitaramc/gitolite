@@ -263,6 +263,11 @@ each of my pubkeys.  In gitolite, we keep them separate: "sitaram@laptop.pub"
 and "sitaram@desktop.pub".  The part before the "@" is the username, so
 gitolite knows these two keys belong to the same person.
 
+Note that you don't say "sitaram@laptop" and so on in the **config** file --
+as far as the config file is concerned there's just **one** user called
+"sitaram" -- so you only say "sitaram" there.  Only the **pubkey files** have
+the extra "@" stuff.
+
 I think this is easier to maintain if you have to delete or change one of
 those keys.
 
