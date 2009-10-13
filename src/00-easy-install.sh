@@ -245,6 +245,8 @@ then
     sort < conf/example.gitolite.rc | perl -ne 'print "$1\n" if /^(\$\w+) *=/' > glrc.new
     if diff -u glrc.old glrc.new
     then
+        ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
+    else
         prompt "    looks like you're upgrading!  I'm going to run your editor
         with *both* the old and the new files (in that order), so you can add
         in the lines pertaining to the variables shown with a '+' sign in the
@@ -253,8 +255,6 @@ then
         [It's upto you to figure out how your editor handles 2 filename
         arguments, switch between them, copy lines, etc ;-)]"
         ${VISUAL:-${EDITOR:-vi}} .gitolite.rc conf/example.gitolite.rc
-    else
-        ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
     fi
 else
     cp conf/example.gitolite.rc .gitolite.rc

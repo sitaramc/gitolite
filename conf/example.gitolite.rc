@@ -95,8 +95,8 @@ $PERSONAL="";
 # works), leave this setting as is.  Otherwise, choose one of the
 # alternatives, or write your own
 
-$GIT_PATH=""
-# $GIT_PATH="/opt/bin/"
+$GIT_PATH="";
+# $GIT_PATH="/opt/bin/";
 
 # --------------------------------------
 # per perl rules, this should be the last line in such a file:
