@@ -348,6 +348,26 @@ Just don't *show* the user this config file; it might sound insulting :-)
 
 ### design choices
 
+#### keeping the parser and the access control separate
+
+There are two programs concerned with access control:
+
+  * `gl-auth-command`, the program that is run via `~/.ssh/authorized_keys`;
+    this decides whether git should even be allowed to run (basic R/W/no
+    access).  (This one cannot decide on the branch-level access; it is not
+    known at this point what branch is being accessed)
+  * the update-hook on each repo, which decides the per-branch permissions
+
+I have chosen to keep the relatively complex task of parsing the config file
+out of them to keep them simpler (and faster).  So any changes to the config
+have to be first "compiled", and the access control programs use this
+"compiled" version of the config.  (The compile step also refreshes
+`~/.ssh/authorized_keys`).
+
+If you choose the "easy install" method, all this is quite transparent to you
+anyway.  If you cannot use the easy install and must install manually, I have
+clear instructions on how to set it up.
+
 #### why we don't do "excludes"
 
 [umm... having said all this, I implemented it anyway; see the "rebel"
@@ -398,23 +418,4 @@ understanding, and ***auditing***, what is allowed and what is not.
 
 And in security, "no confusion" is a good thing :-)
 
-#### keeping the parser and the access control separate
-
-There are two programs concerned with access control:
-
-  * `gl-auth-command`, the program that is run via `~/.ssh/authorized_keys`;
-    this decides whether git should even be allowed to run (basic R/W/no
-    access).  (This one cannot decide on the branch-level access; it is not
-    known at this point what branch is being accessed)
-  * the update-hook on each repo, which decides the per-branch permissions
-
-I have chosen to keep the relatively complex task of parsing the config file
-out of them to keep them simpler (and faster).  So any changes to the config
-have to be first "compiled", and the access control programs use this
-"compiled" version of the config.  (The compile step also refreshes
-`~/.ssh/authorized_keys`).
-
-If you choose the "easy install" method, all this is quite transparent to you
-anyway.  If you cannot use the easy install and must install manually, I have
-clear instructions on how to set it up.
 
