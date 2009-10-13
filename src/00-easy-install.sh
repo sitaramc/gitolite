@@ -239,13 +239,27 @@ prompt "the gitolite rc file needs to be edited by hand.  The defaults
 # lets try and get the file from there first
 if scp -P $port $user@$host:.gitolite.rc .
 then
-    prompt "Oh hey... you already had a '.gitolite.rc' file on the server.  I'll use
-    that instead of the default one..."
+    prompt "Oh hey... you already had a '.gitolite.rc' file on the server.
+    Let's see if we can use that instead of the default one..."
+    sort < .gitolite.rc             | perl -ne 'print "$1\n" if /^(\$\w+) *=/' > glrc.old
+    sort < conf/example.gitolite.rc | perl -ne 'print "$1\n" if /^(\$\w+) *=/' > glrc.new
+    if diff -u glrc.old glrc.new
+    then
+        prompt "    looks like you're upgrading!  I'm going to run your editor
+        with *both* the old and the new files (in that order), so you can add
+        in the lines pertaining to the variables shown with a '+' sign in the
+        above diff.  This is necessary; please dont skip this
+
+        [It's upto you to figure out how your editor handles 2 filename
+        arguments, switch between them, copy lines, etc ;-)]"
+        ${VISUAL:-${EDITOR:-vi}} .gitolite.rc conf/example.gitolite.rc
+    else
+        ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
+    fi
 else
     cp conf/example.gitolite.rc .gitolite.rc
+    ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
 fi
-
-${VISUAL:-${EDITOR:-vi}} .gitolite.rc
 
 # copy the rc across
 scp -P $port .gitolite.rc $user@$host:

@@ -14,6 +14,7 @@ In this document:
       * easier to specify gitweb/daemon access
       * better logging
       * one user, many keys
+      * support for git installed outside default PATH
       * who am I?
   * other cool things
       * "personal" branches
@@ -226,7 +227,7 @@ bits and pieces.  Here's an example, using short repo names for convenience:
     repo r2
     # ...and so on...
 
-### better logging
+#### better logging
 
 If you have been too liberal with the permission to rewind, it has built-in
 logging as an emergency fallback if someone goes too far, or for audit
@@ -271,6 +272,27 @@ the extra "@" stuff.
 I think this is easier to maintain if you have to delete or change one of
 those keys.
 
+#### support for git installed outside default PATH
+
+The normal solution is to add to the system default PATH somehow, either by
+munging `/etc/profile` or by enabling `PermitUserEnvironment` in
+`/etc/ssh/sshd_config` and then setting the PATH in `~/.ssh/.environment`.
+All these are security risks because they allow a lot more than just you and
+your git install :-)
+
+And if you don't have root, you can't do this anyway.
+
+The only solution till now has been to ask every client to set the config
+parameters `remote.<name>.receivepack` and `remote.<name>.uploadpack`.  But
+telling *every* client to do so is a pain...
+
+Gitolite lets you specify the directory in which git binaries are to be found,
+via a new variable (`$GIT_PATH`) in the "rc" file.  If this variable is
+non-empty, it will be appended to the PATH environment variable before
+attempting to run git stuff.
+
+Very easy, very simple, and completely transparent to the users :-)
+
 #### who am I?
 
 As a developer, I send a file called `id_rsa.pub` to the gitolite admin.  He
@@ -292,7 +314,7 @@ In gitolite, it's simple: just ask nicely :-)
 
 ### other cool things
 
-### "personal" branches
+#### "personal" branches
 
 "personal" branches are great for corporate environments, where
 unauthenticated pull/clone is a no-no.  Since a dev workstation cannot do

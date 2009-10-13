@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF);
+our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF, $GIT_PATH);
 
 # wrapper around mkdir; it's not an error if the directory exists, but it is
 # an error if it doesn't exist and we can't create it
@@ -32,6 +32,9 @@ unless (-f $glrc) {
 
 # ok now $glrc exists; read it to get the other paths
 die "parse $glrc failed: " . ($! or $@) unless do $glrc;
+
+# add a custom path for git binaries, if specified
+$ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 
 # mkdir $REPO_BASE, $GL_ADMINDIR if they don't already exist
 my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );

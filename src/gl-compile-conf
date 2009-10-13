@@ -47,7 +47,7 @@ $Data::Dumper::Indent = 1;
 #       common definitions
 # ----------------------------------------------------------------------------
 
-our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST);
+our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH);
 
 # now that this thing *may* be run via "push to admin", any errors have to
 # grab the admin's ATTENTION so he won't miss them among the other messages a
@@ -56,6 +56,9 @@ my $ATTN = "\n\t\t***** ERROR *****\n       ";
 
 my $glrc = $ENV{HOME} . "/.gitolite.rc";
 die "$ATTN parse $glrc failed: " . ($! or $@) unless do $glrc;
+
+# add a custom path for git binaries, if specified
+$ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 
 # ----------------------------------------------------------------------------
 #       definitions specific to this program
