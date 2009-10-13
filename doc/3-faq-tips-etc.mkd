@@ -19,8 +19,8 @@ In this document:
   * other cool things
       * "personal" branches
   * design choices
-      * why we don't do "excludes"
       * keeping the parser and the access control separate
+      * why we don't do "excludes"
 
 ### common errors and mistakes
 
@@ -439,5 +439,3 @@ The lack of overlap between refexes ensures ***no confusion*** in specifying,
 understanding, and ***auditing***, what is allowed and what is not.
 
 And in security, "no confusion" is a good thing :-)
-
-
