@@ -24,12 +24,15 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 
-our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE);
+our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH);
 our %repos;
 
 my $glrc = $ENV{HOME} . "/.gitolite.rc";
 die "parse $glrc failed: "             . ($! or $@) unless do $glrc;
 die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
+
+# add a custom path for git binaries, if specified
+$ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 
 # ----------------------------------------------------------------------------
 #       definitions specific to this program

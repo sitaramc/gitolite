@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF);
+our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF, $GIT_PATH);
 
 # wrapper around mkdir; it's not an error if the directory exists, but it is
 # an error if it doesn't exist and we can't create it
@@ -32,6 +32,9 @@ unless (-f $glrc) {
 
 # ok now $glrc exists; read it to get the other paths
 die "parse $glrc failed: " . ($! or $@) unless do $glrc;
+
+# add a custom path for git binaries, if specified
+$ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 
 # mkdir $REPO_BASE, $GL_ADMINDIR if they don't already exist
 my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
@@ -66,7 +69,10 @@ for my $repo (`find . -type d -name "*.git"`) {
 }
 
 # oh and one of those repos is a bit more special and has an extra hook :)
-system("cp $GL_ADMINDIR/src/pta-hook.sh gitolite-admin.git/hooks/post-update");
-system("perl", "-i", "-p", "-e", "s(export GL_ADMINDIR=.*)(export GL_ADMINDIR=$GL_ADMINDIR)",
-    "gitolite-admin.git/hooks/post-update");
-chmod 0755, "gitolite-admin.git/hooks/post-update";
+if ( -d "gitolite-admin.git/hooks" ) {
+    print STDERR "copying post-update hook to gitolite-admin repo...\n";
+    system("cp -v $GL_ADMINDIR/src/pta-hook.sh gitolite-admin.git/hooks/post-update");
+    system("perl", "-i", "-p", "-e", "s(export GL_ADMINDIR=.*)(export GL_ADMINDIR=$GL_ADMINDIR)",
+        "gitolite-admin.git/hooks/post-update");
+    chmod 0755, "gitolite-admin.git/hooks/post-update";
+}

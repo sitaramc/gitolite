@@ -1,11 +1,19 @@
 # upgrading gitolite atomically
 
+Upgrading is done **manually, on the server** (except the last step, which is
+on your admin repo clone), even if you installed it using the easy install
+script on the client.  First, it's not as difficult as an install so you don't
+really need a script.  Second, you may have customised the "rc" file
+(`~/.gitolite.rc` on the server) and I'm reluctant to mess with that in an
+automated way.
+
 ### general upgrade notes
 
 If you follow the steps below, you can make the upgrade "atomic", so you don't
 have to do it at a "quiet" time or something.
 
-1.  untar the new version to some temp directory and `cd` to it
+1.  copy a tar file containing the new version to the server, untar it to some
+    temp directory and `cd` to it
 
 2.  *prepare* the new version of `~/.gitolite.rc`.  It **must** have **all**
     the variables defined in `conf/example.gitolite.rc` (the "new" rc file),
@@ -31,12 +39,11 @@ have to do it at a "quiet" time or something.
         src/install.pl
 
 5.  compile the config once again, in case the *internal* format of the
-    compiled config file (`$GL_CONF_COMPILED`) has changed
+    compiled config file (`$GL_CONF_COMPILED`) has changed.
 
-        src/gl-compile-conf
-
-    (if you've already setup "push-to-admin", this step should be replaced by
-    a "git push".  Make a dummy commit if needed, to make the push happen).
+    To do this, you have to do a "git push" on the client side.  That might
+    require a dummy change (maybe add a blank line somewhere) because
+    otherwise the push will not happen.
 
 And you're done.
 
@@ -44,6 +51,27 @@ And you're done.
 
 If any extra steps beyond the generic ones above are needed, they will be
 listed here, newest first.
+
+#### upgrading from 410c9ba
+
+Between 410c9ba and this version, gitolite managed to make "push to admin" the
+default for new installs, but in a much more painless way.  If you're
+upgrading, you're not forced to use "push to admin", but I'd suggest you:
+
+  * make sure you have password-less (pubkey) login to a command line on your
+    server
+  * save your `~/.gitolite.rc`, `keydir/*.pub` and your `conf/gitolite.conf`
+    files from the server, bring them to your workstation
+  * then run `src/00-easy-install.sh` on the workstation, as if it were a
+    fresh install
+      * when the editor pops up to edit the rc file, delete all the lines in
+        it and copy them from the saved `~/.gitolite.rc`
+      * at the end of the script, after the gitolite-admin repo has been
+        cloned successfully, copy the saved `conf/gitolite.conf` and
+        `keydir/*.pub` to the clone, then add, commit, and push
+
+Gitolite also learnt to delegate parts of the config to other users.  See
+`doc/5-delegation.mkd` for details.
 
 #### upgrading from 8217ef9
 

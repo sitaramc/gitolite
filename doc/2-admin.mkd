@@ -22,15 +22,15 @@ Please read on to see how to do this correctly.
     extension, like `sitaram.pub` or `john-smith.pub`.  You can also use
     periods and underscores
 
-  * copy all these `*.pub` files to `$GL_KEYDIR`
+  * copy all these `*.pub` files to `keydir` in your gitolite-admin repo clone
 
-  * the config file (`$GL_CONF`) is very well commented, please take a couple
-    of minutes to read it.  Then edit it and
+  * edit the config file (`conf/gitolite.conf` in your admin repo clone).  See
+    `conf/example.conf` in the gitolite source for details on what goes in
+    that file, syntax, etc.  Just add new repos as needed, and add new users
+    and give them permissions as required.  The users names should be exactly
+    the same as their keyfile names, but without the `.pub` extension
 
-      * add new repos as needed
-      * add new users and give them permissions as required.  The users names
-        should be exactly the same as their keyfile names, but without the
-        `.pub` extension
+  * when done, commit your changes and push
 
 #### specifying gitweb and daemon access
 
@@ -51,41 +51,6 @@ one-time setup you must do separately.  All this does is:
     value you specified for `$projects_list` when setting up gitweb)
   * for daemon, create the file `git-daemon-export-ok` in the repository
 
-`src/gl-compile-conf` will keep these files consistent with the config
-settings -- this includes removing such settings if you remove "read"
-permissions for the special usernames.
-
-#### compiling
-
-  * backup your `~/.ssh/authorized_keys` file if you feel nervous :-)
-      * that's "backup" as in "copy", not "move".  The next step won't work if
-        the file doesn't exist.  Even an empty one is fine but it must be
-        present
-      * if you don't have an `~/.ssh/authorized_keys` file at all, you may
-        have logged in with a password, which in turn might mean you are not
-        familiar with ssh and authkeys etc.  If so, please read up at least
-        [this](http://sitaramc.github.com/0-installing/9-gitolite-basics.html#IMPORTANT_overview_of_ssh),
-        and preferably also the man pages for sshd and sshd\_config, to make
-        sure you understand the security implications of what you are doing.
-        Once you have understood that, create at least an empty
-        `~/.ssh/authorized_keys` file before proceeding to the next step
-
-  * cd to `$GL_ADMINDIR` and run `src/gl-compile-conf`
-
-That should be it, really.  However, if you want to be doubly sure, or maybe
-the first couple of times you use it, you may want to check these:
-
-  * check the outputs
-
-      * `~/.ssh/authorized_keys` should contain one line for each "user" pub
-        key added, between two "marker" lines (which you should please please
-        not remove!).  The line should contain a "command=" pointing to a
-        `$GL_ADMINDIR/src/gl-auth-command` file, then some sshd restrictions, the
-        key, etc.
-      * `$GL_CONF_COMPILED` should contain an expanded list of the access
-        control rules.  It may look a little long, but it's fairly intuitive!
-
-  * if the run threw up any "initialising empty repo" messages, check the
-    individual repos (inside `$REPO_BASE`) if you wish.  Especially make sure
-    the `$REPO_BASE/[reponame].git/hooks/update` got copied OK and is
-    executable
+The "compile" script will keep these files consistent with the config settings
+-- this includes removing such settings if you remove "read" permissions for
+the special usernames.

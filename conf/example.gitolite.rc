@@ -5,7 +5,7 @@
 # this file is meant to be pulled into a perl program using "do" or "require".
 
 # You do NOT need to know perl to edit the paths; it should be fairly
-# self-explanatory
+# self-explanatory and easy to maintain perl syntax :-)
 
 # --------------------------------------
 
@@ -87,6 +87,16 @@ $PERSONAL="";
 
 # NOTE: whatever value you choose, for security reasons it is better to make
 # it fully qualified -- that is, starting with "refs/"
+
+# --------------------------------------
+
+# if git on your server is on a standard path (that is
+#       ssh git@server git --version
+# works), leave this setting as is.  Otherwise, choose one of the
+# alternatives, or write your own
+
+$GIT_PATH="";
+# $GIT_PATH="/opt/bin/";
 
 # --------------------------------------
 # per perl rules, this should be the last line in such a file:
