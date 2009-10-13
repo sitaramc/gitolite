@@ -110,7 +110,7 @@ ls src/gl-auth-command  \
 # is, running "ssh git@server" should log in straight away, without asking for
 # a password
 
-ssh -p $port -o PasswordAuthentication=no $user@$host pwd >/dev/null ||
+ssh -p $port -o PasswordAuthentication=no $user@$host true ||
     die "pubkey access didn't work; please set it up using 'ssh-copy-id' or something"
 
 # MANUAL: make sure there's no "gitolite-admin" directory in $HOME (actually
