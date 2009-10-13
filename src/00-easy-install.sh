@@ -157,7 +157,7 @@ fi
 # called SSH_AGENT_PID in your "env"), you should add this new key.  The
 # command is "ssh-add ~/.ssh/sitaram"
 
-if [[ -n $SSH_AGENT_PID ]]
+if ssh-add -l &>/dev/null
 then
     prompt "you're running ssh-agent.  We'll try and do an ssh-add of the
     private key we just created, otherwise this key won't get picked up.  If
