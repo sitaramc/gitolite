@@ -126,15 +126,15 @@ ssh -p $port -o PasswordAuthentication=no $user@$host true ||
 
 prompt "the next command will create a new keypair for your gitolite access
 
-    The pubkey will be $HOME/.ssh/$admin_name.pub.  You will have to
-    choose a passphrase or hit enter for none.  I recommend not having a
-    passphrase for now, and adding one with 'ssh-keygen -p' *as soon as*
-    all the setup is done and you've successfully cloned and pushed the
-    gitolite-admin repo.
+    The pubkey will be $HOME/.ssh/$admin_name.pub.  You will have to choose a
+    passphrase or hit enter for none.  I recommend not having a passphrase for
+    now, *especially* if you do not have a passphrase for the key which you
+    are already using to get server access!
 
-    After that, I suggest you (1) install 'keychain' or something
-    similar, and (2) add the following command to your bashrc (since
-    this is a non-default key)
+    Add one using 'ssh-keygen -p' after all the setup is done and you've
+    successfully cloned and pushed the gitolite-admin repo.  After that,
+    install 'keychain' or something similar, and add the following command to
+    your bashrc (since this is a non-default key)
 
         ssh-add \$HOME/.ssh/$admin_name
 
