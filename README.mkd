@@ -15,12 +15,27 @@ specifying who can and cannot *rewind* a given branch.
 
 In this document:
 
+  * what
   * why
-  * what's extra
+  * extra features
   * security
   * contact and license
 
 ----
+
+### what
+
+Gitolite allows a server to host many git repositories and provide access to
+many developers, without having to give them real userids on the server.  The
+essential magic in doing this is ssh's pubkey access and the `authorized_keys`
+file, and the inspiration was an older program called gitosis.
+
+Gitolite can restrict who can read from (clone/fetch) or write to (push) a
+repository.  It can also restrict who can push to what branch or tag, which is
+very important in a corporate environment.  Gitolite can be installed without
+requiring root permissions, and with no additional software than git itself
+and perl.  It also has several other neat features described below and
+elsewhere in the `doc/` directory.
 
 ### why
 
@@ -33,15 +48,15 @@ a typical $DAYJOB setting, there are some issues:
     to help remotely, we never did manage to install it eventually)
   * you don't have root access, or the ability to add users (this is also true
     for people who have just one userid on a hosting provider)
-  * the most requested feature (see "what's new?") had to be written anyway
+  * the most requested feature (see below) had to be written anyway
 
 All of this pointed to a rewrite.  In perl, naturally :-)
 
-### what's extra
+### extra features
 
-**Per-branch permissions**.  You will not believe how often I am asked this at
-$DAYJOB.  This is almost the single reason I started *thinking* about rolling
-my own gitosis in the first place.
+The most important feature I needed was **per-branch permissions**.  This is
+pretty much mandatory in a corporate environment, and is almost the single
+reason I started *thinking* about rolling my own gitosis in the first place.
 
 It's not just "read-only" versus "read-write".  Rewinding a branch (aka "non
 fast forward push") is potentially dangerous, but sometimes needed.  So is
@@ -53,8 +68,8 @@ Here're **some more features**.  All of them are documented in detail
 somewhere in the `doc/` subdirectory.
 
   * simpler, yet far more powerful, config file syntax, including specifying
-    gitweb/daemon access.  You'll need this power if you manage lots of users
-    + repos + combinations of access
+    gitweb/daemon access.  You'll need this power if you manage lots of
+    users+repos+combinations of access
   * config file syntax gets checked upfront, and much more thoroughly
   * if your requirements are still too complex, you can split up the config
     file and delegate authority over parts of it
@@ -62,7 +77,7 @@ somewhere in the `doc/` subdirectory.
     a synonym for "annotate" :-)]
   * "personal namespace" prefix for each dev
   * migration guide and simple converter for gitosis conf file
-  * "exclude" (or "deny" rights in the config file) -- this is the "rebel"
+  * "exclude" (or "deny") rights in the config file -- this is the "rebel"
     branch in the repository, and always will be ;-)
 
 ### security

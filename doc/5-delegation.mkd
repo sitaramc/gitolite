@@ -5,14 +5,14 @@
 ### lots of repos, lots of users
 
 Gitolite tries to make it easy to manage access to lots of users and repos,
-exploiting commonalities wherever possible.  (The example under "simpler, more
-powerful syntax" [here][ml] should give you an idea).  As you can see, it lets
-you specify bits and pieces of the access control separately -- i.e., *all*
-the access specs for a certain repo need not be together; they can be
+exploiting commonalities wherever possible.  (The example in the section
+"simpler syntax" in [this page][ml] should give you an idea).  As you can see,
+it lets you specify bits and pieces of the access control separately -- i.e.,
+*all* the access specs for a certain repo need not be together; they can be
 scattered, which makes it easier to manage the sort of slice and dice needed
 in that example.
 
-[ml]: http://github.com/sitaramc/gitolite/blob/ml/update.mkd
+[ml]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd
 
 But eventually the config file will become too big.  If you let only one
 person have control, he could become a bottleneck.  If you give it to multiple
@@ -81,23 +81,24 @@ Splitting up the file does help, but there's also that little security issue
 -- anyone can make any change to any "fragment", unless you (once again) go
 back to Unix permissions to keep them separate.
 
-Fixing that requires using "push-to-admin".
+Fixing that requires using "push-to-admin", which is the default (and only)
+method to make config changes in gitosis.
 
-The page on [push-to-admin][ptd] explains clearly how to set it up.  Unlike
-gitosis, I refuse to make it the default because it's a support nightmare.
-Don't get me wrong -- it's a great feature, and I use it myself, but the
-learning curve is too steep to make it *required*.
+For a long time, I refused to make "push to admin" the default because it's a
+support nightmare.  Don't get me wrong -- it's a great feature, and I use it
+myself, but the learning curve was too steep to make it *required*.
 
-[ptd]: http://github.com/sitaramc/gitolite/blob/pu/doc/4-push-to-admin.mkd
+But eventually I figured out a way to front-load the darn ssh problem that
+everyone on #git seemed to run up against, created a nice "easy install"
+script, and made "push to admin" the default.
 
-So, having setup push-to-admin, you add these lines to the main config file,
-assuming Alice is in charge of all web browser development projects, Bob takes
-care of web servers, and Mallory, as [tradition][abe] dictates, is in charge
-of malware ;-)
+So now, you just add these lines to the main config file, assuming Alice is in
+charge of all web browser development projects, Bob takes care of web servers,
+and Mallory, as [tradition][abe] dictates, is in charge of malware ;-)
 
 [abe]: http://en.wikipedia.org/wiki/Alice_and_Bob#List_of_characters
 
-    # you probably added these two lines while setting up push-to-admin
+    # these 2 lines were probably present already
     repo gitolite-admin
         RW+                     = sitaram
     # now add these 3 lines
@@ -111,10 +112,10 @@ of malware ;-)
     @webserver_repos            = apache nginx
     @malware_repos              = conficker storm
 
-**As you can see, for each repo group you want to delegate authority over,
-there's a *branch* in the `gitolite-admin` repo with the same name.  If you
+As you can see, **for each repo group** you want to delegate authority over,
+there's a **branch with the same name** in the `gitolite-admin` repo.  If you
 have write access to that branch, you are allowed to define rules for repos in
-that repo group.**
+that repo group.
 
 In other words, we use gitolite's per-branch permissions to "enforce" the
 separation between the delegated configs!
