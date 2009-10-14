@@ -113,12 +113,6 @@ ls src/gl-auth-command  \
 ssh -p $port -o PasswordAuthentication=no $user@$host true ||
     die "pubkey access didn't work; please set it up using 'ssh-copy-id' or something"
 
-# MANUAL: make sure there's no "gitolite-admin" directory in $HOME (actually
-# for the manual flow this doesn't matter so much!)
-
-[[ -d $HOME/gitolite-admin ]] &&
-    die "please delete or move aside the \$HOME/gitolite-admin directory"
-
 # MANUAL: create a new key for you as a "gitolite user" (as opposed to you as
 # the "gitolite admin" who needs to login to the server and get a command
 # line).  For example, "ssh-keygen -t rsa ~/.ssh/sitaram"; this would create
@@ -241,20 +235,30 @@ if scp -P $port $user@$host:.gitolite.rc .
 then
     prompt "Oh hey... you already had a '.gitolite.rc' file on the server.
     Let's see if we can use that instead of the default one..."
-    sort < .gitolite.rc             | perl -ne 'print "$1\n" if /^(\$\w+) *=/' > glrc.old
-    sort < conf/example.gitolite.rc | perl -ne 'print "$1\n" if /^(\$\w+) *=/' > glrc.new
+    sort < .gitolite.rc             | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > glrc.old
+    sort < conf/example.gitolite.rc | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > glrc.new
     if diff -u glrc.old glrc.new
     then
         ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
     else
-        prompt "    looks like you're upgrading!  I'm going to run your editor
-        with *both* the old and the new files (in that order), so you can add
-        in the lines pertaining to the variables shown with a '+' sign in the
-        above diff.  This is necessary; please dont skip this
+        prompt "    looks like you're upgrading, and there are some new rc
+        variables that this version is expecting that your old rc file doesn't
+        have.
+
+        I'm going to run your editor with two filenames.  The first is the
+        example file from this gitolite version.  It will have a block (code
+        and comments) for each of the variables shown above with a '+' sign.
+
+        The second is your current rc file, the destination.  Copy those lines
+        into this file, preferably *with* the surrounding comments (for
+        clarity) and save it.
+
+        This is necessary; please dont skip this!
 
         [It's upto you to figure out how your editor handles 2 filename
         arguments, switch between them, copy lines, etc ;-)]"
-        ${VISUAL:-${EDITOR:-vi}} .gitolite.rc conf/example.gitolite.rc
+
+        ${VISUAL:-${EDITOR:-vi}} conf/example.gitolite.rc .gitolite.rc
     fi
 else
     cp conf/example.gitolite.rc .gitolite.rc
@@ -277,6 +281,31 @@ REPO_BASE=$(  ssh -p $port $user@$host "perl -e 'do \".gitolite.rc\"; print \$RE
 
 ssh -p $port $user@$host "cd gitolite-install; src/install.pl"
 
+# MANUAL: if you're upgrading, just go to your clone of the admin repo, make a
+# dummy change, and push.  (This assumes that you didn't change the
+# admin_name, pubkeys, userids, ports, or whatever, and you ran easy install
+# only to upgrade the software).  And then you are **done** -- ignore the rest
+# of this file for the purposes of an upgrade
+
+# determine if this is an upgrade; we decide based on whether a pubkey called
+# $admin_name.pub exists in $GL_ADMINDIR/keydir on the remote side
+upgrade=0
+if ssh -p $port $user@$host cat $GL_ADMINDIR/keydir/$admin_name.pub &> /dev/null
+then
+    prompt "this looks like an upgrade, based on the fact that a file called
+    $admin_name.pub already exists in $GL_ADMINDIR/keydir on the server.
+
+    Please go to your clone of the admin repo, make a dummy change (like maybe
+    add a blank line to something), commit, and push.  You're done!
+
+    (This assumes that you didn't change the admin_name, pubkeys, userids,
+    ports, or whatever, and you ran easy install only to upgrade the
+    software)."
+
+    exit 0
+
+fi
+
 # MANUAL: setup the initial config file.  Edit $GL_ADMINDIR/conf/gitolite.conf
 # and add at least the following lines to it:
 
@@ -284,7 +313,7 @@ ssh -p $port $user@$host "cd gitolite-install; src/install.pl"
 #       RW+                 = sitaram
 
 echo "#gitolite conf
-#please see conf/example.conf for details on syntax and features
+# please see conf/example.conf for details on syntax and features
 
 repo gitolite-admin
     RW+                 = $admin_name
@@ -296,20 +325,18 @@ repo testing
 
 # send the config and the key to the remote
 scp -P $port gitolite.conf $user@$host:$GL_ADMINDIR/conf/
-
 scp -P $port $HOME/.ssh/$admin_name.pub $user@$host:$GL_ADMINDIR/keydir
 
 # MANUAL: cd to $GL_ADMINDIR and run "src/gl-compile-conf"
-
 ssh -p $port $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf"
 
 # ----------------------------------------------------------------------
 # hey lets go the whole hog on this; setup push-to-admin!
 # ----------------------------------------------------------------------
 
-# MANUAL: make the first commit in the admin repo.  This is a little more
-# complex, so read carefully and substitute the correct paths.  What you have
-# to do is:
+# MANUAL: you have to now make the first commit in the admin repo.  This is
+# a little more complex, so read carefully and substitute the correct paths.
+# What you have to do is:
 
 #   cd $REPO_BASE/gitolite-admin.git
 #   GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
@@ -329,12 +356,13 @@ GIT_WORK_TREE=$GL_ADMINDIR git commit -am start --allow-empty
 
 ssh -p $port $user@$host "cd gitolite-install; src/install.pl"
 
-prompt "now we will clone the gitolite-admin repo to your workstation
-    and see if it all hangs together.  We'll do this in your \$HOME for now,
-    and you can move it elsewhere later if you wish to."
-
 # MANUAL: you're done!  Log out of the server, come back to your workstation,
-# and clone the admin repo using "git clone gitolite:gitolite-admin.git"!
+# and clone the admin repo using "git clone gitolite:gitolite-admin.git", or
+# pull once again if you already have a clone
+
+prompt "now we will clone the gitolite-admin repo to your workstation
+and see if it all hangs together.  We'll do this in your \$HOME for now,
+and you can move it elsewhere later if you wish to."
 
 cd $HOME
 git clone gitolite:gitolite-admin.git
