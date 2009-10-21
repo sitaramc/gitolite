@@ -49,9 +49,11 @@ Pre-requisites:
   - you must run this from the gitolite working tree top level directory.
     This means you run this as "src/00-easy-install.sh"
   - you must already have pubkey based access to user@host.  If you currently
-    only have password access, use "ssh-copy-id" or something.  Somehow get to
-    the point where you can type "ssh user@host" and get a command line.  Run
-    this program only after that is done
+    only have password access, use "ssh-copy-id" or something equivalent (or
+    copy the key manually).  Somehow (doesn't matter how), get to the point
+    where you can type "ssh user@host" and get a command line.
+
+            **DO NOT RUN THIS PROGRAM UNTIL THAT WORKS**
 
 Errors:
   - if you get a "pubkey [...filename...] exists" error, it is either leftover
