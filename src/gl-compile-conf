@@ -415,7 +415,10 @@ for my $pubkey (glob("*"))
         unless $user_list{$user};
     $user_list{$user} = 'has pubkey';
     print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";
-    print $newkeys_fh `cat $pubkey`;
+    # apparently some pubkeys don't end in a newline...
+    my $pubkey_content = `cat $pubkey`;
+    $pubkey_content =~ s/\s*$/\n/;
+    print $newkeys_fh $pubkey_content;
 }
 # lint check 3; a little more severe than the first two I guess...
 for my $user (sort keys %user_list)
