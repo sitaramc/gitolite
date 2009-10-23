@@ -74,8 +74,8 @@ make the same changes below.
     repos they play havoc with my git commands, so this is how I do it)
 
         cd ~/repositories/gitolite-admin.git
-        GIT_WORK_TREE=/home/git/.gitolite git add conf/gitolite.conf keydir
-        GIT_WORK_TREE=/home/git/.gitolite git commit -am start
+        GIT_WORK_TREE=$HOME/.gitolite git add conf/gitolite.conf keydir
+        GIT_WORK_TREE=$HOME/.gitolite git commit -am start
 
 4.  Now we have to setup the post-update hook for push-to-admin to work.  The hook
     should (1) make a forced checkout in the "live" config directory (which is

@@ -2,7 +2,7 @@
 
 # get this from your .gitolite.conf; and don't forget this is shell, while
 # that is perl :-)
-export GL_ADMINDIR=/home/git/.gitolite
+export GL_ADMINDIR=$HOME/.gitolite
 
 # checkout the master branch to $GL_ADMINDIR
 GIT_WORK_TREE=$GL_ADMINDIR git checkout -f master

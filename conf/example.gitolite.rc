@@ -27,7 +27,7 @@ $REPO_UMASK = 0077;         # gets you 'rwx------'
 # part of the setup of gitweb is a variable called $projects_list (please see
 # gitweb documentation for more on this).  Set this to the same value:
 
-$PROJECTS_LIST = "/home/git/projects.list";
+$PROJECTS_LIST = $ENV{HOME} . "/projects.list";
 
 # --------------------------------------
 
