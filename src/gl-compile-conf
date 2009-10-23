@@ -291,7 +291,8 @@ for my $repo (keys %repos)
 {
     unless (-d "$repo.git")
     {
-        mkdir("$repo.git") or die "$ATTN mkdir $repo.git failed: $!\n";
+        system("mkdir", "-p", "$repo.git") and die "$ATTN mkdir $repo.git failed: $!\n";
+            # erm, note that's "and die" not "or die" as is normal in perl
         wrap_chdir("$repo.git");
         system("git --bare init");
         system("cp $GL_ADMINDIR/src/update-hook.pl hooks/update");

@@ -75,12 +75,6 @@ normal way, since it's not empty anymore.
     to hurt anything.  This happens even in normal git, not just gitolite.
     [Update 2009-09-14; this has been fixed in git 1.6.4.3]
 
-  * if you specify a repo that is not at the top level `$REPO_BASE`, be sure
-    to manually create the intermediate directories first.  For instance if
-    you specify a new repo called "a/b/c" to the config file and push, the
-    "compile" script will just `mkdir a/b/c.git`, assuming "a/b" has already
-    been created
-
   * gitweb not able to read your repos?  You can change the umask for newly
     created repos to something more relaxed -- see the `~/.gitolite.rc` file
 
