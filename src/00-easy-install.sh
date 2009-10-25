@@ -17,6 +17,14 @@ set -e
 
 die() { echo "$@"; echo; echo "run $0 again without any arguments for help and tips"; exit 1; }
 prompt() {
+    # receives two arguments.  A short piece of text to be displayed, without
+    # pausing, in "quiet" mode, and a much longer one to be displayed, *with*
+    # a pause, in normal (verbose) mode
+    [[ $quiet == -q ]] && [[ -n $1 ]] && {
+        echo "$1"
+        return
+    }
+    shift
     echo
     echo
     echo ------------------------------------------------------------------------
@@ -26,7 +34,10 @@ prompt() {
 }
 usage() {
     cat <<EOFU
-Usage: $0 user host port admin_name
+Usage: $0 [-q] user host port admin_name
+
+  - (optional) "-q" as first arg sets "quiet" mode: no verbose descriptions of
+    what is going on, no pauses unless absolutely necessary
   - "user" is the username on the server where you will be installing gitolite
   - "host" is that server's hostname (or IP address is also fine)
   - "port" is optional
@@ -34,9 +45,6 @@ Usage: $0 user host port admin_name
     gitolite config file
 
 Example usage: $0 git my.git.server sitaram
-
-Output:
-  - a proper gitolite admin repo in $HOME/gitolite-admin
 
 Notes:
   - "user" and "admin_name" must be simple names -- no special characters etc
@@ -55,11 +63,6 @@ Pre-requisites:
 
             **DO NOT RUN THIS PROGRAM UNTIL THAT WORKS**
 
-Errors:
-  - if you get a "pubkey [...filename...] exists" error, it is either leftover
-    from a previous, failed, run, or a genuine file you need.  Decide which it
-    is, and remove it and retry, or use a different "admin_name", respectively.
-
 EOFU
     exit 1;
 }
@@ -76,6 +79,13 @@ EOFU
     echo "please cd to the gitolite repo top level directory and run this as
     'src/00-easy-install.sh'"
     exit 1;
+}
+
+# are we in quiet mode?
+quiet=
+[[ "$1" == "-q" ]] && {
+    quiet=-q
+    shift
 }
 
 # MANUAL: (info) we'll use "git" as the user, "server" as the host, and
@@ -120,7 +130,8 @@ ssh -p $port -o PasswordAuthentication=no $user@$host true ||
 # line).  For example, "ssh-keygen -t rsa ~/.ssh/sitaram"; this would create
 # two files in ~/.ssh (sitaram and sitaram.pub)
 
-prompt "the next command will create a new keypair for your gitolite access
+prompt "setting up keypair..." \
+    "the next command will create a new keypair for your gitolite access
 
     The pubkey will be $HOME/.ssh/$admin_name.pub.  You will have to choose a
     passphrase or hit enter for none.  I recommend not having a passphrase for
@@ -138,7 +149,8 @@ prompt "the next command will create a new keypair for your gitolite access
 
 if [[ -f $HOME/.ssh/$admin_name.pub ]]
 then
-    prompt "Hmmm... pubkey $HOME/.ssh/$admin_name.pub exists; should I just re-use it?
+    prompt "    ...reusing $HOME/.ssh/$admin_name.pub..." \
+    "Hmmm... pubkey $HOME/.ssh/$admin_name.pub exists; should I just re-use it?
     Be sure you remember the passphrase, if you gave one when you created it!"
 else
     ssh-keygen -t rsa -f $HOME/.ssh/$admin_name || die "ssh-keygen failed for some reason..."
@@ -155,7 +167,8 @@ fi
 
 if ssh-add -l &>/dev/null
 then
-    prompt "you're running ssh-agent.  We'll try and do an ssh-add of the
+    prompt "   ...adding key to agent..." \
+    "you're running ssh-agent.  We'll try and do an ssh-add of the
     private key we just created, otherwise this key won't get picked up.  If
     you specified a passphrase in the previous step, you'll get asked for one
     now -- type in the same one."
@@ -184,7 +197,8 @@ host gitolite
 
 if grep 'host  *gitolite' $HOME/.ssh/config &>/dev/null
 then
-    prompt "your \$HOME/.ssh/config already has settings for gitolite.  I will
+    prompt "found gitolite para in ~/.ssh/config; assuming it is correct..." \
+    "your \$HOME/.ssh/config already has settings for gitolite.  I will
     assume they're correct, but if they're not, please edit that file, delete
     that paragraph (that line and the following few lines), Ctrl-C, and rerun.
 
@@ -193,7 +207,8 @@ then
 $(cat ~/.ssh/.gl-stanza)"
 
 else
-    prompt "creating settings for your gitolite access in $HOME/.ssh/config;
+    prompt "creating gitolite para in ~/.ssh/config..." \
+    "creating settings for your gitolite access in $HOME/.ssh/config;
     these are the lines that will be appended to your ~/.ssh/config:
 $(cat ~/.ssh/.gl-stanza)"
 
@@ -212,7 +227,7 @@ rm  $HOME/.ssh/.gl-stanza
 # have to create the directory first.
 
 ssh -p $port $user@$host mkdir -p gitolite-install
-rsync -e "ssh -p $port" -a src conf doc $user@$host:gitolite-install/
+rsync $quiet -e "ssh -p $port" -a src conf doc $user@$host:gitolite-install/
 
 # MANUAL: now log on to the server (ssh git@server) and get a command line.
 # This step is for your convenience; the script does it all from the client
@@ -223,7 +238,8 @@ rsync -e "ssh -p $port" -a src conf doc $user@$host:gitolite-install/
 # change any paths.  Make a note of the GL_ADMINDIR and REPO_BASE paths; you
 # will need them later
 
-prompt "the gitolite rc file needs to be edited by hand.  The defaults
+prompt "finding/creating gitolite rc..." \
+    "the gitolite rc file needs to be edited by hand.  The defaults
     are sensible, so if you wish, you can just exit the editor.
 
     Otherwise, make any changes you wish and save it.  Read the comments to
@@ -233,19 +249,20 @@ prompt "the gitolite rc file needs to be edited by hand.  The defaults
     all the paths etc. represent paths on the server!"
 
 # lets try and get the file from there first
-if scp -P $port $user@$host:.gitolite.rc .
+if scp -P $port $user@$host:.gitolite.rc . &>/dev/null
 then
-    prompt "Oh hey... you already had a '.gitolite.rc' file on the server.
+    prompt "    ...trying to reuse existing rc" \
+    "Oh hey... you already had a '.gitolite.rc' file on the server.
     Let's see if we can use that instead of the default one..."
     sort < .gitolite.rc             | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > glrc.old
     sort < conf/example.gitolite.rc | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > glrc.new
     if diff -u glrc.old glrc.new
     then
-        ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
+        [[ $quiet == -q ]] || ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
     else
-        prompt "    looks like you're upgrading, and there are some new rc
-        variables that this version is expecting that your old rc file doesn't
-        have.
+        prompt "" \
+        "    looks like you're upgrading, and there are some new rc variables
+        that this version is expecting that your old rc file doesn't have.
 
         I'm going to run your editor with two filenames.  The first is the
         example file from this gitolite version.  It will have a block (code
@@ -264,13 +281,14 @@ then
     fi
 else
     cp conf/example.gitolite.rc .gitolite.rc
-    ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
+    [[ $quiet == -q ]] || ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
 fi
 
 # copy the rc across
-scp -P $port .gitolite.rc $user@$host:
+scp $quiet -P $port .gitolite.rc $user@$host:
 
-prompt "ignore any 'please edit this file' or 'run this command' type
+prompt "installing/upgrading..." \
+    "ignore any 'please edit this file' or 'run this command' type
     lines in the next set of command outputs coming up.  They're only relevant
     for a manual install, not this one..."
 
@@ -281,7 +299,7 @@ REPO_BASE=$(  ssh -p $port $user@$host "perl -e 'do \".gitolite.rc\"; print \$RE
 # MANUAL: still in the "gitolite-install" directory?  Good.  Run
 # "src/install.pl"
 
-ssh -p $port $user@$host "cd gitolite-install; src/install.pl"
+ssh -p $port $user@$host "cd gitolite-install; src/install.pl $quiet"
 
 # MANUAL: if you're upgrading, just go to your clone of the admin repo, make a
 # dummy change, and push.  (This assumes that you didn't change the
@@ -294,7 +312,8 @@ ssh -p $port $user@$host "cd gitolite-install; src/install.pl"
 upgrade=0
 if ssh -p $port $user@$host cat $GL_ADMINDIR/keydir/$admin_name.pub &> /dev/null
 then
-    prompt "this looks like an upgrade, based on the fact that a file called
+    prompt "upgrade done!" \
+    "this looks like an upgrade, based on the fact that a file called
     $admin_name.pub already exists in $GL_ADMINDIR/keydir on the server.
 
     Please go to your clone of the admin repo, make a dummy change (like maybe
@@ -326,11 +345,11 @@ repo testing
 " > gitolite.conf
 
 # send the config and the key to the remote
-scp -P $port gitolite.conf $user@$host:$GL_ADMINDIR/conf/
-scp -P $port $HOME/.ssh/$admin_name.pub $user@$host:$GL_ADMINDIR/keydir
+scp $quiet -P $port gitolite.conf $user@$host:$GL_ADMINDIR/conf/
+scp $quiet -P $port $HOME/.ssh/$admin_name.pub $user@$host:$GL_ADMINDIR/keydir
 
 # MANUAL: cd to $GL_ADMINDIR and run "src/gl-compile-conf"
-ssh -p $port $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf"
+ssh -p $port $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf $quiet"
 
 # ----------------------------------------------------------------------
 # hey lets go the whole hog on this; setup push-to-admin!
@@ -356,15 +375,16 @@ GIT_WORK_TREE=$GL_ADMINDIR git commit -am start --allow-empty
 # properly.  The install program does this.  So cd back to the
 # "gitolite-install" directory and run "src/install.pl"
 
-ssh -p $port $user@$host "cd gitolite-install; src/install.pl"
+ssh -p $port $user@$host "cd gitolite-install; src/install.pl $quiet"
 
 # MANUAL: you're done!  Log out of the server, come back to your workstation,
 # and clone the admin repo using "git clone gitolite:gitolite-admin.git", or
 # pull once again if you already have a clone
 
-prompt "now we will clone the gitolite-admin repo to your workstation
-and see if it all hangs together.  We'll do this in your \$HOME for now,
-and you can move it elsewhere later if you wish to."
+prompt "cloning gitolite-admin repo..." \
+"now we will clone the gitolite-admin repo to your workstation
+    and see if it all hangs together.  We'll do this in your \$HOME for now,
+    and you can move it elsewhere later if you wish to."
 
 cd $HOME
 git clone gitolite:gitolite-admin.git
