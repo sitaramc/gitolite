@@ -18,20 +18,24 @@ sub wrap_mkdir
     print STDERR "created $dir\n";
 }
 
-# the only path that is *fixed* (can't be changed without changing all 3
-# programs) is ~/.gitolite.rc
+# the common setup module is in the same directory as this running program is
+my $bindir = $0;
+$bindir =~ s/\/[^\/]+$//;
+require "$bindir/gitolite.pm";
 
-my $glrc = $ENV{HOME} . "/.gitolite.rc";
-unless (-f $glrc) {
+# ask where the rc file is, get it, and "do" it
+&where_is_rc();
+unless ($ENV{GL_RC}) {
     # doesn't exist.  Copy it across, tell user to edit it and come back
+    my $glrc = $ENV{HOME} . "/.gitolite.rc";
     system("cp conf/example.gitolite.rc $glrc");
     print STDERR "created $glrc\n";
     print STDERR "please edit it, change the paths if you wish to, and RERUN THIS SCRIPT\n";
     exit;
 }
 
-# ok now $glrc exists; read it to get the other paths
-die "parse $glrc failed: " . ($! or $@) unless do $glrc;
+# ok now the rc file exists; read it to get the other paths
+die "parse $ENV{GL_RC} failed: " . ($! or $@) unless do $ENV{GL_RC};
 
 # add a custom path for git binaries, if specified
 $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;

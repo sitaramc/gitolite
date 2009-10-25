@@ -54,8 +54,14 @@ our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UM
 # typical push generates
 my $ATTN = "\n\t\t***** ERROR *****\n       ";
 
-my $glrc = $ENV{HOME} . "/.gitolite.rc";
-die "$ATTN parse $glrc failed: " . ($! or $@) unless do $glrc;
+# the common setup module is in the same directory as this running program is
+my $bindir = $0;
+$bindir =~ s/\/[^\/]+$//;
+require "$bindir/gitolite.pm";
+
+# ask where the rc file is, get it, and "do" it
+&where_is_rc();
+die "parse $ENV{GL_RC} failed: " . ($! or $@) unless do $ENV{GL_RC};
 
 # add a custom path for git binaries, if specified
 $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
