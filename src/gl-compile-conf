@@ -47,6 +47,9 @@ $Data::Dumper::Indent = 1;
 #       common definitions
 # ----------------------------------------------------------------------------
 
+# setup quiet mode if asked; please do not use this when running manually
+open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
+
 our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH);
 
 # now that this thing *may* be run via "push to admin", any errors have to
@@ -343,12 +346,12 @@ for my $repo (sort keys %repos) {
     if ($repos{$repo}{'R'}{'daemon'}) {
         unless (-f $export_ok) {
             system("touch $export_ok");
-            print STDERR "daemon add $repo.git\n";
+            print "daemon add $repo.git\n";
         }
     } else {
         if (-f $export_ok) {
             unlink($export_ok);
-            print STDERR "daemon del $repo.git\n";
+            print "daemon del $repo.git\n";
         }
     }
 }
@@ -360,21 +363,21 @@ for my $repo (sort keys %repos) {
             # not in the old list; add it to the new one
             $projlist{"$repo.git"} = 1;
             $projlist_changed = 1;
-            print STDERR "gitweb add $repo.git\n";
+            print "gitweb add $repo.git\n";
         }
     } else {
         if ($projlist{"$repo.git"}) {
             # delete it from new list
             delete $projlist{"$repo.git"};
             $projlist_changed = 1;
-            print STDERR "gitweb del $repo.git\n";
+            print "gitweb del $repo.git\n";
         }
     }
 }
 
 # has there been a change in the gitweb projects list?
 if ($projlist_changed) {
-    print STDERR "updating gitweb project list $PROJECTS_LIST\n";
+    print "updating gitweb project list $PROJECTS_LIST\n";
     my $projlist_fh = wrap_open( ">", $PROJECTS_LIST);
     print $projlist_fh join("\n", sort keys %projlist), "\n" if %projlist;
     close $projlist_fh;
