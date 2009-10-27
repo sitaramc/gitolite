@@ -12,6 +12,7 @@ In this document:
       * error checking the config file
       * delegating parts of the config file
       * easier to specify gitweb/daemon access
+      * easier to link gitweb authorisation with gitolite
       * better logging
       * one user, many keys
       * support for git installed outside default PATH
@@ -91,6 +92,8 @@ plain "git archive", because the Makefile adds a file called
     cd gitolite
     make master.tar
     # or maybe "make rebel.tar" or "make pu.tar"
+
+<a name="diff"></a>
 
 ### differences from gitosis
 
@@ -191,6 +194,9 @@ for details.
 
 #### easier to specify gitweb/daemon access
 
+Which of your repos should be accessible via plain HTTP or the `git://`
+protocols (gitweb and git daemon, respectively)?
+
 Specifying gitweb and/or daemon access for a repo is simple: give "read"
 permissions to two special usernames: `gitweb` and `daemon`.
 
@@ -220,6 +226,61 @@ bits and pieces.  Here's an example, using short repo names for convenience:
 
     repo r2
     # ...and so on...
+
+<a name="gitwebauth"></a>
+
+#### easier to link gitweb authorisation with gitolite
+
+Over and above whether a repo is even *shown* by gitweb, you may want to
+further restrict people, allowing them to view *only* those repos for which
+they have been given read access by gitolite.
+
+This requires that:
+
+  * you have to have some sort of HTTP auth on your web server (out of my
+    scope, sorry!)
+  * the HTTP auth should use the same username (like "sitaram") as used in the
+    gitolite config (for the corresponding user)
+
+Once that is done, it's easy.  Gitweb allows you to specify a subroutine to
+decide on access.  We use that feature and tie it to gitolite.  Sample code
+(untested, munged from something I saw [here][leho]) is given below.
+
+Note the **utter simplicity** of the actual check (just 1 line!).  This is an
+unexpected piece of luck coming from the decision to keep the config parse
+separate from the actual access control.  The config parser puts a pure perl
+hash in that file named below as `$gl_conf_compiled`, so all the parsing is
+already done and we just use it!
+
+    # completely untested... but the basic idea should work fine
+
+    # change these as needed
+    $repo_base = '/home/git/repositories/';
+    $gl_conf_compiled = '/home/git/.gitolite/conf/gitolite.conf-compiled.pm';
+
+    # I assume this gives us the HTTP auth username
+    $username = $cgi->remote_user;
+
+    # ----------
+
+    # parse the config file; updates %repos hash
+    our %repos;
+    die "parse $gl_conf_compiled failed: " . ($! or $@) unless do $gl_conf_compiled;
+
+    # this is gitweb's mechanism; it calls whatever sub is pointed at by this
+    # variable to decide access yes/no
+    $export_auth_hook = sub {
+        my $reponame = shift;
+        # gitweb passes us the full repo path; so we strip the beginning...
+        $reponame =~ s/\Q$repo_base//;
+        # ...and the end, to get the repo name as it is specified in gitolite conf
+        $reponame =~ s/\.git$//;
+
+        return exists $repos{$reponame}{R}{$username};
+    }
+
+
+[leho]: http://leho.kraav.com/news/2009/10/27/using-apache-authentication-with-gitweb-gitosis-repository-access-control/
 
 #### better logging
 
