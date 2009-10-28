@@ -24,7 +24,7 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 
-our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH);
+our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $GL_ADMINDIR);
 our %repos;
 
 # the common setup module is in the same directory as this running program is
@@ -60,11 +60,21 @@ my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 #       sanity checks on SSH_ORIGINAL_COMMAND
 # ----------------------------------------------------------------------------
 
-# SSH_ORIGINAL_COMMAND must exist.  Since we also captured $user, we print
-# that in the message so people saying "ssh git@server" can see which gitolite
-# user he is being recognised as
-my $cmd = $ENV{SSH_ORIGINAL_COMMAND}
-    or die "no SSH_ORIGINAL_COMMAND?  I'm not a shell, $user!\n";
+# SSH_ORIGINAL_COMMAND must exist; if not, we die with a nice message
+unless ($ENV{SSH_ORIGINAL_COMMAND}) {
+    # send back some useful info if no command was given
+    print "hello $user, the gitolite version here is ";
+    system("cat", "$GL_ADMINDIR/src/VERSION");
+    print "\ryou have the following permissions:\n\r";
+    for my $r (sort keys %repos) {
+        my $perm .= "  R" if $repos{$r}{R}{$user};
+        $perm .= "  W" if $repos{$r}{W}{$user};
+        print "$perm\t$r\n\r" if $perm;
+    }
+    exit 1;
+}
+
+my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
 
 # split into command and arguments; the pattern allows old style as well as
 # new style: "git-subcommand arg" or "git subcommand arg", just like gitosis

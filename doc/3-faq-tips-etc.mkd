@@ -16,7 +16,7 @@ In this document:
       * better logging
       * one user, many keys
       * support for git installed outside default PATH
-      * who am I?
+      * what repos do I have access to?
   * other cool things
       * "personal" branches
   * design choices
@@ -348,24 +348,35 @@ attempting to run git stuff.
 
 Very easy, very simple, and completely transparent to the users :-)
 
-#### who am I?
+<a name="myrights"></a>
 
-As a developer, I send a file called `id_rsa.pub` to the gitolite admin.  He
-would rename it to "sitaram.pub" and put it in the key directory.  Then he'd
-add "sitaram" to the config file for the repos which I have access to.
+#### what repos do I have access to?
 
-But he could have called me "foobar" instead of "sitaram" -- as long as he
-uses it consistently, it'll all work the same and look the same to me, because
-the public key is all that matters.
+Sometimes there are too many repos, maybe even named similarly, or with the
+potential for typos, confusion about hyphens/underscores or upper/lower case,
+etc.  You'd just like a simple way to know what repos you have access to.
 
-So do I have no reason to know what the admin named me?  Well -- maybe (see
-next section for one possible use).  Anyway how do I find out?
+Easy!  Just use ssh and try to log in as if you were attempting to get a
+shell:
 
-In gitolite, it's simple: just ask nicely :-)
-
-    $ ssh git@my.gitolite.server
+    $ ssh gitolite
     PTY allocation request failed on channel 0
-    no SSH_ORIGINAL_COMMAND?  I'm not a shell, sitaram!
+    hello sitaram, the gitolite version here is v0.6-17-g94ed189
+    you have the following permissions:
+      R  W  Anu-WSD
+      R     ROtest
+      R  W  SecureBrowse
+      R  W  entrans
+      R  W  git-notes
+      R  W  gitolite
+      R  W  gitolite-admin
+      R  W  indic_web_input
+      R  W  proxy
+      R  W  vkc
+
+Note that until this version, we used to put out an ugly `need
+SSH_ORIGINAL_COMMAND` error, just like gitosis used to.  All we did is put
+that code path to better use :-)
 
 ### other cool things
 
