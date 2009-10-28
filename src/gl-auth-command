@@ -27,8 +27,15 @@ use warnings;
 our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH);
 our %repos;
 
-my $glrc = $ENV{HOME} . "/.gitolite.rc";
-die "parse $glrc failed: "             . ($! or $@) unless do $glrc;
+# the common setup module is in the same directory as this running program is
+my $bindir = $0;
+$bindir =~ s/\/[^\/]+$//;
+require "$bindir/gitolite.pm";
+
+# ask where the rc file is, get it, and "do" it
+&where_is_rc();
+die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
+# then "do" the compiled config file, whose name we now know
 die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
 
 # add a custom path for git binaries, if specified

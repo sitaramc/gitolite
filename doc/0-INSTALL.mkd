@@ -9,6 +9,9 @@ slightly more manual process.  Both are explained here.
 In this document:
 
   * easy install
+      * typical example run
+      * advantages over the older install methods
+      * disadvantages
   * manual install
   * other notes
   * next steps
@@ -35,6 +38,17 @@ Assumptions:
 If so, just `cd` to that clone and run `src/00-easy-install.sh` and follow the
 prompts!  (Running it without any arguments shows you usage plus other useful
 info).
+
+#### typical example run
+
+A typical run for me is:
+
+    src/00-easy-install.sh -q git my.git.server sitaram
+
+`-q` stands for "quiet" mode -- very minimal output, no verbose descriptions
+of what it is going to do, and no pauses unless absolutely needed.  However,
+if you're doing this for the first time or you appreciate knowing what it is
+actually doing, I suggest you skip the `-q`.
 
 #### advantages over the older install methods
 

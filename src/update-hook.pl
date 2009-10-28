@@ -28,8 +28,9 @@ use warnings;
 our ($GL_CONF_COMPILED, $PERSONAL);
 our %repos;
 
-my $glrc = $ENV{HOME} . "/.gitolite.rc";
-die "parse $glrc failed: "             . ($! or $@) unless do $glrc;
+# we should already have the GL_RC env var set when we enter this hook
+die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
+# then "do" the compiled config file, whose name we now know
 die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
 
 # ----------------------------------------------------------------------------

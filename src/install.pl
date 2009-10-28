@@ -5,33 +5,40 @@ use warnings;
 
 our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF, $GIT_PATH);
 
+# setup quiet mode if asked; please do not use this when running manually
+open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
+
 # wrapper around mkdir; it's not an error if the directory exists, but it is
 # an error if it doesn't exist and we can't create it
 sub wrap_mkdir
 {
     my $dir = shift;
     if ( -d $dir ) {
-        print STDERR "$dir already exists\n";
+        print "$dir already exists\n";
         return;
     }
     mkdir($dir) or die "mkdir $dir failed: $!\n";
-    print STDERR "created $dir\n";
+    print "created $dir\n";
 }
 
-# the only path that is *fixed* (can't be changed without changing all 3
-# programs) is ~/.gitolite.rc
+# the common setup module is in the same directory as this running program is
+my $bindir = $0;
+$bindir =~ s/\/[^\/]+$//;
+require "$bindir/gitolite.pm";
 
-my $glrc = $ENV{HOME} . "/.gitolite.rc";
-unless (-f $glrc) {
+# ask where the rc file is, get it, and "do" it
+&where_is_rc();
+unless ($ENV{GL_RC}) {
     # doesn't exist.  Copy it across, tell user to edit it and come back
+    my $glrc = $ENV{HOME} . "/.gitolite.rc";
     system("cp conf/example.gitolite.rc $glrc");
-    print STDERR "created $glrc\n";
-    print STDERR "please edit it, change the paths if you wish to, and RERUN THIS SCRIPT\n";
+    print "created $glrc\n";
+    print "please edit it, change the paths if you wish to, and RERUN THIS SCRIPT\n";
     exit;
 }
 
-# ok now $glrc exists; read it to get the other paths
-die "parse $glrc failed: " . ($! or $@) unless do $glrc;
+# ok now the rc file exists; read it to get the other paths
+die "parse $ENV{GL_RC} failed: " . ($! or $@) unless do $ENV{GL_RC};
 
 # add a custom path for git binaries, if specified
 $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
@@ -50,7 +57,7 @@ system("cp -R src doc $GL_ADMINDIR");
 
 unless (-f $GL_CONF) {
     system("cp conf/example.conf $GL_CONF");
-    print STDERR <<EOF;
+    print <<EOF;
     created $GL_CONF
     please edit it, then run these two commands:
         cd $GL_ADMINDIR
@@ -70,7 +77,7 @@ for my $repo (`find . -type d -name "*.git"`) {
 
 # oh and one of those repos is a bit more special and has an extra hook :)
 if ( -d "gitolite-admin.git/hooks" ) {
-    print STDERR "copying post-update hook to gitolite-admin repo...\n";
+    print "copying post-update hook to gitolite-admin repo...\n";
     system("cp -v $GL_ADMINDIR/src/pta-hook.sh gitolite-admin.git/hooks/post-update");
     system("perl", "-i", "-p", "-e", "s(export GL_ADMINDIR=.*)(export GL_ADMINDIR=$GL_ADMINDIR)",
         "gitolite-admin.git/hooks/post-update");
