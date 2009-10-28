@@ -125,6 +125,25 @@ ls src/gl-auth-command  \
 ssh -p $port -o PasswordAuthentication=no $user@$host true ||
     die "pubkey access didn't work; please set it up using 'ssh-copy-id' or something"
 
+# MANUAL: if needed, make a note of the version you are upgrading from, and to
+
+# record which version is being sent across; we assume it's HEAD
+git describe --tags --long HEAD 2>/dev/null > src/VERSION || echo '(unknown)' > src/VERSION
+
+# what was the old version there?
+export upgrade_details="you are upgrading from \
+$(ssh -p $port $user@$host cat gitolite-install/src/VERSION 2>/dev/null || echo '(unknown)' ) \
+to $(cat src/VERSION)"
+
+prompt "$upgrade_details" \
+    "$upgrade_details
+
+    Note: getting '(unknown)' for the 'from' version should only happen once.
+    Getting '(unknown)' for the 'to' version means you are probably installing
+    from a tar file dump, not a real clone.  This is not an error but it's
+    nice to have those version numbers in case you need support.  Try and
+    install from a clone"
+
 # MANUAL: create a new key for you as a "gitolite user" (as opposed to you as
 # the "gitolite admin" who needs to login to the server and get a command
 # line).  For example, "ssh-keygen -t rsa ~/.ssh/sitaram"; this would create
@@ -167,7 +186,7 @@ fi
 
 if ssh-add -l &>/dev/null
 then
-    prompt "   ...adding key to agent..." \
+    prompt "    ...adding key to agent..." \
     "you're running ssh-agent.  We'll try and do an ssh-add of the
     private key we just created, otherwise this key won't get picked up.  If
     you specified a passphrase in the previous step, you'll get asked for one
@@ -228,6 +247,7 @@ rm  $HOME/.ssh/.gl-stanza
 
 ssh -p $port $user@$host mkdir -p gitolite-install
 rsync $quiet -e "ssh -p $port" -a src conf doc $user@$host:gitolite-install/
+rm -f src/VERSION
 
 # MANUAL: now log on to the server (ssh git@server) and get a command line.
 # This step is for your convenience; the script does it all from the client
@@ -312,7 +332,7 @@ ssh -p $port $user@$host "cd gitolite-install; src/install.pl $quiet"
 upgrade=0
 if ssh -p $port $user@$host cat $GL_ADMINDIR/keydir/$admin_name.pub &> /dev/null
 then
-    prompt "upgrade done!" \
+    prompt "done!" \
     "this looks like an upgrade, based on the fact that a file called
     $admin_name.pub already exists in $GL_ADMINDIR/keydir on the server.
 
