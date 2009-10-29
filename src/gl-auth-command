@@ -84,9 +84,8 @@ my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
 #   git-receive-pack 'reponame.git'
 # including the single quotes
 
-my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*).git'/);
-die "bad command: $cmd.  Make sure the repo name is exactly\n" .
-    "as in your config (no extra stuff before the name), plus a \".git\" at the end\n"
+my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:.git)?'/);
+die "bad command: $cmd.  Make sure the repo name is exactly as in your config\n"
     unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS )
         and  $repo and   $repo =~ $REPONAME_PATT );
 
