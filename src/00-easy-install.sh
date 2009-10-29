@@ -332,7 +332,13 @@ ssh -p $port $user@$host "cd gitolite-install; src/install.pl $quiet"
 upgrade=0
 if ssh -p $port $user@$host cat $GL_ADMINDIR/keydir/$admin_name.pub &> /dev/null
 then
-    prompt "done!" \
+    prompt "done!
+
+    If you forgot the help message you saw when you first ran this, there's a
+    somewhat generic version of it at the end of this file.  Try:
+
+        tail -30 $0
+" \
     "this looks like an upgrade, based on the fact that a file called
     $admin_name.pub already exists in $GL_ADMINDIR/keydir on the server.
 
@@ -414,19 +420,35 @@ git clone gitolite:gitolite-admin.git
 echo
 echo
 echo ------------------------------------------------------------------------
-echo "Cool -- we're done.  Now you can edit the config file (currently
-in ~/gitolite-admin/conf/gitolite.conf) to add more repos, users, etc.
-When done, 'git add' the changed files, 'git commit' and 'git push'.
+echo "
+All done!
 
-Read the comments in conf/example.conf for information about the config
-file format -- like the rc file, this also has inline documentation.
+The admin repo is currently cloned at ~/gitolite-admin; you can clone it
+anywhere you like.  To administer gitolite, make changes to the config file
+(config/gitolite.conf) and/or the pubkeys (in subdirectory 'keydir') in any
+clone, then git add, git commit, and git push.
 
-Your URL for cloning any repo on this server will be
+ADDING REPOS: Edit the config file to give *some* user access to the repo.
+When you push, an empty repo will be created on the server, which authorised
+users can then clone from, or push to.
+
+ADDING USERS: copy their pubkey as keydir/<username>.pub, add it, commit and
+push.
+
+CONFIG FILE FORMAT: see comments in conf/example.conf in the gitolite source.
+
+SSH MAGIC: Remember you (the admin) now have *two* keys to access the server
+hosting your gitolite setup -- one to get you a command line, and one to get
+you gitolite access; see doc/6-complex-ssh-setups.mkd.  If you're not using
+keychain or some such software, you may have to run this each time you log in:
+
+    ssh-add ~/.ssh/$admin_name
+
+URLS:  *Your* URL for cloning any repo on this server will be
 
     gitolite:reponame.git
 
-However, any other users you set up will have to use
+*Other* users you set up will have to use
 
     $user@$host:reponame.git
-
-unless they also create similar settings in their '.ssh/config' file."
+"
