@@ -11,6 +11,19 @@ In this document:
   * sanity checks
   * two gitolite servers to manage?
 
+----
+
+>   But before we get to all that, let's clarify that all this is applicable
+>   **only** to the gitolite **admin**.  He's the only one who needs both a
+>   shell and gitolite access, so he has **two** pubkeys in play.
+
+>   Normal users have only one pubkey, since they are only allowed to access
+>   gitolite itself.  They do not need to worry about any of this
+>   `~/.ssh/config` stuff, and their repo urls are very simple, like:
+>   `git@my.git.server:reponame.git`.
+
+----
+
 ### files on client
 
   * default keypair; used to get shell access to servers.  You would have
