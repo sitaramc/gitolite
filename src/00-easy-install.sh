@@ -15,6 +15,10 @@
 # command!)
 set -e
 
+export tmpgli=tmp-gl-install
+trap "rm -rf $tmpgli" 0
+mkdir -p $tmpgli
+
 die() { echo "$@"; echo; echo "run $0 again without any arguments for help and tips"; exit 1; }
 prompt() {
     # receives two arguments.  A short piece of text to be displayed, without
@@ -212,7 +216,7 @@ host gitolite
      user $user
      hostname $host
      port $port
-     identityfile ~/.ssh/$admin_name" > $HOME/.ssh/.gl-stanza
+     identityfile ~/.ssh/$admin_name" > $tmpgli/.gl-stanza
 
 if grep 'host  *gitolite' $HOME/.ssh/config &>/dev/null
 then
@@ -223,19 +227,18 @@ then
 
     In case you want to check right now (from another terminal) if they're
     correct, here's what they are *supposed* to look like:
-$(cat ~/.ssh/.gl-stanza)"
+$(cat $tmpgli/.gl-stanza)"
 
 else
     prompt "creating gitolite para in ~/.ssh/config..." \
     "creating settings for your gitolite access in $HOME/.ssh/config;
     these are the lines that will be appended to your ~/.ssh/config:
-$(cat ~/.ssh/.gl-stanza)"
+$(cat $tmpgli/.gl-stanza)"
 
-    cat $HOME/.ssh/.gl-stanza >> $HOME/.ssh/config
+    cat $tmpgli/.gl-stanza >> $HOME/.ssh/config
     # if the file didn't exist at all, it might have the wrong permissions
     chmod 644 $HOME/.ssh/config
 fi
-rm  $HOME/.ssh/.gl-stanza
 
 # ----------------------------------------------------------------------
 # client side stuff almost done; server side now
@@ -269,16 +272,16 @@ prompt "finding/creating gitolite rc..." \
     all the paths etc. represent paths on the server!"
 
 # lets try and get the file from there first
-if scp -P $port $user@$host:.gitolite.rc . &>/dev/null
+if scp -P $port $user@$host:.gitolite.rc $tmpgli &>/dev/null
 then
     prompt "    ...trying to reuse existing rc" \
     "Oh hey... you already had a '.gitolite.rc' file on the server.
     Let's see if we can use that instead of the default one..."
-    sort < .gitolite.rc             | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > glrc.old
-    sort < conf/example.gitolite.rc | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > glrc.new
-    if diff -u glrc.old glrc.new
+    sort < $tmpgli/.gitolite.rc     | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > $tmpgli/glrc.old
+    sort < conf/example.gitolite.rc | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > $tmpgli/glrc.new
+    if diff -u $tmpgli/glrc.old $tmpgli/glrc.new
     then
-        [[ $quiet == -q ]] || ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
+        [[ $quiet == -q ]] || ${VISUAL:-${EDITOR:-vi}} $tmpgli/.gitolite.rc
     else
         prompt "" \
         "    looks like you're upgrading, and there are some new rc variables
@@ -297,15 +300,15 @@ then
         [It's upto you to figure out how your editor handles 2 filename
         arguments, switch between them, copy lines, etc ;-)]"
 
-        ${VISUAL:-${EDITOR:-vi}} conf/example.gitolite.rc .gitolite.rc
+        ${VISUAL:-${EDITOR:-vi}} conf/example.gitolite.rc $tmpgli/.gitolite.rc
     fi
 else
-    cp conf/example.gitolite.rc .gitolite.rc
-    [[ $quiet == -q ]] || ${VISUAL:-${EDITOR:-vi}} .gitolite.rc
+    cp conf/example.gitolite.rc $tmpgli/.gitolite.rc
+    [[ $quiet == -q ]] || ${VISUAL:-${EDITOR:-vi}} $tmpgli/.gitolite.rc
 fi
 
 # copy the rc across
-scp $quiet -P $port .gitolite.rc $user@$host:
+scp $quiet -P $port $tmpgli/.gitolite.rc $user@$host:
 
 prompt "installing/upgrading..." \
     "ignore any 'please edit this file' or 'run this command' type
@@ -368,10 +371,10 @@ repo gitolite-admin
 repo testing
     RW+                 = @all
 
-" > gitolite.conf
+" > $tmpgli/gitolite.conf
 
 # send the config and the key to the remote
-scp $quiet -P $port gitolite.conf $user@$host:$GL_ADMINDIR/conf/
+scp $quiet -P $port $tmpgli/gitolite.conf $user@$host:$GL_ADMINDIR/conf/
 scp $quiet -P $port $HOME/.ssh/$admin_name.pub $user@$host:$GL_ADMINDIR/keydir
 
 # MANUAL: cd to $GL_ADMINDIR and run "src/gl-compile-conf"
