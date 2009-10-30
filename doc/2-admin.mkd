@@ -14,9 +14,9 @@ Please read on to see how to do this correctly.
 #### adding users and repos
 
   * ask each user who will get access to send you a public key.  See other
-    sources (for example
-    [here](http://sitaramc.github.com/0-installing/2-access-gitolite.html#generating_a_public_key))
-    for how to do this
+    sources (for example [here][genpub]) for how to do this
+
+[genpub]: http://sitaramc.github.com/0-installing/2-access-gitolite.html#generating_a_public_key
 
   * rename each public key according to the user's name, with a `.pub`
     extension, like `sitaram.pub` or `john-smith.pub`.  You can also use
@@ -40,8 +40,11 @@ so here goes.
 
 There's **no special syntax** for this -- just give read permission to a user
 called `gitweb` or `daemon`!  (This also means you can't have a normal user
-with either of those two names, but I doubt that's a problem!).  See the "faq,
-tips, etc" document for easy ways to specify access for multiple repositories.
+with either of those two names, but I doubt that's a problem!).  See the [faq,
+tips, etc][ss] document for easy ways to specify access for multiple
+repositories.
+
+[ss]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#gwd
 
 Note that this does **not** install or configure gitweb/daemon -- that is a
 one-time setup you must do separately.  All this does is:

@@ -434,20 +434,3 @@ close $newkeys_fh or die "$ATTN close newkeys failed: $!\n";
 system("cat $ENV{HOME}/.ssh/authorized_keys > $ENV{HOME}/.ssh/old_authkeys");
 system("cat $ENV{HOME}/.ssh/new_authkeys > $ENV{HOME}/.ssh/authorized_keys");
 system("rm  $ENV{HOME}/.ssh/new_authkeys");
-
-# if the gl admin directory (~/.gitolite) is itself a git repo, do an
-# autocheckin.  nothing fancy; this is a "just in case" type of thing.
-wrap_chdir($GL_ADMINDIR);
-if (-d ".git")
-{
-    system("git add -A conf keydir");       # stage all operational data
-    # and if there are any
-    if (system("git diff --cached --quiet") )
-    {
-        open my $commit_ph, "|-", "git commit -F -"
-            or die "$ATTN open commit failed: $!\n";
-        print $commit_ph "keydir changed\n\n";
-        print $commit_ph `git diff --cached --name-status`;
-        close $commit_ph or die "$ATTN close commit failed: $!\n";
-    }
-}

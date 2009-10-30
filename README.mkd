@@ -1,10 +1,8 @@
 # gitolite
 
->   [IMPORTANT: There is now an "upgrade" document in the "doc" directory;
->   please read if upgrading gitolite]
-
->   [Update 2009-10-10: apart from all the nifty new features, there's now an
->   "easy install" script in the src directory.  Please see the INSTALL
+>   [Update 2009-10-28: apart from all the nifty new features, there's now an
+>   "easy install" script in the src directory.  This script can be used to
+>   install as well as upgrade a gitolite install.  Please see the INSTALL
 >   document in the doc directory for details]
 
 ----
@@ -64,8 +62,10 @@ deleting a branch (which is really just an extreme form of rewind).  I needed
 something in between allowing anyone to do it (the default) and disabling it
 completely (`receive.denyNonFastForwards` or `receive.denyDeletes`).
 
-Here're **some more features**.  All of them are documented in detail
-somewhere in the `doc/` subdirectory.
+Here're **some more features**.  All of them, and more, are documented in
+detail [here][gsdiff].
+
+[gsdiff]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#diff
 
   * simpler, yet far more powerful, config file syntax, including specifying
     gitweb/daemon access.  You'll need this power if you manage lots of
@@ -73,6 +73,8 @@ somewhere in the `doc/` subdirectory.
   * config file syntax gets checked upfront, and much more thoroughly
   * if your requirements are still too complex, you can split up the config
     file and delegate authority over parts of it
+  * easier to specify gitweb/daemon access, and easier to link gitweb
+    authorisation with gitolite
   * more comprehensive logging [aka: management does not think "blame" is just
     a synonym for "annotate" :-)]
   * "personal namespace" prefix for each dev
@@ -85,8 +87,8 @@ somewhere in the `doc/` subdirectory.
 Due to the environment in which this was created and the need it fills, I
 consider this a "security" program, albeit a very modest one.  The code is
 very small and easily reviewable -- the 2 programs that actually control
-access when a user logs in total about 200 lines of code (about
-80 lines according to "sloccount").
+access when a user logs in total about 220 lines of code (about 90 lines
+according to "sloccount").
 
 For the first person to find a security hole in it, defined as allowing a
 normal user (not the gitolite admin) to read a repo, or write/rewind a ref,

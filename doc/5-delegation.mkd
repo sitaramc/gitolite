@@ -5,14 +5,13 @@
 ### lots of repos, lots of users
 
 Gitolite tries to make it easy to manage access to lots of users and repos,
-exploiting commonalities wherever possible.  (The example in the section
-"simpler syntax" in [this page][ml] should give you an idea).  As you can see,
-it lets you specify bits and pieces of the access control separately -- i.e.,
-*all* the access specs for a certain repo need not be together; they can be
-scattered, which makes it easier to manage the sort of slice and dice needed
-in that example.
+exploiting commonalities wherever possible.  (The example in [this
+section][ss] should give you an idea).  As you can see, it lets you specify
+bits and pieces of the access control separately -- i.e., *all* the access
+specs for a certain repo need not be together; they can be scattered, which
+makes it easier to manage the sort of slice and dice needed in that example.
 
-[ml]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd
+[ss]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#simpler_syntax
 
 But eventually the config file will become too big.  If you let only one
 person have control, he could become a bottleneck.  If you give it to multiple
@@ -30,14 +29,16 @@ Delegation offers a way to do all that.  Note that delegated admins cannot
 create or remove users, not can they define new repos.  They can only define
 access control rules for a set of repos they have been given authority for.
 
-### splitting up the config file into fragments
+----
 
 It's easier to show how it all works with an example instead of long
 descriptions.
 
+### splitting up the set of repos into groups
+
 To start with, recall that gitolite allows you to specify **groups** (of users
 or repos, same syntax).  So the basic idea is that the main config file
-(`~/.gitolite/conf/gitolite.conf` by default) will specify some repo groups:
+(`conf/gitolite.conf` in your admin repo clone) will specify some repo groups:
 
     # group your projects/repos however you want
     @webbrowser_repos           = firefox lynx
@@ -47,70 +48,24 @@ or repos, same syntax).  So the basic idea is that the main config file
     # any other config as usual, including access control lines for any of the
     # above projects or groups
 
-Now just create these files (assuming default `$GL_ADMINDIR` location):
+### delegating ownership of groups of repos
 
-    ~/.gitolite/conf/fragments/webbrowser_repos.conf
-    ~/.gitolite/conf/fragments/webserver_repos.conf
-    ~/.gitolite/conf/fragments/malware_repos.conf
-
-Within each of those files put in whatever access control rules you want for
-the repos that are members of that group.  Notice that the basenames of the
-files must be exactly the same as the name of the corresponding repo group in
-the main config file.
-
-For instance, `~/.gitolite/conf/fragments/webbrowser_repos.conf` would only
-contain access control for firefox and lynx.  If it referenced any other repo
-(say "storm") those lines would be ignored (and a warning message generated).
-
-When you run the compile script (`src/gl-compile-conf`), the **net effect is
-as if you appended the contents of all the "fragment" files, in alphabetical
-order, to the bottom of the main file**.
-
-(Except of course, while processing a fragment, it will ignore attempts to set
-permissions for repos that are not members of the same-named "repo group").
-
-And that's basically it, in the simplest usage.
-
-["But WAIT, there's MORE!"][bwtm]
-
-[bwtm]: http://en.wikipedia.org/wiki/Ed_Valenti#But_Wait.21_There.27s_More
-
-### delegating ownership of fragments
-
-Splitting up the file does help, but there's also that little security issue
--- anyone can make any change to any "fragment", unless you (once again) go
-back to Unix permissions to keep them separate.
-
-Fixing that requires using "push-to-admin", which is the default (and only)
-method to make config changes in gitosis.
-
-For a long time, I refused to make "push to admin" the default because it's a
-support nightmare.  Don't get me wrong -- it's a great feature, and I use it
-myself, but the learning curve was too steep to make it *required*.
-
-But eventually I figured out a way to front-load the darn ssh problem that
-everyone on #git seemed to run up against, created a nice "easy install"
-script, and made "push to admin" the default.
-
-So now, you just add these lines to the main config file, assuming Alice is in
-charge of all web browser development projects, Bob takes care of web servers,
-and Mallory, as [tradition][abe] dictates, is in charge of malware ;-)
+Once the repos are grouped, give each person charge of one or more groups.
+For example, Alice may be in charge of all web browser development projects,
+Bob takes care of web servers, and Mallory, as [tradition][abe] dictates, is
+in charge of malware ;-)
 
 [abe]: http://en.wikipedia.org/wiki/Alice_and_Bob#List_of_characters
 
-    # these 2 lines were probably present already
+You do this by adding branches to the `gitolite-admin` repo:
+
+    # the admin repo access was probably like this to start with:
     repo gitolite-admin
         RW+                     = sitaram
-    # now add these 3 lines
+    # now add these lines to the config for the admin repo
         RW  webbrowser_repos    = alice
         RW  webserver_repos     = bob
         RW  malware_repos       = mallory
-
-    # you need these lines too -- they define what repos alice/bob/mallory are
-    # allowed to control
-    @webbrowser_repos           = firefox lynx
-    @webserver_repos            = apache nginx
-    @malware_repos              = conficker storm
 
 As you can see, **for each repo group** you want to delegate authority over,
 there's a **branch with the same name** in the `gitolite-admin` repo.  If you
@@ -136,14 +91,7 @@ Here's how to use this in practice:
 
   * Alice then commits and pushes this branch to the `gitolite-admin` repo
 
-Naturally, a successful push invokes the post-update hook that you installed
-(while setting up [push-to-admin][ptd]).  Here's what it does:
-
-  * for each branch, say `br`, of the `gitolite-admin` repo, it checks if
-    there is a file called `conf/fragments/br.conf`
-
-  * if there is, it extracts it and copies it with the exact same name and
-    path, into the `$GL_ADMINDIR` directory (`~/.gitolite` by default)
-
-After that, it runs the compile script, and things work the same as described
-in the previous section.
+Naturally, a successful push invokes the post-update hook that the admin repo
+has, which eventually runs the compile script.  The **net effect** is as if
+you appended the contents of all the "fragment" files, in alphabetical order,
+to the bottom of the main file.

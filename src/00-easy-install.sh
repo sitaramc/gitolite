@@ -283,6 +283,10 @@ then
     then
         [[ $quiet == -q ]] || ${VISUAL:-${EDITOR:-vi}} $tmpgli/.gitolite.rc
     else
+        # MANUAL: if you're upgrading, read the instructions below and
+        # manually make sure your final ~/.gitolite.rc has both your existing
+        # customisations as well as any new variables that the new version of
+        # gitolite has introduced
         prompt "" \
         "    looks like you're upgrading, and there are some new rc variables
         that this version is expecting that your old rc file doesn't have.

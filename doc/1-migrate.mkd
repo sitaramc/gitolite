@@ -36,8 +36,11 @@ Here's how we migrated my work repos:
 
 Now, log off the server and get back to the client:
 
-1.  follow instructions to install gitolite; see install document.  Make sure
-    that you **don't** change the default path for `$REPO_BASE`!
+[inst]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd
+
+1.  follow instructions to install gitolite; see the [install document][inst].
+    Make sure that you **don't** change the default path for `$REPO_BASE` if
+    you edit the config file!
 
 2.  **convert** your gitosis config file.  Substitute the path for your
     gitosis-admin clone in `$GSAC` below, and similarly the path for your
@@ -51,10 +54,11 @@ Now, log off the server and get back to the client:
 
         cp $GSAC/keydir/* $GLAC/keydir
 
-4.  **Important: expand any multi-key files you may have**.  See the "faq,
-    tips, etc" document in the doc directory for an explanation of what
-    multi-keys are, how gitosis does them and how gitolite does it
-    differently.
+4.  **Important: expand any multi-key files you may have**.  [Here][mk]'s an
+    explanation of what multi-keys are, how gitosis does them and how gitolite
+    does it differently.
+
+[mk]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#multikeys
 
     You can split the keys manually, or use the following code (just
     copy-paste it into your xterm after "cd"-ing to your gitolite-admin repo

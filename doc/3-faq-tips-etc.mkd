@@ -101,6 +101,8 @@ Apart from the big ones listed in the top level README, and subjective ones
 like "better config file format", there are some small, but significant and
 concrete, differences from gitosis.
 
+<a name="simpler_syntax"></a>
+
 #### simpler syntax
 
 The basic syntax is simpler and cleaner but it goes beyond that: **you can
@@ -191,6 +193,8 @@ You can now split up the config file and delegate the authority to specify
 access control for their own pieces.  See
 [doc/5-delegation.mkd](http://github.com/sitaramc/gitolite/blob/pu/doc/5-delegation.mkd)
 for details.
+
+<a name="gwd"></a>
 
 #### easier to specify gitweb/daemon access
 
@@ -307,6 +311,8 @@ Can it get easier?
 The other parts of the log line are the name of the repo, the refname being
 updated, the user updating it, and the refex pattern (from the config file)
 that matched, in case you need to debug the config file itself.
+
+<a name="multikeys"></a>
 
 #### one user, many keys
 

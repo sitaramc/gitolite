@@ -57,12 +57,7 @@ $GL_LOGT="$GL_ADMINDIR/logs/gitolite-%y-%m.log";
 
 # --------------------------------------
 
-# Please DO NOT change the following paths unless you really know what you're
-# doing.  It'll work for now but it's officially deprecated to have them
-# elsewhere from now on, and may break some future features.
-
-# Anyway, the conf files and keydirs don't grow constantly, (like the logs and
-# the repositories do), so I don't think this is a major problem for anyone.
+# Please DO NOT change these three paths
 
 $GL_CONF="$GL_ADMINDIR/conf/gitolite.conf";
 $GL_KEYDIR="$GL_ADMINDIR/keydir";
