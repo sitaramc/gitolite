@@ -446,7 +446,7 @@ CONFIG FILE FORMAT: see comments in conf/example.conf in the gitolite source.
 
 SSH MAGIC: Remember you (the admin) now have *two* keys to access the server
 hosting your gitolite setup -- one to get you a command line, and one to get
-you gitolite access; see doc/6-complex-ssh-setups.mkd.  If you're not using
+you gitolite access; see doc/6-ssh-troubleshooting.mkd.  If you're not using
 keychain or some such software, you may have to run this each time you log in:
 
     ssh-add ~/.ssh/$admin_name

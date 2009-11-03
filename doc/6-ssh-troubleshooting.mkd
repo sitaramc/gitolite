@@ -1,0 +1,203 @@
+# ssh troubleshooting
+
+Ssh has always been the biggest troublespot in all this.  While gitolite makes
+it as easy as possible, you might still run into trouble sometimes.
+
+In this document:
+
+  * ssh sanity checks
+  * explanation
+      * files on the server
+      * files on client
+  * more complex ssh setups
+      * two gitolite servers to manage?
+  * further reading
+
+----
+
+>   But before we get to all that, let's clarify that all this is applicable
+>   **only** to the gitolite **admin**.  He's the only one who needs both a
+>   shell and gitolite access, so he has **two** pubkeys in play.
+
+>   Normal users have only one pubkey, since they are only allowed to access
+>   gitolite itself.  They do not need to worry about any of this stuff, and
+>   their repo urls are very simple, like: `git@my.git.server:reponame.git`.
+
+----
+
+### ssh sanity checks
+
+There are two quick sanity checks you can run:
+
+  * running `ssh gitolite` should get you a list of repos you have rights to
+    access, as described [here][myrights]
+
+[myrights]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#myrights
+
+  * conversely, `ssh git@server` should get you a command line
+
+If one or both of these does not work as expected, do this:
+
+  * first, check that your `~/.ssh` has two public keys, like below:
+
+        $ ls -al ~/.ssh/*.pub
+        -rw-r--r-- 1 sitaram sitaram 409 2008-04-21 17:42 /home/sitaram/.ssh/id_rsa.pub
+        -rw-r--r-- 1 sitaram sitaram 409 2009-10-15 16:25 /home/sitaram/.ssh/sitaram.pub
+
+    If it doesn't you have either lost your keys or you're on the wrong
+    machine.  As long as you have password access to the server you can alweys
+    recover; just pretend you're installing from scratch and start over.
+
+  * next, try running `ssh-add -l`.  On my desktop the output looks like this:
+
+        2048 63:ea:ab:10:d2:4f:88:f4:85:cb:d3:7d:3a:83:37:9a /home/sitaram/.ssh/id_rsa (RSA)
+        2048 d7:23:89:12:5f:22:4f:ad:54:7d:7e:f8:f5:2a:e9:13 /home/sitaram/.ssh/sitaram (RSA)
+
+    If you get only one line (typically the top one), you should ssh-add the
+    other one, using (in my case) `ssh-add ~/.ssh/sitaram`.
+
+    If you get no output, add both of them and check `ssh-add -l` again.
+
+    If this error keeps happening please consider installing [keychain][kch]
+    or something similar, or add these commands to your bash startup scripts.
+
+[kch]: http://www.gentoo.org/proj/en/keychain/
+
+  * Finally, make sure your `~/.ssh/config` has the required `host gitolite`
+    para (see below for more on this).
+
+Once these sanity checks have passed, things should be fine.  However, if you
+still have problems, make sure that the "origin" URL in any clones looks like
+`gitolite:reponame.git`, not `git@server:reponame.git`.
+
+### explanation
+
+Here's how it all hangs together.
+
+#### files on the server
+
+  * the authkeys file; this contains one line containing the pubkey of each
+    user who is permitted to login without a password.
+
+    Pubkey lines that give shell access look like this:
+
+        ssh-rsa AAAAB3NzaC[snip]uPjrUiAUew== /home/sitaram/.ssh/id_rsa
+
+    On a typical server there will be only one or two of these lines.
+
+    Note that the last bit (`/home/sitaram/.ssh/id_rsa`) is purely a *comment*
+    field and can be anything.  Also, the actual lines are much longer, about
+    400 characters; I snipped 'em in the middle, as you can see.
+
+    In contrast, pubkey lines that give access to git repos hosted by gitolite
+    looks like this:
+
+        command="[some path]src/gl-auth-command sitaram",[some restrictions] ssh-rsa AAAAB3NzaC[snip]s18OnB42oQ== sitaram@sita-lt
+
+    You will have many more of these lines -- one for every pubkey file in
+    `keydir/` of your gitolite-admin repo, with the corresponding username in
+    place of "sitaram" in the example above.
+
+    The "command=" at the beginning ensures that when someone with the
+    corresponding private key logs in, they don't get a shell.  Instead, the
+    `gl-auth-command` program is run, and (in this example) is given the
+    argument `sitaram`.  This is how gitolite is invoked, (and is told the
+    user logging in is "sitaram").
+
+#### files on client
+
+  * default keypair; used to get shell access to servers.  You would have
+    copied this pubkey to the gitolite server in order to log in without a
+    password.  (On Linux systems you may have used `ssh-copy-id` to do that).
+    You would have done this *before* you ran the easy install script, because
+    otherwise easy install won't run!
+
+        ~/.ssh/id_rsa
+        ~/.ssh/id_rsa.pub
+
+  * gitolite keypair; the "sitaram" in this is the 3rd argument to the
+    `src/00-easy-install.sh` command you ran; the easy install script does the
+    rest
+
+        ~/.ssh/sitaram
+        ~/.ssh/sitaram.pub
+
+  * config file; this file has an entry for gitolite access:
+
+        ~/.ssh/config
+
+    To understand why we need that, let's step back a bit.  Normally, you
+    might expect to access gitolite repos like this:
+
+        ssh://git@server/reponame.git
+
+    But this won't work, because this ends up using the *default* keypair
+    (normally), which gives you a command line.  Which means it won't invoke
+    the `gl-auth-command` program at all, and so none of gitolite's access
+    control will work.
+
+    You need to force ssh to use the *other* keypair when performing a git
+    operation.  With normal ssh, that would be
+
+        ssh -i ~/.ssh/sitaram git@server
+
+    but git does not support putting an alternate keypair in the URL.
+
+    Luckily, ssh has a very convenient way of capturing all the mundane
+    information (username, hostname, port number (if it's not the default 22),
+    and keypair to be used) in one "paragraph".  This is what the para looks
+    like for us (the easy install script puts it there the first time):
+
+        host gitolite
+             user git
+             hostname server
+             identityfile ~/.ssh/sitaram
+
+    (The "gitolite" can be anything you want of course; it's like a group name
+    for all the stuff below it).  This ensures that typing
+
+        ssh gitolite
+
+    is equivalent to
+
+        ssh -i ~/.ssh/sitaram git@server
+
+    and therefore this:
+
+        git clone gitolite:reponame.git
+
+    now works as expected, invoking the special keypair instead of the default
+    one.
+
+### more complex ssh setups
+
+What do you need to know in order to create more complex ssh setups (for
+instance if you have *two* gitolite servers you are administering)?
+
+#### two gitolite servers to manage?
+
+  * they can have the same key; no harm there (example, sitaram.pub)
+
+  * instead of just one ssh/config para, you now have two (assuming that the
+    remote user on both machines is called "git"):
+
+        host gitolite
+             user git
+             hostname server
+             identityfile ~/.ssh/sitaram
+
+        host gitolite2
+             user git
+             hostname server2
+             identityfile ~/.ssh/sitaram
+
+  * now access one server's repos as `gitolite:reponame.git` and the other
+    server's repos as `gitolite2:reponame.git`.
+
+### further reading
+
+While this focused mostly on the client side ssh, you may also want to read
+[this][glb] for a much more detailed explanation of the ssh magic on the
+server side.
+
+[glb]: http://sitaramc.github.com/0-installing/9-gitolite-basics.html#IMPORTANT_overview_of_ssh
