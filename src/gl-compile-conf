@@ -55,7 +55,8 @@ our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UM
 # now that this thing *may* be run via "push to admin", any errors have to
 # grab the admin's ATTENTION so he won't miss them among the other messages a
 # typical push generates
-my $ATTN = "\n\t\t***** ERROR *****\n       ";
+my $ABRT = "\n\t\t***** ABORTING *****\n       ";
+my $WARN = "\n\t\t***** WARNING *****\n       ";
 
 # the common setup module is in the same directory as this running program is
 my $bindir = $0;
@@ -64,7 +65,7 @@ require "$bindir/gitolite.pm";
 
 # ask where the rc file is, get it, and "do" it
 &where_is_rc();
-die "parse $ENV{GL_RC} failed: " . ($! or $@) unless do $ENV{GL_RC};
+die "$ABRT parse $ENV{GL_RC} failed: " . ($! or $@) unless do $ENV{GL_RC};
 
 # add a custom path for git binaries, if specified
 $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
@@ -113,11 +114,11 @@ umask($REPO_UMASK);
 # ----------------------------------------------------------------------------
 
 sub wrap_chdir {
-    chdir($_[0]) or die "$ATTN chdir $_[0] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
+    chdir($_[0]) or die "$ABRT chdir $_[0] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
 }
 
 sub wrap_open {
-    open (my $fh, $_[0], $_[1]) or die "$ATTN open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n" .
+    open (my $fh, $_[0], $_[1]) or die "$ABRT open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n" .
             ( $_[2] || '' );    # suffix custom error message if given
     return $fh;
 }
@@ -131,10 +132,10 @@ sub expand_list
     {
         # we test with the slightly more relaxed pattern here; we'll catch the
         # "/" in user name thing later; it doesn't affect security anyway
-        die "$ATTN bad user or repo name $item\n" unless $item =~ $REPONAME_PATT;
+        die "$ABRT bad user or repo name $item\n" unless $item =~ $REPONAME_PATT;
         if ($item =~ /^@/)      # nested group
         {
-            die "$ATTN undefined group $item\n" unless $groups{$item};
+            die "$ABRT undefined group $item\n" unless $groups{$item};
             # add those names to the list
             push @new_list, sort keys %{ $groups{$item} };
         }
@@ -185,7 +186,7 @@ sub parse_conf_file
             # the group was *first* created by using $fragment as the *value*
             do { $groups{$1}{$_} ||= $fragment } for ( expand_list( split(' ', $2) ) );
             # again, we take the more "relaxed" pattern
-            die "$ATTN bad group $1\n" unless $1 =~ $REPONAME_PATT;
+            die "$ABRT bad group $1\n" unless $1 =~ $REPONAME_PATT;
         }
         # repo(s)
         elsif (/^repo (.*)/)
@@ -210,7 +211,7 @@ sub parse_conf_file
             # expand the user list, unless it is just "@all"
             @users = expand_list ( @users )
                 unless (@users == 1 and $users[0] eq '@all');
-            do  { die "$ATTN bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
+            do  { die "$ABRT bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
 
             # ok, we can finally populate the %repos hash
             for my $repo (@repos)       # each repo in the current stanza
@@ -250,7 +251,7 @@ sub parse_conf_file
         }
         else
         {
-            die "$ATTN can't make head or tail of '$_'\n";
+            die "$ABRT can't make head or tail of '$_'\n";
         }
     }
     for my $ig (sort keys %ignored)
@@ -275,7 +276,7 @@ for my $fragment_file (glob("conf/fragments/*.conf"))
 
 my $compiled_fh = wrap_open( ">", $GL_CONF_COMPILED );
 print $compiled_fh Data::Dumper->Dump([\%repos], [qw(*repos)]);
-close $compiled_fh or die "$ATTN close compiled-conf failed: $!\n";
+close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
 
 # ----------------------------------------------------------------------------
 #       any new repos to be created?
@@ -288,7 +289,7 @@ close $compiled_fh or die "$ATTN close compiled-conf failed: $!\n";
 # but it turns out not everyone has "modern" gits :)
 my $git_version = `git --version`;
 my ($gv_maj, $gv_min, $gv_patchrel) = ($git_version =~ m/git version (\d+)\.(\d+)\.(\d+)/);
-die "$ATTN I can't understand $git_version\n" unless ($gv_maj >= 1);
+die "$ABRT I can't understand $git_version\n" unless ($gv_maj >= 1);
 $git_version = $gv_maj*10000 + $gv_min*100 + $gv_patchrel;  # now it's "normalised"
 my $git_too_old = 0;
 
@@ -300,7 +301,7 @@ for my $repo (keys %repos)
 {
     unless (-d "$repo.git")
     {
-        system("mkdir", "-p", "$repo.git") and die "$ATTN mkdir $repo.git failed: $!\n";
+        system("mkdir", "-p", "$repo.git") and die "$ABRT mkdir $repo.git failed: $!\n";
             # erm, note that's "and die" not "or die" as is normal in perl
         wrap_chdir("$repo.git");
         system("git --bare init");
@@ -424,11 +425,11 @@ for my $pubkey (glob("*"))
 for my $user (sort keys %user_list)
 {
     next if $user =~ /^(gitweb|daemon|\@all)$/ or $user_list{$user} eq 'has pubkey';
-    print STDERR "$ATTN user $user in config, but has no pubkey!\n";
+    print STDERR "$WARN user $user in config, but has no pubkey!\n";
 }
 
 print $newkeys_fh "# gitolite end\n";
-close $newkeys_fh or die "$ATTN close newkeys failed: $!\n";
+close $newkeys_fh or die "$ABRT close newkeys failed: $!\n";
 
 # all done; overwrite the file (use cat to avoid perm changes)
 system("cat $ENV{HOME}/.ssh/authorized_keys > $ENV{HOME}/.ssh/old_authkeys");
