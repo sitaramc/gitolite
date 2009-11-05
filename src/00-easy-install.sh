@@ -15,9 +15,17 @@
 # command!)
 set -e
 
+# ----------------------------------------------------------------------
+# temp files
+# ----------------------------------------------------------------------
+
 export tmpgli=tmp-gl-install
 trap "rm -rf $tmpgli" 0
 mkdir -p $tmpgli
+
+# ----------------------------------------------------------------------
+# service functions
+# ----------------------------------------------------------------------
 
 die() { echo "$@"; echo; echo "run $0 again without any arguments for help and tips"; exit 1; }
 prompt() {
@@ -38,15 +46,16 @@ prompt() {
 }
 usage() {
     cat <<EOFU
-Usage: $0 [-q] user host port admin_name
+Usage: $0 [-q] user host [port] admin_name     # install
+       $0 [-q] user host [port]                # upgrade
 
   - (optional) "-q" as first arg sets "quiet" mode: no verbose descriptions of
     what is going on, no pauses unless absolutely necessary
   - "user" is the username on the server where you will be installing gitolite
-  - "host" is that server's hostname (or IP address is also fine)
-  - "port" is optional
-  - "admin_name" is *your* name as you want it to appear in the eventual
-    gitolite config file
+  - "host" is that server's hostname (or IP address)
+  - "port" is the ssh server port on "host"; optional, defaults to 22
+  - "admin_name" is *your* name as it should appear in the eventual gitolite
+    config file (not needed/used for upgrades)
 
 Example usage: $0 git my.git.server sitaram
 
@@ -95,21 +104,21 @@ quiet=
 # MANUAL: (info) we'll use "git" as the user, "server" as the host, and
 # "sitaram" as the admin_name in example commands shown below, if any
 
-[[ -z $3 ]] && usage
+[[ -z $2 ]] && usage
 user=$1
 host=$2
+port=22
 admin_name=$3
 # but if the 3rd arg is a number, that's a port number, and the 4th arg is the
 # admin_name
-port=22
-[[ $3 =~ ^[0-9]+$ ]] && {
+if [[ $3 =~ ^[0-9]+$ ]]
+then
     port=$3
-    [[ -z $4 ]] && usage
     admin_name=$4
-}
+fi
 
 [[ "$user" =~ [^a-zA-Z0-9._-] ]] && die "user '$user' invalid"
-[[ "$admin_name" =~ [^a-zA-Z0-9._-] ]] && die "admin_name '$admin_name' invalid"
+[[ -n $admin_name ]] && [[ "$admin_name" =~ [^a-zA-Z0-9._-] ]] && die "admin_name '$admin_name' invalid"
 
 # MANUAL: make sure you're in the gitolite directory, at the top level.
 # The following files should all be visible:
@@ -128,6 +137,10 @@ ls src/gl-auth-command  \
 
 ssh -p $port -o PasswordAuthentication=no $user@$host true ||
     die "pubkey access didn't work; please set it up using 'ssh-copy-id' or something"
+
+# ----------------------------------------------------------------------
+# version info
+# ----------------------------------------------------------------------
 
 # MANUAL: if needed, make a note of the version you are upgrading from, and to
 
@@ -148,12 +161,18 @@ prompt "$upgrade_details" \
     nice to have those version numbers in case you need support.  Try and
     install from a clone"
 
-# MANUAL: create a new key for you as a "gitolite user" (as opposed to you as
-# the "gitolite admin" who needs to login to the server and get a command
-# line).  For example, "ssh-keygen -t rsa ~/.ssh/sitaram"; this would create
-# two files in ~/.ssh (sitaram and sitaram.pub)
+# ----------------------------------------------------------------------
+# new keypair, ssh-config para; only on "install" (not upgrade)
+# ----------------------------------------------------------------------
 
-prompt "setting up keypair..." \
+[[ -n $admin_name ]] && {
+
+    # MANUAL: create a new key for you as a "gitolite user" (as opposed to you
+    # as the "gitolite admin" who needs to login to the server and get a
+    # command line).  For example, "ssh-keygen -t rsa ~/.ssh/sitaram"; this
+    # would create two files in ~/.ssh (sitaram and sitaram.pub)
+
+    prompt "setting up keypair..." \
     "the next command will create a new keypair for your gitolite access
 
     The pubkey will be $HOME/.ssh/$admin_name.pub.  You will have to choose a
@@ -170,78 +189,80 @@ prompt "setting up keypair..." \
 
     This makes using passphrases very convenient."
 
-if [[ -f $HOME/.ssh/$admin_name.pub ]]
-then
-    prompt "    ...reusing $HOME/.ssh/$admin_name.pub..." \
-    "Hmmm... pubkey $HOME/.ssh/$admin_name.pub exists; should I just re-use it?
-    Be sure you remember the passphrase, if you gave one when you created it!"
-else
-    ssh-keygen -t rsa -f $HOME/.ssh/$admin_name || die "ssh-keygen failed for some reason..."
-fi
+    if [[ -f $HOME/.ssh/$admin_name.pub ]]
+    then
+        prompt "    ...reusing $HOME/.ssh/$admin_name.pub..." \
+        "Hmmm... pubkey $HOME/.ssh/$admin_name.pub exists; should I just re-use it?
+        Be sure you remember the passphrase, if you gave one when you created it!"
+    else
+        ssh-keygen -t rsa -f $HOME/.ssh/$admin_name || die "ssh-keygen failed for some reason..."
+    fi
 
-# MANUAL: copy the pubkey created to the server, say to /tmp.  This would be
-# "scp ~/.ssh/sitaram.pub git@server:/tmp" (the script does this at a later
-# stage, you do it now for convenience).  Note: only the pubkey (sitaram.pub).
-# Do NOT copy the ~/.ssh/sitaram file -- that is a private key!
+    # MANUAL: copy the pubkey created to the server, say to /tmp.  This would
+    # be "scp ~/.ssh/sitaram.pub git@server:/tmp" (the script does this at a
+    # later stage, you do it now for convenience).  Note: only the pubkey
+    # (sitaram.pub).  Do NOT copy the ~/.ssh/sitaram file -- that is a private
+    # key!
 
-# MANUAL: if you're running ssh-agent (see if you have an environment variable
-# called SSH_AGENT_PID in your "env"), you should add this new key.  The
-# command is "ssh-add ~/.ssh/sitaram"
+    # MANUAL: if you're running ssh-agent (see if you have an environment
+    # variable called SSH_AGENT_PID in your "env"), you should add this new
+    # key.  The command is "ssh-add ~/.ssh/sitaram"
 
-if ssh-add -l &>/dev/null
-then
-    prompt "    ...adding key to agent..." \
-    "you're running ssh-agent.  We'll try and do an ssh-add of the
-    private key we just created, otherwise this key won't get picked up.  If
-    you specified a passphrase in the previous step, you'll get asked for one
-    now -- type in the same one."
+    if ssh-add -l &>/dev/null
+    then
+        prompt "    ...adding key to agent..." \
+        "you're running ssh-agent.  We'll try and do an ssh-add of the
+        private key we just created, otherwise this key won't get picked up.  If
+        you specified a passphrase in the previous step, you'll get asked for one
+        now -- type in the same one."
 
-    ssh-add $HOME/.ssh/$admin_name
-fi
+        ssh-add $HOME/.ssh/$admin_name
+    fi
 
-# MANUAL: you now need to add some lines to the end of your ~/.ssh/config
-# file.  If the file doesn't exist, create it.  Make sure the file is "chmod
-# 644".
+    # MANUAL: you now need to add some lines to the end of your ~/.ssh/config
+    # file.  If the file doesn't exist, create it.  Make sure the file is
+    # "chmod 644".
 
-# The lines to be included look like this:
+    # The lines to be included look like this:
 
-#   host gitolite
-#       user git
-#       hostname server
-#       port 22
-#       identityfile ~/.ssh/sitaram
+    #   host gitolite
+    #       user git
+    #       hostname server
+    #       port 22
+    #       identityfile ~/.ssh/sitaram
 
-echo "
+    echo "
 host gitolite
-     user $user
-     hostname $host
-     port $port
-     identityfile ~/.ssh/$admin_name" > $tmpgli/.gl-stanza
+         user $user
+         hostname $host
+         port $port
+         identityfile ~/.ssh/$admin_name" > $tmpgli/.gl-stanza
 
-if grep 'host  *gitolite' $HOME/.ssh/config &>/dev/null
-then
-    prompt "found gitolite para in ~/.ssh/config; assuming it is correct..." \
-    "your \$HOME/.ssh/config already has settings for gitolite.  I will
-    assume they're correct, but if they're not, please edit that file, delete
-    that paragraph (that line and the following few lines), Ctrl-C, and rerun.
+    if grep 'host  *gitolite' $HOME/.ssh/config &>/dev/null
+    then
+        prompt "found gitolite para in ~/.ssh/config; assuming it is correct..." \
+        "your \$HOME/.ssh/config already has settings for gitolite.  I will
+        assume they're correct, but if they're not, please edit that file, delete
+        that paragraph (that line and the following few lines), Ctrl-C, and rerun.
 
-    In case you want to check right now (from another terminal) if they're
-    correct, here's what they are *supposed* to look like:
-$(cat $tmpgli/.gl-stanza)"
+        In case you want to check right now (from another terminal) if they're
+        correct, here's what they are *supposed* to look like:
+    $(cat $tmpgli/.gl-stanza)"
 
-else
-    prompt "creating gitolite para in ~/.ssh/config..." \
-    "creating settings for your gitolite access in $HOME/.ssh/config;
-    these are the lines that will be appended to your ~/.ssh/config:
-$(cat $tmpgli/.gl-stanza)"
+    else
+        prompt "creating gitolite para in ~/.ssh/config..." \
+        "creating settings for your gitolite access in $HOME/.ssh/config;
+        these are the lines that will be appended to your ~/.ssh/config:
+    $(cat $tmpgli/.gl-stanza)"
 
-    cat $tmpgli/.gl-stanza >> $HOME/.ssh/config
-    # if the file didn't exist at all, it might have the wrong permissions
-    chmod 644 $HOME/.ssh/config
-fi
+        cat $tmpgli/.gl-stanza >> $HOME/.ssh/config
+        # if the file didn't exist at all, it might have the wrong permissions
+        chmod 644 $HOME/.ssh/config
+    fi
+}
 
 # ----------------------------------------------------------------------
-# client side stuff almost done; server side now
+# server side
 # ----------------------------------------------------------------------
 
 # MANUAL: copy the gitolite directories "src", "conf", and "doc" to the
@@ -323,42 +344,44 @@ prompt "installing/upgrading..." \
 GL_ADMINDIR=$(ssh -p $port $user@$host "perl -e 'do \".gitolite.rc\"; print \$GL_ADMINDIR'")
 REPO_BASE=$(  ssh -p $port $user@$host "perl -e 'do \".gitolite.rc\"; print \$REPO_BASE'")
 
+# determine if this is an upgrade; we decide based on whether a file called
+# $GL_ADMINDIR/conf/gitolite.conf exists on the remote side.  We can't do this
+# till we know the correct value for GL_ADMINDIR
+upgrade=0
+if ssh -p $port $user@$host cat $GL_ADMINDIR/conf/gitolite.conf &> /dev/null
+then
+    upgrade=1
+    [[ -n $admin_name ]] && echo "looks like an upgrade... not using new key '$admin_name' after all!"
+else
+    [[ -z $admin_name ]] && die "this doesn't look like an upgrade... I need a name for the admin"
+fi
+
 # MANUAL: still in the "gitolite-install" directory?  Good.  Run
 # "src/install.pl"
 
 ssh -p $port $user@$host "cd gitolite-install; src/install.pl $quiet"
 
-# MANUAL: if you're upgrading, just go to your clone of the admin repo, make a
-# dummy change, and push.  (This assumes that you didn't change the
-# admin_name, pubkeys, userids, ports, or whatever, and you ran easy install
-# only to upgrade the software).  And then you are **done** -- ignore the rest
-# of this file for the purposes of an upgrade
+# MANUAL: if you're upgrading, run "src/gl-compile-conf" and you're done!  --
+# ignore the rest of this file for the purposes of an upgrade
 
-# determine if this is an upgrade; we decide based on whether a pubkey called
-# $admin_name.pub exists in $GL_ADMINDIR/keydir on the remote side
-upgrade=0
-if ssh -p $port $user@$host cat $GL_ADMINDIR/keydir/$admin_name.pub &> /dev/null
-then
-    prompt "done!
+[[ $upgrade == 1 ]] && {
+    # just compile it, in case the config file's internal format has changed
+    # and the hooks expect something different
+    ssh -p $port $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf $quiet"
+
+    prompt "" "done!
 
     If you forgot the help message you saw when you first ran this, there's a
     somewhat generic version of it at the end of this file.  Try:
 
         tail -30 $0
-" \
-    "this looks like an upgrade, based on the fact that a file called
-    $admin_name.pub already exists in $GL_ADMINDIR/keydir on the server.
-
-    Please go to your clone of the admin repo, make a dummy change (like maybe
-    add a blank line to something), commit, and push.  You're done!
-
-    (This assumes that you didn't change the admin_name, pubkeys, userids,
-    ports, or whatever, and you ran easy install only to upgrade the
-    software)."
-
+"
     exit 0
+}
 
-fi
+# ----------------------------------------------------------------------
+# from here on it's install only
+# ----------------------------------------------------------------------
 
 # MANUAL: setup the initial config file.  Edit $GL_ADMINDIR/conf/gitolite.conf
 # and add at least the following lines to it:
