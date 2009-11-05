@@ -58,8 +58,6 @@ Now, log off the server and get back to the client:
     explanation of what multi-keys are, how gitosis does them and how gitolite
     does it differently.
 
-[mk]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#multikeys
-
     You can split the keys manually, or use the following code (just
     copy-paste it into your xterm after "cd"-ing to your gitolite-admin repo
     clone):
@@ -84,3 +82,6 @@ Now, log off the server and get back to the client:
     the files to make sure this worked properly*
 
 5.  Check all your changes to your gitolite-admin clone, commit, and push
+
+[mk]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#multikeys
+
