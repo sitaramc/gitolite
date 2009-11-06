@@ -16,6 +16,7 @@ In this document:
       * advantages over the older install methods
       * disadvantages
   * manual install
+  * upgrades
   * other notes
   * next steps
 
@@ -74,6 +75,22 @@ actually doing, I suggest you skip the `-q`.
 If you don't have bash, it's not very complicated to do it manually.  Just
 open the file `src/00-easy-install.sh` in a nice, syntax coloring, text
 editor, and follow the instructions marked "MANUAL" :-)
+
+### upgrades
+
+Upgrading gitolite is easy.
+
+To upgrade, pull the latest "master" (or other) branch in your gitolite repo
+clone, then run the same exact command you ran to do the install, except you
+can leave out the last argument.
+
+And you might want to add a `-q` to speed things up :-)
+
+Note that this only upgrades the software.  Unlike earlier versions, it does
+**not** touch the `conf/gitolite.conf` file or the contents of `keydir` in any
+way.  I decided that it is not possible to **safely** let an upgrade do
+something meaningful with them -- fiddling with existing config files (as
+opposed to merely creating one which did not exist) is best left to a human.
 
 ### other notes
 
