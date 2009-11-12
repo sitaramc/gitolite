@@ -381,7 +381,7 @@ for my $repo (sort keys %repos) {
             print "gitweb add $repo.git\n";
         }
         # add the description file; no messages to user or error checking :)
-        open(DESC, ">", $desc_file) and print DESC "$desc{$repo}\n" and close DESC;
+        $desc{$repo} and open(DESC, ">", $desc_file) and print DESC "$desc{$repo}\n" and close DESC;
     } else {
         if ($projlist{"$repo.git"}) {
             # delete it from new list
