@@ -9,6 +9,7 @@ In this document:
   * explanation
       * files on the server
       * files on client
+      * why two keys on client
   * more complex ssh setups
       * two gitolite servers to manage?
   * further reading
@@ -168,6 +169,70 @@ Here's how it all hangs together.
 
     now works as expected, invoking the special keypair instead of the default
     one.
+
+<a name="twokeys"></a>
+
+#### why two keys on client
+
+Why do I (the admin) need two **different** keypairs?
+
+There are two types of access the admin will make to the server: a normal
+login, to get a shell prompt, and gitolite access (clone/fetch/push etc).  The
+first access needs an authkeys line *without* any "command=" restrictions,
+while the second requires a line *with* such a restriction.
+
+And we can't use the same key for both because there is no way to disambiguate
+them; the ssh server will always (*always*) pick the first one in sequence
+when the key is offered by the ssh client.
+
+So the next question is usually "I have other ways to get a shell on that
+account, so why do I need a key for shell access at all?"
+
+The answer to this is that the "easy install" script, being written for the
+most general case, needs shell access via ssh to do its stuff.
+
+If you really, really, want to get rid of the extra key, here's a transcript
+that should have enough info to get you going (but it helps to know ssh well):
+
+  * on "sitaram" user, on my workstation
+
+        cd ~/.ssh
+        cp id_rsa sitaram
+        cp id_rsa.pub sitaram.pub
+        cd ~/gitolite-clone
+        src/00-easy-install.sh -q git my.git.server sitaram
+
+    that last command produces something like the following:
+
+        you are upgrading from     (unknown)     to v0.80-6-gdde8c4e
+        setting up keypair...
+            ...reusing /home/sitaram/.ssh/sitaram.pub...
+        creating gitolite para in ~/.ssh/config...
+        finding/creating gitolite rc...
+        installing/upgrading...
+        Pseudo-terminal will not be allocated because stdin is not a terminal.
+        [master (root-commit) e717a89] start
+         2 files changed, 11 insertions(+), 0 deletions(-)
+         create mode 100644 conf/gitolite.conf
+         create mode 100644 keydir/sitaram.pub
+        cloning gitolite-admin repo...
+        Initialized empty Git repository in /home/sitaram/gitolite-admin/.git/
+        fatal: 'gitolite-admin.git' does not appear to be a git repository
+        fatal: The remote end hung up unexpectedly
+
+    notice that the final step (the clone of the newly created gitolite-admin
+    repo) failed, as expected
+
+  * now log on to the git hosting account (`git@my.git.server` in this
+    example), edit `~/.ssh/authorized_keys`, and delete the line with the
+    first occurrence of your key (this should be *before* the `# gitolite
+    start` line)
+
+  * now go back to your workstation and
+
+        git clone git@my.git.server:gitolite-admin
+
+That should do it.
 
 ### more complex ssh setups
 
