@@ -38,22 +38,27 @@ This is a feature that I personally do not use (corporate environments don't
 like unauthenticated access of any kind to any repo!), but someone wanted it,
 so here goes.
 
-There's **no special syntax** for this -- just give read permission to a user
-called `gitweb` or `daemon`!  (This also means you can't have a normal user
-with either of those two names, but I doubt that's a problem!).  See the [faq,
-tips, etc][ss] document for easy ways to specify access for multiple
-repositories.
+To make a repo or repo group accessible via "git daemon", just give read
+permission to the special user "daemon".  See the [faq, tips, etc][ss]
+document for easy ways to specify access for multiple repositories.
 
 [ss]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#gwd
 
-Note that this does **not** install or configure gitweb/daemon -- that is a
-one-time setup you must do separately.  All this does is:
+There's a special user called "gitweb" also, which works the same way.
+However, setting a description for the project also enables gitweb permissions
+so you may as well use that method and kill two birds with one stone, like so:
 
+    gitolite = "fast, secure, access control for git in a corporate environment"
+
+Note that gitolite does **not** install or configure gitweb/daemon -- that is
+a one-time setup you must do separately.  All this does is:
+
+  * for daemon, create the file `git-daemon-export-ok` in the repository
   * for gitweb, add the repo to the list of projects to be served by gitweb
     (see the config file variable `$PROJECTS_LIST`, which should have the same
     value you specified for `$projects_list` when setting up gitweb)
-  * for daemon, create the file `git-daemon-export-ok` in the repository
+  * put the description, if given, in `$repo/description`
 
 The "compile" script will keep these files consistent with the config settings
--- this includes removing such settings if you remove "read" permissions for
-the special usernames.
+-- this includes removing such settings/files if you remove "read" permissions
+for the special usernames or remove the description line.
