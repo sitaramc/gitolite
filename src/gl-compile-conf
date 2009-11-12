@@ -317,7 +317,8 @@ for my $repo (keys %repos)
             # erm, note that's "and die" not "or die" as is normal in perl
         wrap_chdir("$repo.git");
         system("git --bare init");
-        system("cp $GL_ADMINDIR/src/update-hook.pl hooks/update");
+        # propagate our own, plus any local admin-defined, hooks
+        system("cp $GL_ADMINDIR/src/hooks/* hooks/");
         chmod 0755, "hooks/update";
         wrap_chdir("$repo_base_abs");
         $git_too_old++ if $git_version < 10602;     # that's 1.6.2 to you

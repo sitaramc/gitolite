@@ -66,20 +66,26 @@ unless (-f $GL_CONF) {
 EOF
 }
 
-# finally, any potential changes to src/update-hook.pl must be propagated to
-# all the repos' hook directories
+# finally, hooks must be propagated to all the repos in case they changed
 chdir("$repo_base_abs") or die "chdir $repo_base_abs failed: $!\n";
 for my $repo (`find . -type d -name "*.git"`) {
     chomp ($repo);
-    system("cp $GL_ADMINDIR/src/update-hook.pl $repo/hooks/update");
+    # propagate our own, plus any local admin-defined, hooks
+    system("cp $GL_ADMINDIR/src/hooks/* $repo/hooks/");
     chmod 0755, "$repo/hooks/update";
 }
 
 # oh and one of those repos is a bit more special and has an extra hook :)
 if ( -d "gitolite-admin.git/hooks" ) {
     print "copying post-update hook to gitolite-admin repo...\n";
-    system("cp -v $GL_ADMINDIR/src/pta-hook.sh gitolite-admin.git/hooks/post-update");
+    system("cp -v $GL_ADMINDIR/src/ga-post-update-hook gitolite-admin.git/hooks/post-update");
     system("perl", "-i", "-p", "-e", "s(export GL_ADMINDIR=.*)(export GL_ADMINDIR=$GL_ADMINDIR)",
         "gitolite-admin.git/hooks/post-update");
     chmod 0755, "gitolite-admin.git/hooks/post-update";
+}
+
+# fixup program renames
+for my $oldname qw(pta-hook.sh conf-convert.pl 00-easy-install.sh 99-emergency-addkey.sh install.pl update-hook.pl) {
+    unlink "$GL_ADMINDIR/src/$oldname";
+    unlink "$ENV{HOME}/gitolite-install/src/$oldname";
 }

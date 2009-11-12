@@ -46,7 +46,7 @@ Now, log off the server and get back to the client:
     gitosis-admin clone in `$GSAC` below, and similarly the path for your
     gito**lite**-admin clone in `$GLAC`
 
-        src/conf-convert.pl < $GSAC/gitosis.conf > $GLAC/gitolite.conf
+        src/gl-conf-convert < $GSAC/gitosis.conf > $GLAC/gitolite.conf
 
     Be sure to check the file to make sure it converted correctly
 

@@ -117,7 +117,7 @@ Here's how it all hangs together.
         ~/.ssh/id_rsa.pub
 
   * gitolite keypair; the "sitaram" in this is the 3rd argument to the
-    `src/00-easy-install.sh` command you ran; the easy install script does the
+    `src/gl-easy-install` command you ran; the easy install script does the
     rest
 
         ~/.ssh/sitaram
@@ -200,7 +200,7 @@ that should have enough info to get you going (but it helps to know ssh well):
         cp id_rsa sitaram
         cp id_rsa.pub sitaram.pub
         cd ~/gitolite-clone
-        src/00-easy-install.sh -q git my.git.server sitaram
+        src/gl-easy-install -q git my.git.server sitaram
 
     that last command produces something like the following:
 

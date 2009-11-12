@@ -120,7 +120,7 @@ Notes:
 
 Pre-requisites:
   - you must run this from the gitolite working tree top level directory.
-    This means you run this as "src/00-easy-install.sh"
+    This means you run this as "src/gl-easy-install"
   - you must already have pubkey based access to user@host.  If you currently
     only have password access, use "ssh-copy-id" or something equivalent (or
     copy the key manually).  Somehow (doesn't matter how), get to the point
@@ -137,13 +137,13 @@ EOFU
 # ----------------------------------------------------------------------
 
 basic_sanity() {
-    # MANUAL: this *must* be run as "src/00-easy-install.sh", not by cd-ing to
-    # src and then running "./00-easy-install.sh"
+    # MANUAL: this *must* be run as "src/gl-easy-install", not by cd-ing to
+    # src and then running "./gl-easy-install"
 
-    [[ $0 =~ ^src/00-easy-install.sh$ ]] ||
+    [[ $0 =~ ^src/gl-easy-install$ ]] ||
     {
         die "please cd to the gitolite repo top level directory and run this as
-        'src/00-easy-install.sh'"
+        'src/gl-easy-install'"
     }
 
     # are we in quiet mode?
@@ -175,11 +175,13 @@ basic_sanity() {
     # MANUAL: make sure you're in the gitolite directory, at the top level.
     # The following files should all be visible:
 
-    ls src/gl-auth-command  \
-        src/gl-compile-conf \
-        src/install.pl  \
-        src/update-hook.pl  \
-        conf/example.conf   \
+    ls  src/ga-post-update-hook     \
+        src/gitolite.pm             \
+        src/gl-install              \
+        src/gl-auth-command         \
+        src/gl-compile-conf         \
+        src/hooks/update            \
+        conf/example.conf           \
         conf/example.gitolite.rc    >/dev/null ||
         die "cant find at least some files in gitolite sources/config; aborting"
 
@@ -349,9 +351,9 @@ run_install() {
     fi
 
     # MANUAL: still in the "gitolite-install" directory?  Good.  Run
-    # "src/install.pl"
+    # "src/gl-install"
 
-    ssh -p $port $user@$host "cd gitolite-install; src/install.pl $quiet"
+    ssh -p $port $user@$host "cd gitolite-install; src/gl-install $quiet"
 
     # MANUAL: if you're upgrading, run "src/gl-compile-conf" and you're done!
     # -- ignore the rest of this file for the purposes of an upgrade
@@ -412,9 +414,9 @@ GIT_WORK_TREE=$GL_ADMINDIR git commit -am start --allow-empty
 
     # MANUAL: now that the admin repo is created, you have to set the hooks
     # properly.  The install program does this.  So cd back to the
-    # "gitolite-install" directory and run "src/install.pl"
+    # "gitolite-install" directory and run "src/gl-install"
 
-    ssh -p $port $user@$host "cd gitolite-install; src/install.pl $quiet"
+    ssh -p $port $user@$host "cd gitolite-install; src/gl-install $quiet"
 
     # MANUAL: you're done!  Log out of the server, come back to your
     # workstation, and clone the admin repo using "git clone

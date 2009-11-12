@@ -39,7 +39,7 @@ Assumptions/pre-requisites:
         new keypair if needed, then run `ssh-copy-id user@host`)
   * you have a clone or an archive of gitolite somewhere on your workstation
 
-If so, just `cd` to that clone and run `src/00-easy-install.sh` and follow the
+If so, just `cd` to that clone and run `src/gl-easy-install` and follow the
 prompts!  (Running it without any arguments shows you usage plus other useful
 info).
 
@@ -47,7 +47,7 @@ info).
 
 A typical run for me is:
 
-    src/00-easy-install.sh -q git my.git.server sitaram
+    src/gl-easy-install -q git my.git.server sitaram
 
 `-q` stands for "quiet" mode -- very minimal output, no verbose descriptions
 of what it is going to do, and no pauses unless absolutely needed.  However,
@@ -73,7 +73,7 @@ actually doing, I suggest you skip the `-q`.
 ### manual install
 
 If you don't have bash, it's not very complicated to do it manually.  Just
-open the file `src/00-easy-install.sh` in a nice, syntax coloring, text
+open the file `src/gl-easy-install` in a nice, syntax coloring, text
 editor, and follow the instructions marked "MANUAL" :-)
 
 ### upgrades
@@ -94,7 +94,7 @@ opposed to merely creating one which did not exist) is best left to a human.
 
 ### other notes
 
-  * if you run `src/00-easy-install.sh` without the `-q` option, you will be
+  * if you run `src/gl-easy-install` without the `-q` option, you will be
     given a chance to edit `~/.gitolite.rc`.  You can change any options (such
     as paths, for instance), but be sure to keep the perl syntax -- you
     *don't* have to know perl to do so, it's fairly easy to guess in this
