@@ -106,6 +106,9 @@ my %rurp_seen = ();
 # catch usernames<->pubkeys mismatches; search for "lint" below
 my %user_list = ();
 
+# gitweb descriptions, plain text, keyed by repo
+my %desc = ();
+
 # set the umask before creating any files
 umask($REPO_UMASK);
 
@@ -249,6 +252,15 @@ sub parse_conf_file
                 }
             }
         }
+        # very simple syntax for the gitweb description of repo
+        elsif (/^(\S+) = "(.*)"$/)
+        {
+            my ($repo, $desc) = ($1, $2);
+            die "$ABRT bad repo name $repo\n" unless $repo =~ $REPONAME_PATT;
+            die "$WARN $fragment attempting to set description for $repo\n" if
+                $fragment ne 'master' and $fragment ne $repo and ($groups{"\@$fragment"}{$repo} || '') ne 'master';
+            $desc{$repo} = $desc;
+        }
         else
         {
             die "$ABRT can't make head or tail of '$_'\n";
@@ -359,13 +371,17 @@ for my $repo (sort keys %repos) {
 
 # ...then gitwebs
 for my $repo (sort keys %repos) {
-    if ($repos{$repo}{'R'}{'gitweb'}) {
+    my $desc_file = "$repo.git/description";
+    # note: having a description also counts as enabling gitweb
+    if ($repos{$repo}{'R'}{'gitweb'} or $desc{$repo}) {
         unless ($projlist{"$repo.git"}) {
             # not in the old list; add it to the new one
             $projlist{"$repo.git"} = 1;
             $projlist_changed = 1;
             print "gitweb add $repo.git\n";
         }
+        # add the description file; no messages to user or error checking :)
+        $desc{$repo} and open(DESC, ">", $desc_file) and print DESC "$desc{$repo}\n" and close DESC;
     } else {
         if ($projlist{"$repo.git"}) {
             # delete it from new list
@@ -373,6 +389,8 @@ for my $repo (sort keys %repos) {
             $projlist_changed = 1;
             print "gitweb del $repo.git\n";
         }
+        # delete the description file; no messages to user or error checking :)
+        unlink $desc_file;
     }
 }
 
