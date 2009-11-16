@@ -47,9 +47,6 @@ chomp($merge_base = `git merge-base $oldsha $newsha`)
     unless $oldsha eq '0' x 40
         or $newsha eq '0' x 40;
 
-# some of this is from an example hook in Documentation/howto of git.git, with
-# some variations
-
 # what are you trying to do?  (is it 'W' or '+'?)
 my $perm = 'W';
 # rewriting a tag is considered a rewind, in terms of permissions
@@ -64,6 +61,25 @@ push @allowed_refs, { "$PERSONAL/$ENV{GL_USER}/" => "RW+" } if $PERSONAL;
 # we want specific perms to override @all, so they come first
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$ENV{GL_USER}} || [] };
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{'@all'} || [] };
+
+# prepare the list of refs to be checked
+
+# previously, we just checked $ref -- the ref being updated, which is passed
+# to us by git (see man githooks).  Now we also have to treat each PATH being
+# updated as a potential "ref" and check that, if PATH-based restrictions have
+# been specified
+
+my @refs = ($ref);      # the first ref to check is the real one
+if (exists $repos{$ENV{GL_REPO}}{PATH_LIMITS}) {
+    # this is special to git -- the hash of an empty tree
+    my $empty='4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+    # well they're not really "trees" but $empty is indeed the empty tree so
+    # we can just pretend $oldsha/$newsha are also trees, and anyway 'git
+    # diff' only wants trees
+    my $oldtree = $oldsha eq '0' x 40 ? $empty : $oldsha;
+    my $newtree = $newsha eq '0' x 40 ? $empty : $newsha;
+    push @refs, map { chomp; s/^/PATH\//; $_; } `git diff --name-only $oldtree $newtree`;
+}
 
 my $refex = '';
 
@@ -88,21 +104,25 @@ sub check_ref {
         die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->{$refex} eq '-';
 
         # as far as *this* ref is concerned we're ok
-        return if ($ar->{$refex} =~ /\Q$perm/);
+        return $refex if ($ar->{$refex} =~ /\Q$perm/);
     }
     die "$perm $ref $ENV{GL_REPO} $ENV{GL_USER} DENIED by fallthru\n";
 }
 
-# and in this version, we have only one ref to check
-check_ref($ref);
+# and in this version, we have many "refs" to check.  The one we print in the
+# log is the *first* one (which is a *real* ref, like refs/heads/master),
+# while all the rest (if they exist) are like PATH/something.  So we do the
+# first one separately to capture it, then run the rest (if any)
+my $log_refex = check_ref(shift @refs);
+check_ref($_) for @refs;
 
-# if we returned at all, the check succeeded, so we log the action and exit 0
+# if we returned at all, all the checks succeeded, so we log the action and exit 0
 
 # logging note: if log failure isn't important enough to block pushes, get rid
 # of all the error checking
 open my $log_fh, ">>", $ENV{GL_LOG} or die "open log failed: $!\n";
 print $log_fh "$ENV{GL_TS}  $perm\t" .
     substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
-    "\t$ENV{GL_REPO}\t$ref\t$ENV{GL_USER}\t$refex\n";
+    "\t$ENV{GL_REPO}\t$ref\t$ENV{GL_USER}\t$log_refex\n";
 close $log_fh or die "close log failed: $!\n";
 exit 0;
