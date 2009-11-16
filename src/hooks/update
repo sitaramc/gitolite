@@ -64,22 +64,44 @@ push @allowed_refs, { "$PERSONAL/$ENV{GL_USER}/" => "RW+" } if $PERSONAL;
 # we want specific perms to override @all, so they come first
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$ENV{GL_USER}} || [] };
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{'@all'} || [] };
-for my $ar (@allowed_refs)
-{
-    my $refex = (keys %$ar)[0];
-    # refex?  sure -- a regex to match a ref against :)
-    next unless $ref =~ /$refex/;
-    if ($ar->{$refex} =~ /\Q$perm/)
-    {
-        # if log failure isn't important enough to block pushes, get rid of
-        # all the error checking
-        open my $log_fh, ">>", $ENV{GL_LOG}
-            or die "open log failed: $!\n";
-        print $log_fh "$ENV{GL_TS}  $perm\t" .
-            substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
-            "\t$ENV{GL_REPO}\t$ref\t$ENV{GL_USER}\t$refex\n";
-        close $log_fh or die "close log failed: $!\n";
-        exit 0;
+
+my $refex = '';
+
+# check one ref
+sub check_ref {
+
+    # normally, the $ref will be whatever ref the commit is trying to update
+    # (like refs/heads/master or whatever).  At least one of the refexes that
+    # pertain to this user must match this ref **and** the corresponding
+    # permission must also match the action (W or +) being attempted.  If none
+    # of them match, the access is denied.
+
+    # Notice that the function DIES!!!  Any future changes that require more
+    # work to be done *after* this, even on failure, can start using return
+    # codes etc., but for now we're happy to just die.
+
+    my $ref = shift;
+    for my $ar (@allowed_refs) {
+        $refex = (keys %$ar)[0];
+        # refex?  sure -- a regex to match a ref against :)
+        next unless $ref =~ /$refex/;
+
+        # as far as *this* ref is concerned we're ok
+        return if ($ar->{$refex} =~ /\Q$perm/);
     }
+    die "$perm $ref $ENV{GL_REPO} $ENV{GL_USER} DENIED by fallthru\n";
 }
-die "$perm $ref $ENV{GL_REPO} $ENV{GL_USER} DENIED by fallthru\n";
+
+# and in this version, we have only one ref to check
+check_ref($ref);
+
+# if we returned at all, the check succeeded, so we log the action and exit 0
+
+# logging note: if log failure isn't important enough to block pushes, get rid
+# of all the error checking
+open my $log_fh, ">>", $ENV{GL_LOG} or die "open log failed: $!\n";
+print $log_fh "$ENV{GL_TS}  $perm\t" .
+    substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
+    "\t$ENV{GL_REPO}\t$ref\t$ENV{GL_USER}\t$refex\n";
+close $log_fh or die "close log failed: $!\n";
+exit 0;
