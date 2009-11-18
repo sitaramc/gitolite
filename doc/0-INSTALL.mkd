@@ -1,5 +1,7 @@
 # installing gitolite
 
+[Update 2009-11-18: easy install now works from msysgit also!]
+
 This document tells you how to install gitolite.  After the install is done,
 you may want to see the [admin document][admin] for adding users, repos, etc.
 
@@ -141,22 +143,18 @@ You need the following software on it:
 #### install workstation
 
 Installing or upgrading the gitolite software itself is best done by running
-the easy-install program from a clone, usually on a different machine.
+the easy-install program from a gitolite clone.
 
-This script is heavily dependent on bash, so you need a unix machine that has
-a bash shell available.  Unlike the server side dependency mentioned above,
-this bash dependency is probably permament.
+This script is heavily dependent on bash, so you need a machine with a bash
+shell.  Even the bash that comes with msysgit is fine, if you don't have a
+Linux box handy.
 
-*However*, you do not need to use this machine every day.  Day to day
-administration of gitolite (adding users, repos, etc) can be done from
-anywhere; see next section.
+If you have neither Linux nor Windows+msysgit, you still have a few
+alternatives:
 
-If you do not have such a machine, you have the following alternatives:
-
-  * use a different userid on the same server
-  * use the same userid on the same server!
-  * (either of the above cases makes bash mandatory on the server, by the way)
-  * manually simulate the script directly on the server; doable, but tedious
+  * use a different userid on the same server (assuming it has bash)
+  * use the same userid on the same server (same assumption)
+  * manually simulate the script directly on the server (doable, but tedious)
 
 #### admin workstation(s)
 
@@ -168,10 +166,7 @@ done by cloning this repo, making changes to a file called
 `conf/gitolite.conf`, adding users' pubkeys to `keydir/`, and pushing the
 changes back to the server.
 
-Which means all this can be done from *any* machine, even Windows.  [Just make
-sure your pubkey (from the Windows machine) has been added and permissions
-given to allow you to push to the gitolite-admin repo.  This is also how other
-people can be added as "admins": add their pubkey to as
-`keydir/<username>.pub`, and give `<username>` at least `RW` permissions on
-the `gitolite-admin` repo in the `conf/gitolite.conf` file.]
-
+Which means all this can be done from *any* machine.  You'll normally do it
+from the same machine you used to install gitolite, but it doesn't have to be
+the same one, as long as your pubkey has been added and permissions given to
+allow you to push to the gitolite-admin repo.

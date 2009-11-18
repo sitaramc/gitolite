@@ -33,9 +33,9 @@ fi
 # ----------------------------------------------------------------------
 
 main() {
-    setup_tempdir
-
     basic_sanity "$@"
+
+    setup_tempdir
 
     version_info "$@"
 
@@ -140,11 +140,9 @@ basic_sanity() {
     # MANUAL: this *must* be run as "src/gl-easy-install", not by cd-ing to
     # src and then running "./gl-easy-install"
 
-    [[ $0 =~ ^src/gl-easy-install$ ]] ||
-    {
-        die "please cd to the gitolite repo top level directory and run this as
-        'src/gl-easy-install'"
-    }
+    bindir=${0%/*}
+    # switch to parent of bindir; we assume the conf files are all there
+    cd $bindir; cd ..
 
     # are we in quiet mode?
     quiet=
@@ -163,14 +161,16 @@ basic_sanity() {
     admin_name=$3
     # but if the 3rd arg is a number, that's a port number, and the 4th arg is
     # the admin_name
-    if [[ $3 =~ ^[0-9]+$ ]]
+    if echo $3 | perl -lne 'exit 1 unless /^[0-9]+$/'
     then
         port=$3
         admin_name=$4
     fi
 
-    [[ "$user" =~ [^a-zA-Z0-9._-] ]] && die "user '$user' invalid"
-    [[ -n $admin_name ]] && [[ "$admin_name" =~ [^a-zA-Z0-9._-] ]] && die "admin_name '$admin_name' invalid"
+    echo $user | perl -lne 'exit 1 if /[^a-zA-Z0-9._-]/' ||
+        die "user '$user' invalid"
+    echo $admin_name | perl -lne 'exit 1 if /[^a-zA-Z0-9._-]/' ||
+        die "admin_name '$admin_name' invalid"
 
     # MANUAL: make sure you're in the gitolite directory, at the top level.
     # The following files should all be visible:
@@ -225,11 +225,11 @@ setup_local_ssh() {
 
     prompt "setting up keypair..." "$v_setting_up_keypair"
 
-    if [[ -f $HOME/.ssh/$admin_name.pub ]]
+    if [[ -f "$HOME/.ssh/$admin_name.pub" ]]
     then
         prompt "    ...reusing $HOME/.ssh/$admin_name.pub..." "$v_reuse_pubkey"
     else
-        ssh-keygen -t rsa -f $HOME/.ssh/$admin_name || die "ssh-keygen failed for some reason..."
+        ssh-keygen -t rsa -f "$HOME/.ssh/$admin_name" || die "ssh-keygen failed for some reason..."
     fi
 
     # MANUAL: copy the pubkey created to the server, say to /tmp.  This would
@@ -245,7 +245,7 @@ setup_local_ssh() {
     if ssh-add -l &>/dev/null
     then
         prompt "    ...adding key to agent..." "$v_ssh_add"
-        ssh-add $HOME/.ssh/$admin_name
+        ssh-add "$HOME/.ssh/$admin_name"
     fi
 
     # MANUAL: you now need to add some lines to the end of your ~/.ssh/config
@@ -266,14 +266,14 @@ setup_local_ssh() {
      port $port
      identityfile ~/.ssh/$admin_name" > $tmpgli/.gl-stanza
 
-    if grep 'host  *gitolite' $HOME/.ssh/config &>/dev/null
+    if grep 'host  *gitolite' "$HOME/.ssh/config" &>/dev/null
     then
         prompt "found gitolite para in ~/.ssh/config; assuming it is correct..." "$v_found_para"
     else
         prompt "creating gitolite para in ~/.ssh/config..." "$v_creating_para"
-        cat $tmpgli/.gl-stanza >> $HOME/.ssh/config
+        cat $tmpgli/.gl-stanza >> "$HOME/.ssh/config"
         # if the file didn't exist at all, it might have the wrong permissions
-        chmod 644 $HOME/.ssh/config
+        chmod 644 "$HOME/.ssh/config"
     fi
 }
 
@@ -288,7 +288,7 @@ copy_gl() {
     # have to create the directory first.
 
     ssh -p $port $user@$host mkdir -p gitolite-install
-    rsync $quiet -e "ssh -p $port" -a src conf doc $user@$host:gitolite-install/
+    scp $quiet -P $port -r src conf doc $user@$host:gitolite-install/
     rm -f src/VERSION
 
     # MANUAL: now log on to the server (ssh git@server) and get a command
@@ -384,7 +384,7 @@ repo testing
 
     # send the config and the key to the remote
     scp $quiet -P $port $tmpgli/gitolite.conf $user@$host:$GL_ADMINDIR/conf/
-    scp $quiet -P $port $HOME/.ssh/$admin_name.pub $user@$host:$GL_ADMINDIR/keydir
+    scp $quiet -P $port "$HOME/.ssh/$admin_name.pub" $user@$host:$GL_ADMINDIR/keydir
 
     # MANUAL: cd to $GL_ADMINDIR and run "src/gl-compile-conf"
     ssh -p $port $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf $quiet"
@@ -426,7 +426,7 @@ GIT_WORK_TREE=$GL_ADMINDIR git commit -am start --allow-empty
     prompt "cloning gitolite-admin repo..." "$v_cloning"
 
     cleanup
-    cd $HOME
+    cd "$HOME"
     git clone gitolite:gitolite-admin.git
 
     # MANUAL: be sure to read the message below; this applies to you too...
@@ -464,7 +464,7 @@ successfully cloned and pushed the gitolite-admin repo.  After that, install
 'keychain' or something similar, and add the following command to your bashrc
 (since this is a non-default key)
 
-    ssh-add \\\$HOME/.ssh/\$admin_name
+    ssh-add "\\\$HOME/.ssh/\$admin_name"
 
 This makes using passphrases very convenient.
 "
