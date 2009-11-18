@@ -73,8 +73,8 @@ detail [here][gsdiff].
   * config file syntax gets checked upfront, and much more thoroughly
   * if your requirements are still too complex, you can split up the config
     file and delegate authority over parts of it
-  * easier to specify gitweb/daemon access, and easier to link gitweb
-    authorisation with gitolite
+  * easier to specify gitweb "description" and gitweb/daemon access
+  * easier to sync gitweb (http) authorisation with gitolite's access config
   * more comprehensive logging [aka: management does not think "blame" is just
     a synonym for "annotate" :-)]
   * "personal namespace" prefix for each dev

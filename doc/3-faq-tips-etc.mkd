@@ -11,7 +11,7 @@ In this document:
       * two levels of access rights checking
       * error checking the config file
       * delegating parts of the config file
-      * easier to specify gitweb/daemon access
+      * easier to specify gitweb "description" and gitweb/daemon access
       * easier to link gitweb authorisation with gitolite
       * better logging
       * one user, many keys
@@ -196,17 +196,25 @@ for details.
 
 <a name="gwd"></a>
 
-#### easier to specify gitweb/daemon access
+#### easier to specify gitweb "description" and gitweb/daemon access
 
-Which of your repos should be accessible via plain HTTP or the `git://`
-protocols (gitweb and git daemon, respectively)?
+To enable access to a repo via gitweb *and* create a "description" for it to
+show up on the webpage, just add a line like this, anywhere in the config
+file:
 
-Specifying gitweb and/or daemon access for a repo is simple: give "read"
-permissions to two special usernames: `gitweb` and `daemon`.
+    reponame = "one line of description"
 
-You can also keep these pieces separate from the detailed, branch level access
-for each repo, if you like, since you can write the access control specs in
-bits and pieces.  Here's an example, using short repo names for convenience:
+To enable access to one or more repos via git daemon, just give "read"
+permissions to the special username `daemon`.
+
+There is also a special user called `gitweb` to specify gitweb access; useful
+if you don't care about specifying individual descriptions for each repo and
+just want to quickly enable gitweb access to one or more repos.
+
+Remember gitolite lets you specify the access control specs in bits and
+pieces, so you can keep all the daemon/gitweb access in one place, even if
+each repo has more specific branch-level access config specified elsewhere.
+Here's an example, using really short reponames because I'm lazy:
 
     # maybe near the top of the file, for ease of access:
 
