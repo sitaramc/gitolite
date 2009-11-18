@@ -19,6 +19,7 @@ In this document:
   * upgrades
   * other notes
   * next steps
+  * appendix: server and client requirements
 
 ----
 
@@ -105,3 +106,72 @@ opposed to merely creating one which did not exist) is best left to a human.
 The last message produced by the easy install script should tell you how to
 add users, repos, etc., and you will find more details in the [admin][admin]
 document.
+
+<a name="server_reqs"></a>
+
+### appendix: server and client requirements
+
+There are 3 machines *potentially* involved in installing and administering
+gitolite.
+
+#### server
+
+This is where gitolite is eventually installed.  You need a *normal* userid
+(typically "git" but can be anything) on this machine; root access is *not*
+needed.
+
+You need the following software on it:
+
+  * git
+      * can be in a non-PATH location if you are unable to install it
+        normally; see the `$GIT_PATH` variable in the "rc" file
+  * perl
+      * default install is fine; no special modules are needed
+      * (a normal install of git also requires/installs perl, so you probably
+        have it already)
+  * openssh server
+      * (I guess any ssh server that can understand the `authorized_keys` file
+        format should work)
+  * **bash shell**
+      * a small part of the gitolite server side is written in "bash"; I
+        intend to test it (time permitting) on non-bash (like ksh or plain sh)
+        on non-Linux servers.  Once that is done, this bash dependency will go
+        away.
+
+#### install workstation
+
+Installing or upgrading the gitolite software itself is best done by running
+the easy-install program from a clone, usually on a different machine.
+
+This script is heavily dependent on bash, so you need a unix machine that has
+a bash shell available.  Unlike the server side dependency mentioned above,
+this bash dependency is probably permament.
+
+*However*, you do not need to use this machine every day.  Day to day
+administration of gitolite (adding users, repos, etc) can be done from
+anywhere; see next section.
+
+If you do not have such a machine, you have the following alternatives:
+
+  * use a different userid on the same server
+  * use the same userid on the same server!
+  * (either of the above cases makes bash mandatory on the server, by the way)
+  * manually simulate the script directly on the server; doable, but tedious
+
+#### admin workstation(s)
+
+When you install gitolite, it creates a repository called "gitolite-admin" and
+gives you permissions on it.
+
+Administering gitolite (adding repos/users, assigning permissions, etc) is
+done by cloning this repo, making changes to a file called
+`conf/gitolite.conf`, adding users' pubkeys to `keydir/`, and pushing the
+changes back to the server.
+
+Which means all this can be done from *any* machine, even Windows.  [Just make
+sure your pubkey (from the Windows machine) has been added and permissions
+given to allow you to push to the gitolite-admin repo.  This is also how other
+people can be added as "admins": add their pubkey to as
+`keydir/<username>.pub`, and give `<username>` at least `RW` permissions on
+the `gitolite-admin` repo in the `conf/gitolite.conf` file.]
+
