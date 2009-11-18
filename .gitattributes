@@ -1,0 +1,3 @@
+conf/*          crlf=input
+src/*           crlf=input
+src/hooks/*     crlf=input
