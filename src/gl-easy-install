@@ -45,19 +45,14 @@ main() {
 
     run_install
 
-    [[ $upgrade == 1 ]] && {
-        # just compile it, in case the config file's internal format has
-        # changed and the hooks expect something different
-        ssh -p $port $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf $quiet"
+    [[ $upgrade == 0 ]] && initial_conf_key
 
-        eval "echo \"$v_done\""
-        cleanup
-        exit 0
-    }
-
-    initial_conf_key
+    # MANUAL: cd to $GL_ADMINDIR and run "src/gl-compile-conf"
+    ssh -p $port $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf $quiet"
 
     setup_pta
+
+    clone_it
 }
 
 # ----------------------------------------------------------------------
@@ -140,7 +135,7 @@ basic_sanity() {
 
     bindir=${0%/*}
     # switch to parent of bindir; we assume the conf files are all there
-    cd $bindir; cd ..
+    cd "$bindir"; cd ..
 
     # are we in quiet mode?
     quiet=
@@ -383,9 +378,6 @@ repo testing
     # send the config and the key to the remote
     scp $quiet -P $port $tmpgli/gitolite.conf $user@$host:$GL_ADMINDIR/conf/
     scp $quiet -P $port "$HOME/.ssh/$admin_name.pub" $user@$host:$GL_ADMINDIR/keydir
-
-    # MANUAL: cd to $GL_ADMINDIR and run "src/gl-compile-conf"
-    ssh -p $port $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf $quiet"
 }
 
 # ----------------------------------------------------------------------
@@ -407,7 +399,7 @@ setup_pta() {
 
     echo "cd $REPO_BASE/gitolite-admin.git
 GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
-GIT_WORK_TREE=$GL_ADMINDIR git commit -am start --allow-empty
+GIT_WORK_TREE=$GL_ADMINDIR git diff --cached --quiet || GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
 " | ssh -p $port $user@$host
 
     # MANUAL: now that the admin repo is created, you have to set the hooks
@@ -420,19 +412,26 @@ GIT_WORK_TREE=$GL_ADMINDIR git commit -am start --allow-empty
     # workstation, and clone the admin repo using "git clone
     # gitolite:gitolite-admin", or pull once again if you already have a
     # clone
+}
 
-    prompt "cloning gitolite-admin repo..." "$v_cloning"
-
+clone_it()
+{
     cleanup
     cd "$HOME"
-    git clone gitolite:gitolite-admin
+    if [[ -d gitolite-admin ]]
+    then
+        echo $HOME/gitolite-admin exists, skipping clone step...
+    else
+        prompt "cloning gitolite-admin repo..." "$v_cloning"
+        git clone gitolite:gitolite-admin
+    fi
 
     # MANUAL: be sure to read the message below; this applies to you too...
 
     echo
     echo
     echo ---------------------------------------------------------------
-    eval "echo \"$tail\""
+    eval "echo \"$v_done\""
 }
 
 # ----------------------------------------------------------------------
@@ -537,10 +536,15 @@ install, not this one...
 v_done="
 done!
 
-If you forgot the help message you saw when you first ran this, there's a
-somewhat generic version of it at the end of this file.  Try:
+Reminder:
+    *Your* URL for cloning any repo on this server will be
+        gitolite:reponame.git
+    *Other* users you set up will have to use
+        \$user@\$host:reponame.git
 
-    tail -31 \$0
+    If this is your first time installing gitolite, please also:
+        tail -31 \$0
+    for next steps.
 "
 
 v_cloning="
