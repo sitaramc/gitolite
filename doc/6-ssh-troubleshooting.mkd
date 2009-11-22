@@ -137,6 +137,8 @@ Here's how it all hangs together.
     the `gl-auth-command` program at all, and so none of gitolite's access
     control will work.
 
+    <a name="altkey"></a>
+
     You need to force ssh to use the *other* keypair when performing a git
     operation.  With normal ssh, that would be
 

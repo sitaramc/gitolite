@@ -28,9 +28,8 @@ In this document:
 ### easy install
 
 There is an easy install script that makes installing very easy for the common
-case.  **This script is meant to be run on your workstation, not on the
-server!**  It will take care of all the server side work, *and* get you
-"push-to-admin" too :-)  In short, it does **everything**!
+case.  **This script will setup everything on the server, but you have to run
+it on your workstation, NOT on the server!**
 
 Assumptions/pre-requisites:
 
@@ -120,7 +119,7 @@ gitolite.
 
 This is where gitolite is eventually installed.  You need a *normal* userid
 (typically "git" but can be anything) on this machine; root access is *not*
-needed.
+needed, but it has to be some sort of Unix (not Windows).
 
 You need the following software on it:
 
@@ -134,11 +133,6 @@ You need the following software on it:
   * openssh server
       * (I guess any ssh server that can understand the `authorized_keys` file
         format should work)
-  * **bash shell**
-      * a small part of the gitolite server side is written in "bash"; I
-        intend to test it (time permitting) on non-bash (like ksh or plain sh)
-        on non-Linux servers.  Once that is done, this bash dependency will go
-        away.
 
 #### install workstation
 

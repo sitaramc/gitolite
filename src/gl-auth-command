@@ -96,7 +96,7 @@ die "bad command: $cmd.  Make sure the repo name is exactly as in your config\n"
 # we know the user and repo; we just need to know what perm he's trying
 my $perm = ($verb =~ $R_COMMANDS ? 'R' : 'W');
 
-die "$perm access for $repo denied to $user\n"
+die "$perm access for $repo DENIED to $user\n"
     unless $repos{$repo}{$perm}{$user}
         or $repos{$repo}{$perm}{'@all'};
 
