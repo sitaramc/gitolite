@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
+$Data::Dumper::Sortkeys = 1;
 
 # === add-auth-keys ===
 
