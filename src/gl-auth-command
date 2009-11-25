@@ -67,8 +67,8 @@ unless ($ENV{SSH_ORIGINAL_COMMAND}) {
     system("cat", "$GL_ADMINDIR/src/VERSION");
     print "\ryou have the following permissions:\n\r";
     for my $r (sort keys %repos) {
-        my $perm .= "  R" if $repos{$r}{R}{$user};
-        $perm .= "  W" if $repos{$r}{W}{$user};
+        my $perm .= ( $repos{$r}{R}{'@all'} ? '  @' : ( $repos{$r}{R}{$user} ? '  R' : '' ) );
+        $perm    .= ( $repos{$r}{W}{'@all'} ? '  @' : ( $repos{$r}{W}{$user} ? '  W' : '' ) );
         print "$perm\t$r\n\r" if $perm;
     }
     exit 1;

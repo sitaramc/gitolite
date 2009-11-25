@@ -389,6 +389,7 @@ shell:
       R  W  gitolite-admin
       R  W  indic_web_input
       R  W  proxy
+      @  @  testing
       R  W  vkc
 
 Note that until this version, we used to put out an ugly `need
