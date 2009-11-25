@@ -267,11 +267,13 @@ already done and we just use it!
     # completely untested... but the basic idea should work fine
 
     # change these as needed
-    $repo_base = '/home/git/repositories/';
-    $gl_conf_compiled = '/home/git/.gitolite/conf/gitolite.conf-compiled.pm';
+    # projectroot should be the same as gitolite's REPO_BASE, but converted to
+    # an absolute path
+    $projectroot = '/home/git/repositories/';
+    my $gl_conf_compiled = '/home/git/.gitolite/conf/gitolite.conf-compiled.pm';
 
     # I assume this gives us the HTTP auth username
-    $username = $cgi->remote_user;
+    my $username = $cgi->remote_user;
 
     # ----------
 
@@ -284,12 +286,13 @@ already done and we just use it!
     $export_auth_hook = sub {
         my $reponame = shift;
         # gitweb passes us the full repo path; so we strip the beginning...
-        $reponame =~ s/\Q$repo_base//;
+        $reponame =~ s/\Q$projectroot//;
         # ...and the end, to get the repo name as it is specified in gitolite conf
         $reponame =~ s/\.git$//;
 
-        return exists $repos{$reponame}{R}{$username};
-    }
+        return exists $repos{$reponame}{R}{$username}
+            || exists $repos{$reponame}{R}{'@all'};
+    };
 
 
 [leho]: http://leho.kraav.com/news/2009/10/27/using-apache-authentication-with-gitweb-gitosis-repository-access-control/
