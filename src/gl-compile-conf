@@ -52,12 +52,7 @@ $Data::Dumper::Sortkeys = 1;
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 
 our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH);
-
-# now that this thing *may* be run via "push to admin", any errors have to
-# grab the admin's ATTENTION so he won't miss them among the other messages a
-# typical push generates
-my $ABRT = "\n\t\t***** ABORTING *****\n       ";
-my $WARN = "\n\t\t***** WARNING *****\n       ";
+our ($ABRT, $WARN);
 
 # the common setup module is in the same directory as this running program is
 my $bindir = $0;
@@ -117,16 +112,6 @@ umask($REPO_UMASK);
 # ----------------------------------------------------------------------------
 #       subroutines
 # ----------------------------------------------------------------------------
-
-sub wrap_chdir {
-    chdir($_[0]) or die "$ABRT chdir $_[0] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
-}
-
-sub wrap_open {
-    open (my $fh, $_[0], $_[1]) or die "$ABRT open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n" .
-            ( $_[2] || '' );    # suffix custom error message if given
-    return $fh;
-}
 
 sub expand_list
 {
@@ -337,15 +322,10 @@ for my $repo (keys %repos)
 {
     unless (-d "$repo.git")
     {
-        system("mkdir", "-p", "$repo.git") and die "$ABRT mkdir $repo.git failed: $!\n";
-            # erm, note that's "and die" not "or die" as is normal in perl
-        wrap_chdir("$repo.git");
-        system("git --bare init");
-        # propagate our own, plus any local admin-defined, hooks
-        system("cp $GL_ADMINDIR/src/hooks/* hooks/");
-        chmod 0755, "hooks/update";
-        wrap_chdir("$repo_base_abs");
+        new_repo($repo, "$GL_ADMINDIR/src/hooks");
         $git_too_old++ if $git_version < 10602;     # that's 1.6.2 to you
+        # new_repo would have chdir'd us away; come back
+        wrap_chdir("$repo_base_abs");
     }
 }
 warn "\n\t\t***** WARNING *****\n" .
