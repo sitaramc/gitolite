@@ -162,6 +162,7 @@ basic_sanity() {
 
     echo $user | perl -lne 'exit 1 if /[^a-zA-Z0-9._-]/' ||
         die "user '$user' invalid"
+    [[ "$user" == "root" ]] && die I refuse to install to root
     echo $admin_name | perl -lne 'exit 1 if /[^a-zA-Z0-9._-]/' ||
         die "admin_name '$admin_name' invalid"
 
@@ -220,7 +221,7 @@ setup_local_ssh() {
 
     if [[ -f "$HOME/.ssh/$admin_name.pub" ]]
     then
-        prompt "    ...reusing $HOME/.ssh/$admin_name.pub..." "$v_reuse_pubkey"
+        prompt "" "$v_reuse_pubkey"
     else
         ssh-keygen -t rsa -f "$HOME/.ssh/$admin_name" || die "ssh-keygen failed for some reason..."
     fi
@@ -467,8 +468,14 @@ This makes using passphrases very convenient.
 "
 
 v_reuse_pubkey="
-Hmmm... pubkey \$HOME/.ssh/\$admin_name.pub exists; should I just re-use it?
-Be sure you remember the passphrase, if you gave one when you created it!
+Hmmm... pubkey \$HOME/.ssh/\$admin_name.pub exists; should I just (re-)use it?
+
+IMPORTANT: once the install completes, *this* key can no longer be used to get
+a command line on the server -- it will be used by gitolite, for git access
+only.  If that is a problem, please ABORT now.
+
+doc/6-ssh-troubleshooting.mkd will explain what is happening here, if you need
+more info.
 "
 
 v_ssh_add="
@@ -554,16 +561,16 @@ it elsewhere later if you wish to.
 "
 
 tail="
-All done!
+NOTE: All the below stuff is on your *workstation*.  You shoud not, normally,
+have to do anything directly on your server to administer/use gitolite.
 
-The admin repo is currently cloned at ~/gitolite-admin; you can clone it
-anywhere you like.  To administer gitolite, make changes to the config file
-(config/gitolite.conf) and/or the pubkeys (in subdirectory 'keydir') in any
+The admin repo is currently cloned at ~/gitolite-admin.  You can reclone it
+anywhere else if you wish.  To administer gitolite, make changes to the config
+file (conf/gitolite.conf) and/or the pubkeys (in subdirectory 'keydir') in any
 clone, then git add, git commit, and git push.
 
 ADDING REPOS: Edit the config file to give *some* user access to the repo.
-When you push, an empty repo will be created on the server, which authorised
-users can then clone from, or push to.
+When you push, an empty repo will be created on the server.
 
 ADDING USERS: copy their pubkey as keydir/<username>.pub, add it, commit and
 push.

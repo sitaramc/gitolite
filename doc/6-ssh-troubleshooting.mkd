@@ -91,7 +91,7 @@ Here's how it all hangs together.
     400 characters; I snipped 'em in the middle, as you can see.
 
     In contrast, pubkey lines that give access to git repos hosted by gitolite
-    looks like this:
+    look like this:
 
         command="[some path]src/gl-auth-command sitaram",[some restrictions] ssh-rsa AAAAB3NzaC[snip]s18OnB42oQ== sitaram@sita-lt
 
@@ -146,7 +146,7 @@ Here's how it all hangs together.
 
     but git does not support putting an alternate keypair in the URL.
 
-    Luckily, ssh has a very convenient way of capturing all the mundane
+    Luckily, ssh has a very convenient way of capturing all the connection
     information (username, hostname, port number (if it's not the default 22),
     and keypair to be used) in one "paragraph".  This is what the para looks
     like for us (the easy install script puts it there the first time):
