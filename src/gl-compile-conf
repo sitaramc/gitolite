@@ -360,67 +360,35 @@ warn "\n\t\t***** WARNING *****\n" .
 
 wrap_chdir("$repo_base_abs");
 
-# get the current project list; note that the file may not yet exist if no
-# gitweb access has been specified so far
-my %projlist = ();
-if (-f $PROJECTS_LIST) {
-    my $projlist_fh = wrap_open( "<", $PROJECTS_LIST);
-    while(<$projlist_fh>) {
-        chomp;
-        $projlist{$_} = 1;
-    }
-    close $projlist_fh;
-}
-my $projlist_changed = 0;
-
 # daemons first...
 for my $repo (sort keys %repos) {
     my $export_ok = "$repo.git/git-daemon-export-ok";
     if ($repos{$repo}{'R'}{'daemon'}) {
-        unless (-f $export_ok) {
-            system("touch $export_ok");
-            print "daemon add $repo.git\n";
-        }
+        system("touch $export_ok");
     } else {
-        if (-f $export_ok) {
-            unlink($export_ok);
-            print "daemon del $repo.git\n";
-        }
+        unlink($export_ok);
     }
 }
 
+my %projlist = ();
 # ...then gitwebs
 for my $repo (sort keys %repos) {
     my $desc_file = "$repo.git/description";
     # note: having a description also counts as enabling gitweb
     if ($repos{$repo}{'R'}{'gitweb'} or $desc{$repo}) {
-        unless ($projlist{"$repo.git"}) {
-            # not in the old list; add it to the new one
-            $projlist{"$repo.git"} = 1;
-            $projlist_changed = 1;
-            print "gitweb add $repo.git\n";
-        }
+        $projlist{"$repo.git"} = 1;
         # add the description file; no messages to user or error checking :)
         $desc{$repo} and open(DESC, ">", $desc_file) and print DESC "$desc{$repo}\n" and close DESC;
     } else {
-        if ($projlist{"$repo.git"}) {
-            # delete it from new list
-            delete $projlist{"$repo.git"};
-            $projlist_changed = 1;
-            print "gitweb del $repo.git\n";
-        }
         # delete the description file; no messages to user or error checking :)
         unlink $desc_file;
     }
 }
 
-# has there been a change in the gitweb projects list?
-if ($projlist_changed) {
-    print "updating gitweb project list $PROJECTS_LIST\n";
-    my $projlist_fh = wrap_open( ">", $PROJECTS_LIST);
-    print $projlist_fh join("\n", sort keys %projlist), "\n" if %projlist;
-    close $projlist_fh;
-}
+# update the project list
+my $projlist_fh = wrap_open( ">", $PROJECTS_LIST);
+print $projlist_fh join("\n", sort keys %projlist), "\n" if %projlist;
+close $projlist_fh;
 
 # ----------------------------------------------------------------------------
 #       "compile" ssh authorized_keys
