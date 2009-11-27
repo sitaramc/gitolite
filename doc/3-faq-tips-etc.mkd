@@ -204,6 +204,10 @@ file:
 
     reponame = "one line of description"
 
+You can also specify an "owner":
+
+    reponame "owner name" = "one line of description"
+
 To enable access to one or more repos via git daemon, just give "read"
 permissions to the special username `daemon`.
 
