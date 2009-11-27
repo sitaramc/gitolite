@@ -100,6 +100,15 @@ die "$perm access for $repo DENIED to $user\n"
     unless $repos{$repo}{$perm}{$user}
         or $repos{$repo}{$perm}{'@all'};
 
+# create the repo if it doesn't already exist and the user has "W" access
+my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
+if ( ( $repos{$repo}{W}{$user}
+    or $repos{$repo}{W}{'@all'} ) and not -d "$repo_base_abs/$repo.git" ) {
+    wrap_chdir("$repo_base_abs");
+    new_repo($repo, "$GL_ADMINDIR/src/hooks");
+    wrap_chdir($ENV{HOME});
+}
+
 # ----------------------------------------------------------------------------
 #       logging, timestamp.  also setup env vars for later
 # ----------------------------------------------------------------------------

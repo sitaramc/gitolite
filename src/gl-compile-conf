@@ -312,27 +312,12 @@ my $git_version = `git --version`;
 my ($gv_maj, $gv_min, $gv_patchrel) = ($git_version =~ m/git version (\d+)\.(\d+)\.(\d+)/);
 die "$ABRT I can't understand $git_version\n" unless ($gv_maj >= 1);
 $git_version = $gv_maj*10000 + $gv_min*100 + $gv_patchrel;  # now it's "normalised"
-my $git_too_old = 0;
 
-# repo-base needs to be an absolute path for this loop to work right
-# so if it was not already absolute, prefix $HOME.
-my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
-wrap_chdir("$repo_base_abs");
-for my $repo (keys %repos)
-{
-    unless (-d "$repo.git")
-    {
-        new_repo($repo, "$GL_ADMINDIR/src/hooks");
-        $git_too_old++ if $git_version < 10602;     # that's 1.6.2 to you
-        # new_repo would have chdir'd us away; come back
-        wrap_chdir("$repo_base_abs");
-    }
-}
 warn "\n\t\t***** WARNING *****\n" .
     "\tyour git version is older than 1.6.2\n" .
     "\tgitolite will work but you MUST read the section on\n" .
     "\t\"git version dependency\" in doc/3-faq-tips-etc.mkd\n"
-    if $git_too_old;
+    if $git_version < 10602;     # that's 1.6.2 to you
 
 # ----------------------------------------------------------------------------
 #       handle gitweb and daemon
@@ -342,6 +327,10 @@ warn "\n\t\t***** WARNING *****\n" .
 # just assume you'll never have any *real* users called "gitweb" or "daemon"
 # :-)  These are now "pseduo users" -- giving them "R" access to a repo is all
 # you have to do
+
+# repo-base needs to be an absolute path for this loop to work right
+# so if it was not already absolute, prefix $HOME.
+my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
 
 wrap_chdir("$repo_base_abs");
 
