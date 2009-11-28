@@ -9,8 +9,9 @@
 # the name of this file will change as soon as its function/feature set
 # stabilises enough ;-)
 
-# right now all it does is define a function that tells you where to find the
-# rc file
+# right now all it does is
+# - define a function that tells you where to find the rc file
+# - define a function that creates a new repo and give it our update hook
 
 # ----------------------------------------------------------------------------
 #       where is the rc file hiding?
@@ -40,6 +41,34 @@ sub where_is_rc
             return;
         }
     }
+}
+
+$ABRT = "\n\t\t***** ABORTING *****\n       ";
+$WARN = "\n\t\t***** WARNING *****\n       ";
+sub wrap_chdir {
+    chdir($_[0]) or die "$ABRT chdir $_[0] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
+}
+
+sub wrap_open {
+    open (my $fh, $_[0], $_[1]) or die "$ABRT open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n" .
+            ( $_[2] || '' );    # suffix custom error message if given
+    return $fh;
+}
+
+# NOTE: this sub will change your cwd; caller beware!
+sub new_repo
+{
+    my ($repo, $hooks_dir) = @_;
+
+    umask($REPO_UMASK);
+
+    system("mkdir", "-p", "$repo.git") and die "$ABRT mkdir $repo.git failed: $!\n";
+        # erm, note that's "and die" not "or die" as is normal in perl
+    wrap_chdir("$repo.git");
+    system("git --bare init >&2");
+    # propagate our own, plus any local admin-defined, hooks
+    system("cp $hooks_dir/* hooks/");
+    chmod 0755, "hooks/update";
 }
 
 1;
