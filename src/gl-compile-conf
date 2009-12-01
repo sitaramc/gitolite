@@ -165,7 +165,7 @@ sub parse_conf_file
         s/^ //;
         s/ $//;
         # kill comments
-        s/#.*//;
+        s/\s*#.*//;
         # and blank lines
         next unless /\S/;
 
