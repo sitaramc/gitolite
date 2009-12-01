@@ -17,12 +17,10 @@ In this document:
       * one user, many keys
       * support for git installed outside default PATH
       * what repos do I have access to?
-  * other cool things
+      * "exclude" (or "deny") rules
       * "personal" branches
   * design choices
       * keeping the parser and the access control separate
-      * why we don't do "excludes"
-      * how the rebel edition does it anyway :)
 
 ### common errors and mistakes
 
@@ -179,8 +177,8 @@ Each refex that allows `W` access (or `+` if this is a rewind) for *this*
 user, on *this* repo, is matched against the actual refname being updated.  If
 any of the refexes match, the push succeeds.  If none of them match, it fails.
 
-The normal gitolite does not allow "exclude" or "deny" rules.  But see the
-"how the rebel edition does it anyway" below.
+Gitolite also allows "exclude" or "deny" rules.  See later in this document
+for details.
 
 #### error checking the config file
 
@@ -404,7 +402,54 @@ Note that until this version, we used to put out an ugly `need
 SSH_ORIGINAL_COMMAND` error, just like gitosis used to.  All we did is put
 that code path to better use :-)
 
-### other cool things
+#### "exclude" (or "deny") rules
+
+Take a look at the following snippet, which *seems* to say that "bruce" can
+write versioned tags (anything containing `refs/tags/v[0-9]`), but the other
+staffers can't:
+
+        @staff = bruce whitfield martin
+                [... and later ...]
+        RW refs/tags/v[0-9]     = bruce
+        RW refs/tags            = @staff
+
+But that's not how the matching works.  As long as any refex matches the
+refname being updated, it's a "yes".  Since the second refex (which says
+"anything containing `refs/tags`") is a superset of the first one, it lets
+anyone on `@staff` create versioned tags, not just Bruce.
+
+One way to fix this is to allow "excludes" -- some changes in syntax, combined
+with a rigorous, ordered, interpretation would do it.
+
+Let's recap the **existing semantics**:
+
+>   the first matching refex that has the permission you're looking for (`W`
+>   or `+`), results in success.  A fallthrough results in failure
+
+Here are the **new semantics**, with changes from the "main" one in bold:
+
+>   the first matching refex that has the permission you're looking for (`W`
+>   or `+`) **or a minus (`-`)**, results in success **or failure,
+>   respectively**.  A fallthrough **also** results in failure
+
+So the example we started with becomes, if you use "deny" rules:
+
+        RW refs/tags/v[0-9]     = bruce
+        -  refs/tags/v[0-9]     = @staff
+        RW refs/tags            = @staff
+
+And here's how it works:
+
+  * for non-version tags, only the 3rd rule matches, so anyone on staff can
+    push them
+  * for version tags by bruce, the first rule matches so he can push them
+  * for version tags by staffers *other than bruce*, the second rule matches
+    before the third one, and it has a `-` as the permission, so the push
+    fails
+
+***IMPORTANT NOTE: if you use deny rules, the order of the rules also makes a
+difference, where earlier it did not.  Please review your ruleset carefully or
+test it***.  Or ask me.
 
 #### "personal" branches
 
@@ -481,102 +526,3 @@ have to be first "compiled", and the access control programs use this
 If you choose the "easy install" method, all this is quite transparent to you
 anyway.  If you cannot use the easy install and must install manually, I have
 clear instructions on how to set it up.
-
-#### why we don't do "excludes"
-
-[umm... having said all this, I implemented it anyway; see the "rebel"
-branch!]
-
-I found an error in the example conf file.  This snippet *seems* to say that
-"bruce" can write versioned tags (`refs/tags/v[0-9].*`), but the other
-staffers can't:
-
-        @staff = bruce whitfield martin
-                [... and later ...]
-        RW refs/tags/v[0-9].*   = bruce
-        RW refs/tags            = @staff
-
-But that's not how the matching works.  As long as any refex matches the
-refname being updated, it's a "yes".  So the second refex lets anyone on
-`@staff` create versioned tags, not just Bruce.
-
-One way to fix this is to allow "excludes" -- some changes in syntax, combined
-with a rigorous, ordered, interpretation would do it.
-
-But if you're ever played with squid ACLs, or the include/exclude rules for
-rsync, or rdiff-backup, or even git's own ignore mechanism, you'll see why I
-won't do this.  It bloats the code and the docs, and, despite all the docs,
-*still* confuses people, which may then *reduce* security!
-
-Squid, rsync, gitignore, and all *need* the feature and so tolerate all this;
-but we don't need it.  All we need to do is make the refexes *disjoint* in
-what they match (i.e., ensure that no refname can be matched by more than one
-refex):
-
-        RW refs/tags/v[0-9].*   = bruce
-        RW refs/tags/staff/     = @staff
-
-In general, you probably want to control the refnames writable by devs anyway,
-if at least to maintain some sanity, so being forced to make the refexes
-disjoint is not a big problem.  Here's an example: only the `project_lead` can
-make arbitrarily named refs, while the rest have to stay within their assigned
-namespaces:
-
-        RW+                     =   project_lead
-        RW  refs/tags/qa/       =   @qa_team
-        RW  bugID/              =   @dev_team
-        RW  trac/               =   @dev_team
-
-The lack of overlap between refexes ensures ***no confusion*** in specifying,
-understanding, and ***auditing***, what is allowed and what is not.
-
-And in security, "no confusion" is a good thing :-)
-
-#### how the rebel edition does it anyway :)
-
-Well, reuss on #git asked, I pointed him to the discussion above and said
-"no", and he was nice enough to agree.  But then I started thinking that maybe
-not everyone needs such "safe" environments.  And so, as the README says:
-
->   The paranoid half of Sitaram's brain would like to warn you that the other
->   half rebelled and created this fork.
-
-Let's recap the **existing semantics**:
-
->   the first matching refex that has the permission you're looking for (`W`
->   or `+`), results in success.  A fallthrough results in failure
-
-First I changed the format of the compiled config file (an internal file that
-the user doesn't have to worry about, as long as he remembers to run the
-compile script on every upgrade).  The format change kept the existing syntax
-and semantics of the config file, but it laid the ground work for allowing
-"excludes" using **just one extra line of code** (and a very slight change to
-another)!
-
-This extremely small delta between the rebel edition and the main one will
-make it trivial to maintain it as a separate branch, regardless of what other
-changes happen in the mainline, because I honestly don't see rebel merging
-into the mainline.
-
-Yet ;-)
-
-Here are the **rebel semantics**, with changes from the "main" one in bold:
-
->   the first matching refex that has the permission you're looking for (`W`
->   or `+`) **or a minus (`-`)**, results in success **or failure,
->   respectively**.  A fallthrough **also** results in failure
-
-So the example we started with becomes, in the rebel edition:
-
-        RW refs/tags/v[0-9].*   = bruce
-        -  refs/tags/v[0-9].*   = @staff
-        RW refs/tags            = @staff
-
-And here's how it works:
-
-  * for non-version tags, only the 3rd rule matches, so anyone on staff can
-    push them
-  * for version tags by bruce, the first rule matches so he can push them
-  * for version tags by staffers *other than bruce*, the second rule matches
-    before the third one, and it has a `-` as the permission, so the push
-    fails
