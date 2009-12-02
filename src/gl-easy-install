@@ -581,15 +581,14 @@ CONFIG FILE FORMAT: see comments in conf/example.conf in the gitolite source.
 SSH MAGIC: Remember you (the admin) now have *two* keys to access the server
 hosting your gitolite setup -- one to get you a command line, and one to get
 you gitolite access; see doc/6-ssh-troubleshooting.mkd.  If you're not using
-keychain or some such software, you may have to run this each time you log in:
+keychain or some such software, you may have to run an 'ssh-add' command to
+add that key each time you log in.
 
-    ssh-add ~/.ssh/\$admin_name
+URLS:  *Your* URL for cloning any repo on this server is different from the
+url that the *other* users have to use.  The easy install command should tell
+you what these URLs look like, at the end of each successful run.  Feel free
+to re-run easy install again (using the same arguments) if you missed it.
 
-URLS:  *Your* URL for cloning any repo on this server will be
-
-    gitolite:reponame
-
-*Other* users you set up will have to use
-
-    \$user@\$host:reponame
+UPGRADING GITOLITE: just pull a fresh clone from github, and run the same easy
+install command as before, with the same arguments.
 "
