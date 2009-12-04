@@ -24,7 +24,10 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 
+# these are set by the "rc" file
 our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $GL_ADMINDIR);
+# and these are set by gitolite.pm
+our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT);
 our %repos;
 
 # the common setup module is in the same directory as this running program is
@@ -35,19 +38,9 @@ require "$bindir/gitolite.pm";
 # ask where the rc file is, get it, and "do" it
 &where_is_rc();
 die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
-# then "do" the compiled config file, whose name we now know
-die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
 
 # add a custom path for git binaries, if specified
 $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
-
-# ----------------------------------------------------------------------------
-#       definitions specific to this program
-# ----------------------------------------------------------------------------
-
-my $R_COMMANDS=qr/^(git[ -]upload-pack|git[ -]upload-archive)$/;
-my $W_COMMANDS=qr/^git[ -]receive-pack$/;
-my $REPONAME_PATT=qr(^[0-9a-zA-Z][0-9a-zA-Z._/-]*$); # very simple pattern
 
 # ----------------------------------------------------------------------------
 #       start...
@@ -62,15 +55,7 @@ my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 
 # SSH_ORIGINAL_COMMAND must exist; if not, we die with a nice message
 unless ($ENV{SSH_ORIGINAL_COMMAND}) {
-    # send back some useful info if no command was given
-    print "hello $user, the gitolite version here is ";
-    system("cat", "$GL_ADMINDIR/src/VERSION");
-    print "\ryou have the following permissions:\n\r";
-    for my $r (sort keys %repos) {
-        my $perm .= ( $repos{$r}{R}{'@all'} ? '  @' : ( $repos{$r}{R}{$user} ? '  R' : '' ) );
-        $perm    .= ( $repos{$r}{W}{'@all'} ? '  @' : ( $repos{$r}{W}{$user} ? '  W' : '' ) );
-        print "$perm\t$r\n\r" if $perm;
-    }
+    &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
     exit 1;
 }
 
@@ -93,6 +78,9 @@ die "bad command: $cmd.  Make sure the repo name is exactly as in your config\n"
 #       first level permissions check
 # ----------------------------------------------------------------------------
 
+# parse the compiled acl; goes into %repos (global)
+&parse_acl($GL_CONF_COMPILED);
+
 # we know the user and repo; we just need to know what perm he's trying
 my $perm = ($verb =~ $R_COMMANDS ? 'R' : 'W');
 
@@ -102,11 +90,12 @@ die "$perm access for $repo DENIED to $user\n"
 
 # create the repo if it doesn't already exist and the user has "W" access
 my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
-if ( ( $repos{$repo}{W}{$user}
-    or $repos{$repo}{W}{'@all'} ) and not -d "$repo_base_abs/$repo.git" ) {
-    wrap_chdir("$repo_base_abs");
-    new_repo($repo, "$GL_ADMINDIR/src/hooks");
-    wrap_chdir($ENV{HOME});
+if ( not -d "$repo_base_abs/$repo.git" ) {
+    if ( $repos{$repo}{W}{$user} or $repos{$repo}{W}{'@all'} ) {
+        wrap_chdir("$repo_base_abs");
+        new_repo($repo, "$GL_ADMINDIR/src/hooks");
+        wrap_chdir($ENV{HOME});
+    }
 }
 
 # ----------------------------------------------------------------------------

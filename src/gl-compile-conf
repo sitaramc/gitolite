@@ -51,8 +51,10 @@ $Data::Dumper::Sortkeys = 1;
 # setup quiet mode if asked; please do not use this when running manually
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 
+# these are set by the "rc" file
 our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH);
-our ($ABRT, $WARN);
+# and these are set by gitolite.pm
+our ($REPONAME_PATT, $USERNAME_PATT, $AUTH_COMMAND, $AUTH_OPTIONS, $ABRT, $WARN);
 
 # the common setup module is in the same directory as this running program is
 my $bindir = $0;
@@ -71,11 +73,8 @@ $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 # ----------------------------------------------------------------------------
 
 # command and options for authorized_keys
-my $AUTH_COMMAND="$GL_ADMINDIR/src/gl-auth-command";
-my $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
-# note that REPONAME_PATT allows a "/" also, which USERNAME_PATT doesn't
-my $REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._/-]*$);     # very simple pattern
-my $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);      # very simple pattern
+$AUTH_COMMAND="$GL_ADMINDIR/src/gl-auth-command";
+$AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
 
 # groups can now represent user groups or repo groups.
 

@@ -14,6 +14,35 @@
 # - define a function that creates a new repo and give it our update hook
 
 # ----------------------------------------------------------------------------
+#       common definitions
+# ----------------------------------------------------------------------------
+
+$ABRT = "\n\t\t***** ABORTING *****\n       ";
+$WARN = "\n\t\t***** WARNING *****\n       ";
+
+# commands we're expecting
+$R_COMMANDS=qr/^(git[ -]upload-pack|git[ -]upload-archive)$/;
+$W_COMMANDS=qr/^git[ -]receive-pack$/;
+
+# note that REPONAME_PATT allows a "/" also, which USERNAME_PATT doesn't
+$REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._/-]*$);     # very simple pattern
+$USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);      # very simple pattern
+
+# ----------------------------------------------------------------------------
+#       convenience subs
+# ----------------------------------------------------------------------------
+
+sub wrap_chdir {
+    chdir($_[0]) or die "$ABRT chdir $_[0] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
+}
+
+sub wrap_open {
+    open (my $fh, $_[0], $_[1]) or die "$ABRT open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n" .
+            ( $_[2] || '' );    # suffix custom error message if given
+    return $fh;
+}
+
+# ----------------------------------------------------------------------------
 #       where is the rc file hiding?
 # ----------------------------------------------------------------------------
 
@@ -43,17 +72,9 @@ sub where_is_rc
     }
 }
 
-$ABRT = "\n\t\t***** ABORTING *****\n       ";
-$WARN = "\n\t\t***** WARNING *****\n       ";
-sub wrap_chdir {
-    chdir($_[0]) or die "$ABRT chdir $_[0] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
-}
-
-sub wrap_open {
-    open (my $fh, $_[0], $_[1]) or die "$ABRT open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n" .
-            ( $_[2] || '' );    # suffix custom error message if given
-    return $fh;
-}
+# ----------------------------------------------------------------------------
+#       create a new repository
+# ----------------------------------------------------------------------------
 
 # NOTE: this sub will change your cwd; caller beware!
 sub new_repo
@@ -71,4 +92,36 @@ sub new_repo
     chmod 0755, "hooks/update";
 }
 
+# ----------------------------------------------------------------------------
+#       parse the compiled acl
+# ----------------------------------------------------------------------------
+
+sub parse_acl
+{
+    my $GL_CONF_COMPILED = shift;
+    die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
+}
+
+# ----------------------------------------------------------------------------
+#       print a report of $user's basic permissions
+# ----------------------------------------------------------------------------
+
+# basic means wildcards will be shown as wildcards; this is pretty much what
+# got parsed by the compile script
+sub report_basic
+{
+    my($GL_ADMINDIR, $GL_CONF_COMPILED, $user) = @_;
+
+    &parse_acl($GL_CONF_COMPILED);
+
+    # send back some useful info if no command was given
+    print "hello $user, the gitolite version here is ";
+    system("cat", "$GL_ADMINDIR/src/VERSION");
+    print "\ryou have the following permissions:\n\r";
+    for my $r (sort keys %repos) {
+        my $perm .= ( $repos{$r}{R}{'@all'} ? '  @' : ( $repos{$r}{R}{$user} ? '  R' : '' ) );
+        $perm    .= ( $repos{$r}{W}{'@all'} ? '  @' : ( $repos{$r}{W}{$user} ? '  W' : '' ) );
+        print "$perm\t$r\n\r" if $perm;
+    }
+}
 1;
