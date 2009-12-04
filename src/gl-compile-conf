@@ -27,11 +27,11 @@ $Data::Dumper::Sortkeys = 1;
 #     - anytime a pubkey is added/deleted
 #     - anytime gitolite.conf is changed
 # input:
-#     - GL_CONF (default: ~/.gitolite/gitolite.conf)
+#     - GL_CONF (default: ~/.gitolite/conf/gitolite.conf)
 #     - GL_KEYDIR (default: ~/.gitolite/keydir)
 # output:
 #     - ~/.ssh/authorized_keys (dictated by sshd)
-#     - GL_CONF_COMPILED (default: ~/.gitolite/gitolite.conf-compiled.pm)
+#     - GL_CONF_COMPILED (default: ~/.gitolite/conf/gitolite.conf-compiled.pm)
 # security:
 #     - touches a very critical system file that manages the restrictions on
 #       incoming users.  Be sure to audit AUTH_COMMAND and AUTH_OPTIONS (see
