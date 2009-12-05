@@ -27,6 +27,8 @@ $W_COMMANDS=qr/^git[ -]receive-pack$/;
 # note that REPONAME_PATT allows a "/" also, which USERNAME_PATT doesn't
 $REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._/-]*$);     # very simple pattern
 $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._-]*$);      # very simple pattern
+# same as REPONAME, plus some common regex metas
+$REPOPATT_PATT=qr(^\@?[0-9a-zA-Z][\\^.$|()[\]*+?{}0-9a-zA-Z._/-]*$);
 
 # ----------------------------------------------------------------------------
 #       convenience subs

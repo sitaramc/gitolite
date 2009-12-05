@@ -54,7 +54,7 @@ open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 # these are set by the "rc" file
 our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH);
 # and these are set by gitolite.pm
-our ($REPONAME_PATT, $USERNAME_PATT, $AUTH_COMMAND, $AUTH_OPTIONS, $ABRT, $WARN);
+our ($REPONAME_PATT, $REPOPATT_PATT, $USERNAME_PATT, $AUTH_COMMAND, $AUTH_OPTIONS, $ABRT, $WARN);
 
 # the common setup module is in the same directory as this running program is
 my $bindir = $0;
@@ -85,7 +85,8 @@ our %groups = ();
 # %repos has two functions.
 
 # $repos{repo}{R|W}{user} = 1 if user has R (or W) permissions for at least
-# one branch in repo.  This is used by the "level 1 check" (see faq)
+# one branch in repo.  This is used by the "level 1 check" (see faq).  There's
+# also the new "C" (create a repo) permission now
 
 # $repos{repo}{user} is a list of {ref, perms} pairs.  This is used by the
 # level 2 check.  In order to allow "exclude" rules, the order of rules now
@@ -119,9 +120,7 @@ sub expand_list
 
     for my $item (@list)
     {
-        # we test with the slightly more relaxed pattern here; we'll catch the
-        # "/" in user name thing later; it doesn't affect security anyway
-        die "$ABRT bad user or repo name $item\n" unless $item =~ $REPONAME_PATT;
+        die "$ABRT bad user or repo name $item\n" unless $item =~ $REPOPATT_PATT;
         if ($item =~ /^@/)      # nested group
         {
             die "$ABRT undefined group $item\n" unless $groups{$item};
@@ -183,9 +182,11 @@ sub parse_conf_file
             # grab the list and expand any @stuff in it
             @repos = split ' ', $1;
             @repos = expand_list ( @repos );
+
+            s/\bCREAT[EO]R\b/\$creater/g for @repos;
         }
         # actual permission line
-        elsif (/^(-|R|RW|RW\+) (.* )?= (.+)/)
+        elsif (/^(-|C|R|RW|RW\+) (.* )?= (.+)/)
         {
             my $perms = $1;
             my @refs; @refs = split(' ', $2) if $2;
@@ -202,21 +203,39 @@ sub parse_conf_file
                 unless (@users == 1 and $users[0] eq '@all');
             do  { die "$ABRT bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
 
+            s/\bCREAT[EO]R\b/\$creater/g for @users;
+            s/\bREADERS\b/\$readers/g for @users;
+            s/\bWRITERS\b/\$writers/g for @users;
+
             # ok, we can finally populate the %repos hash
             for my $repo (@repos)       # each repo in the current stanza
             {
                 # if we're processing a delegated config file (not the master
-                # config), and if that fragment name is not the same as the
-                # current repo
-                if ($fragment ne 'master' and $fragment ne $repo)
-                {
-                    # then the fragment must be a group name and the repo
-                    # being processed must be a member of that "@group".
-                    # Also, the value of the hash for that combination must be
-                    # "master", signifying a group created in the master
-                    # config file and not in one of the delegates
-                    unless ( ($groups{"\@$fragment"}{$repo} || '') eq 'master')
-                    {
+                # config), we need to prevent attempts by that admin to obtain
+                # rights on stuff outside his domain
+
+                # trying to set access for $repo (='foo')...
+                if (
+                    # processing the master config, not a fragment
+                    ( $fragment eq 'master' ) or
+                    # fragment is also called 'foo' (you're allowed to have a
+                    # fragment that is only concerned with one repo)
+                    ( $fragment eq $repo ) or
+                    # fragment is called "bar" and "@bar = foo" has been
+                    # defined in the master config
+                    ( ($groups{"\@$fragment"}{$repo} || '') eq 'master' )
+                ) {
+                    # all these are fine
+                } else {
+                    # this is a little more complex
+
+                    # fragment is called "bar", one or more "@bar = regex"
+                    # have been specified in master, and "foo" matches some
+                    # such "regex"
+                    my @matched = grep { $repo =~ /^$_$/ }
+                                  grep { $groups{"\@$fragment"}{$_} eq 'master' }
+                                  sort keys %{ $groups{"\@$fragment"} };
+                    if (@matched < 1) {
                         $ignored{$fragment}{$repo} = 1;
                         next;
                     }
@@ -226,6 +245,7 @@ sub parse_conf_file
                     $user_list{$user}++;    # only to catch lint, see later
 
                     # for 1st level check (see faq/tips doc)
+                    $repos{$repo}{C}{$user} = 1, next if $perms eq 'C';
                     $repos{$repo}{R}{$user} = 1 if $perms =~ /R/;
                     $repos{$repo}{W}{$user} = 1 if $perms =~ /W/;
 
@@ -302,7 +322,12 @@ for my $fragment_file (glob("conf/fragments/*.conf"))
 }
 
 my $compiled_fh = wrap_open( ">", $GL_CONF_COMPILED );
-print $compiled_fh Data::Dumper->Dump([\%repos], [qw(*repos)]);
+my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
+# the dump uses single quotes, but we convert any strings containing $creater,
+# $readers, $writers, to double quoted strings.  A wee bit sneaky, but not too
+# much...
+$dumped_data =~ s/'(?=[^']*\$(?:creater|readers|writers))(.*?)'/"$1"/g;
+print $compiled_fh $dumped_data;
 close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
 
 # ----------------------------------------------------------------------------
@@ -326,6 +351,7 @@ my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE"
 wrap_chdir("$repo_base_abs");
 
 for my $repo (sort keys %repos) {
+    next unless $repo =~ $REPONAME_PATT;
     unless (-d "$repo.git") {
         new_repo($repo, "$GL_ADMINDIR/src/hooks");
         # new_repo would have chdir'd us away; come back
@@ -352,6 +378,7 @@ wrap_chdir("$repo_base_abs");
 
 # daemons first...
 for my $repo (sort keys %repos) {
+    next unless $repo =~ $REPONAME_PATT;
     my $export_ok = "$repo.git/git-daemon-export-ok";
     if ($repos{$repo}{'R'}{'daemon'}) {
         system("touch $export_ok");
@@ -363,6 +390,7 @@ for my $repo (sort keys %repos) {
 my %projlist = ();
 # ...then gitwebs
 for my $repo (sort keys %repos) {
+    next unless $repo =~ $REPONAME_PATT;
     my $desc_file = "$repo.git/description";
     # note: having a description also counts as enabling gitweb
     if ($repos{$repo}{'R'}{'gitweb'} or $desc{"$repo.git"}) {
@@ -422,7 +450,7 @@ for my $pubkey (glob("*"))
 # lint check 3; a little more severe than the first two I guess...
 for my $user (sort keys %user_list)
 {
-    next if $user =~ /^(gitweb|daemon|\@all)$/ or $user_list{$user} eq 'has pubkey';
+    next if $user =~ /^(gitweb|daemon|\@all|\$creater|\$readers|\$writers)$/ or $user_list{$user} eq 'has pubkey';
     print STDERR "$WARN user $user in config, but has no pubkey!\n";
 }
 
