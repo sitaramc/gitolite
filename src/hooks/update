@@ -30,8 +30,21 @@ our %repos;
 
 # we should already have the GL_RC env var set when we enter this hook
 die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
-# then "do" the compiled config file, whose name we now know
-die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
+# then "do" the compiled config file, whose name we now know.  Before doing
+# that we setup the creater etc from environment variables so that the parse
+# interpolates them.  We've minimised the duplication but this *does*
+# duplicate a bit of parse_acl from gitolite.pm; we don't want to include that
+# file here just for that little bit
+{
+    our $creater = $ENV{GL_CREATER};
+    our $readers = $ENV{GL_READERS};
+    our $writers = $ENV{GL_WRITERS};
+
+    die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
+
+    $repos{$ENV{GL_REPO}} = $repos{$ENV{GL_REPOPATT}} if ( $ENV{GL_REPOPATT} );
+}
+my $reported_repo = $ENV{GL_REPO} . ( $ENV{GL_REPOPATT} ? " ($ENV{GL_REPOPATT})" : "" );
 
 # ----------------------------------------------------------------------------
 #       start...
@@ -101,12 +114,12 @@ sub check_ref {
         $refex = (keys %$ar)[0];
         # refex?  sure -- a regex to match a ref against :)
         next unless $ref =~ /$refex/;
-        die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->{$refex} eq '-';
+        die "$perm $ref $reported_repo $ENV{GL_USER} DENIED by $refex\n" if $ar->{$refex} eq '-';
 
         # as far as *this* ref is concerned we're ok
         return $refex if ($ar->{$refex} =~ /\Q$perm/);
     }
-    die "$perm $ref $ENV{GL_REPO} $ENV{GL_USER} DENIED by fallthru\n";
+    die "$perm $ref $reported_repo $ENV{GL_USER} DENIED by fallthru\n";
 }
 
 # and in this version, we have many "refs" to check.  The one we print in the
@@ -123,6 +136,6 @@ check_ref($_) for @refs;
 open my $log_fh, ">>", $ENV{GL_LOG} or die "open log failed: $!\n";
 print $log_fh "$ENV{GL_TS}  $perm\t" .
     substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
-    "\t$ENV{GL_REPO}\t$ref\t$ENV{GL_USER}\t$log_refex\n";
+    "\t$reported_repo\t$ref\t$ENV{GL_USER}\t$log_refex\n";
 close $log_fh or die "close log failed: $!\n";
 exit 0;

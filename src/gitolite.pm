@@ -81,7 +81,7 @@ sub where_is_rc
 # NOTE: this sub will change your cwd; caller beware!
 sub new_repo
 {
-    my ($repo, $hooks_dir) = @_;
+    my ($repo, $hooks_dir, $creater) = @_;
 
     umask($REPO_UMASK);
 
@@ -89,9 +89,38 @@ sub new_repo
         # erm, note that's "and die" not "or die" as is normal in perl
     wrap_chdir("$repo.git");
     system("git --bare init >&2");
+    system("echo $creater > gl-creater") if $creater;
     # propagate our own, plus any local admin-defined, hooks
     system("cp $hooks_dir/* hooks/");
     chmod 0755, "hooks/update";
+}
+
+# ----------------------------------------------------------------------------
+#       metaphysics (like, "is there a god?", "who created me?", etc)
+# ----------------------------------------------------------------------------
+
+# "who created this repo", "am I on the R list", and "am I on the RW list"?
+sub repo_rights
+{
+    my ($repo_base_abs, $repo, $user) = @_;
+    # creater
+    my $c = '';
+    if (                     -f "$repo_base_abs/$repo.git/gl-creater") {
+        my $fh = wrap_open("<", "$repo_base_abs/$repo.git/gl-creater");
+        chomp($c = <$fh>);
+    }
+    # $user's R and W rights
+    my ($r, $w); $r = ''; $w = '';
+    if ($user and            -f "$repo_base_abs/$repo.git/gl-perms") {
+        my $fh = wrap_open("<", "$repo_base_abs/$repo.git/gl-perms");
+        my $perms = join ("", <$fh>);
+        if ($perms) {
+            $r = $user if $perms =~ /^\s*R(?=\s).*\s$user(\s|$)/m;
+            $w = $user if $perms =~ /^\s*RW(?=\s).*\s$user(\s|$)/m;
+        }
+    }
+
+    return ($c, $r, $w);
 }
 
 # ----------------------------------------------------------------------------
@@ -100,8 +129,41 @@ sub new_repo
 
 sub parse_acl
 {
-    my $GL_CONF_COMPILED = shift;
+    # IMPLEMENTATION NOTE: a wee bit of this is duplicated in the update hook;
+    # please update that also if the interface or the env vars change
+
+    my ($GL_CONF_COMPILED, $repo, $c, $r, $w) = @_;
+
+    # void $r if same as $w (otherwise "readers" overrides "writers"; this is
+    # the same problem that needed a sort sub for the Dumper in the compile
+    # script, but localised to just $readers and $writers)
+    $r = "" if $r eq $w;
+
+    # set up the variables for a parse to interpolate stuff from the dumped
+    # hash (remember the selective conversion of single to double quotes?).
+
+    # if they're not passed in, then we look for an env var of that name, else
+    # we default to "NOBODY" (we hope there isn't a real user called NOBODY!)
+    # And in any case, we set those env vars so level 2 can redo the last
+    # parse without any special code
+
+    our $creater = $ENV{GL_CREATER} = $c || $ENV{GL_CREATER} || "NOBODY";
+    our $readers = $ENV{GL_READERS} = $r || $ENV{GL_READERS} || "NOBODY";
+    our $writers = $ENV{GL_WRITERS} = $w || $ENV{GL_WRITERS} || "NOBODY";
+
     die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
+
+    # access reporting doesn't send $repo, and doesn't need to
+    return unless $repo;
+
+    return $ENV{GL_REPOPATT} = "" if $repos{$repo};
+    my @matched = grep { $repo =~ /^$_$/ } sort keys %repos;
+    die "$repo has no matches\n" unless @matched;
+    die "$repo has multiple matches\n@matched\n" if @matched > 1;
+    # found exactly one pattern that matched, copy its ACL
+    $repos{$repo} = $repos{$matched[0]};
+    # and return the pattern
+    return $ENV{GL_REPOPATT} = $matched[0];
 }
 
 # ----------------------------------------------------------------------------
@@ -114,16 +176,18 @@ sub report_basic
 {
     my($GL_ADMINDIR, $GL_CONF_COMPILED, $user) = @_;
 
-    &parse_acl($GL_CONF_COMPILED);
+    &parse_acl($GL_CONF_COMPILED, "", "CREATER", "READERS", "WRITERS");
 
     # send back some useful info if no command was given
     print "hello $user, the gitolite version here is ";
     system("cat", "$GL_ADMINDIR/src/VERSION");
     print "\ryou have the following permissions:\n\r";
     for my $r (sort keys %repos) {
-        my $perm .= ( $repos{$r}{R}{'@all'} ? '  @' : ( $repos{$r}{R}{$user} ? '  R' : '' ) );
-        $perm    .= ( $repos{$r}{W}{'@all'} ? '  @' : ( $repos{$r}{W}{$user} ? '  W' : '' ) );
-        print "$perm\t$r\n\r" if $perm;
+        my $perm .= ( $repos{$r}{C}{'@all'} ? ' @' : ( $repos{$r}{C}{$user} ? ' C' : '  ' ) );
+        $perm    .= ( $repos{$r}{R}{'@all'} ? ' @' : ( $repos{$r}{R}{$user} ? ' R' : '  ' ) );
+        $perm    .= ( $repos{$r}{W}{'@all'} ? ' @' : ( $repos{$r}{W}{$user} ? ' W' : '  ' ) );
+        print "$perm\t$r\n\r" if $perm =~ /\S/;
     }
 }
 1;
+

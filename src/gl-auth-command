@@ -78,8 +78,28 @@ die "bad command: $cmd.  Make sure the repo name is exactly as in your config\n"
 #       first level permissions check
 # ----------------------------------------------------------------------------
 
-# parse the compiled acl; goes into %repos (global)
-&parse_acl($GL_CONF_COMPILED);
+my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
+
+if ( -d "$repo_base_abs/$repo.git" ) {
+    # existing repo
+    my ($creater, $user_R, $user_W) = &repo_rights($repo_base_abs, $repo, $user);
+    my $patt = &parse_acl($GL_CONF_COMPILED, $repo, $creater, $user_R, $user_W);
+} else {
+    my $patt = &parse_acl($GL_CONF_COMPILED, $repo, $user, $user, $user);
+    # parse_acl returns "" if the repo was non-wildcard, or the pattern
+    # that matched if it was a wildcard
+
+    # auto-vivify new repo; 2 situations allow autoviv -- normal repos
+    # with W access (the old mode), and wildcard repos with C access
+    my $W_ok = $repos{$repo}{W}{$user} || $repos{$repo}{W}{'@all'};
+    my $C_ok = $repos{$repo}{C}{$user} || $repos{$repo}{C}{'@all'};
+    if ($W_ok and not $patt or $C_ok and $patt) {
+        wrap_chdir("$repo_base_abs");
+        # for wildcard repos, we also want to set the "creater"
+        new_repo($repo, "$GL_ADMINDIR/src/hooks", ( $patt ? $user : ""));
+        wrap_chdir($ENV{HOME});
+    }
+}
 
 # we know the user and repo; we just need to know what perm he's trying
 my $perm = ($verb =~ $R_COMMANDS ? 'R' : 'W');
@@ -87,16 +107,6 @@ my $perm = ($verb =~ $R_COMMANDS ? 'R' : 'W');
 die "$perm access for $repo DENIED to $user\n"
     unless $repos{$repo}{$perm}{$user}
         or $repos{$repo}{$perm}{'@all'};
-
-# create the repo if it doesn't already exist and the user has "W" access
-my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
-if ( not -d "$repo_base_abs/$repo.git" ) {
-    if ( $repos{$repo}{W}{$user} or $repos{$repo}{W}{'@all'} ) {
-        wrap_chdir("$repo_base_abs");
-        new_repo($repo, "$GL_ADMINDIR/src/hooks");
-        wrap_chdir($ENV{HOME});
-    }
-}
 
 # ----------------------------------------------------------------------------
 #       logging, timestamp.  also setup env vars for later
@@ -113,7 +123,7 @@ for ($s, $min, $h, $d, $m) {
 }
 $ENV{GL_TS} = "$y-$m-$d.$h:$min:$s";
 
-# substitute template parameters and set the logfile name 
+# substitute template parameters and set the logfile name
 $GL_LOGT =~ s/%y/$y/g;
 $GL_LOGT =~ s/%m/$m/g;
 $GL_LOGT =~ s/%d/$d/g;

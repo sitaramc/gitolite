@@ -5,6 +5,15 @@ use warnings;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 $Data::Dumper::Sortkeys = 1;
+$Data::Dumper::Sortkeys = sub { return [ reverse sort keys %{$_[0]} ]; };
+    # this is to make sure that $creater etc go to the end of the dumped hash.
+    # Without this, a setup that has something like
+    #   @team = u1 u2 u3
+    #   repo    priv/CREATER/.+
+    #       RW+ =   CREATER
+    #       RW  =   @team
+    # has a problem.  The RW overrides the RW+ when the dumped hash is read in
+    # (simply going by sequence), so creater's special privs are lost
 
 # === add-auth-keys ===
 
@@ -352,6 +361,7 @@ wrap_chdir("$repo_base_abs");
 
 for my $repo (sort keys %repos) {
     next unless $repo =~ $REPONAME_PATT;
+    print STDERR "creating $repo...\n";
     unless (-d "$repo.git") {
         new_repo($repo, "$GL_ADMINDIR/src/hooks");
         # new_repo would have chdir'd us away; come back
