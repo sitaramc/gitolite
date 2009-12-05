@@ -404,6 +404,11 @@ that code path to better use :-)
 
 #### "exclude" (or "deny") rules
 
+***IMPORTANT CAVEAT: if you use deny rules, the order of the rules also makes
+a difference, where earlier it did not.  Please review your ruleset carefully
+or test it.  In particular, do not use `@all` in a deny rule -- it won't work
+as you might expect***.
+
 Take a look at the following snippet, which *seems* to say that "bruce" can
 write versioned tags (anything containing `refs/tags/v[0-9]`), but the other
 staffers can't:
@@ -446,10 +451,6 @@ And here's how it works:
   * for version tags by staffers *other than bruce*, the second rule matches
     before the third one, and it has a `-` as the permission, so the push
     fails
-
-***IMPORTANT NOTE: if you use deny rules, the order of the rules also makes a
-difference, where earlier it did not.  Please review your ruleset carefully or
-test it***.  Or ask me.
 
 #### "personal" branches
 
