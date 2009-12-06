@@ -1,0 +1,207 @@
+# repositories named with wildcards
+
+***IMPORTANT NOTE***:
+
+This branch contains features that are likely to be much more brittle than the
+"master" branch.  Creating repositories based on wild cards, giving
+"ownership" to the specific user who created it, allowing him/her to hand out
+R and RW permissions to other users to collaborate, all these are possible.
+And any of these could have a bug in it.
+
+----
+
+In this document:
+
+  * wildcard repos
+      * wildcard repos with creater name in them
+      * wildcard repos without creater name in them
+  * side-note: line-anchored regexes
+      * contrast with refexes
+  * handing out rights to wildcard-matached repos
+  * reporting
+  * other issues and discussion
+
+This document is mostly "by example".
+
+----
+
+### Wildcard repos
+
+Which of these alternatives you choose depends on your needs, and the social
+aspects of your environment.  The first one is a little more rigid, making it
+harder to make mistakes, and the second is more flexible and trusting.
+
+#### Wildcard repos with creater name in them
+
+Here's an example snippet:
+
+    @prof       =   u1
+    @TAs        =   u2 u3
+    @students   =   u4 u5 u6
+
+    repo    assignments/CREATER/a[0-9][0-9]
+        C   =   @students
+        RW+ =   CREATER
+        RW  =   WRITERS @TAs
+        R   =   READERS @prof
+
+For now, ignore the special usernames READERS and WRITERS, and just create a
+new repo, as user "u4" (a student):
+
+    $ git clone git@server:assignments/u4/a12
+    Initialized empty Git repository in /home/sitaram/t/a12/.git/
+    Initialized empty Git repository in /home/gitolite/repositories/assignments/u4/a12.git/
+    warning: You appear to have cloned an empty repository.
+
+Notice the *two* empty repo inits, and the order in which they occur ;-)  Now
+make some changes and push, and after that, that specific repo
+(`assignments/u4/a12`) behaves as if the access control looked like this:
+
+    # effective config
+    repo    assignments/u4/a12
+        RW+ =   u4
+        RW  =   WRITERS @TAs
+        R   =   READERS @prof
+
+#### Wildcard repos without creater name in them
+
+Here's how the same example would look if you did not want the CREATER's name
+to be part of the actual repo name.
+
+    repo    assignments/a[0-9][0-9]
+        C   =   @students
+        RW+ =   CREATER
+        RW  =   WRITERS @TAs
+        R   =   READERS @prof
+
+We haven't changed anything except the repo name pattern.  This means that the
+first student that creates, say, `assignments/a12` becomes the owner.
+Mistakes (such as claiming a12 instead of a13) need to be rectified by an
+admin logging on to the back end, though it's not too difficult.
+
+You could also repace the C line like this:
+
+        C   =   @TAs
+
+and have a TA create the repos in advance.
+
+In either case, they could then use the (currently not implemented) `setperms`
+feature to specify which users are "READERS" and which are "WRITERS".  See
+later for details.
+
+### Side-note: Line-anchored regexes
+
+A regex like
+
+    repo assignments/S[0-9]+/A[0-9]+
+
+would match `assignments/S02/A37`.  It will not match `assignments/S02/ABC`,
+or `assignments/S02/a37`, obviously.
+
+But you may be surprised to find that it does not match even
+`assignments/S02/A37/B99`.  This is because internally, gitolite
+*line-anchors* the given regex; so that regex actually becomes
+`^assignments/S[0-9]+/A[0-9]+$` -- notice the line beginning and ending
+metacharacters.
+
+#### Contrast with refexes
+
+Just for interest, note that this is in contrast to the refexes for the normal
+"branch" permissions, as described in `conf/example.conf` and elsewhere.
+Those "refexes" are *not* anchored; a pattern like `refs/heads/master`
+actually matches `foo/refs/heads/master01/bar` as well, even if no one will
+actually push such a branch!  You can anchor it if you really care, by using
+`master$` instead of `master`, but anchoring is *not* the default for
+refexes.]
+
+### Handing out rights to wildcard-matached repos
+
+***not yet implemented***
+
+In the examples above, we saw two special "user" names: READERS and WRITERS.
+The permissions they have are controlled by the config file, but ***who is
+part of this list*** is controlled by the person who created the repository.
+
+The use case is that, although our toy example has only 3 students, in reality
+there will be a few dozen, but each assignment will be worked on only by a
+handful from among those.  This allows the creater to take ad hoc sets of
+users from among the actual users in the system, and place them into one of
+two categories (whose permissions are, in this example, R and RW
+respectively).  In theory you could do the same thing by creating lots of
+little "assignment-NN" groups in the config file but that may be a little too
+cumbersome for non-secret environments.
+
+Create a small text file that contains the permissions you desire:
+
+    $ cat > myperms
+    R user1 user3
+    RW user2
+    (hit ctrl-d here)
+
+...and use the new "getperms" command to set permissions for your repo:
+
+    $ ssh git@server setperms XXX/XXX/XXX < myperms
+    New perms are:
+    R user1 user3
+    RW user2
+
+'setperms' will helpfully print what the new permissions are but you can also
+use 'getperms' to check:
+
+    $ ssh git@server getperms XXX/XXX/XXX
+    R user1 user3
+    RW user2
+
+The following points are important:
+
+  * note the syntax of the commands; it's not a "git" command,and there's no
+    `:` like in a repo URL.  The first space-separated word is R or RW, and
+    the rest are simple usernames.
+
+  * whoever you specify as "R" will match the special user READERS.  "RW" will
+    match WRITERS.
+
+### Reporting
+
+Remember the cool stuff you see when you just do `ssh git@server` (grep for
+"myrights" in `doc/3-faq-tips-etc.mkd` if you forgot, or go [here][mr]).
+
+[mr]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#myrights
+
+This still works, except the format is a little more compressed to accommodate
+a new column (at the start) for "C" permissions, which indicate that you are
+allowed to *create* repos matching that pattern.
+
+In addition, there's a second level of reporting now, which is used to find
+what *actual* repos are available when you supply a pattern.
+
+    XXX to be done XXX
+
+### Other issues and discussion
+
+  * *what if the repo name being pushed matches more than one pattern*?
+
+    I think it would be very hard to reason about access if we were to do
+    something like combine all the access rights in all the matching patterns.
+    No matter how you do it, and how carefully you document it, there'll be
+    someone who is surprised by the result.
+
+    And in security, that's a ***Bad Thing***.
+
+    So we don't combine permissions.  At runtime, we die if we find more than
+    one match.  Let 'em go holler at the admin for creating multiple matching
+    repo patterns :-)
+
+    This can make some repos inaccessible if the patterns changed *after* they
+    were created.  The administrator should be careful not to do this.  Most
+    of the time, it won't be difficult; the fixed prefix will usually be
+    different anyway so there won't be overlaps.
+
+----
+
+Enjoy, and please use with care.  This is pretty powerful stuff.  As they say:
+if you break it, you get to keep both pieces :)
+
+[jwzq]: http://regex.info/blog/2006-09-15/247
+
+[av]: http://en.wikipedia.org/wiki/Autovivification

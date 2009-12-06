@@ -19,6 +19,7 @@ In this document:
       * what repos do I have access to?
       * "exclude" (or "deny") rules
       * "personal" branches
+      * repos named with wildcards
   * design choices
       * keeping the parser and the access control separate
 
@@ -90,7 +91,7 @@ plain "git archive", because the Makefile adds a file called
     git clone git://sitaramc.indefero.net/sitaramc/gitolite.git
     cd gitolite
     make master.tar
-    # or maybe "make rebel.tar" or "make pu.tar"
+    # or maybe "make wildrepos.tar" or "make pu.tar"
 
 <a name="diff"></a>
 
@@ -505,6 +506,11 @@ first check:
         RW dummy        = user3
 
 Just don't *show* the user this config file; it might sound insulting :-)
+
+#### repos named with wildcards
+
+**This feature only exists in the "wildrepos" branch!**  Please see
+`doc/4-wildcard-repositories.mkd` for all the details.
 
 ### design choices
 
