@@ -124,6 +124,26 @@ sub repo_rights
 }
 
 # ----------------------------------------------------------------------------
+#       getperms and setperms
+# ----------------------------------------------------------------------------
+
+sub get_set_perms
+{
+    my($repo_base_abs, $repo, $verb, $user) = @_;
+    my ($creater, $dummy, $dummy2) = &repo_rights($repo_base_abs, $repo, "");
+    die "$repo doesnt exist or is not yours\n" unless $user eq $creater;
+    wrap_chdir("$repo_base_abs");
+    wrap_chdir("$repo.git");
+    if ($verb eq 'getperms') {
+        print STDERR `cat gl-perms 2>/dev/null`;
+    } else {
+        system("cat > gl-perms");
+        print STDERR "New perms are:\n";
+        print STDERR `cat gl-perms`;
+    }
+}
+
+# ----------------------------------------------------------------------------
 #       parse the compiled acl
 # ----------------------------------------------------------------------------
 

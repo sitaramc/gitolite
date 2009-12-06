@@ -60,6 +60,36 @@ unless ($ENV{SSH_ORIGINAL_COMMAND}) {
 }
 
 my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
+my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
+
+# ----------------------------------------------------------------------------
+#       get and set perms for actual repo created by wildcard-autoviv
+# ----------------------------------------------------------------------------
+
+my $CUSTOM_COMMANDS=qr/^\s*(expand|getperms|setperms)\s/;
+
+# note that all the subs called here chdir somewhere else and do not come
+# back; they all blithely take advantage of the fact that processing custom
+# commands is sort of a dead end for normal (git) processing
+
+if ($cmd =~ $CUSTOM_COMMANDS) {
+    my ($verb, $repo) = ($cmd =~ /^\s*(\S+)\s+\/?(.*?)(?:.git)?$/);
+    if ($repo =~ $REPONAME_PATT and $verb =~ /getperms|setperms/) {
+        # with an actual reponame, you can "getperms" or "setperms"
+        get_set_perms($repo_base_abs, $repo, $verb, $user);
+    }
+    elsif ($repo !~ $REPONAME_PATT and $verb eq 'expand') {
+        # with a wildcard, you can "expand" it to see what repos actually match
+        die "not implemented yet\n";
+    } else {
+        die "$cmd doesn't make sense to me\n";
+    }
+    exit 1;
+}
+
+# ----------------------------------------------------------------------------
+#       normal (git) processing
+# ----------------------------------------------------------------------------
 
 # split into command and arguments; the pattern allows old style as well as
 # new style: "git-subcommand arg" or "git subcommand arg", just like gitosis
@@ -77,8 +107,6 @@ die "bad command: $cmd.  Make sure the repo name is exactly as in your config\n"
 # ----------------------------------------------------------------------------
 #       first level permissions check
 # ----------------------------------------------------------------------------
-
-my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
 
 if ( -d "$repo_base_abs/$repo.git" ) {
     # existing repo
