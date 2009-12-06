@@ -156,8 +156,8 @@ sub parse_acl
 
     # void $r if same as $w (otherwise "readers" overrides "writers"; this is
     # the same problem that needed a sort sub for the Dumper in the compile
-    # script, but localised to just $readers and $writers)
-    $r = "" if $r eq $w;
+    # script, but in this case it's limited to just $readers and $writers)
+    $r = "NOBODY" if $r eq $w;
 
     # set up the variables for a parse to interpolate stuff from the dumped
     # hash (remember the selective conversion of single to double quotes?).
@@ -209,5 +209,35 @@ sub report_basic
         print "$perm\t$r\n\r" if $perm =~ /\S/;
     }
 }
-1;
 
+# ----------------------------------------------------------------------------
+#       print a report of $user's basic permissions
+# ----------------------------------------------------------------------------
+
+sub expand_wild
+{
+    my($GL_CONF_COMPILED, $repo_base_abs, $repo, $user) = @_;
+
+    # display matching repos (from *all* the repos in the system) that $user
+    # has at least "R" access to
+
+    chdir("$repo_base_abs") or die "chdir $repo_base_abs failed: $!\n";
+    for my $actual_repo (`find . -type d -name "*.git"|sort`) {
+        chomp ($actual_repo);
+        $actual_repo =~ s/^\.\///;
+        $actual_repo =~ s/\.git$//;
+        # it has to match the pattern being expanded
+        next unless $actual_repo =~ /^$repo$/;
+
+        # find the creater and subsitute in repos
+        my ($creater, $read, $write) = &repo_rights($repo_base_abs, $actual_repo, $user);
+        # get access list with this
+        &parse_acl($GL_CONF_COMPILED, "", $creater, $read || "NOBODY", $write || "NOBODY");
+
+        # you need a minimum of "R" access to the regex we're talking about
+        next unless $repos{$repo}{R}{'@all'} or $repos{$repo}{R}{$user};
+        print STDERR "($creater)\t$actual_repo\n";
+    }
+}
+
+1;

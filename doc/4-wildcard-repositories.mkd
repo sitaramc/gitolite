@@ -134,23 +134,23 @@ cumbersome for non-secret environments.
 Create a small text file that contains the permissions you desire:
 
     $ cat > myperms
-    R user1 user3
-    RW user2
+    R u5
+    RW u6
     (hit ctrl-d here)
 
 ...and use the new "getperms" command to set permissions for your repo:
 
-    $ ssh git@server setperms XXX/XXX/XXX < myperms
+    $ ssh git@server setperms assignments/u4/a12 < myperms
     New perms are:
-    R user1 user3
-    RW user2
+    R u5
+    RW u6
 
 'setperms' will helpfully print what the new permissions are but you can also
 use 'getperms' to check:
 
-    $ ssh git@server getperms XXX/XXX/XXX
-    R user1 user3
-    RW user2
+    $ ssh git@server getperms assignments/u4/a12
+    R u5
+    RW u6
 
 The following points are important:
 
@@ -171,11 +171,6 @@ Remember the cool stuff you see when you just do `ssh git@server` (grep for
 This still works, except the format is a little more compressed to accommodate
 a new column (at the start) for "C" permissions, which indicate that you are
 allowed to *create* repos matching that pattern.
-
-In addition, there's a second level of reporting now, which is used to find
-what *actual* repos are available when you supply a pattern.
-
-    XXX to be done XXX
 
 ### Other issues and discussion
 

@@ -80,7 +80,7 @@ if ($cmd =~ $CUSTOM_COMMANDS) {
     }
     elsif ($repo !~ $REPONAME_PATT and $verb eq 'expand') {
         # with a wildcard, you can "expand" it to see what repos actually match
-        die "not implemented yet\n";
+        expand_wild($GL_CONF_COMPILED, $repo_base_abs, $repo, $user);
     } else {
         die "$cmd doesn't make sense to me\n";
     }
