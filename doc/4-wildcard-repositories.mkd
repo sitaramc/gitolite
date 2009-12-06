@@ -85,9 +85,8 @@ You could also repace the C line like this:
 
 and have a TA create the repos in advance.
 
-In either case, they could then use the (currently not implemented) `setperms`
-feature to specify which users are "READERS" and which are "WRITERS".  See
-later for details.
+In either case, they could then use the `setperms` feature to specify which
+users are "READERS" and which are "WRITERS".  See later for details.
 
 ### Side-note: Line-anchored regexes
 
@@ -115,8 +114,6 @@ actually push such a branch!  You can anchor it if you really care, by using
 refexes.]
 
 ### Handing out rights to wildcard-matached repos
-
-***not yet implemented***
 
 In the examples above, we saw two special "user" names: READERS and WRITERS.
 The permissions they have are controlled by the config file, but ***who is
