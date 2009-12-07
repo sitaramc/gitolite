@@ -101,6 +101,9 @@ my %rurp_seen = ();
 # catch usernames<->pubkeys mismatches; search for "lint" below
 my %user_list = ();
 
+# repo configurations
+my %repo_config = ();
+
 # gitweb descriptions and owners; plain text, keyed by "$repo.git"
 my %desc = ();
 my %owner = ();
@@ -244,6 +247,16 @@ sub parse_conf_file
                 }
             }
         }
+        # configuration
+        elsif (/^config (.+) = ?(.*)/)
+        {
+            my ($key, $value) = ($1, $2);
+            die "$WARN $fragment attempting to set repo configuration\n" if $fragment ne 'master';
+            for my $repo (@repos)       # each repo in the current stanza
+            {
+                $repo_config{$repo}{$key} = $value;
+            }
+        }
         # very simple syntax for the gitweb description of repo; one of:
         #       reponame = "some description string"
         #       reponame "owner name" = "some description string"
@@ -337,6 +350,22 @@ warn "\n\t\t***** WARNING *****\n" .
     "\tgitolite will work but you MUST read the section on\n" .
     "\t\"git version dependency\" in doc/3-faq-tips-etc.mkd\n"
     if $git_version < 10602;     # that's 1.6.2 to you
+
+# ----------------------------------------------------------------------------
+#       update repo configurations
+# ----------------------------------------------------------------------------
+
+for my $repo (keys %repo_config) {
+    wrap_chdir("$repo_base_abs/$repo.git");
+    while ( my ($key, $value) = each(%{ $repo_config{$repo} }) ) {
+        if ($value) {
+            $value =~ s/^"(.*)"$/$1/;
+            system("git", "config", $key, $value);
+        } else {
+            system("git", "config", "--unset-all", $key);
+        }
+    }
+}
 
 # ----------------------------------------------------------------------------
 #       handle gitweb and daemon
