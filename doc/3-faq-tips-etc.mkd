@@ -344,11 +344,35 @@ gitolite knows these two keys belong to the same person.
 
 Note that you don't say "sitaram@laptop" and so on in the **config** file --
 as far as the config file is concerned there's just **one** user called
-"sitaram" -- so you only say "sitaram" there.  Only the **pubkey files** have
-the extra "@" stuff.
+"sitaram" -- so you only say "sitaram" there.
 
 I think this is easier to maintain if you have to delete or change one of
 those keys.
+
+However, now that `sitaramc@gmail.com` is also a valid username, we need to
+distinguish between `sitaramc@gmail.com.pub` and `sitaramc@desktop.pub`.  We
+do that by requiring that the multi-key suffix you use (like "desktop" and
+"laptop") should not have a `"."` in it.  If it does, it looks like an email
+address.  The following table lists sample pubkey filenames and the
+corresponding derived usernames (which is what goes into the
+`conf/gitolite.conf` file):
+
+  * old style multikeys; not mistaken for emails because there is no "." in
+    hostname part
+
+        sitaramc.pub                            sitaramc
+        sitaramc@laptop.pub                     sitaramc
+        sitaramc@desktop.pub                    sitaramc
+
+  * new style, email keys; there is a "." in hostname part; so it's an email
+    address
+
+        sitaramc@gmail.com.pub                  sitaramc@gmail.com
+
+  * multikeys *with* email address
+
+        sitaramc@gmail.com@laptop.pub           sitaramc@gmail.com
+        sitaramc@gmail.com@desktop.pub          sitaramc@gmail.com
 
 #### support for git installed outside default PATH
 
