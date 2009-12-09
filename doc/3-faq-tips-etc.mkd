@@ -19,6 +19,7 @@ In this document:
       * what repos do I have access to?
       * "exclude" (or "deny") rules
       * "personal" branches
+      * custom hooks and custom git config
   * design choices
       * keeping the parser and the access control separate
 
@@ -529,6 +530,12 @@ first check:
         RW dummy        = user3
 
 Just don't *show* the user this config file; it might sound insulting :-)
+
+#### custom hooks and custom git config
+
+You can specify hooks that you want to propagate to all repos, as well as
+per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
+`conf/example.conf` for details.
 
 ### design choices
 
