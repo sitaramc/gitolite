@@ -37,13 +37,16 @@ Assumptions/pre-requisites:
   * git is installed on that server (and so is perl)
   * you have a userid on that server
   * you have ssh-pubkey (**password-less**) login to that userid
-      * (if you have only password access, run `ssh-keygen -t rsa` to create a
-        new keypair if needed, then run `ssh-copy-id user@host`)
+      * if you have only password access, run `ssh-keygen -t rsa` to create a
+        new keypair if needed, then run `ssh-copy-id user@host`.  If you do
+        not have `ssh-copy-id`, read doc/3-faq-tips-etc.mkd and look for
+        `ssh-copy-id` in that file for instructions
   * you have a clone or an archive of gitolite somewhere on your workstation
+      * if you don't have one, just run `git clone git://github.com/sitaramc/gitolite`
 
-If so, just `cd` to that clone and run `src/gl-easy-install` and follow the
-prompts!  (Running it without any arguments shows you usage plus other useful
-info).
+Once you have all this, just `cd` to that clone and run `src/gl-easy-install`
+and follow the prompts!  (Running it without any arguments shows you usage
+plus other useful info).
 
 #### typical example run
 
