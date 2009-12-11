@@ -192,7 +192,11 @@ sub parse_conf_file
             @repos = split ' ', $1;
             @repos = expand_list ( @repos );
 
-            s/\bCREAT[EO]R\b/\$creater/g for @repos;
+            # CREAT[EO]R must be changed to $creater.  Also, prefix a "^" to
+            # force it to look like a regex.  Otherwise, foo/CREATER/bar (no
+            # regex metas) looks like an ordinary reponame, and the logic (in
+            # gl-auth) that decides when to allow autovivify gets confused.
+            s/\bCREAT[EO]R\b/\$creater/g && s/^/^/ for @repos;
         }
         # actual permission line
         elsif (/^(-|C|R|RW|RW\+) (.* )?= (.+)/)
