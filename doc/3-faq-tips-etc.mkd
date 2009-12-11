@@ -19,22 +19,32 @@ In this document:
       * what repos do I have access to?
       * "exclude" (or "deny") rules
       * "personal" branches
+      * custom hooks and custom git config
       * repos named with wildcards
   * design choices
       * keeping the parser and the access control separate
 
 ### common errors and mistakes
 
-  * forgetting to suffix `.git` to the end of the reponame in the `git clone`.
-    This suffix is *not* used in the gitolite config file for the sake of
-    clarity and cleaner syntax, but don't let that fool you.  It's a
-    convention in the git world that **bare repos** end with `.git`.
-
   * adding `repositories/` at the start of the repo name in the `git clone`.
     This error is typically made by the *admin* himself -- because he knows
     what `$REPO_BASE` is set to and thinks he has to provide that prefix on
-    the client side also :-)  In fact gitolite prepends `$REPO_BASE` when it
-    is required anyway, so you shouldn't do the same thing!
+    the client side also :-)  In fact gitolite prepends `$REPO_BASE`
+    internally, so you shouldn't also do the same thing!
+
+  * being able to clone but getting errors on push.  Most likely caused by a
+    combination of:
+
+      * you already have shell access to the server, not just "gitolite"
+        access, *and*
+
+      * you cloned using `git clone git@server:repositories/repo.git` (notice
+        there's an extra "repositories/" in there?)
+
+    In other words, you used a key that completely bypassed gitolite and went
+    straight to the shell to do the clone.
+
+    Please see doc/6-ssh-troubleshooting.mkd for what all this means.
 
 ### git version dependency
 
@@ -66,6 +76,27 @@ Once this is done, the repo is available for cloning by anyone else in the
 normal way, since it's not empty anymore.
 
 ### other errors, warnings, notes...
+
+  * don't have `ssh-copy-id`?  This is broadly what that command does, if you
+    want to replicate it manually.  The input is your pubkey, typically
+    `~/.ssh/id_rsa.pub` from your client/workstation.
+
+      * it copies it to the server as some file
+
+      * it appends that file to `~/.ssh/authorized_keys` on the server
+        (creating it if it doesn't already exist)
+
+      * it then makes sure that all these files/directories have go-w perms
+        set (assuming user is "git"):
+
+            /home/git/.ssh/authorized_keys
+            /home/git/.ssh
+            /home/git
+
+    [Actually, sshd requires that even directories *above* ~ (/, /home,
+    typically) also must be `go-w`, but that needs root.  And typically
+    they're already set that way anyway.  (Or if they're not, you've got
+    bigger problems than gitolite install not working!)]
 
   * cloning an empty repo is only possible with clients greater than 1.6.2.
     So at least one of your clients needs to have a recent git.  Once at least
@@ -345,11 +376,35 @@ gitolite knows these two keys belong to the same person.
 
 Note that you don't say "sitaram@laptop" and so on in the **config** file --
 as far as the config file is concerned there's just **one** user called
-"sitaram" -- so you only say "sitaram" there.  Only the **pubkey files** have
-the extra "@" stuff.
+"sitaram" -- so you only say "sitaram" there.
 
 I think this is easier to maintain if you have to delete or change one of
 those keys.
+
+However, now that `sitaramc@gmail.com` is also a valid username, we need to
+distinguish between `sitaramc@gmail.com.pub` and `sitaramc@desktop.pub`.  We
+do that by requiring that the multi-key suffix you use (like "desktop" and
+"laptop") should not have a `"."` in it.  If it does, it looks like an email
+address.  The following table lists sample pubkey filenames and the
+corresponding derived usernames (which is what goes into the
+`conf/gitolite.conf` file):
+
+  * old style multikeys; not mistaken for emails because there is no "." in
+    hostname part
+
+        sitaramc.pub                            sitaramc
+        sitaramc@laptop.pub                     sitaramc
+        sitaramc@desktop.pub                    sitaramc
+
+  * new style, email keys; there is a "." in hostname part; so it's an email
+    address
+
+        sitaramc@gmail.com.pub                  sitaramc@gmail.com
+
+  * multikeys *with* email address
+
+        sitaramc@gmail.com@laptop.pub           sitaramc@gmail.com
+        sitaramc@gmail.com@desktop.pub          sitaramc@gmail.com
 
 #### support for git installed outside default PATH
 
@@ -506,6 +561,12 @@ first check:
         RW dummy        = user3
 
 Just don't *show* the user this config file; it might sound insulting :-)
+
+#### custom hooks and custom git config
+
+You can specify hooks that you want to propagate to all repos, as well as
+per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
+`conf/example.conf` for details.
 
 #### repos named with wildcards
 

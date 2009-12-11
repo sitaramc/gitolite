@@ -9,6 +9,7 @@ In this document:
       * adding users and repos
       * specifying gitweb and daemon access
       * custom hooks
+      * custom git config
 
 ### administer
 
@@ -90,3 +91,25 @@ just run easy install once again; it'll do it to existing repos also.
 implements all the branch-level permissions in gitolite.  If you fiddle with
 the hooks directory, please make sure you do not mess with this file
 accidentally, or all your fancy per-branch permissions will stop working.**
+
+#### custom git config
+
+The custom hooks feature is a blunt instrument -- all repos get the hook you
+specified and will run it.  In order to make it a little more fine-grained,
+you could set your hooks to only work if a certain "gitconfig" variable was
+set.  Which means we now need a way to specify "git config" settings on a per
+repository basis.
+
+Thanks to Teemu (teemu dot matilainen at iki dot fi), gitolite now does this
+very easily.  For security reasons, this can only be done from the master
+config file (i.e., if you're using delegation, the delegated admins cannot
+specify git config settings).
+
+Please see `conf/example.conf` for syntax.  Note that this only supports the
+basic forms of the "git config" command:
+
+    git config              section.key value   # value may be an empty string
+    git config --unset-all  section.key
+
+It does not (currently) support other options like `--add`, the `value_regex`,
+etc.

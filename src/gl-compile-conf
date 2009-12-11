@@ -36,11 +36,11 @@ $Data::Dumper::Sortkeys = sub { return [ reverse sort keys %{$_[0]} ]; };
 #     - anytime a pubkey is added/deleted
 #     - anytime gitolite.conf is changed
 # input:
-#     - GL_CONF (default: ~/.gitolite/gitolite.conf)
+#     - GL_CONF (default: ~/.gitolite/conf/gitolite.conf)
 #     - GL_KEYDIR (default: ~/.gitolite/keydir)
 # output:
 #     - ~/.ssh/authorized_keys (dictated by sshd)
-#     - GL_CONF_COMPILED (default: ~/.gitolite/gitolite.conf-compiled.pm)
+#     - GL_CONF_COMPILED (default: ~/.gitolite/conf/gitolite.conf-compiled.pm)
 # security:
 #     - touches a very critical system file that manages the restrictions on
 #       incoming users.  Be sure to audit AUTH_COMMAND and AUTH_OPTIONS (see
@@ -111,6 +111,9 @@ my %rurp_seen = ();
 # catch usernames<->pubkeys mismatches; search for "lint" below
 my %user_list = ();
 
+# repo configurations
+my %repo_config = ();
+
 # gitweb descriptions and owners; plain text, keyed by "$repo.git"
 my %desc = ();
 my %owner = ();
@@ -129,7 +132,7 @@ sub expand_list
 
     for my $item (@list)
     {
-        die "$ABRT bad user or repo name $item\n" unless $item =~ $REPOPATT_PATT;
+        die "$ABRT bad user or repo name $item\n" unless $item =~ $REPOPATT_PATT or $item =~ $USERNAME_PATT;
         if ($item =~ /^@/)      # nested group
         {
             die "$ABRT undefined group $item\n" unless $groups{$item};
@@ -182,7 +185,6 @@ sub parse_conf_file
             # store the members of each group as hash key.  Keep track of when
             # the group was *first* created by using $fragment as the *value*
             do { $groups{$1}{$_} ||= $fragment } for ( expand_list( split(' ', $2) ) );
-            # again, we take the more "relaxed" pattern
             die "$ABRT bad group $1\n" unless $1 =~ $REPONAME_PATT;
         }
         # repo(s)
@@ -276,6 +278,16 @@ sub parse_conf_file
                             unless $rurp_seen{$repo}{$user}{$ref}{$perms}++;
                     }
                 }
+            }
+        }
+        # configuration
+        elsif (/^config (.+) = ?(.*)/)
+        {
+            my ($key, $value) = ($1, $2);
+            die "$WARN $fragment attempting to set repo configuration\n" if $fragment ne 'master';
+            for my $repo (@repos)       # each repo in the current stanza
+            {
+                $repo_config{$repo}{$key} = $value;
             }
         }
         # very simple syntax for the gitweb description of repo; one of:
@@ -380,6 +392,22 @@ warn "\n\t\t***** WARNING *****\n" .
     if $git_version < 10602;     # that's 1.6.2 to you
 
 # ----------------------------------------------------------------------------
+#       update repo configurations
+# ----------------------------------------------------------------------------
+
+for my $repo (keys %repo_config) {
+    wrap_chdir("$repo_base_abs/$repo.git");
+    while ( my ($key, $value) = each(%{ $repo_config{$repo} }) ) {
+        if ($value) {
+            $value =~ s/^"(.*)"$/$1/;
+            system("git", "config", $key, $value);
+        } else {
+            system("git", "config", "--unset-all", $key);
+        }
+    }
+}
+
+# ----------------------------------------------------------------------------
 #       handle gitweb and daemon
 # ----------------------------------------------------------------------------
 
@@ -450,7 +478,7 @@ for my $pubkey (glob("*"))
         print STDERR "WARNING: pubkey files should end with \".pub\", ignoring $pubkey\n";
         next;
     }
-    my $user = $pubkey; $user =~ s/(\@.+)?\.pub$//;
+    my $user = $pubkey; $user =~ s/(\@[^.]+)?\.pub$//;
     # lint check 2
     print STDERR "WARNING: pubkey $pubkey exists but user $user not in config\n"
         unless $user_list{$user};
