@@ -104,6 +104,7 @@ die "bad command: $cmd.  Make sure the repo name is exactly as in your config\n"
     unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS )
         and  $repo and   $repo =~ $REPONAME_PATT );
 die "$repo ends with a slash; I don't like that\n" if $repo =~ /\/$/;
+die "$repo has two consecutive periods; I don't like that\n" if $repo =~ /\.\./;
 
 # ----------------------------------------------------------------------------
 #       first level permissions check
