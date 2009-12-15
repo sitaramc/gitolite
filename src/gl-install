@@ -79,8 +79,6 @@ for my $repo (`find . -type d -name "*.git"`) {
 if ( -d "gitolite-admin.git/hooks" ) {
     print "copying post-update hook to gitolite-admin repo...\n";
     system("cp $GL_ADMINDIR/src/ga-post-update-hook gitolite-admin.git/hooks/post-update");
-    system("perl", "-i", "-p", "-e", "s(GL_ADMINDIR=.*)(GL_ADMINDIR=$GL_ADMINDIR)",
-        "gitolite-admin.git/hooks/post-update");
     chmod 0755, "gitolite-admin.git/hooks/post-update";
 }
 

@@ -73,7 +73,7 @@ $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 # ----------------------------------------------------------------------------
 
 # command and options for authorized_keys
-$AUTH_COMMAND="$GL_ADMINDIR/src/gl-auth-command";
+$AUTH_COMMAND="$bindir/gl-auth-command";
 $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
 
 # groups can now represent user groups or repo groups.

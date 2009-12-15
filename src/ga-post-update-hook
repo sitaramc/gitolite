@@ -1,10 +1,7 @@
 #!/bin/sh
 
-# get this from your .gitolite.conf; and don't forget this is shell, while
-# that is perl :-)
-export GL_ADMINDIR; GL_ADMINDIR=$HOME/.gitolite
-
 # checkout the master branch to $GL_ADMINDIR
+# (the GL_ADMINDIR env var would have been set by gl-auth-command)
 GIT_WORK_TREE=$GL_ADMINDIR git checkout -f master
 
 # remove all fragments.  otherwise, you get spurious error messages when you
@@ -31,4 +28,4 @@ do
 done
 
 cd $GL_ADMINDIR
-src/gl-compile-conf
+$GL_BINDIR/gl-compile-conf

@@ -39,6 +39,11 @@ require "$bindir/gitolite.pm";
 &where_is_rc();
 die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
 
+# we need to pass GL_ADMINDIR and the bindir to the child hooks (well only the
+# admin repo's post-update hook but still...)
+$ENV{GL_ADMINDIR} = $GL_ADMINDIR;
+$ENV{GL_BINDIR} = $bindir;
+
 # add a custom path for git binaries, if specified
 $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 

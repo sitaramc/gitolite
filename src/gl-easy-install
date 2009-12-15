@@ -48,7 +48,7 @@ main() {
     [[ $upgrade == 0 ]] && initial_conf_key
 
     # MANUAL: cd to $GL_ADMINDIR and run "src/gl-compile-conf"
-    ssh -p $port $user@$host "cd $GL_ADMINDIR; src/gl-compile-conf $quiet"
+    ssh -p $port $user@$host "cd $GL_ADMINDIR; \$PWD/src/gl-compile-conf $quiet"
 
     setup_pta
 
