@@ -25,8 +25,8 @@ $R_COMMANDS=qr/^(git[ -]upload-pack|git[ -]upload-archive)$/;
 $W_COMMANDS=qr/^git[ -]receive-pack$/;
 
 # note that REPONAME_PATT allows "/", while USERNAME_PATT allows "@"
-$REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._/-]*$);    # very simple pattern
-$USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@-]*$);   # very simple pattern
+$REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._/+-]*$);    # very simple pattern
+$USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);   # very simple pattern
 
 # ----------------------------------------------------------------------------
 #       convenience subs
