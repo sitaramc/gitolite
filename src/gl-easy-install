@@ -361,12 +361,15 @@ run_install() {
 # MANUAL: setup the initial config file.  Edit $GL_ADMINDIR/conf/gitolite.conf
 # and add at least the following lines to it:
 
+#   @SHELL = sitaram
 #   repo gitolite-admin
 #       RW+                 = sitaram
 
 initial_conf_key() {
     echo "#gitolite conf
 # please see conf/example.conf for details on syntax and features
+
+@SHELL                  = $admin_name
 
 repo gitolite-admin
     RW+                 = $admin_name

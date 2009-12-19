@@ -74,7 +74,8 @@ $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 
 # command and options for authorized_keys
 $AUTH_COMMAND="$bindir/gl-auth-command";
-$AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
+$AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding";
+    # note, for most users there's also a "no-pty" added to this, see later
 
 # groups can now represent user groups or repo groups.
 
@@ -441,7 +442,11 @@ for my $pubkey (glob("*"))
     print STDERR "WARNING: pubkey $pubkey exists but user $user not in config\n"
         unless $user_list{$user};
     $user_list{$user} = 'has pubkey';
-    print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";
+    if ($groups{'@SHELL'}{$user}) {
+        print $newkeys_fh "command=\"$AUTH_COMMAND -s $user\",$AUTH_OPTIONS ";
+    } else {
+        print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS,no-pty ";
+    }
     # apparently some pubkeys don't end in a newline...
     my $pubkey_content = `cat $pubkey`;
     $pubkey_content =~ s/\s*$/\n/;
