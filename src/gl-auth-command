@@ -53,6 +53,14 @@ umask($REPO_UMASK);
 #       start...
 # ----------------------------------------------------------------------------
 
+# if the first argument is a "-s", this user is allowed to get a shell using
+# this key
+my $shell_allowed = 0;
+if ($ARGV[0] eq '-s') {
+    $shell_allowed = 1;
+    shift;
+}
+
 # first, fix the biggest gripe I have with gitosis, a 1-line change
 my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 
@@ -60,13 +68,24 @@ my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 #       sanity checks on SSH_ORIGINAL_COMMAND
 # ----------------------------------------------------------------------------
 
-# SSH_ORIGINAL_COMMAND must exist; if not, we die with a nice message
+# print basic access info if SSH_ORIGINAL_COMMAND does not exist
 unless ($ENV{SSH_ORIGINAL_COMMAND}) {
+    # unless the user is allowed to use a shell
+    if ($shell_allowed) {
+        my $shell = $ENV{SHELL};
+        $shell =~ s/.*\//-/;    # change "/bin/bash" to "-bash"
+        exec { $ENV{SHELL} } $shell;
+    }
     &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
     exit 1;
 }
 
 my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
+# people allowed to get a shell can get basic access info by asking nicely
+if ($shell_allowed and $cmd eq 'info') {
+    &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
+    exit 1;
+}
 
 # split into command and arguments; the pattern allows old style as well as
 # new style: "git-subcommand arg" or "git subcommand arg", just like gitosis
@@ -77,9 +96,12 @@ my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
 # including the single quotes
 
 my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:.git)?'/);
-die "bad command: $cmd.  Make sure the repo name is exactly as in your config\n"
-    unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS )
-        and  $repo and   $repo =~ $REPONAME_PATT );
+unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS ) and $repo and $repo =~ $REPONAME_PATT ) {
+    # if the user is allowed a shell, just run the command
+    exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND} if $shell_allowed;
+    # otherwise, whine
+    die "bad command: $cmd\n";
+}
 
 # ----------------------------------------------------------------------------
 #       first level permissions check
