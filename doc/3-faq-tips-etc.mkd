@@ -102,10 +102,10 @@ normal way, since it's not empty anymore.
     So at least one of your clients needs to have a recent git.  Once at least
     one commit has been made, older clients can also use it
 
-  * when you clone an empty repo, git seems to complain about the remote
-    hanging up or something.  I have no idea what that is, but it doesn't seem
-    to hurt anything.  This happens even in normal git, not just gitolite.
-    [Update 2009-09-14; this has been fixed in git 1.6.4.3]
+  * when you clone an empty repo, git seems to complain about `fatal: The
+    remote end hung up unexpectedly`.  However, you can ignore this, since it
+    doesn't seem to hurt anything.  [Update 2009-09-14; this has been fixed in
+    git 1.6.4.3]
 
   * gitweb not able to read your repos?  You can change the umask for newly
     created repos to something more relaxed -- see the `~/.gitolite.rc` file

@@ -27,8 +27,8 @@ $W_COMMANDS=qr/^git[ -]receive-pack$/;
 # note that REPONAME_PATT allows "/", while USERNAME_PATT does not
 # also, the reason REPONAME_PATT is a superset of USERNAME_PATT is (duh!)
 # because in this version, a repo can have "CREATER" in the name (see docs)
-$REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@/-]*$);  # very simple pattern
-$USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@-]*$);   # very simple pattern
+$REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@/+-]*$); # very simple pattern
+$USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple pattern
 # same as REPONAME, plus some common regex metas
 $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 
