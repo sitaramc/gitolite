@@ -179,15 +179,9 @@ sub parse_acl
     return unless $repo;
 
     return $ENV{GL_REPOPATT} = "" if $repos{$repo};
-
-    # didn't find $repo in %repos, so it must be a wildcard-match case
-
-    # note that the repo regexes in %repos have a leading ^ but not a trailing
-    # $; we need to add the $ here to complete the "line-anchoring"
-    my @matched = grep { $repo =~ /$_$/ } sort keys %repos;
+    my @matched = grep { $repo =~ /^$_$/ } sort keys %repos;
     die "$repo has no matches\n" unless @matched;
     die "$repo has multiple matches\n@matched\n" if @matched > 1;
-
     # found exactly one pattern that matched, copy its ACL
     $repos{$repo} = $repos{$matched[0]};
     # and return the pattern
