@@ -175,7 +175,8 @@ sub parse_acl
 
     die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
 
-    # access reporting doesn't send $repo, and doesn't need to
+    # basic access reporting doesn't send $repo, and doesn't need to; you just
+    # want the config dumped as is, really
     return unless $repo;
 
     return $ENV{GL_REPOPATT} = "" if $repos{$repo};
@@ -221,6 +222,10 @@ sub report_basic
 sub expand_wild
 {
     my($GL_CONF_COMPILED, $repo_base_abs, $repo, $user) = @_;
+
+    # this is for convenience; he can copy-paste the output of the basic
+    # access report instead of having to manually change CREATER to his name
+    $repo =~ s/\bCREAT[EO]R\b/$user/g;
 
     # display matching repos (from *all* the repos in the system) that $user
     # has at least "R" access to
