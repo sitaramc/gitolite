@@ -99,7 +99,7 @@ if ($cmd =~ $CUSTOM_COMMANDS) {
         # with an actual reponame, you can "getperms" or "setperms"
         get_set_perms($repo_base_abs, $repo, $verb, $user);
     }
-    elsif ($repo !~ $REPONAME_PATT and $verb eq 'expand') {
+    elsif ($verb eq 'expand') {
         # with a wildcard, you can "expand" it to see what repos actually match
         expand_wild($GL_CONF_COMPILED, $repo_base_abs, $repo, $user);
     } else {
@@ -143,20 +143,14 @@ die "$repo has two consecutive periods; I don't like that\n" if $repo =~ /\.\./;
 if ( -d "$repo_base_abs/$repo.git" ) {
     # existing repo
     my ($creater, $user_R, $user_W) = &repo_rights($repo_base_abs, $repo, $user);
-    my $patt = &parse_acl($GL_CONF_COMPILED, $repo, $creater, $user_R, $user_W);
+    &parse_acl($GL_CONF_COMPILED, $repo, $creater, $user_R, $user_W);
 } else {
-    my $patt = &parse_acl($GL_CONF_COMPILED, $repo, $user, $user, $user);
-    # parse_acl returns "" if the repo was non-wildcard, or the pattern
-    # that matched if it was a wildcard
+    &parse_acl($GL_CONF_COMPILED, $repo, $user, $user, $user);
 
-    # auto-vivify new repo; 2 situations allow autoviv -- normal repos
-    # with W access (the old mode), and wildcard repos with C access
-    my $W_ok = $repos{$repo}{W}{$user} || $repos{$repo}{W}{'@all'};
-    my $C_ok = $repos{$repo}{C}{$user} || $repos{$repo}{C}{'@all'};
-    if ($W_ok and not $patt or $C_ok and $patt) {
+    # auto-vivify new repo if you have C access
+    if ( $repos{$repo}{C}{$user} || $repos{$repo}{C}{'@all'} ) {
         wrap_chdir("$repo_base_abs");
-        # for wildcard repos, we also want to set the "creater"
-        new_repo($repo, "$GL_ADMINDIR/src/hooks", ( $patt ? $user : ""));
+        new_repo($repo, "$GL_ADMINDIR/src/hooks", $user);
         wrap_chdir($ENV{HOME});
     }
 }
