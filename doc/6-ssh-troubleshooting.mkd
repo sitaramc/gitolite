@@ -148,8 +148,9 @@ Here's how it all hangs together.
 
     Luckily, ssh has a very convenient way of capturing all the connection
     information (username, hostname, port number (if it's not the default 22),
-    and keypair to be used) in one "paragraph".  This is what the para looks
-    like for us (the easy install script puts it there the first time):
+    and keypair to be used) in one "paragraph" of `~/.ssh/config`.  This is
+    what the para looks like for us (the easy install script puts it there the
+    first time):
 
         host gitolite
              user git
