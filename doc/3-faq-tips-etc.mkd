@@ -5,6 +5,10 @@ In this document:
   * common errors and mistakes
   * git version dependency
   * other errors, warnings, notes...
+      * ssh-copy-id
+      * cloning an empty repo
+      * `@all` syntax for repos
+      * umask setting
   * getting a tar file from a clone
   * differences from gitosis
       * simpler syntax
@@ -77,38 +81,58 @@ normal way, since it's not empty anymore.
 
 ### other errors, warnings, notes...
 
-  * don't have `ssh-copy-id`?  This is broadly what that command does, if you
-    want to replicate it manually.  The input is your pubkey, typically
-    `~/.ssh/id_rsa.pub` from your client/workstation.
+#### ssh-copy-id
 
-      * it copies it to the server as some file
+don't have `ssh-copy-id`?  This is broadly what that command does, if you want
+to replicate it manually.  The input is your pubkey, typically
+`~/.ssh/id_rsa.pub` from your client/workstation.
 
-      * it appends that file to `~/.ssh/authorized_keys` on the server
-        (creating it if it doesn't already exist)
+  * it copies it to the server as some file
 
-      * it then makes sure that all these files/directories have go-w perms
-        set (assuming user is "git"):
+  * it appends that file to `~/.ssh/authorized_keys` on the server
+    (creating it if it doesn't already exist)
 
-            /home/git/.ssh/authorized_keys
-            /home/git/.ssh
-            /home/git
+  * it then makes sure that all these files/directories have go-w perms
+    set (assuming user is "git"):
 
-    [Actually, sshd requires that even directories *above* ~ (/, /home,
-    typically) also must be `go-w`, but that needs root.  And typically
-    they're already set that way anyway.  (Or if they're not, you've got
-    bigger problems than gitolite install not working!)]
+        /home/git/.ssh/authorized_keys
+        /home/git/.ssh
+        /home/git
 
-  * cloning an empty repo is only possible with clients greater than 1.6.2.
-    So at least one of your clients needs to have a recent git.  Once at least
-    one commit has been made, older clients can also use it
+[Actually, sshd requires that even directories *above* ~ (/, /home,
+typically) also must be `go-w`, but that needs root.  And typically
+they're already set that way anyway.  (Or if they're not, you've got
+bigger problems than gitolite install not working!)]
 
-  * when you clone an empty repo, git seems to complain about `fatal: The
-    remote end hung up unexpectedly`.  However, you can ignore this, since it
-    doesn't seem to hurt anything.  [Update 2009-09-14; this has been fixed in
-    git 1.6.4.3]
+#### cloning an empty repo
 
-  * gitweb not able to read your repos?  You can change the umask for newly
-    created repos to something more relaxed -- see the `~/.gitolite.rc` file
+Cloning an empty repo is only possible with clients greater than 1.6.2.  So at
+least one of your clients needs to have a recent git.  Once at least one
+commit has been made, older clients can also use it
+
+When you clone an empty repo, git seems to complain about `fatal: The remote
+end hung up unexpectedly`.  However, you can ignore this, since it doesn't
+seem to hurt anything.  [Update 2009-09-14; this has been fixed in git
+1.6.4.3]
+
+#### `@all` syntax for repos
+
+There *is* a way to use the `@all` syntax for repos also, as described in
+`conf/example.conf`.  However, there is an important difference between this
+and the old `@all` (for users):
+
+  * `@all` for repos is immediately expanded, when found, into the currently
+    known list of repos.  "Currently" means upto this point in the config
+    file, and "known" means having some user with some permissions associated
+    with the repo!
+
+  * This means that if you really want *all* repos, you'd better put this para
+    at the **end** of the config file!
+
+#### umask setting
+
+Gitweb not able to read your repos?  You can change the umask for newly
+created repos to something more relaxed -- see the `~/.gitolite.rc` file
 
 ### getting a tar file from a clone
 

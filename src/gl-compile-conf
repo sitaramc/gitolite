@@ -193,8 +193,11 @@ sub parse_conf_file
         {
             # grab the list and expand any @stuff in it
             @repos = split ' ', $1;
-            @repos = expand_list ( @repos );
-
+            if (@repos == 1 and $repos[0] eq '@all') {
+                @repos = keys %repos;
+            } else {
+                @repos = expand_list ( @repos );
+            }
             s/\bCREAT[EO]R\b/\$creater/g for @repos;
         }
         # actual permission line
