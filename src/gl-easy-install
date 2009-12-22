@@ -199,8 +199,8 @@ version_info() {
     git describe --tags --long HEAD 2>/dev/null > src/VERSION || echo '(unknown)' > src/VERSION
 
     # what was the old version there?
-    export upgrade_details="you are upgrading from \
-    $(ssh -p $port $user@$host cat gitolite-install/src/VERSION 2>/dev/null || echo '(unknown)' ) \
+    export upgrade_details="you are upgrading \
+    $(ssh -p $port $user@$host cat gitolite-install/src/VERSION 2>/dev/null || echo '(or installing first-time)' ) \
     to $(cat src/VERSION)"
 
     prompt "$upgrade_details" "$v_upgrade_details"
