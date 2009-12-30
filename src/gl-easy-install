@@ -401,7 +401,6 @@ setup_pta() {
     # Substitute $GL_ADMINDIR and $REPO_BASE appropriately.  Note there is no
     # space around the "=" in the second and third lines.
 
-    git ls-remote gitolite:gitolite-admin
     echo "cd $REPO_BASE/gitolite-admin.git
 GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
 GIT_WORK_TREE=$GL_ADMINDIR git diff --cached --quiet || GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
