@@ -264,6 +264,16 @@ sub parse_conf_file
                 $repo_config{$repo}{$key} = $value;
             }
         }
+        # include
+        elsif (/^include "(.+)"/)
+        {
+            my $file = $1;
+            $file = "$GL_ADMINDIR/conf/$file" unless $file =~ /^\//;
+            die "$WARN $fragment attempting to include configuration\n" if $fragment ne 'master';
+            die "$ABRT included file not found: '$file'\n" unless -f $file;
+
+            parse_conf_file($file, $fragment);
+        }
         # very simple syntax for the gitweb description of repo; one of:
         #       reponame = "some description string"
         #       reponame "owner name" = "some description string"
