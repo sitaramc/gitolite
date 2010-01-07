@@ -13,6 +13,7 @@ In this document:
   * differences from gitosis
       * simpler syntax
       * two levels of access rights checking
+      * file/dir NAME based restrictions
       * error checking the config file
       * delegating parts of the config file
       * easier to specify gitweb "description" and gitweb/daemon access
@@ -234,6 +235,15 @@ any of the refexes match, the push succeeds.  If none of them match, it fails.
 
 Gitolite also allows "exclude" or "deny" rules.  See later in this document
 for details.
+
+#### file/dir NAME based restrictions
+
+In addition to branch-name based restrictions, gitolite also allows you to
+restrict what files or directories can be involved in changes being pushed.
+This basically uses `git diff --name-only` to obtain the list of files being
+changed, treating each filename as a "ref" to be matched.
+
+Please see `conf/example.conf` for syntax and examples.
 
 #### error checking the config file
 

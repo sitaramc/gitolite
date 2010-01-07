@@ -200,9 +200,9 @@ sub parse_conf_file
 
             # if no ref is given, this PERM applies to all refs
             @refs = qw(refs/.*) unless @refs;
-            # fully qualify refs that dont start with "refs/" or "PATH/";
+            # fully qualify refs that dont start with "refs/" or "NAME/";
             # prefix them with "refs/heads/"
-            @refs = map { m(^(refs|PATH)/) or s(^)(refs/heads/); $_ } @refs;
+            @refs = map { m(^(refs|NAME)/) or s(^)(refs/heads/); $_ } @refs;
 
             # expand the user list, unless it is just "@all"
             @users = expand_list ( @users )
@@ -239,13 +239,13 @@ sub parse_conf_file
                     # for 2nd level check, store each "ref, perms" pair in order
                     for my $ref (@refs)
                     {
-                        # checking PATH based restrictions is expensive for
+                        # checking NAME based restrictions is expensive for
                         # the update hook (see the changes to src/hooks/update
                         # in this commit for why) so we would *very* much like
                         # to avoid doing it for the large majority of repos
-                        # that do *not* use PATH limits.  Setting a flag that
+                        # that do *not* use NAME limits.  Setting a flag that
                         # can be checked right away will help us do that
-                        $repos{$repo}{PATH_LIMITS} = 1 if $ref =~ /^PATH\//;
+                        $repos{$repo}{NAME_LIMITS} = 1 if $ref =~ /^NAME\//;
                         push @{ $repos{$repo}{$user} }, { $ref => $perms }
                             unless $rurp_seen{$repo}{$user}{$ref}{$perms}++;
                     }
