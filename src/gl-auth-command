@@ -105,14 +105,14 @@ if ($cmd =~ $CUSTOM_COMMANDS) {
     } else {
         die "$cmd doesn't make sense to me\n";
     }
-    exit 1;
+    exit 0;
 }
 
 # people allowed to get a shell can get basic access info by asking nicely
 if ($cmd eq 'info') {
     &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
     print "you also have shell access\n\r" if $shell_allowed;
-    exit 1;
+    exit 0;
 }
 
 # ----------------------------------------------------------------------------

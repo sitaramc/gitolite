@@ -137,11 +137,11 @@ sub get_set_perms
     wrap_chdir("$repo_base_abs");
     wrap_chdir("$repo.git");
     if ($verb eq 'getperms') {
-        print STDERR `cat gl-perms 2>/dev/null`;
+        system("cat", "gl-perms") if -f "gl-perms";
     } else {
         system("cat > gl-perms");
-        print STDERR "New perms are:\n";
-        print STDERR `cat gl-perms`;
+        print "New perms are:\n";
+        system("cat", "gl-perms");
     }
 }
 
