@@ -143,7 +143,7 @@ Create a small text file that contains the permissions you desire:
     RW u6
     (hit ctrl-d here)
 
-...and use the new "getperms" command to set permissions for your repo:
+...and use the new "setperms" command to set permissions for your repo:
 
     $ ssh git@server setperms assignments/u4/a12 < myperms
     New perms are:
