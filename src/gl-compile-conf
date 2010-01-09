@@ -200,6 +200,8 @@ sub parse_conf_file
 
             # if no ref is given, this PERM applies to all refs
             @refs = qw(refs/.*) unless @refs;
+            # deprecation warning
+            map { warn "WARNING: old syntax 'PATH/' found; please use new syntax 'NAME/'\n" if s(^PATH/)(NAME/) } @refs;
             # fully qualify refs that dont start with "refs/" or "NAME/";
             # prefix them with "refs/heads/"
             @refs = map { m(^(refs|NAME)/) or s(^)(refs/heads/); $_ } @refs;
