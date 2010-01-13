@@ -100,7 +100,7 @@ sub check_ref {
     for my $ar (@allowed_refs) {
         $refex = (keys %$ar)[0];
         # refex?  sure -- a regex to match a ref against :)
-        next unless $ref =~ /$refex/;
+        next unless $ref =~ /^$refex/;
         die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->{$refex} eq '-';
 
         # as far as *this* ref is concerned we're ok
