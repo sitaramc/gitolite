@@ -78,12 +78,12 @@ push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{'@all'} || [] };
 # prepare the list of refs to be checked
 
 # previously, we just checked $ref -- the ref being updated, which is passed
-# to us by git (see man githooks).  Now we also have to treat each PATH being
-# updated as a potential "ref" and check that, if PATH-based restrictions have
+# to us by git (see man githooks).  Now we also have to treat each NAME being
+# updated as a potential "ref" and check that, if NAME-based restrictions have
 # been specified
 
 my @refs = ($ref);      # the first ref to check is the real one
-if (exists $repos{$ENV{GL_REPO}}{PATH_LIMITS}) {
+if (exists $repos{$ENV{GL_REPO}}{NAME_LIMITS}) {
     # this is special to git -- the hash of an empty tree
     my $empty='4b825dc642cb6eb9a060e54bf8d69288fbee4904';
     # well they're not really "trees" but $empty is indeed the empty tree so
@@ -91,7 +91,7 @@ if (exists $repos{$ENV{GL_REPO}}{PATH_LIMITS}) {
     # diff' only wants trees
     my $oldtree = $oldsha eq '0' x 40 ? $empty : $oldsha;
     my $newtree = $newsha eq '0' x 40 ? $empty : $newsha;
-    push @refs, map { chomp; s/^/PATH\//; $_; } `git diff --name-only $oldtree $newtree`;
+    push @refs, map { chomp; s/^/NAME\//; $_; } `git diff --name-only $oldtree $newtree`;
 }
 
 my $refex = '';
@@ -113,7 +113,7 @@ sub check_ref {
     for my $ar (@allowed_refs) {
         $refex = (keys %$ar)[0];
         # refex?  sure -- a regex to match a ref against :)
-        next unless $ref =~ /$refex/;
+        next unless $ref =~ /^$refex/;
         die "$perm $ref $reported_repo $ENV{GL_USER} DENIED by $refex\n" if $ar->{$refex} eq '-';
 
         # as far as *this* ref is concerned we're ok
@@ -124,7 +124,7 @@ sub check_ref {
 
 # and in this version, we have many "refs" to check.  The one we print in the
 # log is the *first* one (which is a *real* ref, like refs/heads/master),
-# while all the rest (if they exist) are like PATH/something.  So we do the
+# while all the rest (if they exist) are like NAME/something.  So we do the
 # first one separately to capture it, then run the rest (if any)
 my $log_refex = check_ref(shift @refs);
 check_ref($_) for @refs;

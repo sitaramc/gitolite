@@ -8,10 +8,34 @@ and shell access]...".  We've managed (thanks to an idea from Jesse Keating)
 to get around this.  Now it *is* possible for a single key to allow both
 gitolite access *and* shell access.
 
-This is done by placing such a user in a special `@SHELL` group in the
-gitolite config file.  As usual, please see `conf/example.conf` for more info
-on this, since I'm using that as a central place to document anything
-concerned with the conf file.
+This is done by:
+
+  * (**on the server**) listing all such users in a variable called
+    `$SHELL_USERS` in the `~/.gitolite.rc` file.  For example:
+
+        $SHELL_USERS = "alice bob";
+
+    (Note the syntax: a space separated list of users in one string variable).
+
+  * (**on your client**) make at least a dummy change to your clone of the
+    gitolite-admin repo and push it.
+
+**IMPORTANT UPGRADE NOTE**: a previous implementation of this feature worked
+by adding people to a special group (`@SHELL`) in the *config* file.  This
+meant that anyone with gitolite-admin repo write access could add himself to
+the `@SHELL` group and push, thus obtaining shell.
+
+This is not a problem for most setups, but if someone wants to separate these
+two privileges (the right to push the admin repo and the right to get a shell)
+then it does pose a problem.  Since the "rc" file can only be edited by
+someone who already has shell access, we now use that instead, even though
+this forces a change in the syntax.
+
+To migrate from the old scheme to the new one, add a new variable
+`$SHELL_USERS` to `~/.gitolite.rc` on the server with the appropriate names in
+it.  **It is best to do this directly on the server *before* upgrading to this
+version.**  (After the upgrade is done and tested you can remove the `@SHELL`
+lines from the gitolite config file).
 
 ----
 

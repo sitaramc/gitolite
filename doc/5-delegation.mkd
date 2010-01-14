@@ -61,35 +61,35 @@ You do this by adding branches to the `gitolite-admin` repo:
 
     # the admin repo access was probably like this to start with:
     repo gitolite-admin
-        RW+                     = sitaram
+        RW+                                         = sitaram
     # now add these lines to the config for the admin repo
-        RW  webbrowser_repos    = alice
-        RW  webserver_repos     = bob
-        RW  malware_repos       = mallory
+        RW  NAME/conf/fragments/webbrowser_repos    = alice
+        RW  NAME/conf/fragments/webserver_repos     = bob
+        RW  NAME/conf/fragments/malware_repos       = mallory
+
+This uses gitolite's ability to restrict pushes by file/dir name being changed
+-- the syntax you see above ensures that, while "sitaram" does not have any
+NAME based restrictions, the other 3 users do.  See `conf/example.conf` for
+syntax and notes.
 
 As you can see, **for each repo group** you want to delegate authority over,
-there's a **branch with the same name** in the `gitolite-admin` repo.  If you
-have write access to that branch, you are allowed to define rules for repos in
-that repo group.
+there's a rule for a **corresponding file** in `conf/fragments` in the
+`gitolite-admin` repo.  If you have write access to that file, you are allowed
+to define rules for repos in that repo group.
 
-In other words, we use gitolite's per-branch permissions to "enforce" the
-separation between the delegated configs!
+In other words, we use gitolite's file/dir NAME-based permissions to "enforce"
+the separation between the delegated configs!
 
 Here's how to use this in practice:
 
-  * Alice clones the `gitolite-admin` repo, creates (if not already created) and
-    checks out a new branch called `webbrowser_repos`, and adds a file called
-    `conf/fragments/webbrowser_repos.conf` in that branch
-
-      * (the rest of the contents of that branch do not matter; she can keep
-        all the other files or delete all of them -- it doesn't make any
-        difference.  Only that one specific file is used).
+  * Alice clones the `gitolite-admin` repo, and adds a file called
+    `conf/fragments/webbrowser_repos.conf`
 
   * she writes in this file any access control rules for the "firefox" and
     "lynx" repos.  She should not write access rules for any other project --
     they will be ignored
 
-  * Alice then commits and pushes this branch to the `gitolite-admin` repo
+  * Alice then commits and pushes to the `gitolite-admin` repo
 
 Naturally, a successful push invokes the post-update hook that the admin repo
 has, which eventually runs the compile script.  The **net effect** is as if

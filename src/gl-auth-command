@@ -127,7 +127,7 @@ if ($cmd eq 'info') {
 #   git-receive-pack 'reponame.git'
 # including the single quotes
 
-my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:.git)?'/);
+my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:\.git)?'/);
 unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS ) and $repo and $repo =~ $REPONAME_PATT ) {
     # if the user is allowed a shell, just run the command
     exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND} if $shell_allowed;
