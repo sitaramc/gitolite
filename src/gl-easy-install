@@ -302,12 +302,16 @@ copy_gl() {
         prompt "    ...trying to reuse existing rc" \
         "Oh hey... you already had a '.gitolite.rc' file on the server.
 Let's see if we can use that instead of the default one..."
-        sort < $tmpgli/.gitolite.rc     | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > $tmpgli/glrc.old
-        sort < conf/example.gitolite.rc | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > $tmpgli/glrc.new
-        if diff -u $tmpgli/glrc.old $tmpgli/glrc.new
+        < $tmpgli/.gitolite.rc     perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' | sort > $tmpgli/glrc.old
+        < conf/example.gitolite.rc perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' | sort > $tmpgli/glrc.new
+        comm -13 $tmpgli/glrc.old $tmpgli/glrc.new > $tmpgli/glrc.comm13
+        if [[ ! -s $tmpgli/glrc.comm13 ]]
         then
             [[ $quiet == -q ]] || ${VISUAL:-${EDITOR:-vi}} $tmpgli/.gitolite.rc
         else
+            echo new variables found in rc file:
+            cat $tmpgli/glrc.comm13
+            echo
             # MANUAL: if you're upgrading, read the instructions below and
             # manually make sure your final ~/.gitolite.rc has both your existing
             # customisations as well as any new variables that the new version of
@@ -339,6 +343,8 @@ run_install() {
     if ssh -p $port $user@$host cat $GL_ADMINDIR/conf/gitolite.conf &> /dev/null
     then
         upgrade=1
+        ssh -p $port $user@$host cat $GL_ADMINDIR/conf/gitolite.conf 2> /dev/null | grep '@SHELL' &&
+            prompt "" "$v_at_shell_bwi"
         [[ -n $admin_name ]] && echo -e "\n    *** WARNING ***: looks like an upgrade... ignoring argument '$admin_name'"
     else
         [[ -z $admin_name ]] && die "    *** ERROR ***: doesn't look like an upgrade, so I need a name for the admin"
@@ -361,15 +367,12 @@ run_install() {
 # MANUAL: setup the initial config file.  Edit $GL_ADMINDIR/conf/gitolite.conf
 # and add at least the following lines to it:
 
-#   @SHELL = sitaram
 #   repo gitolite-admin
 #       RW+                 = sitaram
 
 initial_conf_key() {
     echo "#gitolite conf
 # please see conf/example.conf for details on syntax and features
-
-@SHELL                  = $admin_name
 
 repo gitolite-admin
     RW+                 = $admin_name
@@ -541,6 +544,17 @@ v_ignore_stuff="
 ignore any 'please edit this file' or 'run this command' type lines in the
 next set of command outputs coming up.  They're only relevant for a manual
 install, not this one...
+"
+
+v_at_shell_bwi="
+you are using the @SHELL feature in your gitolite config.  This feature has
+now changed in a backward incompatible way; see doc/6-ssh-troubleshooting.mkd
+for information on migrating this to the new syntax.
+
+DO NOT hit enter unless you have understood that information and properly
+migrated your setup, or you are sure you have shell access to the server
+through some other means than the $admin_name key.
+
 "
 
 v_done="
