@@ -63,6 +63,8 @@ You do this by adding branches to the `gitolite-admin` repo:
     repo gitolite-admin
         RW+                                         = sitaram
     # now add these lines to the config for the admin repo
+        RW                                          = alice bob mallory
+        RW+ NAME/                                   = sitaram
         RW  NAME/conf/fragments/webbrowser_repos    = alice
         RW  NAME/conf/fragments/webserver_repos     = bob
         RW  NAME/conf/fragments/malware_repos       = mallory
