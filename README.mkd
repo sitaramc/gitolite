@@ -70,6 +70,8 @@ detail [here][gsdiff].
   * simpler, yet far more powerful, config file syntax, including specifying
     gitweb/daemon access.  You'll need this power if you manage lots of
     users+repos+combinations of access
+  * apart from branch-name based restrictions, you can also restrict by
+    file/dir name changed (i.e., output of `git diff --name-only`)
   * config file syntax gets checked upfront, and much more thoroughly
   * if your requirements are still too complex, you can split up the config
     file and delegate authority over parts of it
