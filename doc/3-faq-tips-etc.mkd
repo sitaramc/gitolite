@@ -347,7 +347,7 @@ already done and we just use it!
     $export_auth_hook = sub {
         my $reponame = shift;
         # gitweb passes us the full repo path; so we strip the beginning...
-        $reponame =~ s/\Q$projectroot//;
+        $reponame =~ s/\Q$projectroot\E\/?//;
         # ...and the end, to get the repo name as it is specified in gitolite conf
         $reponame =~ s/\.git$//;
 
