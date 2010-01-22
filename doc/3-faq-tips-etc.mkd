@@ -471,7 +471,7 @@ etc.  You'd just like a simple way to know what repos you have access to.
 Easy!  Just use ssh and try to log in as if you were attempting to get a
 shell:
 
-    $ ssh gitolite
+    $ ssh gitolite info
     PTY allocation request failed on channel 0
     hello sitaram, the gitolite version here is v0.6-17-g94ed189
     you have the following permissions:
