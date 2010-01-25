@@ -28,7 +28,16 @@ have any problems right now, it's worth skimming over.
 Please also note that ssh problems don't always look like ssh problems.  One
 common example: when the remote says the repo you're trying to access "does
 not appear to be a git repository", and yet you are sure it exists, you
-haven't mis-spelled it, etc.
+haven't mis-spelled it, etc.  Another example is being able to access
+repositories using the full unix path (typically like
+`git@server:repositories/reponame.git`, assuming default `$REPO_BASE` setting,
+instead of specifying only the part below `$REPO_BASE`, i.e.,
+`git@server:reponame.git`).
+
+[Both these errors indicate that you managed to bypass gitolite completely and
+are using your shell access -- instead of running via
+`/some/path/gl-auth-command <your_username>` it is just going to bash and
+working from there!]
 
 ### basic ssh troubleshooting
 
