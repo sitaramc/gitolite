@@ -25,6 +25,10 @@ very detailed look at how gitolite uses ssh's features on the server side.
 Most people don't know ssh as well as they *think* they do; even if you dont
 have any problems right now, it's worth skimming over.
 
+In addition to both these documents, there's now a program called
+`sshkeys-lint` that you can run on your client.  Run it without arguments to
+get help on how to run it and what inputs it needs.
+
 Please also note that ssh problems don't always look like ssh problems.  One
 common example: when the remote says the repo you're trying to access "does
 not appear to be a git repository", and yet you are sure it exists, you
