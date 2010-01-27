@@ -15,6 +15,7 @@ In this document:
       * two levels of access rights checking
       * file/dir NAME based restrictions
       * error checking the config file
+      * including config lines from other files
       * delegating parts of the config file
       * easier to specify gitweb "description" and gitweb/daemon access
       * easier to link gitweb authorisation with gitolite
@@ -253,6 +254,10 @@ was denied.
 
 Gitolite "compiles" the config file first and keyword typos *are* caught so
 you know right away.
+
+#### including config lines from other files
+
+See the entry under "INCLUDE SOME OTHER FILE" in `conf/example.conf`.
 
 #### delegating parts of the config file
 
