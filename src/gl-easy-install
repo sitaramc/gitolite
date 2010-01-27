@@ -307,7 +307,9 @@ Let's see if we can use that instead of the default one..."
         # msysgit doesn't have "comm".  diff is not ideal for our purposes
         # because we only care about differences in one direction, but we'll
         # have to make do...
-        diff -u  $tmpgli/glrc.old $tmpgli/glrc.new | grep '^+' > $tmpgli/glrc.comm13
+        set +e
+        diff -u  $tmpgli/glrc.old $tmpgli/glrc.new | grep '^+.*\$' > $tmpgli/glrc.comm13
+        set -e
         if [[ ! -s $tmpgli/glrc.comm13 ]]
         then
             [[ $quiet == -q ]] || ${VISUAL:-${EDITOR:-vi}} $tmpgli/.gitolite.rc
