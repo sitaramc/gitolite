@@ -245,7 +245,7 @@ sub expand_wild
 
         # you need a minimum of "R" access to the regex we're talking about
         next unless $repos{$repo}{R}{'@all'} or $repos{$repo}{R}{$user};
-        print STDERR "($creater)\t$actual_repo\n";
+        print "($creater)\t$actual_repo\n";
     }
 }
 
