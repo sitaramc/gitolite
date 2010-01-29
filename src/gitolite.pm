@@ -230,6 +230,7 @@ sub expand_wild
     # get the list of repo patterns
     &parse_acl($GL_CONF_COMPILED, "", "NOBODY", "NOBODY", "NOBODY");
     my @repopatts = grep { $_ !~ $REPONAME_PATT } sort keys %repos;
+    my %reponames = map { $_ => 1 } grep { $_ =~ $REPONAME_PATT } sort keys %repos;
 
     # display matching repos (from *all* the repos in the system) that $user
     # has at least "R" access to
@@ -239,6 +240,11 @@ sub expand_wild
         chomp ($actual_repo);
         $actual_repo =~ s/^\.\///;
         $actual_repo =~ s/\.git$//;
+        # actual_repo should not be present "as is" in the config, because if
+        # it does, those permissions will override anything inherited from a
+        # wildcard that also happens to match, and it would be misleading to
+        # show that here
+        next if $reponames{$actual_repo};
         # it has to match the pattern being expanded
         next unless $actual_repo =~ /^$repo$/;
         # it also has to match one of the repo patterns in %repos (which we
