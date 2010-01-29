@@ -26,7 +26,7 @@ use warnings;
 # these are set by the "rc" file
 our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR);
 # and these are set by gitolite.pm
-our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT);
+our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT);
 our %repos;
 
 # the common setup module is in the same directory as this running program is
@@ -101,6 +101,7 @@ if ($cmd =~ $CUSTOM_COMMANDS) {
     }
     elsif ($verb eq 'expand') {
         # with a wildcard, you can "expand" it to see what repos actually match
+        die "$repo has invalid characters" unless "x$repo" =~ $REPOPATT_PATT;
         expand_wild($GL_CONF_COMPILED, $repo_base_abs, $repo, $user);
     } else {
         die "$cmd doesn't make sense to me\n";
