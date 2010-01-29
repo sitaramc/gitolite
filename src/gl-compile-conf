@@ -170,13 +170,13 @@ sub parse_conf_file
     my @repos;
     while (<$conf_fh>)
     {
+        # kill comments, but take care of "#" inside *simple* strings
+        s/^((".*?"|[^#"])*)#.*/$1/;
         # normalise whitespace; keeps later regexes very simple
         s/=/ = /;
         s/\s+/ /g;
         s/^ //;
         s/ $//;
-        # kill comments
-        s/\s*#.*//;
         # and blank lines
         next unless /\S/;
 

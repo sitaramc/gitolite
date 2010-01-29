@@ -304,7 +304,12 @@ copy_gl() {
 Let's see if we can use that instead of the default one..."
         < $tmpgli/.gitolite.rc     perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' | sort > $tmpgli/glrc.old
         < conf/example.gitolite.rc perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' | sort > $tmpgli/glrc.new
-        comm -13 $tmpgli/glrc.old $tmpgli/glrc.new > $tmpgli/glrc.comm13
+        # msysgit doesn't have "comm".  diff is not ideal for our purposes
+        # because we only care about differences in one direction, but we'll
+        # have to make do...
+        set +e
+        diff -u  $tmpgli/glrc.old $tmpgli/glrc.new | grep '^+.*\$' > $tmpgli/glrc.comm13
+        set -e
         if [[ ! -s $tmpgli/glrc.comm13 ]]
         then
             [[ $quiet == -q ]] || ${VISUAL:-${EDITOR:-vi}} $tmpgli/.gitolite.rc
@@ -526,7 +531,7 @@ v_upgrade_glrc="
 looks like you're upgrading, and there are some new rc variables that this
 version is expecting that your old rc file doesn't have.
 
-I'm going to run your editor with two filenames.  The first is the example
+I'm going to run your \\\$EDITOR with two filenames.  The first is the example
 file from this gitolite version.  It will have a block (code and comments) for
 each of the variables shown above with a '+' sign.
 
@@ -536,7 +541,7 @@ it.
 
 This is necessary; please dont skip this!
 
-[It's upto you to figure out how your editor handles 2 filename arguments,
+[It's upto you to figure out how your \\\$EDITOR handles 2 filename arguments,
 switch between them, copy lines, etc ;-)]
 "
 

@@ -15,6 +15,7 @@ In this document:
       * two levels of access rights checking
       * file/dir NAME based restrictions
       * error checking the config file
+      * including config lines from other files
       * delegating parts of the config file
       * easier to specify gitweb "description" and gitweb/daemon access
       * easier to link gitweb authorisation with gitolite
@@ -255,6 +256,10 @@ was denied.
 Gitolite "compiles" the config file first and keyword typos *are* caught so
 you know right away.
 
+#### including config lines from other files
+
+See the entry under "INCLUDE SOME OTHER FILE" in `conf/example.conf`.
+
 #### delegating parts of the config file
 
 You can now split up the config file and delegate the authority to specify
@@ -472,7 +477,7 @@ etc.  You'd just like a simple way to know what repos you have access to.
 Easy!  Just use ssh and try to log in as if you were attempting to get a
 shell:
 
-    $ ssh gitolite
+    $ ssh gitolite info
     PTY allocation request failed on channel 0
     hello sitaram, the gitolite version here is v0.6-17-g94ed189
     you have the following permissions:
