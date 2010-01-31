@@ -216,7 +216,7 @@ sub ext_cmd_rsync
     #   rsync --server -some.flags . some/path
 
     die "bad rsync command: $cmd"
-        unless $cmd =~ /^rsync --server( --sender)? -[\w.]+ \. (\S+)$/;
+        unless $cmd =~ /^rsync --server( --sender)? -[\w.]+(?: --(?:delete|partial))* \. (\S+)$/;
     my $perm = "W";
     $perm = "R" if $1;
     my $path = $2;
