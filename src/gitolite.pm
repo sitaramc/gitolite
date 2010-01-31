@@ -156,4 +156,82 @@ sub report_basic
         print "$perm\t$r\n\r" if $perm;
     }
 }
+
+# ----------------------------------------------------------------------------
+#       E X T E R N A L   C O M M A N D   H E L P E R S
+# ----------------------------------------------------------------------------
+
+sub ext_cmd
+{
+    my ($GL_CONF_COMPILED, $RSYNC_BASE, $cmd) = @_;
+
+    # check each external command we know about and call it if enabled
+    if ($RSYNC_BASE and $cmd =~ /^rsync /) {
+        &ext_cmd_rsync($GL_CONF_COMPILED, $RSYNC_BASE, $cmd);
+    } else {
+        die "bad command: $cmd\n";
+    }
+}
+
+# ----------------------------------------------------------------------------
+#       generic check access routine
+# ----------------------------------------------------------------------------
+
+sub check_access
+{
+    my ($GL_CONF_COMPILED, $repo, $path, $perm) = @_;
+    my $ref = "NAME/$path";
+
+    &parse_acl($GL_CONF_COMPILED);
+
+    # until I do some major refactoring (which will bloat the update hook a
+    # bit, sadly), this code duplicates stuff in the current update hook.
+
+    my @allowed_refs;
+    # we want specific perms to override @all, so they come first
+    push @allowed_refs, @ { $repos{$repo}{$ENV{GL_USER}} || [] };
+    push @allowed_refs, @ { $repos{$repo}{'@all'} || [] };
+
+    for my $ar (@allowed_refs) {
+        my $refex = (keys %$ar)[0];
+        next unless $ref =~ /^$refex/;
+        die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->{$refex} eq '-';
+        return if ($ar->{$refex} =~ /\Q$perm/);
+    }
+    die "$perm $ref $ENV{GL_REPO} $ENV{GL_USER} DENIED by fallthru\n";
+}
+
+# ----------------------------------------------------------------------------
+#       external command helper: rsync
+# ----------------------------------------------------------------------------
+
+sub ext_cmd_rsync
+{
+    my ($GL_CONF_COMPILED, $RSYNC_BASE, $cmd) = @_;
+
+    # test the command patterns; reject if they don't fit.  Rsync sends
+    # commands that looks like one of these to the server (the first one is
+    # for a read, the second for a write)
+    #   rsync --server --sender -some.flags . some/path
+    #   rsync --server -some.flags . some/path
+
+    die "bad rsync command: $cmd"
+        unless $cmd =~ /^rsync --server( --sender)? -[\w.]+ \. (\S+)$/;
+    my $perm = "W";
+    $perm = "R" if $1;
+    my $path = $2;
+    die "I dont like absolute paths in $cmd\n" if $path =~ /^\//;
+    die "I dont like '..' paths in $cmd\n" if $path =~ /\.\./;
+
+    # ok now check if we're permitted to execute a $perm action on $path
+    # (taken as a refex) using rsync.
+
+    &check_access($GL_CONF_COMPILED, 'EXTCMD/rsync', $path, $perm);
+        # that should "die" if there's a problem
+
+    wrap_chdir($RSYNC_BASE);
+    exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND};
+}
+
+
 1;

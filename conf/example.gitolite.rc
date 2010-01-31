@@ -107,6 +107,17 @@ $GIT_PATH="";
 # $SHELL_USERS = "alice bob";
 
 # --------------------------------------
+
+# EXTERNAL COMMAND HELPER -- RSYNC
+#
+# base path of all the files that are accessible via rsync.  Must be an
+# absolute path.  Leave it undefined or set to the empty string to disable the
+# rsync helper.
+$RSYNC_BASE = "";
+# $RSYNC_BASE = "/home/git/up-down";
+# $RSYNC_BASE = "/tmp/up-down";
+
+# --------------------------------------
 # per perl rules, this should be the last line in such a file:
 1;
 

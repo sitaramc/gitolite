@@ -24,7 +24,7 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 # these are set by the "rc" file
-our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR);
+our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE);
 # and these are set by gitolite.pm
 our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT);
 our %repos;
@@ -99,8 +99,9 @@ my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:\.git)?'/);
 unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS ) and $repo and $repo =~ $REPONAME_PATT ) {
     # if the user is allowed a shell, just run the command
     exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND} if $shell_allowed;
-    # otherwise, whine
-    die "bad command: $cmd\n";
+    # otherwise, call the external command helper
+    &ext_cmd($GL_CONF_COMPILED, $RSYNC_BASE, $cmd);
+    exit;   # in case the external command helper forgot :-)
 }
 
 # ----------------------------------------------------------------------------

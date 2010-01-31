@@ -355,6 +355,7 @@ my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE"
 wrap_chdir("$repo_base_abs");
 
 for my $repo (sort keys %repos) {
+    next if $repo =~ m(^EXTCMD/);   # these are not real repos
     unless (-d "$repo.git") {
         new_repo($repo, "$GL_ADMINDIR/src/hooks");
         # new_repo would have chdir'd us away; come back
