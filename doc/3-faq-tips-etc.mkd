@@ -499,12 +499,9 @@ that code path to better use :-)
 
 #### "exclude" (or "deny") rules
 
-***IMPORTANT CAVEAT: if you use deny rules, the order of the rules also makes
-a difference, where earlier it did not.  Please review your ruleset carefully
-or test it.  In particular, do not use `@all` in a deny rule -- it won't work
-as you might expect***.  Also, deny rules are only processed in the second
-level checks (see "two levels of access rights checking" above), which means
-they only apply to write operations.
+Here is an illustrative explanation of "deny" rules.  However, please be sure
+to read the "DENY/EXCLUDE RULES" section in `conf/example.conf` for important
+notes/caveats before using "deny" rules.
 
 Take a look at the following snippet, which *seems* to say that "bruce" can
 write versioned tags (anything containing `refs/tags/v[0-9]`), but the other
