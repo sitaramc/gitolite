@@ -48,6 +48,32 @@ sub log_it {
     close $log_fh or die "close log failed: $!\n";
 }
 
+# check one ref
+sub check_ref {
+
+    # normally, the $ref will be whatever ref the commit is trying to update
+    # (like refs/heads/master or whatever).  At least one of the refexes that
+    # pertain to this user must match this ref **and** the corresponding
+    # permission must also match the action (W or +) being attempted.  If none
+    # of them match, the access is denied.
+
+    # Notice that the function DIES!!!  Any future changes that require more
+    # work to be done *after* this, even on failure, can start using return
+    # codes etc., but for now we're happy to just die.
+
+    my ($allowed_refs, $repo, $ref, $perm) = @_;
+    for my $ar (@{$allowed_refs}) {
+        my $refex = (keys %$ar)[0];
+        # refex?  sure -- a regex to match a ref against :)
+        next unless $ref =~ /^$refex/;
+        die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->{$refex} eq '-';
+
+        # as far as *this* ref is concerned we're ok
+        return $refex if ($ar->{$refex} =~ /\Q$perm/);
+    }
+    die "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n";
+}
+
 # ----------------------------------------------------------------------------
 #       where is the rc file hiding?
 # ----------------------------------------------------------------------------

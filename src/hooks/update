@@ -85,40 +85,12 @@ if (exists $repos{$ENV{GL_REPO}}{NAME_LIMITS}) {
     push @refs, map { chomp; s/^/NAME\//; $_; } `git diff --name-only $oldtree $newtree`;
 }
 
-my $refex = '';
-
-# check one ref
-sub check_ref {
-
-    # normally, the $ref will be whatever ref the commit is trying to update
-    # (like refs/heads/master or whatever).  At least one of the refexes that
-    # pertain to this user must match this ref **and** the corresponding
-    # permission must also match the action (W or +) being attempted.  If none
-    # of them match, the access is denied.
-
-    # Notice that the function DIES!!!  Any future changes that require more
-    # work to be done *after* this, even on failure, can start using return
-    # codes etc., but for now we're happy to just die.
-
-    my $ref = shift;
-    for my $ar (@allowed_refs) {
-        $refex = (keys %$ar)[0];
-        # refex?  sure -- a regex to match a ref against :)
-        next unless $ref =~ /^$refex/;
-        die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->{$refex} eq '-';
-
-        # as far as *this* ref is concerned we're ok
-        return $refex if ($ar->{$refex} =~ /\Q$perm/);
-    }
-    die "$perm $ref $ENV{GL_REPO} $ENV{GL_USER} DENIED by fallthru\n";
-}
-
 # and in this version, we have many "refs" to check.  The one we print in the
 # log is the *first* one (which is a *real* ref, like refs/heads/master),
 # while all the rest (if they exist) are like NAME/something.  So we do the
 # first one separately to capture it, then run the rest (if any)
-my $log_refex = check_ref(shift @refs);
-check_ref($_) for @refs;
+my $log_refex = check_ref(\@allowed_refs, $ENV{GL_REPO}, (shift @refs), $perm);
+&check_ref               (\@allowed_refs, $ENV{GL_REPO}, $_           , $perm) for @refs;
 
 # if we returned at all, all the checks succeeded, so we log the action and exit 0
 
