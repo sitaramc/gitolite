@@ -42,6 +42,12 @@ sub wrap_open {
     return $fh;
 }
 
+sub log_it {
+    open my $log_fh, ">>", $ENV{GL_LOG} or die "open log failed: $!\n";
+    print $log_fh @_;
+    close $log_fh or die "close log failed: $!\n";
+}
+
 # ----------------------------------------------------------------------------
 #       where is the rc file hiding?
 # ----------------------------------------------------------------------------

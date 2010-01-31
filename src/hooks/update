@@ -33,6 +33,10 @@ die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
 # then "do" the compiled config file, whose name we now know
 die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
 
+# we've started to need some common subs in what used to be a small, cute,
+# little script that barely spanned a few lines :(
+require "$ENV{GL_BINDIR}/gitolite.pm";
+
 # ----------------------------------------------------------------------------
 #       start...
 # ----------------------------------------------------------------------------
@@ -118,11 +122,7 @@ check_ref($_) for @refs;
 
 # if we returned at all, all the checks succeeded, so we log the action and exit 0
 
-# logging note: if log failure isn't important enough to block pushes, get rid
-# of all the error checking
-open my $log_fh, ">>", $ENV{GL_LOG} or die "open log failed: $!\n";
-print $log_fh "$ENV{GL_TS}  $perm\t" .
+&log_it("$ENV{GL_TS}  $perm\t" .
     substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
-    "\t$ENV{GL_REPO}\t$ref\t$ENV{GL_USER}\t$log_refex\n";
-close $log_fh or die "close log failed: $!\n";
+    "\t$ENV{GL_REPO}\t$ref\t$ENV{GL_USER}\t$log_refex\n");
 exit 0;
