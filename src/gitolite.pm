@@ -158,17 +158,28 @@ sub report_basic
 }
 
 # ----------------------------------------------------------------------------
-#       E X T E R N A L   C O M M A N D   H E L P E R S
+#       S P E C I A L   C O M M A N D S
 # ----------------------------------------------------------------------------
 
-sub ext_cmd
+sub special_cmd
 {
-    my ($GL_CONF_COMPILED, $RSYNC_BASE, $cmd) = @_;
+    my ($GL_ADMINDIR, $GL_CONF_COMPILED, $RSYNC_BASE, $HTPASSWD_FILE) = @_;
 
-    # check each external command we know about and call it if enabled
-    if ($RSYNC_BASE and $cmd =~ /^rsync /) {
+    my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
+    my $user = $ENV{GL_USER};
+
+    # check each special command we know about and call it if enabled
+    if ($cmd eq 'info') {
+        &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
+        print "you also have shell access\n\r" if $shell_allowed;
+    } elsif ($HTPASSWD_FILE and $cmd eq 'htpasswd') {
+        &ext_cmd_htpasswd($HTPASSWD_FILE);
+    } elsif ($RSYNC_BASE and $cmd =~ /^rsync /) {
         &ext_cmd_rsync($GL_CONF_COMPILED, $RSYNC_BASE, $cmd);
     } else {
+        # if the user is allowed a shell, just run the command
+        exec $ENV{SHELL}, "-c", $cmd if $shell_allowed;
+
         die "bad command: $cmd\n";
     }
 }
@@ -234,5 +245,30 @@ sub ext_cmd_rsync
     exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND};
 }
 
+# ----------------------------------------------------------------------------
+#       external command helper: htpasswd
+# ----------------------------------------------------------------------------
+
+sub ext_cmd_htpasswd
+{
+    my $HTPASSWD_FILE = shift;
+
+    die "$HTPASSWD_FILE doesn't exist or is not writable\n" unless -w $HTPASSWD_FILE;
+    $|++;
+    print <<EOFhtp;
+Please type in your new htpasswd at the prompt.  You only have to type it once.
+
+NOTE THAT THE PASSWORD WILL BE ECHOED, so please make sure no one is
+shoulder-surfing, and make sure you clear your screen as well as scrollback
+history after you're done (or close your terminal instance).
+
+EOFhtp
+    print "new htpasswd:";
+
+    my $password = <>;
+    $password =~ s/[\n\r]*$//;
+    my $rc = system("htpasswd", "-b", $HTPASSWD_FILE, $ENV{GL_USER}, $password);
+    die "htpasswd command seems to have failed with $rc return code...\n" if $rc;
+}
 
 1;

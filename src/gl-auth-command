@@ -24,7 +24,7 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 # these are set by the "rc" file
-our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE);
+our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE);
 # and these are set by gitolite.pm
 our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT);
 our %repos;
@@ -97,30 +97,30 @@ unless ($ENV{SSH_ORIGINAL_COMMAND}) {
     $ENV{SSH_ORIGINAL_COMMAND} = 'info';
 }
 
-my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
-# people allowed to get a shell can get basic access info by asking nicely
-if ($cmd eq 'info') {
-    &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
-    print "you also have shell access\n\r" if $shell_allowed;
-    exit 1;
-}
+# ----------------------------------------------------------------------------
+#       non-git commands
+# ----------------------------------------------------------------------------
 
-# split into command and arguments; the pattern allows old style as well as
-# new style: "git-subcommand arg" or "git subcommand arg", just like gitosis
-# does, although I'm not sure how necessary that is
-#
-# keep in mind this is how git sends across the command:
-#   git-receive-pack 'reponame.git'
-# including the single quotes
+# if the command does NOT fit the pattern of a normal git command, send it off
+# somewhere else...
 
-my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:\.git)?'/);
+# side notes on detecting a normal git command: the pattern we check allows
+# old style as well as new style ("git-subcommand arg" or "git subcommand
+# arg"), just like gitosis does, although I'm not sure how necessary that is.
+# Currently, this is how git sends across the command (including the single
+# quotes):
+#       git-receive-pack 'reponame.git'
+
+my ($verb, $repo) = ($ENV{SSH_ORIGINAL_COMMAND} =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:\.git)?'/);
 unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS ) and $repo and $repo =~ $REPONAME_PATT ) {
-    # if the user is allowed a shell, just run the command
-    exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND} if $shell_allowed;
-    # otherwise, call the external command helper
-    &ext_cmd($GL_CONF_COMPILED, $RSYNC_BASE, $cmd);
-    exit;   # in case the external command helper forgot :-)
+    # ok, it's not a normal git command; call the special command helper
+    &special_cmd ($GL_ADMINDIR, $GL_CONF_COMPILED, $RSYNC_BASE, $HTPASSWD_FILE);
+    exit;
 }
+
+# ----------------------------------------------------------------------------
+#       the real git commands (git-receive-pack, etc...)
+# ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
 #       first level permissions check
