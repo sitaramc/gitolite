@@ -38,8 +38,7 @@ require "$bindir/gitolite.pm";
 &where_is_rc();
 die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
 
-# we need to pass GL_ADMINDIR and the bindir to the child hooks (well only the
-# admin repo's post-update hook but still...)
+# we need to pass GL_ADMINDIR and the bindir to the child hooks
 $ENV{GL_ADMINDIR} = $GL_ADMINDIR;
 $ENV{GL_BINDIR} = $bindir;
 
@@ -185,12 +184,7 @@ $GL_LOGT =~ s/%m/$m/g;
 $GL_LOGT =~ s/%d/$d/g;
 $ENV{GL_LOG} = $GL_LOGT;
 
-# if log failure isn't important enough to block access, get rid of all the
-# error checking
-open my $log_fh, ">>", $ENV{GL_LOG}
-    or die "open log failed: $!\n";
-print $log_fh "$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$user\n";
-close $log_fh or die "close log failed: $!\n";
+&log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$user\n");
 
 # ----------------------------------------------------------------------------
 #       over to git now
