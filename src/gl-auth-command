@@ -64,6 +64,24 @@ if ($ARGV[0] eq '-s') {
 my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 
 # ----------------------------------------------------------------------------
+#       logging, timestamp env vars
+# ----------------------------------------------------------------------------
+
+# timestamp
+my ($s, $min, $h, $d, $m, $y) = (localtime)[0..5];
+$y += 1900; $m++;               # usual adjustments
+for ($s, $min, $h, $d, $m) {
+    $_ = "0$_" if $_ < 10;
+}
+$ENV{GL_TS} = "$y-$m-$d.$h:$min:$s";
+
+# substitute template parameters and set the logfile name
+$GL_LOGT =~ s/%y/$y/g;
+$GL_LOGT =~ s/%m/$m/g;
+$GL_LOGT =~ s/%d/$d/g;
+$ENV{GL_LOG} = $GL_LOGT;
+
+# ----------------------------------------------------------------------------
 #       sanity checks on SSH_ORIGINAL_COMMAND
 # ----------------------------------------------------------------------------
 
@@ -108,6 +126,8 @@ unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS ) and $repo an
 #       first level permissions check
 # ----------------------------------------------------------------------------
 
+$ENV{GL_REPO}=$repo;
+
 # parse the compiled acl; goes into %repos (global)
 &parse_acl($GL_CONF_COMPILED);
 
@@ -129,31 +149,10 @@ if ( not -d "$repo_base_abs/$repo.git" ) {
 }
 
 # ----------------------------------------------------------------------------
-#       logging, timestamp.  also setup env vars for later
-# ----------------------------------------------------------------------------
-
-# reponame
-$ENV{GL_REPO}=$repo;
-
-# timestamp
-my ($s, $min, $h, $d, $m, $y) = (localtime)[0..5];
-$y += 1900; $m++;               # usual adjustments
-for ($s, $min, $h, $d, $m) {
-    $_ = "0$_" if $_ < 10;
-}
-$ENV{GL_TS} = "$y-$m-$d.$h:$min:$s";
-
-# substitute template parameters and set the logfile name 
-$GL_LOGT =~ s/%y/$y/g;
-$GL_LOGT =~ s/%m/$m/g;
-$GL_LOGT =~ s/%d/$d/g;
-$ENV{GL_LOG} = $GL_LOGT;
-
-&log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$user\n");
-
-# ----------------------------------------------------------------------------
 #       over to git now
 # ----------------------------------------------------------------------------
+
+&log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$user\n");
 
 $repo = "'$REPO_BASE/$repo.git'";
 exec("git", "shell", "-c", "$verb $repo");
