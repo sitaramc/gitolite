@@ -67,16 +67,16 @@ my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 #       sanity checks on SSH_ORIGINAL_COMMAND
 # ----------------------------------------------------------------------------
 
-# print basic access info if SSH_ORIGINAL_COMMAND does not exist
+# no SSH_ORIGINAL_COMMAND given...
 unless ($ENV{SSH_ORIGINAL_COMMAND}) {
-    # unless the user is allowed to use a shell
+    # if the user is allowed to use a shell, give him one
     if ($shell_allowed) {
         my $shell = $ENV{SHELL};
         $shell =~ s/.*\//-/;    # change "/bin/bash" to "-bash"
         exec { $ENV{SHELL} } $shell;
     }
-    &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
-    exit 1;
+    # otherwise, pretend he typed in "info" and carry on...
+    $ENV{SSH_ORIGINAL_COMMAND} = 'info';
 }
 
 my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
