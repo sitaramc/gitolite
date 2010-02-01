@@ -218,8 +218,8 @@ Note that at this point no git program has entered the picture, and we have no
 way of knowing what **ref** (branch, tag, etc) he is trying to update, even if
 it is a "write" operation.
 
-For a "read" operation to pass this check, the username (or `@all`) must be
-mentioned on some line in the config for this repo.
+For a "read" operation to pass this check, the username (or `@all`) must have
+read permission (i.e., R, RW, or RW+) on at least one branch of the repo.
 
 For a "write" operation, there is an additional restriction: lines specifying
 only `R` (read access) don't count.  *The user must have write access to
@@ -363,7 +363,7 @@ already done and we just use it!
     $export_auth_hook = sub {
         my $reponame = shift;
         # gitweb passes us the full repo path; so we strip the beginning...
-        $reponame =~ s/\Q$projectroot//;
+        $reponame =~ s/\Q$projectroot\E\/?//;
         # ...and the end, to get the repo name as it is specified in gitolite conf
         $reponame =~ s/\.git$//;
 
@@ -502,7 +502,9 @@ that code path to better use :-)
 ***IMPORTANT CAVEAT: if you use deny rules, the order of the rules also makes
 a difference, where earlier it did not.  Please review your ruleset carefully
 or test it.  In particular, do not use `@all` in a deny rule -- it won't work
-as you might expect***.
+as you might expect***.  Also, deny rules are only processed in the second
+level checks (see "two levels of access rights checking" above), which means
+they only apply to write operations.
 
 Take a look at the following snippet, which *seems* to say that "bruce" can
 write versioned tags (anything containing `refs/tags/v[0-9]`), but the other
