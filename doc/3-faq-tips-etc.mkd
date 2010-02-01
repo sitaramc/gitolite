@@ -13,7 +13,9 @@ In this document:
   * differences from gitosis
       * simpler syntax
       * two levels of access rights checking
+      * file/dir NAME based restrictions
       * error checking the config file
+      * including config lines from other files
       * delegating parts of the config file
       * easier to specify gitweb "description" and gitweb/daemon access
       * easier to link gitweb authorisation with gitolite
@@ -215,8 +217,8 @@ Note that at this point no git program has entered the picture, and we have no
 way of knowing what **ref** (branch, tag, etc) he is trying to update, even if
 it is a "write" operation.
 
-For a "read" operation to pass this check, the username (or `@all`) must be
-mentioned on some line in the config for this repo.
+For a "read" operation to pass this check, the username (or `@all`) must have
+read permission (i.e., R, RW, or RW+) on at least one branch of the repo.
 
 For a "write" operation, there is an additional restriction: lines specifying
 only `R` (read access) don't count.  *The user must have write access to
@@ -235,6 +237,15 @@ any of the refexes match, the push succeeds.  If none of them match, it fails.
 Gitolite also allows "exclude" or "deny" rules.  See later in this document
 for details.
 
+#### file/dir NAME based restrictions
+
+In addition to branch-name based restrictions, gitolite also allows you to
+restrict what files or directories can be involved in changes being pushed.
+This basically uses `git diff --name-only` to obtain the list of files being
+changed, treating each filename as a "ref" to be matched.
+
+Please see `conf/example.conf` for syntax and examples.
+
 #### error checking the config file
 
 gitosis does not do any.  I just found out that if you mis-spell `members` as
@@ -243,6 +254,10 @@ was denied.
 
 Gitolite "compiles" the config file first and keyword typos *are* caught so
 you know right away.
+
+#### including config lines from other files
+
+See the entry under "INCLUDE SOME OTHER FILE" in `conf/example.conf`.
 
 #### delegating parts of the config file
 
@@ -461,7 +476,7 @@ etc.  You'd just like a simple way to know what repos you have access to.
 Easy!  Just use ssh and try to log in as if you were attempting to get a
 shell:
 
-    $ ssh gitolite
+    $ ssh gitolite info
     PTY allocation request failed on channel 0
     hello sitaram, the gitolite version here is v0.6-17-g94ed189
     you have the following permissions:
@@ -486,7 +501,9 @@ that code path to better use :-)
 ***IMPORTANT CAVEAT: if you use deny rules, the order of the rules also makes
 a difference, where earlier it did not.  Please review your ruleset carefully
 or test it.  In particular, do not use `@all` in a deny rule -- it won't work
-as you might expect***.
+as you might expect***.  Also, deny rules are only processed in the second
+level checks (see "two levels of access rights checking" above), which means
+they only apply to write operations.
 
 Take a look at the following snippet, which *seems* to say that "bruce" can
 write versioned tags (anything containing `refs/tags/v[0-9]`), but the other

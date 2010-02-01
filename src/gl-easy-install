@@ -302,12 +302,21 @@ copy_gl() {
         prompt "    ...trying to reuse existing rc" \
         "Oh hey... you already had a '.gitolite.rc' file on the server.
 Let's see if we can use that instead of the default one..."
-        sort < $tmpgli/.gitolite.rc     | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > $tmpgli/glrc.old
-        sort < conf/example.gitolite.rc | perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' > $tmpgli/glrc.new
-        if diff -u $tmpgli/glrc.old $tmpgli/glrc.new
+        < $tmpgli/.gitolite.rc     perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' | sort > $tmpgli/glrc.old
+        < conf/example.gitolite.rc perl -ne 'print "$1\n" if /^\s*(\$\w+) *=/' | sort > $tmpgli/glrc.new
+        # msysgit doesn't have "comm".  diff is not ideal for our purposes
+        # because we only care about differences in one direction, but we'll
+        # have to make do...
+        set +e
+        diff -u  $tmpgli/glrc.old $tmpgli/glrc.new | grep '^+.*\$' > $tmpgli/glrc.comm13
+        set -e
+        if [[ ! -s $tmpgli/glrc.comm13 ]]
         then
             [[ $quiet == -q ]] || ${VISUAL:-${EDITOR:-vi}} $tmpgli/.gitolite.rc
         else
+            echo new variables found in rc file:
+            cat $tmpgli/glrc.comm13
+            echo
             # MANUAL: if you're upgrading, read the instructions below and
             # manually make sure your final ~/.gitolite.rc has both your existing
             # customisations as well as any new variables that the new version of
@@ -339,6 +348,8 @@ run_install() {
     if ssh -p $port $user@$host cat $GL_ADMINDIR/conf/gitolite.conf &> /dev/null
     then
         upgrade=1
+        ssh -p $port $user@$host cat $GL_ADMINDIR/conf/gitolite.conf 2> /dev/null | grep '@SHELL' &&
+            prompt "" "$v_at_shell_bwi"
         [[ -n $admin_name ]] && echo -e "\n    *** WARNING ***: looks like an upgrade... ignoring argument '$admin_name'"
     else
         [[ -z $admin_name ]] && die "    *** ERROR ***: doesn't look like an upgrade, so I need a name for the admin"
@@ -361,15 +372,12 @@ run_install() {
 # MANUAL: setup the initial config file.  Edit $GL_ADMINDIR/conf/gitolite.conf
 # and add at least the following lines to it:
 
-#   @SHELL = sitaram
 #   repo gitolite-admin
 #       RW+                 = sitaram
 
 initial_conf_key() {
     echo "#gitolite conf
 # please see conf/example.conf for details on syntax and features
-
-@SHELL                  = $admin_name
 
 repo gitolite-admin
     RW+                 = $admin_name
@@ -401,7 +409,6 @@ setup_pta() {
     # Substitute $GL_ADMINDIR and $REPO_BASE appropriately.  Note there is no
     # space around the "=" in the second and third lines.
 
-    git ls-remote gitolite:gitolite-admin
     echo "cd $REPO_BASE/gitolite-admin.git
 GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
 GIT_WORK_TREE=$GL_ADMINDIR git diff --cached --quiet || GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
@@ -524,7 +531,7 @@ v_upgrade_glrc="
 looks like you're upgrading, and there are some new rc variables that this
 version is expecting that your old rc file doesn't have.
 
-I'm going to run your editor with two filenames.  The first is the example
+I'm going to run your \\\$EDITOR with two filenames.  The first is the example
 file from this gitolite version.  It will have a block (code and comments) for
 each of the variables shown above with a '+' sign.
 
@@ -534,7 +541,7 @@ it.
 
 This is necessary; please dont skip this!
 
-[It's upto you to figure out how your editor handles 2 filename arguments,
+[It's upto you to figure out how your \\\$EDITOR handles 2 filename arguments,
 switch between them, copy lines, etc ;-)]
 "
 
@@ -542,6 +549,17 @@ v_ignore_stuff="
 ignore any 'please edit this file' or 'run this command' type lines in the
 next set of command outputs coming up.  They're only relevant for a manual
 install, not this one...
+"
+
+v_at_shell_bwi="
+you are using the @SHELL feature in your gitolite config.  This feature has
+now changed in a backward incompatible way; see doc/6-ssh-troubleshooting.mkd
+for information on migrating this to the new syntax.
+
+DO NOT hit enter unless you have understood that information and properly
+migrated your setup, or you are sure you have shell access to the server
+through some other means than the $admin_name key.
+
 "
 
 v_done="

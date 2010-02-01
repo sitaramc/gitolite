@@ -1,0 +1,100 @@
+#!/usr/bin/perl -w
+
+use strict;
+our (%users, %linenos);
+
+&usage unless $ARGV[0] and -f $ARGV[0];
+my @authlines = &filelines($ARGV[0]);
+my $lineno = 0;
+for (@authlines)
+{
+    $lineno++;
+    if (/^# gitolite start/ .. /^# gitolite end/) {
+        warn "line $lineno: non-gitolite key found in gitolite section" if /ssh-rsa|ssh-dss/ and not /command=.*gl-auth-command/;
+    } else {
+        warn "line $lineno: gitolite key found outside gitolite section" if /command=.*gl-auth-command/;
+    }
+    next if /\# gitolite (start|end)/;
+    die "line $lineno: unrecognised line\n" unless /^(?:command=".*gl-auth-command (\S+?)"\S+ )?(?:ssh-rsa|ssh-dss) (\S+)/;
+    my ($user, $key) = ($1 || '', $2);
+    if ($linenos{$key}) {
+        warn "authkeys file line $lineno is repeat of line $linenos{$key}, will be ignored by server sshd\n";
+        next;
+    }
+    $linenos{$key} = $lineno;
+    $users{$key}   = ($user ? "maps to gitolite user $user" : "gets you a command line");
+}
+
+print "\n";
+
+# all *.pub in current dir should be exactly one line, starting with ssh-rsa
+# or ssh-dss
+
+my @pubkeys = glob("*.pub");
+die "no *.pub files here\n" unless @pubkeys;
+for my $pub (@pubkeys) {
+    my @lines = &filelines($pub);
+    die "$pub has more than one line\n" if @lines > 1;
+    die "$pub does not start with ssh-rsa or ssh-dss\n" unless $lines[0] =~ /^(?:ssh-rsa|ssh-dss) (\S+)/;
+    my $key = $1;
+    if ($users{$key}) {
+        print "$pub $users{$key}\n";
+    } else {
+        print "$pub has NO ACCESS to the server\n";
+    }
+}
+
+print <<INFO;
+
+Git operations using a pubkey that gets you a command line will BYPASS
+gitolite completely.  This means:
+
+  - using "git clone git\@server:reponame" will get you the "does not appear to
+    be a git repository" message
+  - using "git clone git\@server:repositories/reponame" [assuming default value
+    of \$REPO_BASE) will work but subsequent push will fail
+
+----
+
+Now you know what pubkey gets you what access.
+
+To see what key is *actually* being used when you run your commands, try "ssh
+-v git\@server" or "ssh -v gitolite", and look for a line saying "Offering
+public key".  If there are more than one such lines, the last one is what
+counts.
+
+If at any time you are asked for a password (password, not passphrase; see
+doc/6 for the difference, if needed), then none of this applies anyway.
+
+INFO
+
+sub filelines
+{
+    my $f;
+    my $fn = shift;
+    open ($f, "<", $fn) or die "open $fn failed: $!\n";
+    return <$f>;
+}
+
+sub usage
+{
+    print STDERR <<EOF;
+
+On your *client*:
+
+  - copy the server's ~/.ssh/authorized_keys file to your *client*'s
+    /tmp/foo (maybe using "scp" or whatever)
+
+  - cd to the ~/.ssh directory (which contains all the pub keys this client
+    can use)
+
+  - run "$0 /tmp/foo"
+
+Note: people who have so many keypairs they keep them in *sub*-directories of
+~/.ssh [you know who you are ;-)] can figure it out themselves; you clearly
+know enough about ssh not to need my help!
+
+EOF
+
+exit 1;
+}
