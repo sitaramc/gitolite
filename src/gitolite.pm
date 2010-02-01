@@ -230,6 +230,7 @@ sub ext_cmd_rsync
         # that should "die" if there's a problem
 
     wrap_chdir($RSYNC_BASE);
+    &log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$ENV{USER}\n");
     exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND};
 }
 
