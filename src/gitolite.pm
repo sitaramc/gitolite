@@ -261,7 +261,6 @@ sub expand_wild
 
     # get the list of repo patterns
     &parse_acl($GL_CONF_COMPILED, "", "NOBODY", "NOBODY", "NOBODY");
-    my @repopatts = grep { $_ !~ $REPONAME_PATT } sort keys %repos;
     my %reponames = map { $_ => 1 } grep { $_ =~ $REPONAME_PATT } sort keys %repos;
 
     # display matching repos (from *all* the repos in the system) that $user
@@ -279,26 +278,15 @@ sub expand_wild
         next if $reponames{$actual_repo};
         # it has to match the pattern being expanded
         next unless $actual_repo =~ /^$repo$/;
-        # it also has to match one of the repo patterns in %repos (which we
-        # already snarfed earlier)
-        my @patts = grep { $actual_repo =~ /^$_$/ } @repopatts;
-        # should be exactly one match
-        # (see reasoning in the "other issues" section of doc/4)
-        if (@patts != 1) {
-            # though if it's more than one we print an additional message
-            print "ignoring $actual_repo; has multiple matches\n(@patts)\n" if @patts > 1;
-            next;
-        }
 
         # find the creater and subsitute in repos
         my ($creater, $read, $write) = &repo_rights($repo_base_abs, $actual_repo, $user);
         # get access list with this
-        &parse_acl($GL_CONF_COMPILED, "", $creater, $read || "NOBODY", $write || "NOBODY");
+        &parse_acl($GL_CONF_COMPILED, $actual_repo, $creater, $read || "NOBODY", $write || "NOBODY");
 
-        my $perm = "";
-        $perm .= ($repos{$patts[0]}{C}{'@all'} or $repos{$patts[0]}{C}{$user}) ? " C" : "  ";
-        $perm .= ($repos{$patts[0]}{R}{'@all'} or $repos{$patts[0]}{R}{$user}) ? " R" : "  ";
-        $perm .= ($repos{$patts[0]}{W}{'@all'} or $repos{$patts[0]}{W}{$user}) ? " W" : "  ";
+        my $perm = "  ";
+        $perm .= ($repos{$actual_repo}{R}{'@all'} or $repos{$actual_repo}{R}{$user}) ? " R" : "  ";
+        $perm .= ($repos{$actual_repo}{W}{'@all'} or $repos{$actual_repo}{W}{$user}) ? " W" : "  ";
         next if $perm eq "      ";
         print "$perm\t($creater)\t$actual_repo\n";
     }
