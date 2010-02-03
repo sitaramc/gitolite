@@ -123,7 +123,10 @@ sub new_repo
         # erm, note that's "and die" not "or die" as is normal in perl
     wrap_chdir("$repo.git");
     system("git --bare init >&2");
-    system("echo $creater > gl-creater") if $creater;
+    if ($creater) {
+        system("echo $creater > gl-creater");
+        system("git", "config", "gitweb.owner", $creater);
+    }
     # propagate our own, plus any local admin-defined, hooks
     system("cp $hooks_dir/* hooks/");
     chmod 0755, "hooks/update";
