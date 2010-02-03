@@ -284,7 +284,6 @@ sub parse_conf_file
             die "$WARN $fragment attempting to set description for $repo\n" if
                 $fragment ne 'master' and $fragment ne $repo and ($groups{"\@$fragment"}{$repo} || '') ne 'master';
             $desc{"$repo.git"} = $desc;
-            $owner =~ s/ /+/g if $owner;    # gitweb/INSTALL wants more, but meh...!
             $owner{"$repo.git"} = $owner || '';
         }
         else
@@ -415,16 +414,32 @@ for my $repo (sort keys %repos) {
         $projlist{"$repo.git"} = 1;
         # add the description file; no messages to user or error checking :)
         $desc{"$repo.git"} and open(DESC, ">", $desc_file) and print DESC $desc{"$repo.git"} . "\n" and close DESC;
+        if ($owner{"$repo.git"}) {
+            # set the repository owner
+            system("git", "--git-dir=$repo.git", "config", "gitweb.owner", $owner{"$repo.git"});
+        } else {
+            # remove the repository owner setting
+            system("git --git-dir=$repo.git config --unset-all gitweb.owner 2>/dev/null");
+        }
     } else {
         # delete the description file; no messages to user or error checking :)
         unlink $desc_file;
+        # remove the repository owner setting
+        system("git --git-dir=$repo.git config --unset-all gitweb.owner 2>/dev/null");
+    }
+
+    # unless there are other gitweb.* keys set, remove the section to keep the
+    # config file clean
+    my $keys = `git --git-dir=$repo.git config --get-regexp '^gitweb\\.' 2>/dev/null`;
+    if (length($keys) == 0) {
+        system("git --git-dir=$repo.git config --remove-section gitweb 2>/dev/null");
     }
 }
 
 # update the project list
 my $projlist_fh = wrap_open( ">", $PROJECTS_LIST);
 for my $proj (sort keys %projlist) {
-    print $projlist_fh "$proj" . ( $owner{$proj} ? " $owner{$proj}" : "" ) . "\n";
+    print $projlist_fh "$proj\n";
 }
 close $projlist_fh;
 
