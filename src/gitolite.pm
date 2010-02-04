@@ -1,3 +1,4 @@
+use strict;
 # this file is commonly used using "require".  It is not required to use "use"
 # (because it doesn't live in a different package)
 
@@ -17,16 +18,19 @@
 #       common definitions
 # ----------------------------------------------------------------------------
 
-$ABRT = "\n\t\t***** ABORTING *****\n       ";
-$WARN = "\n\t\t***** WARNING *****\n       ";
+our $ABRT = "\n\t\t***** ABORTING *****\n       ";
+our $WARN = "\n\t\t***** WARNING *****\n       ";
 
 # commands we're expecting
-$R_COMMANDS=qr/^(git[ -]upload-pack|git[ -]upload-archive)$/;
-$W_COMMANDS=qr/^git[ -]receive-pack$/;
+our $R_COMMANDS=qr/^(git[ -]upload-pack|git[ -]upload-archive)$/;
+our $W_COMMANDS=qr/^git[ -]receive-pack$/;
 
 # note that REPONAME_PATT allows "/", while USERNAME_PATT allows "@"
-$REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._/+-]*$);    # very simple pattern
-$USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);   # very simple pattern
+our $REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._/+-]*$);    # very simple pattern
+our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);   # very simple pattern
+
+our $REPO_UMASK;
+our %repos;
 
 # ----------------------------------------------------------------------------
 #       convenience subs
@@ -163,7 +167,7 @@ sub report_basic
 
 sub special_cmd
 {
-    my ($GL_ADMINDIR, $GL_CONF_COMPILED, $RSYNC_BASE, $HTPASSWD_FILE) = @_;
+    my ($GL_ADMINDIR, $GL_CONF_COMPILED, $shell_allowed, $RSYNC_BASE, $HTPASSWD_FILE) = @_;
 
     my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
     my $user = $ENV{GL_USER};
