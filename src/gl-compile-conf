@@ -502,5 +502,6 @@ close $newkeys_fh or die "$ABRT close newkeys failed: $!\n";
 
 # all done; overwrite the file (use cat to avoid perm changes)
 system("cat $ENV{HOME}/.ssh/authorized_keys > $ENV{HOME}/.ssh/old_authkeys");
-system("cat $ENV{HOME}/.ssh/new_authkeys > $ENV{HOME}/.ssh/authorized_keys");
+system("cat $ENV{HOME}/.ssh/new_authkeys > $ENV{HOME}/.ssh/authorized_keys")
+    and die "couldn't write authkeys file\n";
 system("rm  $ENV{HOME}/.ssh/new_authkeys");
