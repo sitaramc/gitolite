@@ -99,6 +99,11 @@ or in Unix, perl, shell, etc.)...  well I can't afford 1000 USD rewards like
 djb, so you'll have to settle for 1000 INR (Indian Rupees) as a "token" prize
 :-)
 
+Update 2010-01-31: this security promise does not apply if you enable any of
+the external command helpers (like rsync).  It's probably quite secure, but I
+just haven't thought about it enough to be able to make such promises, like I
+can for the rest of "master".
+
 ----
 
 ### contact and license

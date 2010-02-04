@@ -27,6 +27,7 @@ In this document:
       * "personal" branches
       * custom hooks and custom git config
       * repos named with wildcards
+      * access control for external commands
   * design choices
       * keeping the parser and the access control separate
 
@@ -331,9 +332,25 @@ This requires that:
   * the HTTP auth should use the same username (like "sitaram") as used in the
     gitolite config (for the corresponding user)
 
-Once that is done, it's easy.  Gitweb allows you to specify a subroutine to
-decide on access.  We use that feature and tie it to gitolite.  Sample code
-(untested, munged from something I saw [here][leho]) is given below.
+Normally a superuser sets up passwords for users using the "htpasswd" command,
+but this is an administrative chore.
+
+Robin Smidsrød had the *great* idea that, since each user already has pubkey
+access to `git@server`, this gives us a very neat way of using gitolite to let
+the users *manage their own HTTP passwords*.  Here's how:
+
+  * setup apache so that the htaccess file it looks for is owned by the "git"
+    user
+  * in the `~/.gitolite.rc` file, look for the variable `$HTPASSWD_FILE` and
+    point it to this file
+  * tell your users to type in `ssh git@server htpasswd` to set or change
+    their HTTP passwords
+
+Here's the rest of how it hangs together.
+
+Gitweb allows you to specify a subroutine to decide on access.  We use that
+feature and tie it to gitolite.  Sample code (untested by me, but others do
+use it, munged from something I saw [here][leho]) is given below.
 
 Note the **utter simplicity** of the actual check (just 1 line!).  This is an
 unexpected piece of luck coming from the decision to keep the config parse
@@ -349,7 +366,7 @@ already done and we just use it!
     $projectroot = '/home/git/repositories/';
     my $gl_conf_compiled = '/home/git/.gitolite/conf/gitolite.conf-compiled.pm';
 
-    # I assume this gives us the HTTP auth username
+    # I am told this gives us the HTTP auth username
     my $username = $cgi->remote_user;
 
     # ----------
@@ -359,10 +376,11 @@ already done and we just use it!
     die "parse $gl_conf_compiled failed: " . ($! or $@) unless do $gl_conf_compiled;
 
     # this is gitweb's mechanism; it calls whatever sub is pointed at by this
-    # variable to decide access yes/no
+    # variable to decide access yes/no.  Gitweb calls it with one argument
+    # containing the full path of the repo being accessed
     $export_auth_hook = sub {
         my $reponame = shift;
-        # gitweb passes us the full repo path; so we strip the beginning...
+        # take the full path provided, strip the beginning...
         $reponame =~ s/\Q$projectroot\E\/?//;
         # ...and the end, to get the repo name as it is specified in gitolite conf
         $reponame =~ s/\.git$//;
@@ -499,12 +517,9 @@ that code path to better use :-)
 
 #### "exclude" (or "deny") rules
 
-***IMPORTANT CAVEAT: if you use deny rules, the order of the rules also makes
-a difference, where earlier it did not.  Please review your ruleset carefully
-or test it.  In particular, do not use `@all` in a deny rule -- it won't work
-as you might expect***.  Also, deny rules are only processed in the second
-level checks (see "two levels of access rights checking" above), which means
-they only apply to write operations.
+Here is an illustrative explanation of "deny" rules.  However, please be sure
+to read the "DENY/EXCLUDE RULES" section in `conf/example.conf` for important
+notes/caveats before using "deny" rules.
 
 Take a look at the following snippet, which *seems* to say that "bruce" can
 write versioned tags (anything containing `refs/tags/v[0-9]`), but the other
@@ -613,6 +628,20 @@ per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
 
 **This feature only exists in the "wildrepos" branch!**  Please see
 `doc/4-wildcard-repositories.mkd` for all the details.
+
+#### access control for external commands
+
+Gitolite now has a mechanism for allowing access control for arbitrary
+external commands, as long as they are invoked via ssh and present a
+server-side command that contains enough information to make an access control
+decision.  The first (and only, so far) such command implemented is rsync.
+
+Note that this is incompatible with giving people shell access as described in
+`doc/6-ssh-troubleshooting.mkd` -- people who have shell access are not
+subject to this mechanism (it wouldn't make sense to try and control someone
+who has shell access anyway).
+
+Please see the config files (both of them) for examples and usage.
 
 ### design choices
 

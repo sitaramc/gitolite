@@ -24,7 +24,7 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 # these are set by the "rc" file
-our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR);
+our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE);
 # and these are set by gitolite.pm
 our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT);
 our %repos;
@@ -48,6 +48,8 @@ $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 # set the umask before creating any files
 umask($REPO_UMASK);
 
+my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
+
 # ----------------------------------------------------------------------------
 #       start...
 # ----------------------------------------------------------------------------
@@ -64,23 +66,38 @@ if ($ARGV[0] eq '-s') {
 my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 
 # ----------------------------------------------------------------------------
+#       logging, timestamp env vars
+# ----------------------------------------------------------------------------
+
+# timestamp
+my ($s, $min, $h, $d, $m, $y) = (localtime)[0..5];
+$y += 1900; $m++;               # usual adjustments
+for ($s, $min, $h, $d, $m) {
+    $_ = "0$_" if $_ < 10;
+}
+$ENV{GL_TS} = "$y-$m-$d.$h:$min:$s";
+
+# substitute template parameters and set the logfile name
+$GL_LOGT =~ s/%y/$y/g;
+$GL_LOGT =~ s/%m/$m/g;
+$GL_LOGT =~ s/%d/$d/g;
+$ENV{GL_LOG} = $GL_LOGT;
+
+# ----------------------------------------------------------------------------
 #       sanity checks on SSH_ORIGINAL_COMMAND
 # ----------------------------------------------------------------------------
 
-# print basic access info if SSH_ORIGINAL_COMMAND does not exist
+# no SSH_ORIGINAL_COMMAND given...
 unless ($ENV{SSH_ORIGINAL_COMMAND}) {
-    # unless the user is allowed to use a shell
+    # if the user is allowed to use a shell, give him one
     if ($shell_allowed) {
         my $shell = $ENV{SHELL};
         $shell =~ s/.*\//-/;    # change "/bin/bash" to "-bash"
         exec { $ENV{SHELL} } $shell;
     }
-    &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
-    exit 1;
+    # otherwise, pretend he typed in "info" and carry on...
+    $ENV{SSH_ORIGINAL_COMMAND} = 'info';
 }
-
-my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
-my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
 
 # ----------------------------------------------------------------------------
 #       get and set perms for actual repo created by wildcard-autoviv
@@ -92,7 +109,8 @@ my $CUSTOM_COMMANDS=qr/^\s*(expand|getperms|setperms)\s/;
 # back; they all blithely take advantage of the fact that processing custom
 # commands is sort of a dead end for normal (git) processing
 
-if ($cmd =~ $CUSTOM_COMMANDS) {
+if ($ENV{SSH_ORIGINAL_COMMAND} =~ $CUSTOM_COMMANDS) {
+    my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
     my ($verb, $repo) = ($cmd =~ /^\s*(\S+)\s+\/?(.*?)(?:.git)?$/);
     if ($repo =~ $REPONAME_PATT and $verb =~ /getperms|setperms/) {
         # with an actual reponame, you can "getperms" or "setperms"
@@ -108,34 +126,35 @@ if ($cmd =~ $CUSTOM_COMMANDS) {
     exit 0;
 }
 
-# people allowed to get a shell can get basic access info by asking nicely
-if ($cmd eq 'info') {
-    &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
-    print "you also have shell access\n\r" if $shell_allowed;
-    exit 0;
-}
-
 # ----------------------------------------------------------------------------
-#       normal (git) processing
+#       non-git commands
 # ----------------------------------------------------------------------------
 
-# split into command and arguments; the pattern allows old style as well as
-# new style: "git-subcommand arg" or "git subcommand arg", just like gitosis
-# does, although I'm not sure how necessary that is
-#
-# keep in mind this is how git sends across the command:
-#   git-receive-pack 'reponame.git'
-# including the single quotes
+# if the command does NOT fit the pattern of a normal git command, send it off
+# somewhere else...
 
-my ($verb, $repo) = ($cmd =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:\.git)?'/);
+# side notes on detecting a normal git command: the pattern we check allows
+# old style as well as new style ("git-subcommand arg" or "git subcommand
+# arg"), just like gitosis does, although I'm not sure how necessary that is.
+# Currently, this is how git sends across the command (including the single
+# quotes):
+#       git-receive-pack 'reponame.git'
+
+my ($verb, $repo) = ($ENV{SSH_ORIGINAL_COMMAND} =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:\.git)?'/);
 unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS ) and $repo and $repo =~ $REPONAME_PATT ) {
-    # if the user is allowed a shell, just run the command
-    exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND} if $shell_allowed;
-    # otherwise, whine
-    die "bad command: $cmd\n";
+    # ok, it's not a normal git command; call the special command helper
+    &special_cmd ($GL_ADMINDIR, $GL_CONF_COMPILED, $RSYNC_BASE, $HTPASSWD_FILE);
+    exit;
 }
 die "$repo ends with a slash; I don't like that\n" if $repo =~ /\/$/;
 die "$repo has two consecutive periods; I don't like that\n" if $repo =~ /\.\./;
+
+# reponame
+$ENV{GL_REPO}=$repo;
+
+# ----------------------------------------------------------------------------
+#       the real git commands (git-receive-pack, etc...)
+# ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
 #       first level permissions check
@@ -164,31 +183,10 @@ die "$perm access for $repo DENIED to $user\n"
         or $repos{$repo}{$perm}{'@all'};
 
 # ----------------------------------------------------------------------------
-#       logging, timestamp.  also setup env vars for later
-# ----------------------------------------------------------------------------
-
-# reponame
-$ENV{GL_REPO}=$repo;
-
-# timestamp
-my ($s, $min, $h, $d, $m, $y) = (localtime)[0..5];
-$y += 1900; $m++;               # usual adjustments
-for ($s, $min, $h, $d, $m) {
-    $_ = "0$_" if $_ < 10;
-}
-$ENV{GL_TS} = "$y-$m-$d.$h:$min:$s";
-
-# substitute template parameters and set the logfile name
-$GL_LOGT =~ s/%y/$y/g;
-$GL_LOGT =~ s/%m/$m/g;
-$GL_LOGT =~ s/%d/$d/g;
-$ENV{GL_LOG} = $GL_LOGT;
-
-&log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$user\n");
-
-# ----------------------------------------------------------------------------
 #       over to git now
 # ----------------------------------------------------------------------------
+
+&log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$user\n");
 
 $repo = "'$REPO_BASE/$repo.git'";
 exec("git", "shell", "-c", "$verb $repo");
