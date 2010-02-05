@@ -1,3 +1,4 @@
+use strict;
 # this file is commonly used using "require".  It is not required to use "use"
 # (because it doesn't live in a different package)
 
@@ -17,20 +18,23 @@
 #       common definitions
 # ----------------------------------------------------------------------------
 
-$ABRT = "\n\t\t***** ABORTING *****\n       ";
-$WARN = "\n\t\t***** WARNING *****\n       ";
+our $ABRT = "\n\t\t***** ABORTING *****\n       ";
+our $WARN = "\n\t\t***** WARNING *****\n       ";
 
 # commands we're expecting
-$R_COMMANDS=qr/^(git[ -]upload-pack|git[ -]upload-archive)$/;
-$W_COMMANDS=qr/^git[ -]receive-pack$/;
+our $R_COMMANDS=qr/^(git[ -]upload-pack|git[ -]upload-archive)$/;
+our $W_COMMANDS=qr/^git[ -]receive-pack$/;
 
 # note that REPONAME_PATT allows "/", while USERNAME_PATT does not
 # also, the reason REPONAME_PATT is a superset of USERNAME_PATT is (duh!)
 # because in this version, a repo can have "CREATER" in the name (see docs)
-$REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@/+-]*$); # very simple pattern
-$USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple pattern
+our $REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@/+-]*$); # very simple pattern
+our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple pattern
 # same as REPONAME, plus some common regex metas
-$REPOPATT_PATT=qr(^\@?[0-9a-zA-Z][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
+our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
+
+our $REPO_UMASK;
+our %repos;
 
 # ----------------------------------------------------------------------------
 #       convenience subs
@@ -77,6 +81,18 @@ sub check_ref {
     }
     die "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n";
 }
+
+# ln -sf :-)
+sub ln_sf
+{
+    my($srcdir, $glob, $dstdir) = @_;
+    for my $hook ( glob("$srcdir/$glob") ) {
+        $hook =~ s/$srcdir\///;
+        unlink                   "$dstdir/$hook";
+        symlink "$srcdir/$hook", "$dstdir/$hook" or die "could not symlink $hook\n";
+    }
+}
+
 
 # ----------------------------------------------------------------------------
 #       where is the rc file hiding?
@@ -128,7 +144,7 @@ sub new_repo
         system("git", "config", "gitweb.owner", $creater);
     }
     # propagate our own, plus any local admin-defined, hooks
-    system("cp $hooks_dir/* hooks/");
+    ln_sf($hooks_dir, "*", "hooks");
     chmod 0755, "hooks/update";
 }
 
@@ -321,7 +337,7 @@ sub expand_wild
 
 sub special_cmd
 {
-    my ($GL_ADMINDIR, $GL_CONF_COMPILED, $RSYNC_BASE, $HTPASSWD_FILE) = @_;
+    my ($GL_ADMINDIR, $GL_CONF_COMPILED, $shell_allowed, $RSYNC_BASE, $HTPASSWD_FILE) = @_;
 
     my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
     my $user = $ENV{GL_USER};

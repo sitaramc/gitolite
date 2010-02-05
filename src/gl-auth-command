@@ -147,7 +147,7 @@ if ($ENV{SSH_ORIGINAL_COMMAND} =~ $CUSTOM_COMMANDS) {
 my ($verb, $repo) = ($ENV{SSH_ORIGINAL_COMMAND} =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:\.git)?'/);
 unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS ) and $repo and $repo =~ $REPONAME_PATT ) {
     # ok, it's not a normal git command; call the special command helper
-    &special_cmd ($GL_ADMINDIR, $GL_CONF_COMPILED, $RSYNC_BASE, $HTPASSWD_FILE);
+    &special_cmd ($GL_ADMINDIR, $GL_CONF_COMPILED, $shell_allowed, $RSYNC_BASE, $HTPASSWD_FILE);
     exit;
 }
 die "$repo ends with a slash; I don't like that\n" if $repo =~ /\/$/;
