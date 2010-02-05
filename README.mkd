@@ -86,10 +86,7 @@ detail [here][gsdiff].
 ### security
 
 Due to the environment in which this was created and the need it fills, I
-consider this a "security" program, albeit a very modest one.  The code is
-very small and easily reviewable -- the 2 programs that actually control
-access when a user logs in total about 220 lines of code (about 90 lines
-according to "sloccount").
+consider this a "security" program, albeit a very modest one.
 
 For the first person to find a security hole in it, defined as allowing a
 normal user (not the gitolite admin) to read a repo, or write/rewind a ref,
@@ -99,10 +96,10 @@ or in Unix, perl, shell, etc.)...  well I can't afford 1000 USD rewards like
 djb, so you'll have to settle for 1000 INR (Indian Rupees) as a "token" prize
 :-)
 
-Update 2010-01-31: this security promise does not apply if you enable any of
-the external command helpers (like rsync).  It's probably quite secure, but I
-just haven't thought about it enough to be able to make such promises, like I
-can for the rest of "master".
+However, there are a few optional features (which must be explicitly enabled
+in the RC file) where I just haven't had the time to reason about security
+thoroughly enough.  Please read the comments in `conf/example.gitolite.rc` for
+details, looking for the word "security".
 
 ----
 

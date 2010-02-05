@@ -24,7 +24,7 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 # these are set by the "rc" file
-our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE);
+our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE, $GL_WILDREPOS);
 # and these are set by gitolite.pm
 our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT);
 our %repos;
@@ -110,6 +110,7 @@ my $CUSTOM_COMMANDS=qr/^\s*(expand|(get|set)(perms|desc))\s/;
 # commands is sort of a dead end for normal (git) processing
 
 if ($ENV{SSH_ORIGINAL_COMMAND} =~ $CUSTOM_COMMANDS) {
+    die "wildrepos disabled, sorry\n" unless $GL_WILDREPOS;
     my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
     my ($verb, $repo) = ($cmd =~ /^\s*(\S+)\s+\/?(.*?)(?:.git)?$/);
     if ($repo =~ $REPONAME_PATT and $verb =~ /getperms|setperms/) {
@@ -171,8 +172,8 @@ if ( -d "$repo_base_abs/$repo.git" ) {
 } else {
     &parse_acl($GL_CONF_COMPILED, $repo, $user, $user, $user);
 
-    # auto-vivify new repo if you have C access
-    if ( $repos{$repo}{C}{$user} || $repos{$repo}{C}{'@all'} ) {
+    # auto-vivify new repo if you have C access (and wildrepos is on)
+    if ( $GL_WILDREPOS and $repos{$repo}{C}{$user} || $repos{$repo}{C}{'@all'} ) {
         wrap_chdir("$repo_base_abs");
         new_repo($repo, "$GL_ADMINDIR/src/hooks", $user);
         wrap_chdir($ENV{HOME});

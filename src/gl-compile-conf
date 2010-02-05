@@ -61,7 +61,7 @@ $Data::Dumper::Sortkeys = sub { return [ reverse sort keys %{$_[0]} ]; };
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 
 # these are set by the "rc" file
-our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $SHELL_USERS);
+our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $SHELL_USERS, $GL_WILDREPOS);
 # and these are set by gitolite.pm
 our ($REPONAME_PATT, $REPOPATT_PATT, $USERNAME_PATT, $AUTH_COMMAND, $AUTH_OPTIONS, $ABRT, $WARN);
 
@@ -133,7 +133,8 @@ sub expand_list
 
     for my $item (@list)
     {
-        die "$ABRT bad user or repo name $item\n" unless $item =~ $REPOPATT_PATT or $item =~ $USERNAME_PATT;
+        die "$ABRT bad user or repo name $item\n"
+            unless ($GL_WILDREPOS ? $item =~ $REPOPATT_PATT : $item =~ $REPONAME_PATT) or $item =~ $USERNAME_PATT;
         if ($item =~ /^@/)      # nested group
         {
             die "$ABRT undefined group $item\n" unless $groups{$item};
@@ -206,6 +207,7 @@ sub parse_conf_file
             my $perms = $1;
             my @refs; @refs = split(' ', $2) if $2;
             my @users = split ' ', $3;
+            die "wildrepos disabled, cant use 'C' in config\n" if $perms eq 'C' and not $GL_WILDREPOS;
 
             # if no ref is given, this PERM applies to all refs
             @refs = qw(refs/.*) unless @refs;

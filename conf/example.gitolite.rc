@@ -108,6 +108,26 @@ $GIT_PATH="";
 
 # --------------------------------------
 
+
+
+# ----------------------------------------------------------------------
+#                   SECURITY SENSITIVE SETTINGS
+#
+#       Settings below this point may have security implications.  That
+#       usually means that I have not thought hard enough about all the
+#       possible ways to crack security if these settings are enabled.
+
+#       Please see details on each setting for specifics, if any.
+# ----------------------------------------------------------------------
+
+
+
+# --------------------------------------
+# EXTERNAL COMMAND HELPER -- HTPASSWD
+
+# security note: runs an external command (htpasswd) with specific arguments,
+# including a user-chosen "password".
+
 # if you want to enable the "htpasswd" command, give this the absolute path to
 # whatever file apache (etc) expect to find the passwords in.
 
@@ -118,13 +138,31 @@ $HTPASSWD_FILE = "";
 
 # --------------------------------------
 # EXTERNAL COMMAND HELPER -- RSYNC
-#
+
+# security note: runs an external command (rsync) with specific arguments, all
+# presumably filled in correctly by the client-side rsync.
+
 # base path of all the files that are accessible via rsync.  Must be an
 # absolute path.  Leave it undefined or set to the empty string to disable the
 # rsync helper.
 $RSYNC_BASE = "";
 # $RSYNC_BASE = "/home/git/up-down";
 # $RSYNC_BASE = "/tmp/up-down";
+
+# --------------------------------------
+# ALLOW REPO CONFIG TO USE WILDCARDS
+
+# security note: this used to in a separate "wildrepos" branch.  You can
+# create repositories based on wild cards, give "ownership" to the specific
+# user who created it, allow him/her to hand out R and RW permissions to other
+# users to collaborate, etc.  This is powerful stuff, and I've made it as
+# secure as I can, but it hasn't had the kind of rigorous line-by-line
+# analysis that the old "master" branch had.
+
+# This has now been rolled into master, with all the functionality gated by
+# this variable.  Set this to 1 if you want to enable the wildrepos features.
+# Please see doc/4-wildcard-repositories.mkd for details.
+# $GL_WILDREPOS = 0;
 
 # --------------------------------------
 # per perl rules, this should be the last line in such a file:

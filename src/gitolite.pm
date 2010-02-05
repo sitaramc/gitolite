@@ -33,7 +33,8 @@ our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple patter
 # same as REPONAME, plus some common regex metas
 our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 
-our $REPO_UMASK;
+# these come from the RC file
+our ($REPO_UMASK, $GL_WILDREPOS);
 our %repos;
 
 # ----------------------------------------------------------------------------
@@ -134,6 +135,8 @@ sub new_repo
     my ($repo, $hooks_dir, $creater) = @_;
 
     umask($REPO_UMASK);
+    die "wildrepos disabled, can't set creater $creater on new repo $repo\n"
+        if $creater and not $GL_WILDREPOS;
 
     system("mkdir", "-p", "$repo.git") and die "$ABRT mkdir $repo.git failed: $!\n";
         # erm, note that's "and die" not "or die" as is normal in perl
@@ -226,6 +229,7 @@ sub parse_acl
     # please update that also if the interface or the env vars change
 
     my ($GL_CONF_COMPILED, $repo, $c, $r, $w) = @_;
+    $c = $r = $w = "NOBODY" unless $GL_WILDREPOS;
 
     # void $r if same as $w (otherwise "readers" overrides "writers"; this is
     # the same problem that needed a sort sub for the Dumper in the compile
@@ -251,6 +255,8 @@ sub parse_acl
     return unless $repo;
 
     return $ENV{GL_REPOPATT} = "" if $repos{$repo};
+    # didn't find it, but wild is off?  too bad, die!!! muahahaha
+    die "$repo not found in compiled config\n" unless $GL_WILDREPOS;
 
     # didn't find $repo in %repos, so it must be a wildcard-match case
     my @matched = grep { $repo =~ /^$_$/ } sort keys %repos;

@@ -149,7 +149,7 @@ plain "git archive", because the Makefile adds a file called
     git clone git://sitaramc.indefero.net/sitaramc/gitolite.git
     cd gitolite
     make master.tar
-    # or maybe "make wildrepos.tar" or "make pu.tar"
+    # or maybe "make pu.tar"
 
 <a name="diff"></a>
 
@@ -626,8 +626,7 @@ per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
 
 #### repos named with wildcards
 
-**This feature only exists in the "wildrepos" branch!**  Please see
-`doc/4-wildcard-repositories.mkd` for all the details.
+Please see `doc/4-wildcard-repositories.mkd` for all the details.
 
 #### access control for external commands
 
