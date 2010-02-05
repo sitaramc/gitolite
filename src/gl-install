@@ -71,14 +71,16 @@ chdir("$repo_base_abs") or die "chdir $repo_base_abs failed: $!\n";
 for my $repo (`find . -type d -name "*.git"`) {
     chomp ($repo);
     # propagate our own, plus any local admin-defined, hooks
-    system("cp $GL_ADMINDIR/src/hooks/* $repo/hooks/");
+    ln_sf("$GL_ADMINDIR/src/hooks", "*", "$repo/hooks");
     chmod 0755, "$repo/hooks/update";
 }
 
 # oh and one of those repos is a bit more special and has an extra hook :)
 if ( -d "gitolite-admin.git/hooks" ) {
     print "copying post-update hook to gitolite-admin repo...\n";
-    system("cp $GL_ADMINDIR/src/ga-post-update-hook gitolite-admin.git/hooks/post-update");
+    unlink "gitolite-admin.git/hooks/post-update";
+    symlink "$GL_ADMINDIR/src/ga-post-update-hook", "gitolite-admin.git/hooks/post-update"
+        or die "could not symlink post-update hook\n";
     chmod 0755, "gitolite-admin.git/hooks/post-update";
 }
 

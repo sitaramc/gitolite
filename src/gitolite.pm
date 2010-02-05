@@ -78,6 +78,18 @@ sub check_ref {
     die "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n";
 }
 
+# ln -sf :-)
+sub ln_sf
+{
+    my($srcdir, $glob, $dstdir) = @_;
+    for my $hook ( glob("$srcdir/$glob") ) {
+        $hook =~ s/$srcdir\///;
+        unlink                   "$dstdir/$hook";
+        symlink "$srcdir/$hook", "$dstdir/$hook" or die "could not symlink $hook\n";
+    }
+}
+
+
 # ----------------------------------------------------------------------------
 #       where is the rc file hiding?
 # ----------------------------------------------------------------------------
@@ -124,7 +136,7 @@ sub new_repo
     wrap_chdir("$repo.git");
     system("git --bare init >&2");
     # propagate our own, plus any local admin-defined, hooks
-    system("cp $hooks_dir/* hooks/");
+    ln_sf($hooks_dir, "*", "hooks");
     chmod 0755, "hooks/update";
 }
 
