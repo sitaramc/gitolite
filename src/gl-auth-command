@@ -103,7 +103,7 @@ unless ($ENV{SSH_ORIGINAL_COMMAND}) {
 #       get and set perms for actual repo created by wildcard-autoviv
 # ----------------------------------------------------------------------------
 
-my $CUSTOM_COMMANDS=qr/^\s*(expand|getperms|setperms)\s/;
+my $CUSTOM_COMMANDS=qr/^\s*(expand|(get|set)(perms|desc))\s/;
 
 # note that all the subs called here chdir somewhere else and do not come
 # back; they all blithely take advantage of the fact that processing custom
@@ -115,6 +115,10 @@ if ($ENV{SSH_ORIGINAL_COMMAND} =~ $CUSTOM_COMMANDS) {
     if ($repo =~ $REPONAME_PATT and $verb =~ /getperms|setperms/) {
         # with an actual reponame, you can "getperms" or "setperms"
         get_set_perms($repo_base_abs, $repo, $verb, $user);
+    }
+    elsif ($repo =~ $REPONAME_PATT and $verb =~ /(get|set)desc/) {
+        # with an actual reponame, you can "getdesc" or "setdesc"
+        get_set_desc($repo_base_abs, $repo, $verb, $user);
     }
     elsif ($verb eq 'expand') {
         # with a wildcard, you can "expand" it to see what repos actually match
