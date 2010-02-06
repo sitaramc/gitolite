@@ -411,6 +411,8 @@ sub ext_cmd_rsync
     my $perm = "W";
     $perm = "R" if $1;
     my $path = $2;
+    die "I dont like some of the characters in $path\n" unless $path =~ $REPOPATT_PATT;
+        # XXX make a better pattern for this if people complain ;-)
     die "I dont like absolute paths in $cmd\n" if $path =~ /^\//;
     die "I dont like '..' paths in $cmd\n" if $path =~ /\.\./;
 
