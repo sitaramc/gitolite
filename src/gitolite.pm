@@ -352,6 +352,14 @@ sub special_cmd
     if ($cmd eq 'info') {
         &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
         print "you also have shell access\n\r" if $shell_allowed;
+    } elsif ($cmd =~ /^info\s+(.+)$/) {
+        my @otherusers = split ' ', $1;
+        &parse_acl($GL_CONF_COMPILED);
+        die "you can't ask for others' permissions\n" unless $repos{'gitolite-admin'}{'R'}{$user};
+        for my $otheruser (@otherusers) {
+            warn("ignoring illegal username $otheruser\n"), next unless $otheruser =~ $USERNAME_PATT;
+            &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $otheruser);
+        }
     } elsif ($HTPASSWD_FILE and $cmd eq 'htpasswd') {
         &ext_cmd_htpasswd($HTPASSWD_FILE);
     } elsif ($RSYNC_BASE and $cmd =~ /^rsync /) {
