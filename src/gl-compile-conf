@@ -61,7 +61,7 @@ $Data::Dumper::Sortkeys = sub { return [ reverse sort keys %{$_[0]} ]; };
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 
 # these are set by the "rc" file
-our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $SHELL_USERS, $GL_WILDREPOS);
+our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $SHELL_USERS, $GL_WILDREPOS, $GL_GITCONFIG_KEYS);
 # and these are set by gitolite.pm
 our ($REPONAME_PATT, $REPOPATT_PATT, $USERNAME_PATT, $AUTH_COMMAND, $AUTH_OPTIONS, $ABRT, $WARN);
 
@@ -288,7 +288,9 @@ sub parse_conf_file
         elsif (/^config (.+) = ?(.*)/)
         {
             my ($key, $value) = ($1, $2);
-            die "$WARN $fragment attempting to set repo configuration\n" if $fragment ne 'master';
+            my @validkeys = split (' ', ($GL_GITCONFIG_KEYS || ''));
+            my @matched = grep { $key =~ /^$_$/ } @validkeys;
+            die "$ABRT git config $key not allowed\n" if (@matched < 1);
             for my $repo (@repos)       # each repo in the current stanza
             {
                 $repo_config{$repo}{$key} = $value;

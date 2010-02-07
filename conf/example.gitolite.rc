@@ -123,6 +123,32 @@ $GIT_PATH="";
 
 
 # --------------------------------------
+# ALLOW REPO ADMIN TO SET GITCONFIG KEYS
+#
+# Gitolite allows you to set git repo options using the "config" keyword; see
+# conf/example.conf for details and syntax.
+#
+# However, if you are in an installation where the repo admin does not (and
+# should not) have shell access to the server, then allowing him to set
+# arbitrary repo config options *may* be a security risk -- some config
+# settings may allow executing arbitrary commands.
+#
+# You have 3 choices.  By default $GL_GITCONFIG_KEYS is left undefined, which
+# completely disables this feature (meaning you cannot set git configs from
+# the repo config).
+#
+# The second choice is to give it a space separated list of settings you
+# consider safe.  (These are actually treated as a set of regular expression
+# patterns, and any one of them must match).  For example:
+# $GL_GITCONFIG_KEYS = "core\.logAllRefUpdates core\..*compression";
+# allows repo admins to set one of those 3 config keys (yes, that second
+# pattern matches two settings from "man git-config", if you look)
+#
+# The third choice (which you may have guessed already if you're familiar with
+# regular expressions) is to allow anything and everything:
+# $GL_GITCONFIG_KEYS = ".*";
+
+# --------------------------------------
 # EXTERNAL COMMAND HELPER -- HTPASSWD
 
 # security note: runs an external command (htpasswd) with specific arguments,
