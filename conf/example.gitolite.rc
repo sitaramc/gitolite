@@ -133,9 +133,10 @@ $GIT_PATH="";
 # arbitrary repo config options *may* be a security risk -- some config
 # settings may allow executing arbitrary commands.
 #
-# You have 3 choices.  By default $GL_GITCONFIG_KEYS is left undefined, which
+# You have 3 choices.  By default $GL_GITCONFIG_KEYS is left empty, which
 # completely disables this feature (meaning you cannot set git configs from
 # the repo config).
+$GL_GITCONFIG_KEYS = "";
 #
 # The second choice is to give it a space separated list of settings you
 # consider safe.  (These are actually treated as a set of regular expression
@@ -188,7 +189,7 @@ $RSYNC_BASE = "";
 # This has now been rolled into master, with all the functionality gated by
 # this variable.  Set this to 1 if you want to enable the wildrepos features.
 # Please see doc/4-wildcard-repositories.mkd for details.
-# $GL_WILDREPOS = 0;
+$GL_WILDREPOS = 0;
 
 # --------------------------------------
 # per perl rules, this should be the last line in such a file:
