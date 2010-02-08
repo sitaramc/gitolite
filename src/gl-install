@@ -56,13 +56,14 @@ for my $dir qw(conf doc keydir logs src) {
 system("cp -R src doc $GL_ADMINDIR");
 
 unless (-f $GL_CONF) {
-    system("cp conf/example.conf $GL_CONF");
     print <<EOF;
-    created $GL_CONF
-    please edit it, then run these two commands:
-        cd $GL_ADMINDIR
-        src/gl-compile-conf
-    (the "admin" document should help here...)
+    please do the following:
+    1.  create and edit $GL_CONF to contain something like this:
+            repo gitolite-admin
+                RW+     =   yourname
+    2.  copy "yourname.pub" to $GL_ADMINDIR/keydir
+    3.  run this command
+            $GL_ADMINDIR/src/gl-compile-conf
 EOF
 }
 
