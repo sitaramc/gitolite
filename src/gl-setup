@@ -1,0 +1,84 @@
+#!/bin/sh
+
+GL_PACKAGE_CONF=/tmp/share/gitolite/conf
+# must be the same as the value for the same variable in
+# $GL_PACKAGE_CONF/example.gitolite.rc.  Sorry about the catch-22 :)
+
+# TODO need to fix for portability to ksh and so on
+# TODO need to get the version in there somehow
+
+# This program is meant to be completely non-interactive, suitable for running
+# server-side from a "post RPM/DEB install" script, or manually by users.
+# Please see the doc/0-user-setup.mkd for details.
+
+# usage:
+#   $0 [foo.pub]
+
+# The pubkey filename must end with ".pub" and is mandatory when you first run
+# this command.  Otherwise it is optional, and can be used to override a
+# pubkey file if you happen to have lost all gitolite-access to the repos (but
+# do have shell access via some other means)
+
+die() { echo "$@"; echo death at line number ${BASH_LINENO[0]}; exit 1; }
+
+pubkey_file=$1
+admin_name=
+if [[ -n $pubkey_file ]]
+then
+    [[ $pubkey_file =~ .pub$ ]] || die "$pubkey_file must end in .pub"
+    [[ -f $pubkey_file ]] || die "cant find $pubkey_file"
+    admin_name=$(basename $pubkey_file .pub)
+fi
+
+if [[ -f ~/.gitolite.rc ]]
+then
+    perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < $GL_PACKAGE_CONF/example.gitolite.rc | sort > .newvars
+    perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < ~/.gitolite.rc                       | sort > .oldvars
+    comm -23 .newvars .oldvars > .diffvars
+    if [[ -s .diffvars ]]
+    then
+        cp $GL_PACKAGE_CONF/example.gitolite.rc ~/.gitolite.rc.new
+        echo new version of the rc file saved in ~/.gitolite.rc.new
+        echo
+        echo please update ~/.gitolite.rc manually if you need features
+        echo controlled by any of the following variables:
+        echo ----
+        sed -e 's/^/    /' < .diffvars
+        echo ----
+    fi
+    rm -f .newvars .oldvars .diffvars
+else
+    [[ -n $pubkey_file ]] || die "looks like first run -- I need a pubkey file"
+    cp $GL_PACKAGE_CONF/example.gitolite.rc ~/.gitolite.rc
+fi
+
+gl-install -q
+
+GL_ADMINDIR=$(cd;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR')
+REPO_BASE=$(  cd;perl -e 'do ".gitolite.rc"; print $REPO_BASE'  )
+
+[[ -f $GL_ADMINDIR/conf/gitolite.conf ]] || {
+    echo DEBUG NO DEFAULT CONF FOUND .. CREATING .. >&2
+    cat <<EOF > $GL_ADMINDIR/conf/gitolite.conf
+        repo    gitolite-admin
+                RW+     =   $admin_name
+
+        repo    testing
+                RW+     =   @all
+EOF
+}
+cp $pubkey_file $GL_ADMINDIR/keydir
+
+touch $HOME/.ssh/authorized_keys
+gl-compile-conf -q
+
+# setup push-to-admin
+od=$PWD
+cd; cd $REPO_BASE/gitolite-admin.git
+GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
+GIT_WORK_TREE=$GL_ADMINDIR git diff --cached --quiet || GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
+cd $od
+
+# now that the admin repo is created, you have to set the hooks properly; best
+# do it by running install again
+gl-install -q
