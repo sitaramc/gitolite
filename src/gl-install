@@ -48,12 +48,12 @@ my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE"
 wrap_mkdir($repo_base_abs);
 wrap_mkdir($GL_ADMINDIR);
 # mkdir $GL_ADMINDIR's subdirs
-for my $dir qw(conf doc keydir logs src) {
+for my $dir qw(conf doc keydir logs src hooks hooks/common hooks/gitolite-admin) {
     wrap_mkdir("$GL_ADMINDIR/$dir");
 }
 
 # "src" and "doc" will be overwritten on each install, but not conf
-system("cp -R src doc $GL_ADMINDIR");
+system("cp -R src doc hooks $GL_ADMINDIR");
 
 unless (-f $GL_CONF) {
     print <<EOF;
@@ -72,7 +72,7 @@ chdir("$repo_base_abs") or die "chdir $repo_base_abs failed: $!\n";
 for my $repo (`find . -type d -name "*.git"`) {
     chomp ($repo);
     # propagate our own, plus any local admin-defined, hooks
-    ln_sf("$GL_ADMINDIR/src/hooks", "*", "$repo/hooks");
+    ln_sf("$GL_ADMINDIR/hooks/common", "*", "$repo/hooks");
     chmod 0755, "$repo/hooks/update";
 }
 
@@ -80,13 +80,13 @@ for my $repo (`find . -type d -name "*.git"`) {
 if ( -d "gitolite-admin.git/hooks" ) {
     print "copying post-update hook to gitolite-admin repo...\n";
     unlink "gitolite-admin.git/hooks/post-update";
-    symlink "$GL_ADMINDIR/src/ga-post-update-hook", "gitolite-admin.git/hooks/post-update"
+    symlink "$GL_ADMINDIR/hooks/gitolite-admin/post-update", "gitolite-admin.git/hooks/post-update"
         or die "could not symlink post-update hook\n";
     chmod 0755, "gitolite-admin.git/hooks/post-update";
 }
 
 # fixup program renames
-for my $oldname qw(pta-hook.sh conf-convert.pl 00-easy-install.sh 99-emergency-addkey.sh install.pl update-hook.pl) {
+for my $oldname qw(pta-hook.sh conf-convert.pl 00-easy-install.sh 99-emergency-addkey.sh install.pl update-hook.pl hooks/update ga-post-update-hook) {
     unlink "$GL_ADMINDIR/src/$oldname";
     unlink "$ENV{HOME}/gitolite-install/src/$oldname";
 }

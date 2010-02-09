@@ -169,12 +169,12 @@ basic_sanity() {
     # MANUAL: make sure you're in the gitolite directory, at the top level.
     # The following files should all be visible:
 
-    ls  src/ga-post-update-hook     \
+    ls  hooks/gitolite-admin/post-update     \
+        hooks/common/update         \
         src/gitolite.pm             \
         src/gl-install              \
         src/gl-auth-command         \
         src/gl-compile-conf         \
-        src/hooks/update            \
         conf/example.conf           \
         conf/example.gitolite.rc    >/dev/null ||
         die "cant find at least some files in gitolite sources/config; aborting"
@@ -282,7 +282,7 @@ copy_gl() {
     # have to create the directory first.
 
     ssh -p $port $user@$host mkdir -p gitolite-install
-    scp $quiet -P $port -r src conf doc $user@$host:gitolite-install/
+    scp $quiet -P $port -r src conf doc hooks $user@$host:gitolite-install/
     rm -f src/VERSION
 
     # MANUAL: now log on to the server (ssh git@server) and get a command
