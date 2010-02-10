@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF, $GIT_PATH);
+our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF, $GIT_PATH, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS);
 
 # setup quiet mode if asked; please do not use this when running manually
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
@@ -31,7 +31,11 @@ require "$bindir/gitolite.pm";
 unless ($ENV{GL_RC}) {
     # doesn't exist.  Copy it across, tell user to edit it and come back
     my $glrc = $ENV{HOME} . "/.gitolite.rc";
-    system("cp $bindir/../conf/example.gitolite.rc $glrc");
+    if ($GL_PACKAGE_CONF) {
+        system("cp $GL_PACKAGE_CONF/example.gitolite.rc $glrc");
+    } else {
+        system("cp $bindir/../conf/example.gitolite.rc $glrc");
+    }
     print "created $glrc\n";
     print "please edit it, change the paths if you wish to, and RERUN THIS SCRIPT\n";
     exit;
@@ -49,13 +53,18 @@ wrap_mkdir($repo_base_abs);
 wrap_mkdir($GL_ADMINDIR);
 # mkdir $GL_ADMINDIR's subdirs
 for my $dir qw(conf doc keydir logs src hooks hooks/common hooks/gitolite-admin) {
+    # some of them will stay empty; too lazy to fix right now ;-)
     wrap_mkdir("$GL_ADMINDIR/$dir");
 }
 
 # "src" and "doc" will be overwritten on each install, but not conf
-system("cp -R src doc hooks $GL_ADMINDIR");
+if ($GL_PACKAGE_HOOKS) {
+    system("cp -R $GL_PACKAGE_HOOKS $GL_ADMINDIR");
+} else {
+    system("cp -R $bindir/../src $bindir/../doc $bindir/../hooks $GL_ADMINDIR");
+}
 
-unless (-f $GL_CONF) {
+unless (-f $GL_CONF or $GL_PACKAGE_CONF) {
     print <<EOF;
     please do the following:
     1.  create and edit $GL_CONF to contain something like this:
