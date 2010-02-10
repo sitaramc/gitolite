@@ -83,6 +83,9 @@ for my $repo (`find . -type d -name "*.git"`) {
     chomp ($repo);
     # propagate our own, plus any local admin-defined, hooks
     ln_sf("$GL_ADMINDIR/hooks/common", "*", "$repo/hooks");
+    # in case of package install, GL_ADMINDIR is no longer the top cop;
+    # override with the package hooks
+    ln_sf("$GL_PACKAGE_HOOKS/common", "*", "$repo/hooks") if $GL_PACKAGE_HOOKS;
     chmod 0755, "$repo/hooks/update";
 }
 
@@ -92,6 +95,8 @@ if ( -d "gitolite-admin.git/hooks" ) {
     unlink "gitolite-admin.git/hooks/post-update";
     symlink "$GL_ADMINDIR/hooks/gitolite-admin/post-update", "gitolite-admin.git/hooks/post-update"
         or die "could not symlink post-update hook\n";
+    # ditto... (see previous block)
+    ln_sf("$GL_PACKAGE_HOOKS/gitolite-admin", "post-update", "gitolite-admin.git/hooks") if $GL_PACKAGE_HOOKS;
     chmod 0755, "gitolite-admin.git/hooks/post-update";
 }
 

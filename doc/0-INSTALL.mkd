@@ -2,30 +2,59 @@
 
 [Update 2009-11-18: easy install now works from msysgit also!]
 
+Gitolite is somewhat unusual as far as "server" software goes -- every userid
+on the system is a potential "gitolite host" and can install his own version
+if he chooses to.
+
 This document tells you how to install gitolite.  After the install is done,
 you may want to see the [admin document][admin] for adding users, repos, etc.
 
 [admin]: http://github.com/sitaramc/gitolite/blob/pu/doc/2-admin.mkd
 
-There's an easy install script that requires bash (**strongly** recommended),
-but if you have no bash or you're on one of the legacy Unixes there's a
-slightly more manual process.  Both are explained here.
+[[TOC]]
 
 In this document:
 
-  * easy install
+  * install methods
+  * user install
       * typical example run
       * advantages over the older install methods
       * disadvantages
-  * manual install
-  * upgrades
-  * other notes
+      * upgrades
+      * other notes
+  * system install / user setup
   * next steps
-  * appendix: server and client requirements
+  * appendix A: server and client requirements for user install
+      * server
+      * install workstation
+      * admin workstation(s)
+  * appendix B: NOTE TO PACKAGE MAINTAINERS
 
 ----
 
-### easy install
+### install methods
+
+There are 2 ways to install gitolite: The **user-install** mode was the
+traditional way, and is used when *any* of the following is true:
+
+  * you don't have root on your "server" (some types of hosting setups, many
+    corporate paranoia setups ;-)
+  * your server distro does not have gitolite in its package repositories
+  * your server distro's package repositories have an old version of gitolite
+  * you want to stay current with the latest gitolite versions
+  * your server is not Linux (maybe AIX, or Solaris, etc.)
+
+The "user install" section describes this method.
+
+The **system-install followed by user-setup** mode is used when you (or
+someone who has root) has installed an RPM or DEB of gitolite and you intend
+to use that version.
+
+The "system install / user setup" section describes this method.
+
+----
+
+### user install
 
 There is an easy install script that makes installing very easy for the common
 case.  **This script will setup everything on the server, but you have to run
@@ -43,6 +72,7 @@ Assumptions/pre-requisites:
         `ssh-copy-id` in that file for instructions
   * you have a clone or an archive of gitolite somewhere on your workstation
       * if you don't have one, just run `git clone git://github.com/sitaramc/gitolite`
+  * your workstation has bash (even msysgit bash will do)
 
 Once you have all this, just `cd` to that clone and run `src/gl-easy-install`
 and follow the prompts!  (Running it without any arguments shows you usage
@@ -75,13 +105,7 @@ actually doing, I suggest you skip the `-q`.
 
   * need a recent bash
 
-### manual install
-
-If you don't have bash, it's not very complicated to do it manually.  Just
-open the file `src/gl-easy-install` in a nice, syntax coloring, text
-editor, and follow the instructions marked "MANUAL" :-)
-
-### upgrades
+#### upgrades
 
 Upgrading gitolite is easy.
 
@@ -97,13 +121,43 @@ way.  I decided that it is not possible to **safely** let an upgrade do
 something meaningful with them -- fiddling with existing config files (as
 opposed to merely creating one which did not exist) is best left to a human.
 
-### other notes
+#### other notes
 
   * if you run `src/gl-easy-install` without the `-q` option, you will be
     given a chance to edit `~/.gitolite.rc`.  You can change any options (such
     as paths, for instance), but be sure to keep the perl syntax -- you
     *don't* have to know perl to do so, it's fairly easy to guess in this
     limited case.
+
+### system install / user setup
+
+In this mode a system administrator installs gitolite using the server's
+distro package mechanism (yum install, apt-get install, etc).
+
+Once this is done, you as a user must run a command like this (unlike in the
+"user install" mode, this is done directly on the server):
+
+    gl-setup yourname.pub
+
+where yourname.pub is a copy of a public key from your workstation.  The first
+time you run this, it will create a "gitolite-admin" repo and populate it with
+the right configuration for whoever has the corresponding private key to
+clone and push it.  In other words, that person is the administrator for this
+particular gitolite instance.
+
+If your system administrator upgrades gitolite itself, things will usually
+just work without any change; you should not have to do anything special.
+However, some new features may require additional settings in your
+`~/.gitolite.rc` file.
+
+Finally, in the rare case that you managed to lose your keys to the admin repo
+and want to supply a new pubkey, you can use this command to replace any such
+key.  Could be useful in an emergency -- just get your new "yourname.pub" to
+the server and run the same command as above.
+
+**IMPORTANT**: there are two variables in the `~/.gitolite.rc` file:
+`$GL_PACKAGE_CONF` and `$GL_PACKAGE_HOOKS`.  If you remove or change either of
+them, expect trouble :-)
 
 ### next steps
 
@@ -113,7 +167,7 @@ document.
 
 <a name="server_reqs"></a>
 
-### appendix: server and client requirements
+### appendix A: server and client requirements for user install
 
 There are 3 machines *potentially* involved in installing and administering
 gitolite.
@@ -167,3 +221,43 @@ Which means all this can be done from *any* machine.  You'll normally do it
 from the same machine you used to install gitolite, but it doesn't have to be
 the same one, as long as your pubkey has been added and permissions given to
 allow you to push to the gitolite-admin repo.
+
+### appendix B: NOTE TO PACKAGE MAINTAINERS
+
+Here's how you'd package gitolite.  In the following description, location "X"
+can be, say, `/usr/share/gitolite/conf` or some such, and similarly location
+"Y" can be perhaps `/usr/share/gitolite/hooks`.  It's upto your distro
+policies where they are.
+
+These are the content changes needed (no trailing slashes in the location
+values please):
+
+  * `gl-setup` should have the following line:
+
+        GL_PACKAGE_CONF="X"
+
+  * `example.gitolite.rc` should have the following lines:
+
+        $GL_PACKAGE_CONF="X";
+        $GL_PACKAGE_HOOKS="Y";
+
+This is where the files should be installed:
+
+  * everything in "src" goes somewhere on the PATH
+  * everything in "conf" goes to location "X"
+  * everything in "hooks" goes to location "Y"
+
+You might also want to delete the `gl-easy-install` script, since that is
+meant for a totally different mode of installation and probably would *not*
+work if a user tried to run it :-)
+
+On the initial install, you could also choose to setup a userid called
+"gitolite", and run "gl-setup" as that user; however I do not know how you
+would come up with the initial pubkey that is needed.  Anyway, the point is
+that the "gitolite" user is no more special than any other in terms of hosting
+gitolite.  Any user can host it by just running "gl-setup".
+
+When you upgrade, just overwrite all the files; it'll all just work.  In fact,
+other than the initial "gl-setup" run, the only time a gitolite hosting user
+has to actually do anything is to edit their own `~/.gitolite.rc` file if they
+want to enable or disable specific features.
