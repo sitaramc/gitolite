@@ -31,7 +31,7 @@ require "$bindir/gitolite.pm";
 unless ($ENV{GL_RC}) {
     # doesn't exist.  Copy it across, tell user to edit it and come back
     my $glrc = $ENV{HOME} . "/.gitolite.rc";
-    system("cp conf/example.gitolite.rc $glrc");
+    system("cp $bindir/../conf/example.gitolite.rc $glrc");
     print "created $glrc\n";
     print "please edit it, change the paths if you wish to, and RERUN THIS SCRIPT\n";
     exit;
