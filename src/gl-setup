@@ -58,7 +58,6 @@ GL_ADMINDIR=$(cd;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR')
 REPO_BASE=$(  cd;perl -e 'do ".gitolite.rc"; print $REPO_BASE'  )
 
 [[ -f $GL_ADMINDIR/conf/gitolite.conf ]] || {
-    echo DEBUG NO DEFAULT CONF FOUND .. CREATING .. >&2
     cat <<EOF > $GL_ADMINDIR/conf/gitolite.conf
         repo    gitolite-admin
                 RW+     =   $admin_name
@@ -67,7 +66,7 @@ REPO_BASE=$(  cd;perl -e 'do ".gitolite.rc"; print $REPO_BASE'  )
                 RW+     =   @all
 EOF
 }
-cp $pubkey_file $GL_ADMINDIR/keydir
+[[ -n $pubkey_file ]] && cp $pubkey_file $GL_ADMINDIR/keydir
 
 touch $HOME/.ssh/authorized_keys
 gl-compile-conf -q

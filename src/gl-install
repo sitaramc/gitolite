@@ -62,6 +62,7 @@ if ($GL_PACKAGE_HOOKS) {
     system("cp -R $GL_PACKAGE_HOOKS $GL_ADMINDIR");
 } else {
     system("cp -R $bindir/../src $bindir/../doc $bindir/../hooks $GL_ADMINDIR");
+    system("cp    $bindir/../conf/VERSION                        $GL_ADMINDIR/conf");
 }
 
 unless (-f $GL_CONF or $GL_PACKAGE_CONF) {
@@ -95,7 +96,7 @@ if ( -d "gitolite-admin.git/hooks" ) {
 }
 
 # fixup program renames
-for my $oldname qw(pta-hook.sh conf-convert.pl 00-easy-install.sh 99-emergency-addkey.sh install.pl update-hook.pl hooks/update ga-post-update-hook) {
+for my $oldname qw(pta-hook.sh conf-convert.pl 00-easy-install.sh 99-emergency-addkey.sh install.pl update-hook.pl hooks/update ga-post-update-hook VERSION) {
     unlink "$GL_ADMINDIR/src/$oldname";
     unlink "$ENV{HOME}/gitolite-install/src/$oldname";
 }
