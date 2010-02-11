@@ -10,28 +10,33 @@ In this document:
       * `@all` syntax for repos
       * umask setting
   * getting a tar file from a clone
-  * differences from gitosis
-      * simpler syntax
-      * two levels of access rights checking
-      * file/dir NAME based restrictions
-      * error checking the config file
-      * including config lines from other files
-      * delegating parts of the config file
-      * easier to specify gitweb "description" and gitweb/daemon access
-      * easier to link gitweb authorisation with gitolite
-      * better logging
-      * one user, many keys
-      * support for git installed outside default PATH
-      * what repos do I have access to?
-      * "exclude" (or "deny") rules
-      * "personal" branches
-      * custom hooks and custom git config
-      * repos named with wildcards
-      * access control for external commands
+  * features
+      * syntax and normal usage
+          * simpler syntax
+          * one user, many keys
+      * security, access control, and auditing
+          * two levels of access rights checking
+          * better logging
+          * "exclude" (or "deny") rules
+          * file/dir NAME based restrictions
+          * delegating parts of the config file
+      * convenience features
+          * what repos do I have access to?
+          * error checking the config file
+          * including config lines from other files
+          * support for git installed outside default PATH
+          * "personal" branches
+          * custom hooks and custom git config
+      * helping with gitweb
+          * easier to specify gitweb "description" and gitweb/daemon access
+          * easier to link gitweb authorisation with gitolite
+      * advanced features
+          * repos named with wildcards
+          * access control for external commands
   * design choices
       * keeping the parser and the access control separate
 
-### common errors and mistakes
+## common errors and mistakes
 
   * adding `repositories/` at the start of the repo name in the `git clone`.
     This error is typically made by the *admin* himself -- because he knows
@@ -53,7 +58,7 @@ In this document:
 
     Please see doc/6-ssh-troubleshooting.mkd for what all this means.
 
-### git version dependency
+## git version dependency
 
 Here's a workaround for a version dependency that the normal flow of gitolite
 has.
@@ -82,9 +87,9 @@ and then push.  Something like:
 Once this is done, the repo is available for cloning by anyone else in the
 normal way, since it's not empty anymore.
 
-### other errors, warnings, notes...
+## other errors, warnings, notes...
 
-#### ssh-copy-id
+### ssh-copy-id
 
 don't have `ssh-copy-id`?  This is broadly what that command does, if you want
 to replicate it manually.  The input is your pubkey, typically
@@ -107,7 +112,7 @@ typically) also must be `go-w`, but that needs root.  And typically
 they're already set that way anyway.  (Or if they're not, you've got
 bigger problems than gitolite install not working!)]
 
-#### cloning an empty repo
+### cloning an empty repo
 
 Cloning an empty repo is only possible with clients greater than 1.6.2.  So at
 least one of your clients needs to have a recent git.  Once at least one
@@ -118,7 +123,7 @@ end hung up unexpectedly`.  However, you can ignore this, since it doesn't
 seem to hurt anything.  [Update 2009-09-14; this has been fixed in git
 1.6.4.3]
 
-#### `@all` syntax for repos
+### `@all` syntax for repos
 
 There *is* a way to use the `@all` syntax for repos also, as described in
 `conf/example.conf`.  However, there is an important difference between this
@@ -132,12 +137,12 @@ and the old `@all` (for users):
   * This means that if you really want *all* repos, you'd better put this para
     at the **end** of the config file!
 
-#### umask setting
+### umask setting
 
 Gitweb not able to read your repos?  You can change the umask for newly
 created repos to something more relaxed -- see the `~/.gitolite.rc` file
 
-### getting a tar file from a clone
+## getting a tar file from a clone
 
 You can clone the repo from github or indefero, then execute a make command to
 extract a tar file of the branch you want.  Please use the make command, not a
@@ -153,13 +158,9 @@ plain "git archive", because the Makefile adds a file called
 
 <a name="diff"></a>
 
-### differences from gitosis
+## features
 
-Apart from the big ones listed in the top level README, and subjective ones
-like "better config file format", there are some small, but significant and
-concrete, differences from gitosis.
-
-<a name="simpler_syntax"></a>
+### syntax and normal usage
 
 #### simpler syntax
 
@@ -204,6 +205,51 @@ do not worry that this causes some duplication or inefficiency.  It doesn't
 
 See the "specify gitweb/daemon access" section below for one more example.
 
+#### one user, many keys
+
+I have a laptop and a desktop I need to access the server from.  I have
+different private keys on them, but as far as gitolite is concerned both of
+them should be treated as "sitaram".  How does this work?
+
+In gitosis, the admin creates a single "sitaram.pub" containing one line for
+each of my pubkeys.  In gitolite, we keep them separate: "sitaram@laptop.pub"
+and "sitaram@desktop.pub".  The part before the "@" is the username, so
+gitolite knows these two keys belong to the same person.
+
+Note that you don't say "sitaram@laptop" and so on in the **config** file --
+as far as the config file is concerned there's just **one** user called
+"sitaram" -- so you only say "sitaram" there.
+
+I think this is easier to maintain if you have to delete or change one of
+those keys.
+
+However, now that `sitaramc@gmail.com` is also a valid username, we need to
+distinguish between `sitaramc@gmail.com.pub` and `sitaramc@desktop.pub`.  We
+do that by requiring that the multi-key suffix you use (like "desktop" and
+"laptop") should not have a `"."` in it.  If it does, it looks like an email
+address.  The following table lists sample pubkey filenames and the
+corresponding derived usernames (which is what goes into the
+`conf/gitolite.conf` file):
+
+  * old style multikeys; not mistaken for emails because there is no "." in
+    hostname part
+
+        sitaramc.pub                            sitaramc
+        sitaramc@laptop.pub                     sitaramc
+        sitaramc@desktop.pub                    sitaramc
+
+  * new style, email keys; there is a "." in hostname part; so it's an email
+    address
+
+        sitaramc@gmail.com.pub                  sitaramc@gmail.com
+
+  * multikeys *with* email address
+
+        sitaramc@gmail.com@laptop.pub           sitaramc@gmail.com
+        sitaramc@gmail.com@desktop.pub          sitaramc@gmail.com
+
+### security, access control, and auditing
+
 #### two levels of access rights checking
 
 Gitolite has two levels of access checks.  The **first check** is what I will
@@ -239,6 +285,89 @@ any of the refexes match, the push succeeds.  If none of them match, it fails.
 Gitolite also allows "exclude" or "deny" rules.  See later in this document
 for details.
 
+Apart from the big ones listed in the top level README, and subjective ones
+like "better config file format", gitolite has evolved to have many useful
+fearures than the original goal of "gitosis + branch-level access control".
+
+<a name="simpler_syntax"></a>
+
+#### better logging
+
+If you have been too liberal with the permission to rewind, it has built-in
+logging as an emergency fallback if someone goes too far, or for audit
+purposes [`*`].  The logfile names and location are configurable, and can
+include the year/month/day etc in the filename for easy archival or further
+processing.  The log file even tells you which pattern in the config file
+matched to allow that specific access to proceed.
+
+>   [`*`] setting `core.logAllRefUpdates true` does provide a safety net
+>   against over-zealous rewinds, but it does not tell you "who".  And
+>   strangely, management does not seem to share the view that "blame" is just
+>   a synonym for "annotate" ;-)]
+
+The log lines look like this:
+
+    2009-09-19.10:24:37  +  b4e76569659939  4fb16f2a88d8b5  myrepo refs/heads/master       user2   refs/heads/master
+
+The "+" at the start indicates a non-fast forward update, in this case from
+b4e76569659939 to 4fb16f2a88d8b5.  So b4e76569659939 is the one to restore!
+Can it get easier?
+
+The other parts of the log line are the name of the repo, the refname being
+updated, the user updating it, and the refex pattern (from the config file)
+that matched, in case you need to debug the config file itself.
+
+<a name="multikeys"></a>
+
+#### "exclude" (or "deny") rules
+
+Here is an illustrative explanation of "deny" rules.  However, please be sure
+to read the "DENY/EXCLUDE RULES" section in `conf/example.conf` for important
+notes/caveats before using "deny" rules.
+
+Take a look at the following snippet, which *seems* to say that "bruce" can
+write versioned tags (anything containing `refs/tags/v[0-9]`), but the other
+staffers can't:
+
+        @staff = bruce whitfield martin
+                [... and later ...]
+        RW refs/tags/v[0-9]     = bruce
+        RW refs/tags            = @staff
+
+But that's not how the matching works.  As long as any refex matches the
+refname being updated, it's a "yes".  Since the second refex (which says
+"anything containing `refs/tags`") is a superset of the first one, it lets
+anyone on `@staff` create versioned tags, not just Bruce.
+
+One way to fix this is to allow "excludes" -- some changes in syntax, combined
+with a rigorous, ordered, interpretation would do it.
+
+Let's recap the **existing semantics**:
+
+>   the first matching refex that has the permission you're looking for (`W`
+>   or `+`), results in success.  A fallthrough results in failure
+
+Here are the **new semantics**, with changes from the "main" one in bold:
+
+>   the first matching refex that has the permission you're looking for (`W`
+>   or `+`) **or a minus (`-`)**, results in success **or failure,
+>   respectively**.  A fallthrough **also** results in failure
+
+So the example we started with becomes, if you use "deny" rules:
+
+        RW refs/tags/v[0-9]     = bruce
+        -  refs/tags/v[0-9]     = @staff
+        RW refs/tags            = @staff
+
+And here's how it works:
+
+  * for non-version tags, only the 3rd rule matches, so anyone on staff can
+    push them
+  * for version tags by bruce, the first rule matches so he can push them
+  * for version tags by staffers *other than bruce*, the second rule matches
+    before the third one, and it has a `-` as the permission, so the push
+    fails
+
 #### file/dir NAME based restrictions
 
 In addition to branch-name based restrictions, gitolite also allows you to
@@ -247,6 +376,46 @@ This basically uses `git diff --name-only` to obtain the list of files being
 changed, treating each filename as a "ref" to be matched.
 
 Please see `conf/example.conf` for syntax and examples.
+
+#### delegating parts of the config file
+
+You can now split up the config file and delegate the authority to specify
+access control for their own pieces.  See
+[doc/5-delegation.mkd](http://github.com/sitaramc/gitolite/blob/pu/doc/5-delegation.mkd)
+for details.
+
+<a name="gwd"></a>
+
+### convenience features
+
+#### what repos do I have access to?
+
+Sometimes there are too many repos, maybe even named similarly, or with the
+potential for typos, confusion about hyphens/underscores or upper/lower case,
+etc.  You'd just like a simple way to know what repos you have access to.
+
+Easy!  Just use ssh and try to log in as if you were attempting to get a
+shell:
+
+    $ ssh gitolite info
+    PTY allocation request failed on channel 0
+    hello sitaram, the gitolite version here is v0.6-17-g94ed189
+    you have the following permissions:
+      R  W  Anu-WSD
+      R     ROtest
+      R  W  SecureBrowse
+      R  W  entrans
+      R  W  git-notes
+      R  W  gitolite
+      R  W  gitolite-admin
+      R  W  indic_web_input
+      R  W  proxy
+      @  @  testing
+      R  W  vkc
+
+Note that until this version, we used to put out an ugly `need
+SSH_ORIGINAL_COMMAND` error, just like gitosis used to.  All we did is put
+that code path to better use :-)
 
 #### error checking the config file
 
@@ -261,14 +430,94 @@ you know right away.
 
 See the entry under "INCLUDE SOME OTHER FILE" in `conf/example.conf`.
 
-#### delegating parts of the config file
+#### support for git installed outside default PATH
 
-You can now split up the config file and delegate the authority to specify
-access control for their own pieces.  See
-[doc/5-delegation.mkd](http://github.com/sitaramc/gitolite/blob/pu/doc/5-delegation.mkd)
-for details.
+The normal solution is to add to the system default PATH somehow, either by
+munging `/etc/profile` or by enabling `PermitUserEnvironment` in
+`/etc/ssh/sshd_config` and then setting the PATH in `~/.ssh/.environment`.
+All these are security risks because they allow a lot more than just you and
+your git install :-)
 
-<a name="gwd"></a>
+And if you don't have root, you can't do this anyway.
+
+The only solution till now has been to ask every client to set the config
+parameters `remote.<name>.receivepack` and `remote.<name>.uploadpack`.  But
+telling *every* client to do so is a pain...
+
+Gitolite lets you specify the directory in which git binaries are to be found,
+via a new variable (`$GIT_PATH`) in the "rc" file.  If this variable is
+non-empty, it will be appended to the PATH environment variable before
+attempting to run git stuff.
+
+Very easy, very simple, and completely transparent to the users :-)
+
+<a name="myrights"></a>
+
+#### "personal" branches
+
+"personal" branches are great for corporate environments, where
+unauthenticated pull/clone is a no-no.  Since a dev workstation cannot do
+authentication, even work shared just between 2 devs has to go *via* the
+server.  This causes the same branch name clutter as in a centralised VCS,
+plus setting up permissions for this becomes a chore for the admin.
+
+gitolite lets you define a "personal" or "scratch" namespace prefix for
+each developer (e.g., `refs/personal/<devname>/*`), with full
+permissions for that dev and read-only for everyone else.  And you get
+this without adding a single line to the access config file -- pretty
+much fire and forget as far as the admin is concerned, even if there is
+constant churn in the project teams.
+
+Not bad for something that took just *one* line of code to implement.
+And that's one clean, readable, line, by the way ;-)
+
+The admin would set `$PERSONAL_BRANCH_PREFIX` in the rc file and communicate
+this to all users.  It could be something like `refs/heads/personal`, which
+means all such branches will show up in `git branch` lookups and `git clone`
+will fetch them.  Or he could use, say, `refs/personal`, which means it won't
+show up in any normal "branch-y" commands and stuff, and generally be much
+less noisy.
+
+**Note that a user who has NO write access cannot have personal branches**; if
+you read the section (above) on "two levels of access rights checking" you'll
+understand why.
+
+For instance, in the following example, `user3` cannot push to any
+`refs/heads/personal/user3/*` branches because the first level check stops him
+cold:
+
+    # assume $PERSONAL = 'refs/heads/personal' in ~/.gitolite.rc
+    repo myrepo
+        RW+ master      = sitaram
+        RW+ release     = qa_guy
+        RW              = user1 user2
+        R               = user3
+
+If we relax that check, *any* access becomes *write* access.  Yes it will be
+caught later, by the hook, but it's good practice to catch things in multiple
+places.
+
+If you want `user3` to have his own personal branch, but without write access
+to any of the "real" branches (like "master", "release", etc.), just use a
+dummy branch.  Choose a name that will never exist in practice, or even if
+someone creates it, we don't care.  For example, this will get him past the
+first check:
+
+        RW dummy        = user3
+
+Just don't *show* the user this config file; it might sound insulting :-)
+
+#### custom hooks and custom git config
+
+You can specify hooks that you want to propagate to all repos, as well as
+per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
+`conf/example.conf` for details.
+
+### helping with gitweb
+
+Although gitweb is a completely separate program, gitolite can do quite a
+lot to help you manage gitweb access as well; once the initial setup is
+complete, you can do it all from within the gitolite config file!
 
 #### easier to specify gitweb "description" and gitweb/daemon access
 
@@ -392,237 +641,7 @@ already done and we just use it!
 
 [leho]: http://leho.kraav.com/news/2009/10/27/using-apache-authentication-with-gitweb-gitosis-repository-access-control/
 
-#### better logging
-
-If you have been too liberal with the permission to rewind, it has built-in
-logging as an emergency fallback if someone goes too far, or for audit
-purposes [`*`].  The logfile names and location are configurable, and can
-include the year/month/day etc in the filename for easy archival or further
-processing.  The log file even tells you which pattern in the config file
-matched to allow that specific access to proceed.
-
->   [`*`] setting `core.logAllRefUpdates true` does provide a safety net
->   against over-zealous rewinds, but it does not tell you "who".  And
->   strangely, management does not seem to share the view that "blame" is just
->   a synonym for "annotate" ;-)]
-
-The log lines look like this:
-
-    2009-09-19.10:24:37  +  b4e76569659939  4fb16f2a88d8b5  myrepo refs/heads/master       user2   refs/heads/master
-
-The "+" at the start indicates a non-fast forward update, in this case from
-b4e76569659939 to 4fb16f2a88d8b5.  So b4e76569659939 is the one to restore!
-Can it get easier?
-
-The other parts of the log line are the name of the repo, the refname being
-updated, the user updating it, and the refex pattern (from the config file)
-that matched, in case you need to debug the config file itself.
-
-<a name="multikeys"></a>
-
-#### one user, many keys
-
-I have a laptop and a desktop I need to access the server from.  I have
-different private keys on them, but as far as gitolite is concerned both of
-them should be treated as "sitaram".  How does this work?
-
-In gitosis, the admin creates a single "sitaram.pub" containing one line for
-each of my pubkeys.  In gitolite, we keep them separate: "sitaram@laptop.pub"
-and "sitaram@desktop.pub".  The part before the "@" is the username, so
-gitolite knows these two keys belong to the same person.
-
-Note that you don't say "sitaram@laptop" and so on in the **config** file --
-as far as the config file is concerned there's just **one** user called
-"sitaram" -- so you only say "sitaram" there.
-
-I think this is easier to maintain if you have to delete or change one of
-those keys.
-
-However, now that `sitaramc@gmail.com` is also a valid username, we need to
-distinguish between `sitaramc@gmail.com.pub` and `sitaramc@desktop.pub`.  We
-do that by requiring that the multi-key suffix you use (like "desktop" and
-"laptop") should not have a `"."` in it.  If it does, it looks like an email
-address.  The following table lists sample pubkey filenames and the
-corresponding derived usernames (which is what goes into the
-`conf/gitolite.conf` file):
-
-  * old style multikeys; not mistaken for emails because there is no "." in
-    hostname part
-
-        sitaramc.pub                            sitaramc
-        sitaramc@laptop.pub                     sitaramc
-        sitaramc@desktop.pub                    sitaramc
-
-  * new style, email keys; there is a "." in hostname part; so it's an email
-    address
-
-        sitaramc@gmail.com.pub                  sitaramc@gmail.com
-
-  * multikeys *with* email address
-
-        sitaramc@gmail.com@laptop.pub           sitaramc@gmail.com
-        sitaramc@gmail.com@desktop.pub          sitaramc@gmail.com
-
-#### support for git installed outside default PATH
-
-The normal solution is to add to the system default PATH somehow, either by
-munging `/etc/profile` or by enabling `PermitUserEnvironment` in
-`/etc/ssh/sshd_config` and then setting the PATH in `~/.ssh/.environment`.
-All these are security risks because they allow a lot more than just you and
-your git install :-)
-
-And if you don't have root, you can't do this anyway.
-
-The only solution till now has been to ask every client to set the config
-parameters `remote.<name>.receivepack` and `remote.<name>.uploadpack`.  But
-telling *every* client to do so is a pain...
-
-Gitolite lets you specify the directory in which git binaries are to be found,
-via a new variable (`$GIT_PATH`) in the "rc" file.  If this variable is
-non-empty, it will be appended to the PATH environment variable before
-attempting to run git stuff.
-
-Very easy, very simple, and completely transparent to the users :-)
-
-<a name="myrights"></a>
-
-#### what repos do I have access to?
-
-Sometimes there are too many repos, maybe even named similarly, or with the
-potential for typos, confusion about hyphens/underscores or upper/lower case,
-etc.  You'd just like a simple way to know what repos you have access to.
-
-Easy!  Just use ssh and try to log in as if you were attempting to get a
-shell:
-
-    $ ssh gitolite info
-    PTY allocation request failed on channel 0
-    hello sitaram, the gitolite version here is v0.6-17-g94ed189
-    you have the following permissions:
-      R  W  Anu-WSD
-      R     ROtest
-      R  W  SecureBrowse
-      R  W  entrans
-      R  W  git-notes
-      R  W  gitolite
-      R  W  gitolite-admin
-      R  W  indic_web_input
-      R  W  proxy
-      @  @  testing
-      R  W  vkc
-
-Note that until this version, we used to put out an ugly `need
-SSH_ORIGINAL_COMMAND` error, just like gitosis used to.  All we did is put
-that code path to better use :-)
-
-#### "exclude" (or "deny") rules
-
-Here is an illustrative explanation of "deny" rules.  However, please be sure
-to read the "DENY/EXCLUDE RULES" section in `conf/example.conf` for important
-notes/caveats before using "deny" rules.
-
-Take a look at the following snippet, which *seems* to say that "bruce" can
-write versioned tags (anything containing `refs/tags/v[0-9]`), but the other
-staffers can't:
-
-        @staff = bruce whitfield martin
-                [... and later ...]
-        RW refs/tags/v[0-9]     = bruce
-        RW refs/tags            = @staff
-
-But that's not how the matching works.  As long as any refex matches the
-refname being updated, it's a "yes".  Since the second refex (which says
-"anything containing `refs/tags`") is a superset of the first one, it lets
-anyone on `@staff` create versioned tags, not just Bruce.
-
-One way to fix this is to allow "excludes" -- some changes in syntax, combined
-with a rigorous, ordered, interpretation would do it.
-
-Let's recap the **existing semantics**:
-
->   the first matching refex that has the permission you're looking for (`W`
->   or `+`), results in success.  A fallthrough results in failure
-
-Here are the **new semantics**, with changes from the "main" one in bold:
-
->   the first matching refex that has the permission you're looking for (`W`
->   or `+`) **or a minus (`-`)**, results in success **or failure,
->   respectively**.  A fallthrough **also** results in failure
-
-So the example we started with becomes, if you use "deny" rules:
-
-        RW refs/tags/v[0-9]     = bruce
-        -  refs/tags/v[0-9]     = @staff
-        RW refs/tags            = @staff
-
-And here's how it works:
-
-  * for non-version tags, only the 3rd rule matches, so anyone on staff can
-    push them
-  * for version tags by bruce, the first rule matches so he can push them
-  * for version tags by staffers *other than bruce*, the second rule matches
-    before the third one, and it has a `-` as the permission, so the push
-    fails
-
-#### "personal" branches
-
-"personal" branches are great for corporate environments, where
-unauthenticated pull/clone is a no-no.  Since a dev workstation cannot do
-authentication, even work shared just between 2 devs has to go *via* the
-server.  This causes the same branch name clutter as in a centralised VCS,
-plus setting up permissions for this becomes a chore for the admin.
-
-gitolite lets you define a "personal" or "scratch" namespace prefix for
-each developer (e.g., `refs/personal/<devname>/*`), with full
-permissions for that dev and read-only for everyone else.  And you get
-this without adding a single line to the access config file -- pretty
-much fire and forget as far as the admin is concerned, even if there is
-constant churn in the project teams.
-
-Not bad for something that took just *one* line of code to implement.
-And that's one clean, readable, line, by the way ;-)
-
-The admin would set `$PERSONAL_BRANCH_PREFIX` in the rc file and communicate
-this to all users.  It could be something like `refs/heads/personal`, which
-means all such branches will show up in `git branch` lookups and `git clone`
-will fetch them.  Or he could use, say, `refs/personal`, which means it won't
-show up in any normal "branch-y" commands and stuff, and generally be much
-less noisy.
-
-**Note that a user who has NO write access cannot have personal branches**; if
-you read the section (above) on "two levels of access rights checking" you'll
-understand why.
-
-For instance, in the following example, `user3` cannot push to any
-`refs/heads/personal/user3/*` branches because the first level check stops him
-cold:
-
-    # assume $PERSONAL = 'refs/heads/personal' in ~/.gitolite.rc
-    repo myrepo
-        RW+ master      = sitaram
-        RW+ release     = qa_guy
-        RW              = user1 user2
-        R               = user3
-
-If we relax that check, *any* access becomes *write* access.  Yes it will be
-caught later, by the hook, but it's good practice to catch things in multiple
-places.
-
-If you want `user3` to have his own personal branch, but without write access
-to any of the "real" branches (like "master", "release", etc.), just use a
-dummy branch.  Choose a name that will never exist in practice, or even if
-someone creates it, we don't care.  For example, this will get him past the
-first check:
-
-        RW dummy        = user3
-
-Just don't *show* the user this config file; it might sound insulting :-)
-
-#### custom hooks and custom git config
-
-You can specify hooks that you want to propagate to all repos, as well as
-per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
-`conf/example.conf` for details.
+### advanced features
 
 #### repos named with wildcards
 
@@ -642,9 +661,9 @@ who has shell access anyway).
 
 Please see the config files (both of them) for examples and usage.
 
-### design choices
+## design choices
 
-#### keeping the parser and the access control separate
+### keeping the parser and the access control separate
 
 There are two programs concerned with access control:
 
