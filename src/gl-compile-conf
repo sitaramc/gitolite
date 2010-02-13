@@ -206,6 +206,7 @@ sub parse_conf_file
         {
             my $perms = $1;
             my @refs; @refs = split(' ', $2) if $2;
+            @refs = expand_list ( @refs );
             my @users = split ' ', $3;
             die "wildrepos disabled, cant use 'C' in config\n" if $perms eq 'C' and not $GL_WILDREPOS;
 
