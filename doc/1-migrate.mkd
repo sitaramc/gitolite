@@ -42,11 +42,14 @@ Now, log off the server and get back to the client:
     Make sure that you **don't** change the default path for `$REPO_BASE` if
     you edit the config file!
 
-2.  **convert** your gitosis config file.  Substitute the path for your
-    gitosis-admin clone in `$GSAC` below, and similarly the path for your
-    gito**lite**-admin clone in `$GLAC`
+    This will give you a gitolite config that has the required entries for the
+    "gitolite-admin" repo.
 
-        src/gl-conf-convert < $GSAC/gitosis.conf > $GLAC/gitolite.conf
+2.  **convert** your gitosis config file and append it to your gitolite config
+    file.  Substitute the path for your gitosis-admin clone in `$GSAC` below,
+    and similarly the path for your gito**lite**-admin clone in `$GLAC`
+
+        src/gl-conf-convert < $GSAC/gitosis.conf >> $GLAC/gitolite.conf
 
     Be sure to check the file to make sure it converted correctly
 
