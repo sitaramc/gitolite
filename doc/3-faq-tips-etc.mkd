@@ -156,11 +156,17 @@ plain "git archive", because the Makefile adds a file called
     make master.tar
     # or maybe "make pu.tar"
 
-<a name="diff"></a>
+<a name="features"></a>
 
 ## features
 
+Apart from the big ones listed in the top level README, and subjective ones
+like "better config file format", gitolite has evolved to have many useful
+fearures than the original goal of "gitosis + branch-level access control".
+
 ### syntax and normal usage
+
+<a name="simpler_syntax"></a>
 
 #### simpler syntax
 
@@ -204,6 +210,8 @@ do not worry that this causes some duplication or inefficiency.  It doesn't
 :-)
 
 See the "specify gitweb/daemon access" section below for one more example.
+
+<a name="multikeys"></a>
 
 #### one user, many keys
 
@@ -250,6 +258,8 @@ corresponding derived usernames (which is what goes into the
 
 ### security, access control, and auditing
 
+<a name="two_levels"></a>
+
 #### two levels of access rights checking
 
 Gitolite has two levels of access checks.  The **first check** is what I will
@@ -285,12 +295,6 @@ any of the refexes match, the push succeeds.  If none of them match, it fails.
 Gitolite also allows "exclude" or "deny" rules.  See later in this document
 for details.
 
-Apart from the big ones listed in the top level README, and subjective ones
-like "better config file format", gitolite has evolved to have many useful
-fearures than the original goal of "gitosis + branch-level access control".
-
-<a name="simpler_syntax"></a>
-
 #### better logging
 
 If you have been too liberal with the permission to rewind, it has built-in
@@ -316,8 +320,6 @@ Can it get easier?
 The other parts of the log line are the name of the repo, the refname being
 updated, the user updating it, and the refex pattern (from the config file)
 that matched, in case you need to debug the config file itself.
-
-<a name="multikeys"></a>
 
 #### "exclude" (or "deny") rules
 
@@ -384,9 +386,9 @@ access control for their own pieces.  See
 [doc/5-delegation.mkd](http://github.com/sitaramc/gitolite/blob/pu/doc/5-delegation.mkd)
 for details.
 
-<a name="gwd"></a>
-
 ### convenience features
+
+<a name="myrights"></a>
 
 #### what repos do I have access to?
 
@@ -451,8 +453,6 @@ attempting to run git stuff.
 
 Very easy, very simple, and completely transparent to the users :-)
 
-<a name="myrights"></a>
-
 #### "personal" branches
 
 "personal" branches are great for corporate environments, where
@@ -512,6 +512,8 @@ Just don't *show* the user this config file; it might sound insulting :-)
 You can specify hooks that you want to propagate to all repos, as well as
 per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
 `conf/example.conf` for details.
+
+<a name="gitweb"></a>
 
 ### helping with gitweb
 
