@@ -43,6 +43,8 @@ are using your shell access -- instead of running via
 `/some/path/gl-auth-command <your_username>` it is just going to bash and
 working from there!]
 
+<a name="basic"></a>
+
 ### basic ssh troubleshooting
 
 [glb]: http://sitaramc.github.com/0-installing/9-gitolite-basics.html#IMPORTANT_overview_of_ssh
@@ -181,6 +183,8 @@ If it gets you the GNU info command output, you have shell access.  This means
 you had command line access to the server *before* you were added as a
 gitolite user.  If you send that same key to your gitolite admin to include in
 the admin repo, it won't work.  For reasons why, see below.
+
+<a name="details"></a>
 
 ### details
 
@@ -348,6 +352,8 @@ that should have enough info to get you going (but it helps to know ssh well):
 
 That should do it.
 
+<a name="complex"></a>
+
 ### more complex ssh setups
 
 What do you need to know in order to create more complex ssh setups (for
@@ -372,6 +378,8 @@ instance if you have *two* gitolite servers you are administering)?
 
   * now access one server's repos as `gitolite:reponame.git` and the other
     server's repos as `gitolite2:reponame.git`.
+
+<a name="shell"></a>
 
 ### giving shell access to gitolite users
 
