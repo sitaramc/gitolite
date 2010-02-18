@@ -306,7 +306,7 @@ sub expand_wild
 
     # get the list of repo patterns
     &parse_acl($GL_CONF_COMPILED, "", "NOBODY", "NOBODY", "NOBODY");
-    my %reponames = map { $_ => 1 } grep { $_ =~ $REPONAME_PATT } sort keys %repos;
+    my %normal_repos = %repos;
 
     # display matching repos (from *all* the repos in the system) that $user
     # has at least "R" access to
@@ -316,24 +316,28 @@ sub expand_wild
         chomp ($actual_repo);
         $actual_repo =~ s/^\.\///;
         $actual_repo =~ s/\.git$//;
-        # actual_repo should not be present "as is" in the config, because if
-        # it does, those permissions will override anything inherited from a
-        # wildcard that also happens to match, and it would be misleading to
-        # show that here
-        next if $reponames{$actual_repo};
-        # it has to match the pattern being expanded
+        # actual_repo has to match the pattern being expanded
         next unless $actual_repo =~ /^$repo$/;
-
-        # find the creater and subsitute in repos
-        my ($creater, $read, $write) = &repo_rights($repo_base_abs, $actual_repo, $user);
-        # get access list with this
-        &parse_acl($GL_CONF_COMPILED, $actual_repo, $creater, $read || "NOBODY", $write || "NOBODY");
-
-        my $perm = "  ";
-        $perm .= ($repos{$actual_repo}{R}{'@all'} or $repos{$actual_repo}{R}{$user}) ? " R" : "  ";
-        $perm .= ($repos{$actual_repo}{W}{'@all'} or $repos{$actual_repo}{W}{$user}) ? " W" : "  ";
-        next if $perm eq "      ";
-        print "$perm\t($creater)\t$actual_repo\n";
+        # if actual_repo is present "as is" in the config, those
+        # permissions will override anything inherited from a
+        # wildcard that also happens to match
+        my $creater;
+        if ($normal_repos{$actual_repo}) {
+            %repos = %normal_repos;
+            $creater = '<gitolite>';
+        } else {
+            # find the creater and subsitute in repos
+            my ($read, $write);
+            ($creater, $read, $write) = &repo_rights($repo_base_abs, $actual_repo, $user);
+            # get access list with this
+            &parse_acl($GL_CONF_COMPILED, $actual_repo, $creater, $read || "NOBODY", $write || "NOBODY");
+            $creater = "($creater)";
+        }
+        my $perm = '  ';
+        $perm .= ( $repos{$actual_repo}{R}{'@all'} ? ' @' : ( $repos{$actual_repo}{R}{$user} ? ' R' : '  ' ) );
+        $perm .= ( $repos{$actual_repo}{W}{'@all'} ? ' @' : ( $repos{$actual_repo}{W}{$user} ? ' W' : '  ' ) );
+        next if $perm eq '      ';
+        print "$perm\t$creater\t$actual_repo\n";
     }
 }
 
