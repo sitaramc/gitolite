@@ -7,10 +7,10 @@
 # Note: I'm not sure if that "-r" is a GNU tar extension...
 
 .GITOLITE-VERSION:
-	@touch .GITOLITE-VERSION
+	@touch conf/VERSION
 
 %.tar:	.GITOLITE-VERSION
-	git describe --all --long $* > .GITOLITE-VERSION
+	git describe --tags --long $* > conf/VERSION
 	git archive $* > $@
-	tar -r -f $@ .GITOLITE-VERSION
-	rm .GITOLITE-VERSION
+	tar -r -f $@ conf/VERSION
+	rm conf/VERSION

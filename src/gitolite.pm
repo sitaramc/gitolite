@@ -34,7 +34,7 @@ our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple patter
 our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 
 # these come from the RC file
-our ($REPO_UMASK, $GL_WILDREPOS);
+our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS);
 our %repos;
 
 # ----------------------------------------------------------------------------
@@ -148,6 +148,9 @@ sub new_repo
     }
     # propagate our own, plus any local admin-defined, hooks
     ln_sf($hooks_dir, "*", "hooks");
+    # in case of package install, GL_ADMINDIR is no longer the top cop;
+    # override with the package hooks
+    ln_sf("$GL_PACKAGE_HOOKS/common", "*", "hooks") if $GL_PACKAGE_HOOKS;
     chmod 0755, "hooks/update";
 }
 
@@ -282,7 +285,7 @@ sub report_basic
 
     # send back some useful info if no command was given
     print "hello $user, the gitolite version here is ";
-    system("cat", "$GL_ADMINDIR/src/VERSION");
+    system("cat", ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION");
     print "\ryou have the following permissions:\n\r";
     for my $r (sort keys %repos) {
         my $perm .= ( $repos{$r}{C}{'@all'} ? ' @' : ( $repos{$r}{C}{$user} ? ' C' : '  ' ) );

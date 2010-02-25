@@ -169,12 +169,12 @@ basic_sanity() {
     # MANUAL: make sure you're in the gitolite directory, at the top level.
     # The following files should all be visible:
 
-    ls  src/ga-post-update-hook     \
+    ls  hooks/gitolite-admin/post-update     \
+        hooks/common/update         \
         src/gitolite.pm             \
         src/gl-install              \
         src/gl-auth-command         \
         src/gl-compile-conf         \
-        src/hooks/update            \
         conf/example.conf           \
         conf/example.gitolite.rc    >/dev/null ||
         die "cant find at least some files in gitolite sources/config; aborting"
@@ -196,12 +196,12 @@ version_info() {
     # MANUAL: if needed, make a note of the version you are upgrading from, and to
 
     # record which version is being sent across; we assume it's HEAD
-    git describe --tags --long HEAD 2>/dev/null > src/VERSION || echo '(unknown)' > src/VERSION
+    git describe --tags --long HEAD 2>/dev/null > conf/VERSION || echo '(unknown)' > conf/VERSION
 
     # what was the old version there?
     export upgrade_details="you are upgrading \
-    $(ssh -p $port $user@$host cat gitolite-install/src/VERSION 2>/dev/null || echo '(or installing first-time)' ) \
-    to $(cat src/VERSION)"
+    $(ssh -p $port $user@$host cat gitolite-install/conf/VERSION 2>/dev/null || echo '(or installing first-time)' ) \
+    to $(cat conf/VERSION)"
 
     prompt "$upgrade_details" "$v_upgrade_details"
 }
@@ -282,8 +282,7 @@ copy_gl() {
     # have to create the directory first.
 
     ssh -p $port $user@$host mkdir -p gitolite-install
-    scp $quiet -P $port -r src conf doc $user@$host:gitolite-install/
-    rm -f src/VERSION
+    scp $quiet -P $port -r src conf doc hooks $user@$host:gitolite-install/
 
     # MANUAL: now log on to the server (ssh git@server) and get a command
     # line.  This step is for your convenience; the script does it all from
