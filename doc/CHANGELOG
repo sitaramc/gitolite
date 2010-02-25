@@ -1,0 +1,39 @@
+Major changes to gitolite, master branch only, most recent first, no dates but
+the tags can help you position stuff approximately
+
+  - v1.1
+
+  - contrib directory added
+  - expand now lists non-wildcard repos also
+  - refs also have groups now
+  - allow admins to get "info" for other users
+
+  - wildrepos merged
+  - getdesc and setdesc for wildrepos
+  - htpasswd subcommand
+  - access control for rsync
+
+  - v1.0
+
+  - sshkeys-lint program added, doc/6 revamped
+  - @SHELL in config changed to $SHELL_USERS in rc
+  - "include" mechanism
+  - delegation now uses NAME/ instead of branches
+  - PATH/ changed to NAME/
+
+  - @SHELL in config
+  - use of @all for repos also (see doc for caveat)
+  - config entries for repos
+
+  - deny rules (no more "rebel" branch!)
+  - PATH/
+  - specify gitweb owner
+
+  - v0.95
+  - easy install can run from msysgit also
+  - v0.90
+  - allow admin defined hooks
+  - specify gitweb desc
+  - v0.85
+  - emergency addkey program
+  - v0.80
