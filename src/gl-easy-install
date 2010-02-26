@@ -582,7 +582,7 @@ it elsewhere later if you wish to.
 "
 
 tail="
-NOTE: All the below stuff is on your *workstation*.  You shoud not, normally,
+NOTE: All the below stuff is on your *workstation*.  You should not, normally,
 have to do anything directly on your server to administer/use gitolite.
 
 The admin repo is currently cloned at ~/gitolite-admin.  You can reclone it
@@ -590,8 +590,9 @@ anywhere else if you wish.  To administer gitolite, make changes to the config
 file (conf/gitolite.conf) and/or the pubkeys (in subdirectory 'keydir') in any
 clone, then git add, git commit, and git push.
 
-ADDING REPOS: Edit the config file to give *some* user access to the repo.
-When you push, an empty repo will be created on the server.
+ADDING REPOS: Do NOT add repos manually on the server.  Edit the config file
+to give *some* user access to the repo.  When you push, an empty repo will be
+created on the server.
 
 ADDING USERS: copy their pubkey as keydir/<username>.pub, add it, commit and
 push.
