@@ -115,7 +115,7 @@ if ($ENV{SSH_ORIGINAL_COMMAND} =~ $CUSTOM_COMMANDS) {
     my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
     my ($verb, $repo) = ($cmd =~ /^\s*(\S+)(?:\s+\/?(.*?)(?:.git)?)?$/);
     # deal with "no argument" cases
-    $verb eq 'expand' ? $repo = '.*' : die "$verb needs an argument\n" unless $repo;
+    $verb eq 'expand' ? $repo = '^' : die "$verb needs an argument\n" unless $repo;
     if ($repo =~ $REPONAME_PATT and $verb =~ /getperms|setperms/) {
         # with an actual reponame, you can "getperms" or "setperms"
         get_set_perms($repo_base_abs, $repo, $verb, $user);

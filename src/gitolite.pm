@@ -320,7 +320,7 @@ sub expand_wild
         $actual_repo =~ s/^\.\///;
         $actual_repo =~ s/\.git$//;
         # actual_repo has to match the pattern being expanded
-        next unless $actual_repo =~ /^$repo$/;
+        next unless $actual_repo =~ /$repo/;
         # if actual_repo is present "as is" in the config, those
         # permissions will override anything inherited from a
         # wildcard that also happens to match
