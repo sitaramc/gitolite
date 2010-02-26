@@ -107,7 +107,7 @@ to replicate it manually.  The input is your pubkey, typically
         /home/git/.ssh
         /home/git
 
-[Actually, sshd requires that even directories *above* ~ (/, /home,
+[Actually, `sshd` requires that even directories *above* `~` (`/`, `/home`,
 typically) also must be `go-w`, but that needs root.  And typically
 they're already set that way anyway.  (Or if they're not, you've got
 bigger problems than gitolite install not working!)]

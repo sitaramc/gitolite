@@ -22,7 +22,7 @@ gitolite *after* the install has completed successfully.
 
 In addition, I **strongly** recommend reading [this document][glb] -- it's a
 very detailed look at how gitolite uses ssh's features on the server side.
-Most people don't know ssh as well as they *think* they do; even if you dont
+Most people don't know ssh as well as they *think* they do; even if you don't
 have any problems right now, it's worth skimming over.
 
 In addition to both these documents, there's now a program called

@@ -159,7 +159,7 @@ use 'getperms' to check:
 
 The following points are important:
 
-  * note the syntax of the commands; it's not a "git" command,and there's no
+  * note the syntax of the commands; it's not a "git" command, and there's no
     `:` like in a repo URL.  The first space-separated word is R or RW, and
     the rest are simple usernames.
 
