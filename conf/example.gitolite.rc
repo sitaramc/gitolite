@@ -195,4 +195,7 @@ $GL_WILDREPOS = 0;
 # per perl rules, this should be the last line in such a file:
 1;
 
+# Local variables:
+# mode: perl
+# End:
 # vim: set syn=perl:
