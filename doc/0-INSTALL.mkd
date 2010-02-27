@@ -9,7 +9,14 @@ if he chooses to.
 This document tells you how to install gitolite.  After the install is done,
 you may want to see the [admin document][admin] for adding users, repos, etc.
 
+**Please note** that gitolite depends heavily on proper ssh setup and pubkey
+based access.  Sadly, most people don't know ssh as well as they think they
+do.  To make matters worse, ssh problems in gitolite don't always look like
+ssh problems.  Please read about [ssh troubleshooting][doc6] if you have *any*
+kind of trouble installing gitolite!
+
 [admin]: http://github.com/sitaramc/gitolite/blob/pu/doc/2-admin.mkd
+[doc6]: http://github.com/sitaramc/gitolite/blob/pu/doc/6-ssh-troubleshooting.mkd
 
 In this document:
 
