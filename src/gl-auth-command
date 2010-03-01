@@ -113,7 +113,7 @@ my $CUSTOM_COMMANDS=qr/^\s*(expand|(get|set)(perms|desc))\b/;
 if ($ENV{SSH_ORIGINAL_COMMAND} =~ $CUSTOM_COMMANDS) {
     die "wildrepos disabled, sorry\n" unless $GL_WILDREPOS;
     my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
-    my ($verb, $repo) = ($cmd =~ /^\s*(\S+)(?:\s+\/?(.*?)(?:.git)?)?$/);
+    my ($verb, $repo) = ($cmd =~ /^\s*(\S+)(?:\s+'?\/?(.*?)(?:\.git)?'?)?$/);
     # deal with "no argument" cases
     $verb eq 'expand' ? $repo = '^' : die "$verb needs an argument\n" unless $repo;
     if ($repo =~ $REPONAME_PATT and $verb =~ /getperms|setperms/) {
