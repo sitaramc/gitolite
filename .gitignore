@@ -2,3 +2,4 @@
 *.tgz
 *.tar.gz
 *.tar.bz2
+conf/VERSION
