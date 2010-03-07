@@ -567,8 +567,11 @@ done!
 Reminder:
     *Your* URL for cloning any repo on this server will be
         gitolite:reponame.git
+
     *Other* users you set up will have to use
         \$user@\$host:reponame.git
+    However, if your server uses a non-standard ssh port, they should use
+        ssh://\$user@\$host:\$port/reponame.git
 
     If this is your first time installing gitolite, please also:
         tail -31 \$0
