@@ -7,6 +7,7 @@ In this document:
 
   * administer
       * adding users and repos
+      * moving pre-existing repos into gitolite
       * specifying gitweb and daemon access
       * custom hooks
       * custom git config
@@ -39,6 +40,25 @@ Please read on to see how to do this correctly.
     the same as their keyfile names, but without the `.pub` extension
 
   * when done, commit your changes and push
+
+#### moving pre-existing repos into gitolite
+
+One simple way to add a pre-existing repo to gitolite is to let gitolite
+create it as a brand new repo as in the previous section, and then, from an
+existing clone, "push --all" to the new one.
+
+However, if you have many existing repos to add, this can be time-consuming
+and error-prone.  Here's how to take a bunch of existing repos and add them to
+gitolite:
+
+  * make sure they're *bare* repos ;-)
+
+  * log on to the server and copy the repos to `$REPO_BASE` (which defaults to
+    `~/repositories`), making sure that the directory names end in ".git".
+
+  * back on your workstation, add each repo (without the `.git` suffix) to
+    `conf/gitolite.conf` in your gitolite-admin repo clone.  Then add, commit,
+    push.
 
 #### specifying gitweb and daemon access
 

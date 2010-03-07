@@ -61,7 +61,7 @@ $Data::Dumper::Sortkeys = sub { return [ reverse sort keys %{$_[0]} ]; };
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 
 # these are set by the "rc" file
-our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $SHELL_USERS, $GL_WILDREPOS, $GL_GITCONFIG_KEYS);
+our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $SHELL_USERS, $GL_WILDREPOS, $GL_GITCONFIG_KEYS, $GL_PACKAGE_HOOKS);
 # and these are set by gitolite.pm
 our ($REPONAME_PATT, $REPOPATT_PATT, $USERNAME_PATT, $AUTH_COMMAND, $AUTH_OPTIONS, $ABRT, $WARN);
 
@@ -399,6 +399,17 @@ for my $repo (sort keys %repos) {
         new_repo($repo, "$GL_ADMINDIR/hooks/common");
         # new_repo would have chdir'd us away; come back
         wrap_chdir("$repo_base_abs");
+    }
+
+    # when repos are copied over from elsewhere, one had to run easy install
+    # once again to make the new (OS-copied) repo contain the proper update
+    # hook.  Perhaps we can make this easier now, and eliminate the easy
+    # install, with a quick check (and a new, empty, "hook" as a sentinel)
+    unless (-l "$repo.git/hooks/gitolite-hooked") {
+        ln_sf("$GL_ADMINDIR/hooks/common", "*", "$repo.git/hooks");
+        # in case of package install, GL_ADMINDIR is no longer the top cop;
+        # override with the package hooks
+        ln_sf("$GL_PACKAGE_HOOKS/common", "*", "$repo.git/hooks") if $GL_PACKAGE_HOOKS;
     }
 }
 
