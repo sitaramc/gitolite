@@ -412,7 +412,7 @@ setup_pta() {
     echo "cd $REPO_BASE/gitolite-admin.git
 PATH=$PATH:$GIT_PATH
 GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
-GIT_WORK_TREE=$GL_ADMINDIR git diff --cached --quiet || GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
+GIT_WORK_TREE=$GL_ADMINDIR git diff --cached --quiet 2>/dev/null || GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
 " | ssh -p $port $user@$host
 
     # MANUAL: now that the admin repo is created, you have to set the hooks
