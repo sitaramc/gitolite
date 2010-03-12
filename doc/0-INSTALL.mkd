@@ -284,33 +284,50 @@ can be, say, `/usr/share/gitolite/conf` or some such, and similarly location
 "Y" can be perhaps `/usr/share/gitolite/hooks`.  It's upto your distro
 policies where they are.
 
-These are the content changes needed (no trailing slashes in the location
-values please):
+**Step 1**: Clone the gitolite repo and run the make command inside the clone
 
-  * `gl-setup` should have the following line:
+    git clone git://github.com/sitaramc/gitolite.git
+    cd gitolite
+    make pu.tar     # or "make master.tar" or "make v1.2.tar" etc
+
+Then you explode the tar file in some temporary location.
+
+*Alternatively, you can `git checkout` the tag or branch you want, and run
+this command in the clone directly*:
+
+    git describe --tags --long > conf/VERSION
+
+**Step 2**: Now make the following changes (no trailing slashes in the
+location values please):
+
+  * `src/gl-setup` should have the following line:
 
         GL_PACKAGE_CONF="X"
 
-  * `example.gitolite.rc` should have the following lines:
+  * `conf/example.gitolite.rc` should have the following lines:
 
         $GL_PACKAGE_CONF="X";
         $GL_PACKAGE_HOOKS="Y";
 
-This is where the files should be installed:
+  * delete `src/gl-easy-install`; that script is meant for a totally different
+    mode of installation and does *not* play well in this mode :-)
+
+**Step 3**: Move (or arrange to move) the files to their proper locations as
+given below:
 
   * everything in "src" goes somewhere on the PATH
   * everything in "conf" goes to location "X"
   * everything in "hooks" goes to location "Y"
 
-You might also want to delete the `gl-easy-install` script, since that is
-meant for a totally different mode of installation and probably would *not*
-work if a user tried to run it :-)
+**Step 4**: There is no step 4.  Unless you count telling your users to run
+`gl-setup` as a step :)
 
-On the initial install, you could also choose to setup a userid called
-"gitolite", and run "gl-setup" as that user; however I do not know how you
-would come up with the initial pubkey that is needed.  Anyway, the point is
-that the "gitolite" user is no more special than any other in terms of hosting
-gitolite.  Any user can host it by just running "gl-setup".
+On the initial install (urpmi, yum install, or apt-get install), you could
+also choose to setup a userid called "gitolite", and run "gl-setup" as that
+user; however I do not know how you would come up with the initial pubkey that
+is needed.  Anyway, the point is that the "gitolite" user is no more special
+than any other in terms of hosting gitolite.  Any user can host gitolite on
+his userid by just running "gl-setup".
 
 When you upgrade, just overwrite all the files; it'll all just work.  In fact,
 other than the initial "gl-setup" run, the only time a gitolite hosting user
