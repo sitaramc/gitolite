@@ -1,6 +1,15 @@
 Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 
+  - v1.3
+
+  - easier to move repos into gitolite
+  - pattern for expand is no longer anchored
+
+  - v1.2
+
+  - distro packaging support -- easy to install systemwide now
+
   - v1.1
 
   - contrib directory added
