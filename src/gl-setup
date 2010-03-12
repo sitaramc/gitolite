@@ -52,6 +52,15 @@ else
     cp $GL_PACKAGE_CONF/example.gitolite.rc ~/.gitolite.rc
 fi
 
+# setup ssh stuff.  We break our normal rule that we will not fiddle with
+# authkeys etc., because in this case it seems appropriate
+cd
+mkdir -p .ssh
+touch .ssh/authorized_keys
+chmod go-w . .ssh .ssh/authorized_keys
+
+# now we get to gitolite itself
+
 gl-install -q
 
 GL_ADMINDIR=$(cd;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR')
