@@ -286,12 +286,12 @@ sub report_basic
     # send back some useful info if no command was given
     print "hello $user, the gitolite version here is ";
     system("cat", ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION");
-    print "\ryou have the following permissions:\n\r";
+    print "\ryou have the following permissions:\r\n";
     for my $r (sort keys %repos) {
         my $perm .= ( $repos{$r}{C}{'@all'} ? ' @' : ( $repos{$r}{C}{$user} ? ' C' : '  ' ) );
         $perm    .= ( $repos{$r}{R}{'@all'} ? ' @' : ( $repos{$r}{R}{$user} ? ' R' : '  ' ) );
         $perm    .= ( $repos{$r}{W}{'@all'} ? ' @' : ( $repos{$r}{W}{$user} ? ' W' : '  ' ) );
-        print "$perm\t$r\n\r" if $perm =~ /\S/;
+        print "$perm\t$r\r\n" if $perm =~ /\S/;
     }
 }
 
@@ -358,7 +358,7 @@ sub special_cmd
     # check each special command we know about and call it if enabled
     if ($cmd eq 'info') {
         &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
-        print "you also have shell access\n\r" if $shell_allowed;
+        print "you also have shell access\r\n" if $shell_allowed;
     } elsif ($cmd =~ /^info\s+(.+)$/) {
         my @otherusers = split ' ', $1;
         &parse_acl($GL_CONF_COMPILED);
