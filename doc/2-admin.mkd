@@ -10,6 +10,7 @@ In this document:
       * moving pre-existing repos into gitolite
       * specifying gitweb and daemon access
       * custom hooks
+      * when you need your own "update" hook
       * custom git config
 
 ### administer
@@ -111,6 +112,17 @@ just run easy install once again; it'll do it to existing repos also.
 implements all the branch-level permissions in gitolite.  If you fiddle with
 the hooks directory, please make sure you do not mess with this file
 accidentally, or all your fancy per-branch permissions will stop working.**
+
+#### when you need your own "update" hook
+
+Gitolite basically takes over the update hook for all repos, but some setups
+really need the update hook functionality for their own purposes too.  In
+order to allow this, Gitolite now exec's a hook called `update.secondary` when
+it's own "update" hook is done and everything is ready to go.
+
+You can create this `update.secondary` hook selectively on some repos on the
+server, or use the mechanism in the previous section to make gitolite install
+it on *all* your repos.
 
 #### custom git config
 

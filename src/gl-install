@@ -59,10 +59,10 @@ for my $dir qw(conf doc keydir logs src hooks hooks/common hooks/gitolite-admin)
 
 # "src" and "doc" will be overwritten on each install, but not conf
 if ($GL_PACKAGE_HOOKS) {
-    system("cp -R $GL_PACKAGE_HOOKS $GL_ADMINDIR");
+    system("cp -R -p $GL_PACKAGE_HOOKS $GL_ADMINDIR");
 } else {
-    system("cp -R $bindir/../src $bindir/../doc $bindir/../hooks $GL_ADMINDIR");
-    system("cp    $bindir/../conf/VERSION                        $GL_ADMINDIR/conf");
+    system("cp -R -p $bindir/../src $bindir/../doc $bindir/../hooks $GL_ADMINDIR");
+    system("cp       $bindir/../conf/VERSION                        $GL_ADMINDIR/conf");
 }
 
 unless (-f $GL_CONF or $GL_PACKAGE_CONF) {

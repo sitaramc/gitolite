@@ -54,6 +54,8 @@ require "$ENV{GL_BINDIR}/gitolite.pm";
 #       start...
 # ----------------------------------------------------------------------------
 
+my @saved_ARGV = @ARGV;     # for chaining to another update hook at the end
+
 my $ref = shift;
 my $oldsha = shift;
 my $newsha = shift;
@@ -110,4 +112,9 @@ my $log_refex = check_ref(\@allowed_refs, $ENV{GL_REPO}, (shift @refs), $perm);
 &log_it("$ENV{GL_TS}  $perm\t" .
     substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
     "\t$reported_repo\t$ref\t$ENV{GL_USER}\t$log_refex\n");
+
+# now chain to the local admin defined update hook, if present
+exec "./hooks/update.secondary", @saved_ARGV
+    if -f "hooks/update.secondary" or -l "hooks/update.secondary";
+
 exit 0;

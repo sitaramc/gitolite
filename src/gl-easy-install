@@ -282,7 +282,7 @@ copy_gl() {
     # have to create the directory first.
 
     ssh -p $port $user@$host mkdir -p gitolite-install
-    scp $quiet -P $port -r src conf doc hooks $user@$host:gitolite-install/
+    scp $quiet -P $port -p -r src conf doc hooks $user@$host:gitolite-install/
 
     # MANUAL: now log on to the server (ssh git@server) and get a command
     # line.  This step is for your convenience; the script does it all from
