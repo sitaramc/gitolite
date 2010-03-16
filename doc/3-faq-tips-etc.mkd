@@ -461,51 +461,19 @@ authentication, even work shared just between 2 devs has to go *via* the
 server.  This causes the same branch name clutter as in a centralised VCS,
 plus setting up permissions for this becomes a chore for the admin.
 
-gitolite lets you define a "personal" or "scratch" namespace prefix for
-each developer (e.g., `refs/personal/<devname>/*`), with full
-permissions for that dev and read-only for everyone else.  And you get
-this without adding a single line to the access config file -- pretty
-much fire and forget as far as the admin is concerned, even if there is
-constant churn in the project teams.
+gitolite lets you define a "personal" or "scratch" namespace prefix for each
+developer (e.g., `refs/personal/<devname>/*`).  Just add a line like:
 
-Not bad for something that took just *one* line of code to implement.
-And that's one clean, readable, line, by the way ;-)
+        RW+ personal/USER/      =   @userlist
 
-The admin would set `$PERSONAL_BRANCH_PREFIX` in the rc file and communicate
-this to all users.  It could be something like `refs/heads/personal`, which
-means all such branches will show up in `git branch` lookups and `git clone`
-will fetch them.  Or he could use, say, `refs/personal`, which means it won't
-show up in any normal "branch-y" commands and stuff, and generally be much
-less noisy.
+This means I (user "sitaram") can do anything to any branch whose name starts
+with `personal/sitaram/` assuming I'm in "userlist".
 
-**Note that a user who has NO write access cannot have personal branches**; if
-you read the section (above) on "two levels of access rights checking" you'll
-understand why.
-
-For instance, in the following example, `user3` cannot push to any
-`refs/heads/personal/user3/*` branches because the first level check stops him
-cold:
-
-    # assume $PERSONAL = 'refs/heads/personal' in ~/.gitolite.rc
-    repo myrepo
-        RW+ master      = sitaram
-        RW+ release     = qa_guy
-        RW              = user1 user2
-        R               = user3
-
-If we relax that check, *any* access becomes *write* access.  Yes it will be
-caught later, by the hook, but it's good practice to catch things in multiple
-places.
-
-If you want `user3` to have his own personal branch, but without write access
-to any of the "real" branches (like "master", "release", etc.), just use a
-dummy branch.  Choose a name that will never exist in practice, or even if
-someone creates it, we don't care.  For example, this will get him past the
-first check:
-
-        RW dummy        = user3
-
-Just don't *show* the user this config file; it might sound insulting :-)
+You can have any number of such lines with different prefixes (for example,
+using topic names instead of "personal") or even suffixes if you like.  The
+important thing is that the "branch" name should contain `/USER/` (including
+the slashes).  At runtime this will match whoever is the current user.  Access
+is still determined by the right hand side of course.
 
 #### custom hooks and custom git config
 
