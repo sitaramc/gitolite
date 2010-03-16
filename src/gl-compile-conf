@@ -217,6 +217,7 @@ sub parse_conf_file
             # fully qualify refs that dont start with "refs/" or "NAME/";
             # prefix them with "refs/heads/"
             @refs = map { m(^(refs|NAME)/) or s(^)(refs/heads/); $_ } @refs;
+            @refs = map { s(/USER/)(/\$gl_user/); $_ } @refs;
 
             # expand the user list, unless it is just "@all"
             @users = expand_list ( @users )
@@ -367,7 +368,7 @@ my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
 # the dump uses single quotes, but we convert any strings containing $creater,
 # $readers, $writers, to double quoted strings.  A wee bit sneaky, but not too
 # much...
-$dumped_data =~ s/'(?=[^']*\$(?:creater|readers|writers))(.*?)'/"$1"/g;
+$dumped_data =~ s/'(?=[^']*\$(?:creater|readers|writers|gl_user))(.*?)'/"$1"/g;
 print $compiled_fh $dumped_data;
 close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
 

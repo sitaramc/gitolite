@@ -39,6 +39,7 @@ die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
     our $creater = $ENV{GL_CREATER};
     our $readers = $ENV{GL_READERS};
     our $writers = $ENV{GL_WRITERS};
+    our $gl_user = $ENV{GL_USER};
 
     die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
 

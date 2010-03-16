@@ -250,6 +250,7 @@ sub parse_acl
     our $creater = $ENV{GL_CREATER} = $c || $ENV{GL_CREATER} || "NOBODY";
     our $readers = $ENV{GL_READERS} = $r || $ENV{GL_READERS} || "NOBODY";
     our $writers = $ENV{GL_WRITERS} = $w || $ENV{GL_WRITERS} || "NOBODY";
+    our $gl_user = $ENV{GL_USER};
 
     die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
 
