@@ -25,7 +25,7 @@ use warnings;
 #       common definitions
 # ----------------------------------------------------------------------------
 
-our ($GL_CONF_COMPILED, $PERSONAL);
+our ($GL_CONF_COMPILED);
 our %repos;
 
 # we should already have the GL_RC env var set when we enter this hook
@@ -76,8 +76,6 @@ $perm = '+' if $ref =~ m(refs/tags/) and $oldsha ne ('0' x 40);
 $perm = '+' if $oldsha ne $merge_base;
 
 my @allowed_refs;
-# personal stuff -- right at the start in the new regime, I guess!
-push @allowed_refs, { "$PERSONAL/$ENV{GL_USER}/" => "RW+" } if $PERSONAL;
 # we want specific perms to override @all, so they come first
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$ENV{GL_USER}} || [] };
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{'@all'} || [] };
