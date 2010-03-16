@@ -6,3 +6,8 @@ GIT_WORK_TREE=$GL_ADMINDIR git checkout -f master
 
 cd $GL_ADMINDIR
 $GL_BINDIR/gl-compile-conf
+
+if [[ -f hooks/post-update.secondary ]] || [[ -L hooks/post-update.secondary ]]
+then
+    exec hooks/post-update.secondary "$@"
+fi
