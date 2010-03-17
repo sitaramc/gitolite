@@ -5,15 +5,6 @@ use warnings;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 $Data::Dumper::Sortkeys = 1;
-$Data::Dumper::Sortkeys = sub { return [ reverse sort keys %{$_[0]} ]; };
-    # this is to make sure that $creater etc go to the end of the dumped hash.
-    # Without this, a setup that has something like
-    #   @team = u1 u2 u3
-    #   repo    priv/CREATER/.+
-    #       RW+ =   CREATER
-    #       RW  =   @team
-    # has a problem.  The RW overrides the RW+ when the dumped hash is read in
-    # (simply going by sequence), so creater's special privs are lost
 
 # === add-auth-keys ===
 
@@ -224,7 +215,7 @@ sub parse_conf_file
                 unless (@users == 1 and $users[0] eq '@all');
             do  { die "$ABRT bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
 
-            s/\bCREAT[EO]R\b/\$creater/g for @users;
+            s/\bCREAT[EO]R\b/~\$creater/g for @users;
             s/\bREADERS\b/\$readers/g for @users;
             s/\bWRITERS\b/\$writers/g for @users;
 
@@ -368,7 +359,7 @@ my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
 # the dump uses single quotes, but we convert any strings containing $creater,
 # $readers, $writers, to double quoted strings.  A wee bit sneaky, but not too
 # much...
-$dumped_data =~ s/'(?=[^']*\$(?:creater|readers|writers|gl_user))(.*?)'/"$1"/g;
+$dumped_data =~ s/'(?=[^']*\$(?:creater|readers|writers|gl_user))~?(.*?)'/"$1"/g;
 print $compiled_fh $dumped_data;
 close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
 

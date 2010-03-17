@@ -234,11 +234,6 @@ sub parse_acl
     my ($GL_CONF_COMPILED, $repo, $c, $r, $w) = @_;
     $c = $r = $w = "NOBODY" unless $GL_WILDREPOS;
 
-    # void $r if same as $w (otherwise "readers" overrides "writers"; this is
-    # the same problem that needed a sort sub for the Dumper in the compile
-    # script, but in this case it's limited to just $readers and $writers)
-    $r = "NOBODY" if $r eq $w;
-
     # set up the variables for a parse to interpolate stuff from the dumped
     # hash (remember the selective conversion of single to double quotes?).
 
