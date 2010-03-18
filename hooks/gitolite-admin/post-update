@@ -9,7 +9,7 @@ $GL_BINDIR/gl-compile-conf
 
 cd -
 
-if [[ -f hooks/post-update.secondary ]] || [[ -L hooks/post-update.secondary ]]
+if [ -f hooks/post-update.secondary ] || [ -L hooks/post-update.secondary ]
 then
     exec hooks/post-update.secondary "$@"
 fi
