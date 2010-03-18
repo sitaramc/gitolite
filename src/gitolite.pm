@@ -174,8 +174,8 @@ sub repo_rights
         my $fh = wrap_open("<", "$repo_base_abs/$repo.git/gl-perms");
         my $perms = join ("", <$fh>);
         if ($perms) {
-            $r = $user if $perms =~ /^\s*R(?=\s).*\s$user(\s|$)/m;
-            $w = $user if $perms =~ /^\s*RW(?=\s).*\s$user(\s|$)/m;
+            $r = $user if $perms =~ /^\s*R(?=\s).*\s(\@all|$user)(\s|$)/m;
+            $w = $user if $perms =~ /^\s*RW(?=\s).*\s(\@all|$user)(\s|$)/m;
         }
     }
 
