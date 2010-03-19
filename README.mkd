@@ -108,3 +108,4 @@ details, looking for the word "security".
 Gitolite is released under GPL v2.  See COPYING for details.
 
 sitaramc@gmail.com
+mailing list: gitolite@googlegroups.com
