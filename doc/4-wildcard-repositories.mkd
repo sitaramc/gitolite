@@ -184,7 +184,16 @@ allowed to *create* repos matching that pattern.
 
 In addition, there is also the "expand" command, which takes any regex pattern
 and returns you a list of all wildcard-created repos that you have access to
-which fit that pattern.
+which fit that pattern.  And if, as an administrator, you wish to list out
+*every single* repo that your users have created, add this to the *end* of the
+config file:
+
+    repo @all
+        R       =   sitaram     # or whoever you are
+
+Push the config, then try
+
+    ssh gitolite expand
 
 ### other issues and discussion
 
