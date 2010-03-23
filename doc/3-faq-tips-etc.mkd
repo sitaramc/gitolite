@@ -126,16 +126,12 @@ seem to hurt anything.  [Update 2009-09-14; this has been fixed in git
 ### `@all` syntax for repos
 
 There *is* a way to use the `@all` syntax for repos also, as described in
-`conf/example.conf`.  However, there is an important difference between this
-and the old `@all` (for users):
+`conf/example.conf`.  However, there are a couple of minor cautions:
 
-  * `@all` for repos is immediately expanded, when found, into the currently
-    known list of repos.  "Currently" means upto this point in the config
-    file, and "known" means having some user with some permissions associated
-    with the repo!
-
-  * This means that if you really want *all* repos, you'd better put this para
-    at the **end** of the config file!
+  * don't use `NAME/` or such restrictions on the special `@all` repo.  Due to
+    the potential for defeating a crucial optimisation and slowing down *all*
+    access, we do not support this.
+  * don't try giving `@all` users some permission for `@all` repos
 
 ### umask setting
 

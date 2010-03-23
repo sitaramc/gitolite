@@ -284,9 +284,13 @@ sub report_basic
     system("cat", ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION");
     print "\ryou have the following permissions:\r\n";
     for my $r (sort keys %repos) {
-        my $perm .= ( $repos{$r}{C}{'@all'} ? ' @' : ( $repos{$r}{C}{$user} ? ' C' : '  ' ) );
-        $perm    .= ( $repos{$r}{R}{'@all'} ? ' @' : ( $repos{$r}{R}{$user} ? ' R' : '  ' ) );
-        $perm    .= ( $repos{$r}{W}{'@all'} ? ' @' : ( $repos{$r}{W}{$user} ? ' W' : '  ' ) );
+        # @all repos; meaning of read/write flags:
+        #   @ => @all users are allowed access to this repo
+        # r/w => you        are allowed access to @all repos
+        # R/W => you        are allowed access to this repo
+        my $perm .= ( $repos{$r}{C}{'@all'} ? ' @' :                                     ( $repos{$r}{C}{$user} ? ' C' : '  ' ) );
+        $perm    .= ( $repos{$r}{R}{'@all'} ? ' @' : ( $repos{'@all'}{R}{$user} ? ' r' : ( $repos{$r}{R}{$user} ? ' R' : '  ' )));
+        $perm    .= ( $repos{$r}{W}{'@all'} ? ' @' : ( $repos{'@all'}{W}{$user} ? ' w' : ( $repos{$r}{W}{$user} ? ' W' : '  ' )));
         print "$perm\t$r\r\n" if $perm =~ /\S/;
     }
 }
@@ -333,8 +337,9 @@ sub expand_wild
             $creater = "($creater)";
         }
         my $perm = '  ';
-        $perm .= ( $repos{$actual_repo}{R}{'@all'} ? ' @' : ( $repos{$actual_repo}{R}{$user} ? ' R' : '  ' ) );
-        $perm .= ( $repos{$actual_repo}{W}{'@all'} ? ' @' : ( $repos{$actual_repo}{W}{$user} ? ' W' : '  ' ) );
+        # @all repos; see notes above
+        $perm .= ( $repos{$actual_repo}{R}{'@all'} ? ' @' : ( $repos{'@all'}{R}{$user} ? ' r' : ( $repos{$actual_repo}{R}{$user} ? ' R' : '  ' )));
+        $perm .= ( $repos{$actual_repo}{W}{'@all'} ? ' @' : ( $repos{'@all'}{W}{$user} ? ' w' : ( $repos{$actual_repo}{W}{$user} ? ' W' : '  ' )));
         next if $perm eq '      ';
         print "$perm\t$creater\t$actual_repo\n";
     }
@@ -390,8 +395,11 @@ sub check_access
     # bit, sadly), this code duplicates stuff in the current update hook.
 
     my @allowed_refs;
-    # we want specific perms to override @all, so they come first
+    # user+repo specific perms override everything else, so they come first.
+    # Then perms given to specific user for @all repos, and finally perms
+    # given to @all users for specific repo
     push @allowed_refs, @ { $repos{$repo}{$ENV{GL_USER}} || [] };
+    push @allowed_refs, @ { $repos{'@all'}{$ENV{GL_USER}} || [] };
     push @allowed_refs, @ { $repos{$repo}{'@all'} || [] };
 
     &check_ref(\@allowed_refs, $repo, $ref, $perm);

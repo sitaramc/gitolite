@@ -188,6 +188,7 @@ my $perm = ($verb =~ $R_COMMANDS ? 'R' : 'W');
 
 die "$perm access for $repo DENIED to $user\n"
     unless $repos{$repo}{$perm}{$user}
+        or $repos{'@all'}{$perm}{$user}     # new: access to @all repos
         or $repos{$repo}{$perm}{'@all'};
 
 # ----------------------------------------------------------------------------

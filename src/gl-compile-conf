@@ -184,9 +184,7 @@ sub parse_conf_file
         {
             # grab the list and expand any @stuff in it
             @repos = split ' ', $1;
-            if (@repos == 1 and $repos[0] eq '@all') {
-                @repos = keys %repos;
-            } else {
+            unless (@repos == 1 and $repos[0] eq '@all') {
                 @repos = expand_list ( @repos );
                 do  { die "$ABRT bad reponame $_\n" unless ($GL_WILDREPOS ? $_ =~ $REPOPATT_PATT : $_ =~ $REPONAME_PATT) } for @repos;
             }
