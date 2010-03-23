@@ -394,13 +394,7 @@ sub check_access
     push @allowed_refs, @ { $repos{$repo}{$ENV{GL_USER}} || [] };
     push @allowed_refs, @ { $repos{$repo}{'@all'} || [] };
 
-    for my $ar (@allowed_refs) {
-        my $refex = (keys %$ar)[0];
-        next unless $ref =~ /^$refex/;
-        die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->{$refex} eq '-';
-        return if ($ar->{$refex} =~ /\Q$perm/);
-    }
-    die "$perm $ref $ENV{GL_REPO} $ENV{GL_USER} DENIED by fallthru\n";
+    &check_ref(\@allowed_refs, $repo, $ref, $perm);
 }
 
 # ----------------------------------------------------------------------------
