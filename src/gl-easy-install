@@ -410,7 +410,7 @@ setup_pta() {
     # space around the "=" in the second and third lines.
 
     echo "cd $REPO_BASE/gitolite-admin.git
-PATH=$PATH:$GIT_PATH
+PATH=\$PATH:$GIT_PATH
 GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
 GIT_WORK_TREE=$GL_ADMINDIR git diff --cached --quiet 2>/dev/null || GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
 " | ssh -p $port $user@$host
