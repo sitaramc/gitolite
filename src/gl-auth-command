@@ -173,7 +173,7 @@ if ( -d "$repo_base_abs/$repo.git" ) {
     my ($creater, $user_R, $user_W) = &repo_rights($repo_base_abs, $repo, $user);
     &parse_acl($GL_CONF_COMPILED, $repo, $creater, $user_R, $user_W);
 } else {
-    &parse_acl($GL_CONF_COMPILED, $repo, $user, $user, $user);
+    &parse_acl($GL_CONF_COMPILED, $repo, $user, "NOBODY", "NOBODY");
 
     # auto-vivify new repo if you have C access (and wildrepos is on)
     if ( $GL_WILDREPOS and $repos{$repo}{C}{$user} || $repos{$repo}{C}{'@all'} ) {
