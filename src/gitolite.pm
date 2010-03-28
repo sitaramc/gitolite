@@ -253,15 +253,21 @@ sub parse_acl
     # want the config dumped as is, really
     return unless $repo;
 
-    return $ENV{GL_REPOPATT} = "" if $repos{$repo};
-    # didn't find it, but wild is off?  too bad, die!!! muahahaha
-    die "$repo not found in compiled config\n" unless $GL_WILDREPOS;
+    # return with "no wildcard match" status if you found the actual repo in
+    # the config or if wild is unset
+    return $ENV{GL_REPOPATT} = "" if $repos{$repo} or not $GL_WILDREPOS;
 
-    # didn't find $repo in %repos, so it must be a wildcard-match case
+    # didn't find actual repo in %repos, and wild is set, so find the repo
+    # pattern that matches the actual repo
     my @matched = grep { $repo =~ /^$_$/ } sort keys %repos;
-    die "$repo has no matches\n" unless @matched;
+
+    # didn't find a match?  avoid leaking info to user about repo existence;
+    # as before, pretend "no wildcard match" status
+    return $ENV{GL_REPOPATT} = "" unless @matched;
+
     die "$repo has multiple matches\n@matched\n" if @matched > 1;
-    # found exactly one pattern that matched, copy its ACL
+
+    # found exactly one pattern that matched, copy its ACL for convenience
     $repos{$repo} = $repos{$matched[0]};
     # and return the pattern
     return $ENV{GL_REPOPATT} = $matched[0];

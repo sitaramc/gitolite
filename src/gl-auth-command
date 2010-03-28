@@ -180,6 +180,10 @@ if ( -d "$repo_base_abs/$repo.git" ) {
         wrap_chdir("$repo_base_abs");
         new_repo($repo, "$GL_ADMINDIR/hooks/common", $user);
         wrap_chdir($ENV{HOME});
+    } else {
+        # repo didn't exist, and you didn't have perms to create it.  Delete
+        # the "convenience" copy of the ACL that parse_acl makes for us
+        delete $repos{$repo};
     }
 }
 
