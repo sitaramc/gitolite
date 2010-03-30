@@ -18,6 +18,7 @@ In this document:
           * two levels of access rights checking
           * better logging
           * "exclude" (or "deny") rules
+          * the "D" permission -- separating delete and rewind rights
           * file/dir NAME based restrictions
           * delegating parts of the config file
       * convenience features
@@ -365,6 +366,28 @@ And here's how it works:
   * for version tags by staffers *other than bruce*, the second rule matches
     before the third one, and it has a `-` as the permission, so the push
     fails
+
+#### the "D" permission -- separating delete and rewind rights
+
+Since the beginning, `RW+` meant being able to rewind *or* delete a ref.  My
+stand is that these two are fairly similar, and infact a rewind is almost the
+same as a delete+push (the only difference I can see is if you had
+core.logAllRefUpdates set, which is *not* a default setting).
+
+However, there seem to be cases where it is useful to distinguish them --
+situations where one of them should be restricted more than the other.
+([Arguments][sdrr] exist for both sides: restrict delete more than rewind, and
+vice versa).
+
+So we now allow these two rights to be separated.  Just use the new `D`
+permission anywhere in the config for the repo, and instantly all `RW+`
+permissions (for that repo) cease to permit deletion of the ref matched.
+
+This provides the *greatest* backward compatibility (if you don't specify any
+`D` permissions, everything works just as before), while also enabling the new
+semantics at the granularity of a repo, instead of the entire config.
+
+[sdrr]: http://groups.google.com/group/gitolite/browse_thread/thread/9f2b4358ce406d4c#
 
 #### file/dir NAME based restrictions
 

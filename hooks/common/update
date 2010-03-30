@@ -75,6 +75,10 @@ $perm = '+' if $ref =~ m(refs/tags/) and $oldsha ne ('0' x 40);
 # notice that ref delete looks like a rewind, as it should
 $perm = '+' if $oldsha ne $merge_base;
 
+# were any 'D' perms specified?  If they were, it means we have to separate
+# deletes from rewinds, so if the new sha is all 0's, change the '+' to a 'D'
+$perm = 'D' if $repos{$ENV{GL_REPO}}{DELETE_IS_D} and $newsha eq '0' x 40;
+
 my @allowed_refs;
 # @all repos: see comments in similar code in check_access
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$ENV{GL_USER}} || [] };
