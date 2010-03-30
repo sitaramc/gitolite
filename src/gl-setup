@@ -27,20 +27,20 @@ if [ -n "$pubkey_file" ]
 then
     echo $pubkey_file | grep '.pub$' >/dev/null || die "$pubkey_file must end in .pub"
     [ -f $pubkey_file ] || die "cant find $pubkey_file"
-    admin_name=$(basename $pubkey_file .pub)
+    admin_name=` basename $pubkey_file .pub`
 fi
 
-if [ -f ~/.gitolite.rc ]
+if [ -f $HOME/.gitolite.rc ]
 then
     perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < $GL_PACKAGE_CONF/example.gitolite.rc | sort > .newvars
-    perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < ~/.gitolite.rc                       | sort > .oldvars
+    perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < $HOME/.gitolite.rc                   | sort > .oldvars
     comm -23 .newvars .oldvars > .diffvars
     if [ -s .diffvars ]
     then
-        cp $GL_PACKAGE_CONF/example.gitolite.rc ~/.gitolite.rc.new
-        echo new version of the rc file saved in ~/.gitolite.rc.new
+        cp $GL_PACKAGE_CONF/example.gitolite.rc $HOME/.gitolite.rc.new
+        echo new version of the rc file saved in $HOME/.gitolite.rc.new
         echo
-        echo please update ~/.gitolite.rc manually if you need features
+        echo please update $HOME/.gitolite.rc manually if you need features
         echo controlled by any of the following variables:
         echo ----
         sed -e 's/^/    /' < .diffvars
@@ -49,7 +49,7 @@ then
     rm -f .newvars .oldvars .diffvars
 else
     [ -n "$pubkey_file" ] || die "looks like first run -- I need a pubkey file"
-    cp $GL_PACKAGE_CONF/example.gitolite.rc ~/.gitolite.rc
+    cp $GL_PACKAGE_CONF/example.gitolite.rc $HOME/.gitolite.rc
 fi
 
 # setup ssh stuff.  We break our normal rule that we will not fiddle with
@@ -63,8 +63,8 @@ chmod go-w . .ssh .ssh/authorized_keys
 
 gl-install -q
 
-GL_ADMINDIR=$(cd;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR')
-REPO_BASE=$(  cd;perl -e 'do ".gitolite.rc"; print $REPO_BASE'  )
+GL_ADMINDIR=` cd;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR'`
+REPO_BASE=`   cd;perl -e 'do ".gitolite.rc"; print $REPO_BASE'  `
 
 [ -f $GL_ADMINDIR/conf/gitolite.conf ] || {
     cat <<EOF > $GL_ADMINDIR/conf/gitolite.conf
