@@ -387,6 +387,19 @@ This provides the *greatest* backward compatibility (if you don't specify any
 `D` permissions, everything works just as before), while also enabling the new
 semantics at the granularity of a repo, instead of the entire config.
 
+Note 1: if you find that `RW+` no longer allows deletion but you can't see a
+`D` permission in the rules, remember that gitolite allows a repo config to be
+specified in multiple places for convenience, included delegated or included
+files.  Be sure to search everywhere :)
+
+Note 2: a quick way to make this the default for *all* your repos is:
+
+    repo @all
+        D   dummy-branch    =   foo
+
+where foo can be either the administrator, or if you can ignore the warning
+message when you push, a non-existant user.
+
 [sdrr]: http://groups.google.com/group/gitolite/browse_thread/thread/9f2b4358ce406d4c#
 
 #### file/dir NAME based restrictions
