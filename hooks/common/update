@@ -28,6 +28,10 @@ use warnings;
 our ($GL_CONF_COMPILED);
 our %repos;
 
+# people with shell access should be allowed to bypass the update hook, simply
+# by setting an env var that the ssh "front door" will never set
+exit 0 if exists $ENV{GL_BYPASS_UPDATE_HOOK};
+
 # we should already have the GL_RC env var set when we enter this hook
 die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
 # then "do" the compiled config file, whose name we now know.  Before doing
