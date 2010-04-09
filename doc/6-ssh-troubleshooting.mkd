@@ -386,32 +386,23 @@ instance if you have *two* gitolite servers you are administering)?
 We've managed (thanks to an idea from Jesse Keating) to make it possible for a
 single key to allow both gitolite access *and* shell access.
 
-This is done by:
+This is done by copying the pubkey (to which you want to give shell access) to
+the server and running either
 
-  * (**on the server**) listing all such users in a variable called
-    `$SHELL_USERS` in the `~/.gitolite.rc` file.  For example:
+    cd $HOME/.gitolite  # assuming default $GL_ADMINDIR in ~/.gitolite.rc
+    src/gl-tool shell-add ~/foo.pub
 
-        $SHELL_USERS = "alice bob";
+or
 
-    (Note the syntax: a space separated list of users in one string variable).
+    gl-tool shell-add ~/foo.pub
 
-  * (**on your client**) make at least a dummy change to your clone of the
-    gitolite-admin repo and push it.
+The first method is to be used if you used the **user-install** mode, while
+the second method is for the **system-install followed by user-setup** mode
+(see doc/0-INSTALL.mkd, section on "install methods", for more on this)
 
-**IMPORTANT UPGRADE NOTE**: a previous implementation of this feature worked
-by adding people to a special group (`@SHELL`) in the *config* file.  This
-meant that anyone with gitolite-admin repo write access could add himself to
-the `@SHELL` group and push, thus obtaining shell.
+**IMPORTANT UPGRADE NOTE**: previous implementations of this feature were
+crap.  There was no easy/elegant way to ensure that someone who had repo admin
+access would not manage to get himself shell access.
 
-This is not a problem for most setups, but if someone wants to separate these
-two privileges (the right to push the admin repo and the right to get a shell)
-then it does pose a problem.  Since the "rc" file can only be edited by
-someone who already has shell access, we now use that instead, even though
-this forces a change in the syntax.
-
-To migrate from the old scheme to the new one, add a new variable
-`$SHELL_USERS` to `~/.gitolite.rc` on the server with the appropriate names in
-it.  **It is best to do this directly on the server *before* upgrading to this
-version.**  (After the upgrade is done and tested you can remove the `@SHELL`
-lines from the gitolite config file).
-
+Giving someone shell access requires that you should have shell access in the
+first place, so the simplest way is to enable it from the server side only.

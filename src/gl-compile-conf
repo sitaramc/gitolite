@@ -52,7 +52,7 @@ $Data::Dumper::Sortkeys = 1;
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 
 # these are set by the "rc" file
-our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $SHELL_USERS, $GL_WILDREPOS, $GL_GITCONFIG_KEYS, $GL_PACKAGE_HOOKS);
+our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $GL_WILDREPOS, $GL_GITCONFIG_KEYS, $GL_PACKAGE_HOOKS);
 # and these are set by gitolite.pm
 our ($REPONAME_PATT, $REPOPATT_PATT, $USERNAME_PATT, $AUTH_COMMAND, $AUTH_OPTIONS, $ABRT, $WARN);
 
@@ -537,11 +537,7 @@ for my $pubkey (glob("*"))
         print STDERR "WARNING: a pubkey file can only have one line (key); ignoring $pubkey\n";
         next;
     }
-    if ($SHELL_USERS and $SHELL_USERS =~ /(^|\s)$user(\s|$)/) {
-        print $newkeys_fh "command=\"$AUTH_COMMAND -s $user\",$AUTH_OPTIONS ";
-    } else {
-        print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS,no-pty ";
-    }
+    print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS,no-pty ";
     print $newkeys_fh $pubkey_content;
 }
 # lint check 3; a little more severe than the first two I guess...

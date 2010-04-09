@@ -75,19 +75,6 @@ $GIT_PATH="";
 
 # --------------------------------------
 
-# if you want to give shell access to any gitolite user(s), name them here.
-# Please see doc/6-ssh-troubleshooting.mkd for details on how this works.
-
-# Do not add people to this list indiscriminately.  AUDITABILITY OF ACCESS
-# CONTROL CHANGES (AND OF REPO ACCESSES) WILL BE COMPROMISED IF ADMINS CAN
-# FIDDLE WITH THE ACTUAL (PLAIN TEXT) LOG FILES THAT GITOLITE KEEPS, WHICH
-# THEY CAN EASILY DO IF THEY HAVE A SHELL.
-
-# syntax: space separated list of gitolite usernames in *one* string variable.
-# $SHELL_USERS = "alice bob";
-
-# --------------------------------------
-
 
 
 # ----------------------------------------------------------------------

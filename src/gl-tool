@@ -1,0 +1,74 @@
+#!/bin/sh
+
+# BEGIN USAGE
+
+# $0 -- make some server side tasks easier
+
+# Usage:
+#   $0 [sub-command [args]]
+
+# Security notes: this program does not do any sanitisation of input.  You're
+# running it at the CLI on the server, so you already have the power to do
+# whatever you want anyway.
+
+# current sub-commands:
+
+# (1) REPLACE THE OLD $SHELL_USERS MECHANISM
+
+#   $0 shell-add foo.pub
+# adds the pubkey in foo.pub into the authkeys file with "-s" argument (shell
+# access) and user "foo".  The line will be added *before* the "# gitolite
+# start" section, so that a gitolite-admin push will not affect it.
+
+# Although there is no "shell-remove" sub-command, you can do that quite
+# easily by editing ~/.ssh/authorized_keys and deleting the appropriate line.
+
+# END USAGE
+
+
+die() { echo "$@"; exit 1; }
+
+if [ -z "$1" ]
+then
+    perl -ne 's/\$0/$ARGV/ge; print if /BEGIN USAGE/../END USAGE/' $0 | grep -v USAGE | cut -c3-
+    exit 1
+fi
+
+if [ "$1" = "shell-add" ]
+then
+    # sanity checks
+    [ -z "$2" ] && exec $0
+    [ -f "$2" ] || die "$2 does not exist"
+    wc -l < $2 | grep '^1$' >/dev/null || die "$2 contains more than one line"
+
+    # must be kept consistent with what's in src/gl-compile-conf; on the plus
+    # side, it's not likely to change anytime soon!
+    AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding"
+
+    bindir=`echo $0 | perl -lpe 's/^/$ENV{PWD}\// unless /^\//; s/\/[^\/]+$//;'`
+
+    pubkey_file=$2
+    user=`basename $pubkey_file .pub`
+
+    authline="command=\"$bindir/gl-auth-command -s $user\",$AUTH_OPTIONS `cat $pubkey_file`";
+
+    authkeys=$HOME/.ssh/authorized_keys
+
+    for i in 1
+    do
+        perl -lne "last if /# gitolite start/; print unless /gl-auth-command -s $user/; " $authkeys
+        echo $authline
+        perl -lne "print if /# gitolite start/ .. 0; " $authkeys
+    done > $authkeys.new
+
+    diff -u $authkeys $authkeys.new && die no change to authkey file
+    echo
+    echo If the above diff looks ok, press enter.  Else press Ctrl-C.
+    read dummy
+    cat $authkeys     > $authkeys.old
+    cat $authkeys.new > $authkeys
+
+    exit 0
+fi
+
+die "could not understand command $1"
