@@ -511,6 +511,12 @@ print $newkeys_fh "# gitolite start\n";
 wrap_chdir($GL_KEYDIR);
 for my $pubkey (glob("*"))
 {
+    # security check (thanks to divVerent for catching this)
+    unless ($pubkey =~ $USERNAME_PATT) {
+        print STDERR "$pubkey contains some unsavoury characters; ignored...\n";
+        next;
+    }
+
     # lint check 1
     unless ($pubkey =~ /\.pub$/)
     {
