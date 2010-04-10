@@ -28,6 +28,7 @@ In this document:
       * upgrades
       * other notes
   * system install / user setup
+      * multiple gitolite instances
   * next steps
   * appendix A: server and client requirements for user install
       * server
@@ -164,6 +165,28 @@ the server and run the same command as above.
 **IMPORTANT**: there are two variables in the `~/.gitolite.rc` file:
 `$GL_PACKAGE_CONF` and `$GL_PACKAGE_HOOKS`.  If you remove or change either of
 them, expect trouble :-)
+
+#### multiple gitolite instances
+
+With this mode of install, it's easy to create multiple gitolite instances
+(say one for each department, on some mega company-wide server).  You can even
+do this without giving shell access to the admins.  Here's an example with
+just two "departments", and their admins Alice and Bob:
+
+  * create userids `webbrowser_repos` and `webserver_repos`
+  * ask Alice and Bob for their pubkeys; copy them to the respective home
+    directories for convenience
+  * run `su - webbrowser_repos`, then `gl-setup alice.pub`
+  * (similarly with `webserver_repos` and `bob.pub`, and so on for others)
+
+That's it.  The URL for all web browser projects is now something like
+`webbrowser_repos@server:reponame`, and similarly for the others.
+
+Notice that you only have to do this once for each "department", and it's
+really just one command after creating the userid.  None of these admins need
+to have a command line on the server, so don't give them the passwords if you
+don't need to -- the pubkey will allow them to be gitolite admins on their
+domain, and that's quite enough for normal operations.
 
 ### next steps
 

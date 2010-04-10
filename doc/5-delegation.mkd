@@ -97,3 +97,24 @@ Naturally, a successful push invokes the post-update hook that the admin repo
 has, which eventually runs the compile script.  The **net effect** is as if
 you appended the contents of all the "fragment" files, in alphabetical order,
 to the bottom of the main file.
+
+----
+
+### Security/Philosophy note
+
+The delegation feature is meant only for access control rules, not pubkeys.
+Adding/removing pubkeys is a much more significant event than changing branch
+level permissions for people already on staff, and only the main admin should
+be allowed to do it.
+
+Gitolite's "userids" all live in the same namespace.  This is unlikely to
+change, so please don't ask -- it gets real complicated to do otherwise.
+Allowing delegated admins to add users means username collisions, which also
+means security problems (admin-A creates a pubkey for Admin-B, thus gaining
+access to all of Admin-B's stuff).
+
+If you feel the need to delegate even that, please just go the whole hog and
+give them separate gitolite instances!  It's pretty easy to setup the
+*software* itself system-wide, so that many users can use it without all the
+"easy install" fuss.  See the "system install / user setup" section in
+doc/0-INSTALL.mkd for details.
