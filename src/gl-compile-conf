@@ -509,10 +509,12 @@ while (<$authkeys_fh>)
 # options, in the standard ssh authorized_keys format), then the "end" line.
 print $newkeys_fh "# gitolite start\n";
 wrap_chdir($GL_KEYDIR);
-for my $pubkey (glob("*"))
+for my $pubkey (`find . -type f`)
 {
+    chomp($pubkey); $pubkey =~ s(^\./)();
+
     # security check (thanks to divVerent for catching this)
-    unless ($pubkey =~ $USERNAME_PATT) {
+    unless ($pubkey =~ $REPONAME_PATT) {
         print STDERR "$pubkey contains some unsavoury characters; ignored...\n";
         next;
     }
@@ -523,7 +525,11 @@ for my $pubkey (glob("*"))
         print STDERR "WARNING: pubkey files should end with \".pub\", ignoring $pubkey\n";
         next;
     }
-    my $user = $pubkey; $user =~ s/(\@[^.]+)?\.pub$//;
+
+    my $user = $pubkey;
+    $user =~ s(.*/)();                  # foo/bar/baz.pub -> baz.pub
+    $user =~ s/(\@[^.]+)?\.pub$//;      # baz.pub, baz@home.pub -> baz
+
     # lint check 2
     print STDERR "WARNING: pubkey $pubkey exists but user $user not in config\n"
         unless $user_list{$user};
