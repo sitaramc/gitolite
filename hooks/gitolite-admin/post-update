@@ -3,7 +3,7 @@
 # checkout the master branch to $GL_ADMINDIR
 # (the GL_ADMINDIR env var would have been set by gl-auth-command)
 GIT_WORK_TREE=$GL_ADMINDIR git checkout -f master -- \
-    `git ls-tree master | cut -f2 | perl -lne 'print unless /^(src|hooks)$/'`
+    `git ls-tree --name-only master | perl -lne 'print unless /^(src|hooks)$/'`
 
 od=$PWD
 cd $GL_ADMINDIR
