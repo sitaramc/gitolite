@@ -159,6 +159,18 @@ $RSYNC_BASE = "";
 $GL_WILDREPOS = 0;
 
 # --------------------------------------
+# HOOK CHAINING
+
+# by default, the update hook in every repo chains to "update.secondary".
+# Similarly, the post-update hook in the admin repo chains to
+# "post-update.secondary".  If you're fine with the defaults, there's no need
+# to do anything here.  However, if you want to use different names or paths,
+# change these variables
+
+# $UPDATE_CHAINS_TO = "hooks/update.secondary";
+# $ADMIN_POST_UPDATE_CHAINS_TO = "hooks/post-update.secondary";
+
+# --------------------------------------
 # per perl rules, this should be the last line in such a file:
 1;
 

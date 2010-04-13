@@ -11,7 +11,10 @@ $GL_BINDIR/gl-compile-conf
 
 cd $od
 
-if [ -f hooks/post-update.secondary ] || [ -L hooks/post-update.secondary ]
+ADMIN_POST_UPDATE_CHAINS_TO=` cd;perl -e 'do ".gitolite.rc"; print $ADMIN_POST_UPDATE_CHAINS_TO'`
+[ -n "$ADMIN_POST_UPDATE_CHAINS_TO" ] || ADMIN_POST_UPDATE_CHAINS_TO=hooks/post-update.secondary
+
+if [ -f $ADMIN_POST_UPDATE_CHAINS_TO ] || [ -L $ADMIN_POST_UPDATE_CHAINS_TO ]
 then
-    exec hooks/post-update.secondary "$@"
+    exec $ADMIN_POST_UPDATE_CHAINS_TO "$@"
 fi

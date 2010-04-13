@@ -25,7 +25,7 @@ use warnings;
 #       common definitions
 # ----------------------------------------------------------------------------
 
-our ($GL_CONF_COMPILED);
+our ($GL_CONF_COMPILED, $UPDATE_CHAINS_TO);
 our %repos;
 
 # people with shell access should be allowed to bypass the update hook, simply
@@ -123,7 +123,8 @@ my $log_refex = check_ref(\@allowed_refs, $ENV{GL_REPO}, (shift @refs), $perm);
     "\t$reported_repo\t$ref\t$ENV{GL_USER}\t$log_refex\n");
 
 # now chain to the local admin defined update hook, if present
-exec "./hooks/update.secondary", @saved_ARGV
-    if -f "hooks/update.secondary" or -l "hooks/update.secondary";
+$UPDATE_CHAINS_TO ||= 'hooks/update.secondary';
+exec $UPDATE_CHAINS_TO, @saved_ARGV
+    if -f $UPDATE_CHAINS_TO or -l $UPDATE_CHAINS_TO;
 
 exit 0;
