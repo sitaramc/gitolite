@@ -108,11 +108,11 @@ metacharacters.
 
 Just for interest, note that this is in contrast to the refexes for the normal
 "branch" permissions, as described in `conf/example.conf` and elsewhere.
-Those "refexes" are *not* anchored; a pattern like `refs/heads/master`
-actually matches `foo/refs/heads/master01/bar` as well, even if no one will
-actually push such a branch!  You can anchor it if you really care, by using
-`master$` instead of `master`, but anchoring is *not* the default for
-refexes.]
+These "refexes" are only anchored at the start; a pattern like
+`refs/heads/master` actually can match `refs/heads/master01/bar` as well, even
+if no one will actually push such a branch!  You can anchor both sides if you
+really care, by using `master$` instead of `master`, but that is *not* the
+default for refexes.
 
 ### Handing out rights to wildcard-matched repos
 
