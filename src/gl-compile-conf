@@ -389,6 +389,7 @@ wrap_chdir("$repo_base_abs");
 for my $repo (sort keys %repos) {
     next unless $repo =~ $REPONAME_PATT;
     next if $repo =~ m(^EXTCMD/);   # these are not real repos
+    next if $repo eq '@all';
     unless (-d "$repo.git") {
         print STDERR "creating $repo...\n";
         new_repo($repo, "$GL_ADMINDIR/hooks/common");
