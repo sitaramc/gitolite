@@ -1,5 +1,20 @@
 Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
+[NYD = not yet documented due to lack of time...]
+
+  - v1.4
+
+  - recurse through keydir for pubkeys
+  - bypass update hook if GL_BYPASS_UPDATE_HOOK is available in ENV
+  - new server-side program "gl-tool", subcommand "shell-add"
+  - new "D" permission (makes RW+ no longer imply "D" if used)
+  - @all for repos is now a true @all
+  - allow setperms to specify @all
+  - post-update hook and gl-setup should be dash compat now
+  - workaround for a Data::Dumper crash; see 412a691
+  - both hooks chain to "<hookname>.secondary" now
+
+  - new style personal branches (see 2456cc1 for advantages)
 
   - v1.3
 
@@ -13,12 +28,12 @@ the tags can help you position stuff approximately
   - v1.1
 
   - contrib directory added
-  - expand now lists non-wildcard repos also
-  - refs also have groups now
-  - allow admins to get "info" for other users
+  - expand now lists non-wildcard repos also (expand is NYD)
+  - refs also have groups now (NYD)
+  - allow admins to get "info" for other users (NYD)
 
   - wildrepos merged
-  - getdesc and setdesc for wildrepos
+  - getdesc and setdesc for wildrepos (NYD)
   - htpasswd subcommand
   - access control for rsync
 
