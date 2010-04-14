@@ -1,0 +1,111 @@
+# comparing gerrit and gitolite
+
+Gerrit and gitolite have too many high level differences.  Size is most
+visible of course: 56000 lines of Java versus 1300 lines of perl+shell,
+according to David A. Wheeler's 'SLOCCount' tool.  Gerrit needs a database,
+and even comes with its own ssh server and git server, and since the git
+engine is internal it probably has to include a lot of things that normal git
+already has; I wouldn't know for sure.
+
+Gerrit allows a lot more de-centralisation in managing the system, and of
+course excels at code review, and it seems geared to really large, open
+source-ish projects with lots of contributors.
+
+Gitolite works on a pure command-line install and a plain text file config,
+and is designed to run unobtrusively and quite transparently to all developers
+-- other than sending the admin their pubkey, nothing really changes for them
+in their workflow, toolset, etc.  The "lite" in the name still holds, despite
+all the extra features being pumped in!
+
+Gitolite was mainly written for a corporate environment, where we really,
+really, need branch-level ACLs.  While they would certainly love the code
+review part, things like *voting* on a change, and so on seem a bit alien, and
+it seems to me that code review itself is more likely to be a hierarchical
+thing, not a peer-to-peer, "anyone can comment" thing.  I could be wrong.
+
+----
+
+In short, gitolite doesn't do the main thing that gerrit does, and gerrit is
+so much bigger than gitolite in so many ways, it seems really odd to compare
+them at all.
+
+However, it seems gerrit comes closest to gitolite in terms of flexibility of
+access control, which is gitolite's main strength, so I thought it would be
+useful to compare gitolite with just what is in the "access-control.html" in
+the gerrit war file.  Or see [this][gdac].  [...and stop sniggering at the
+"svn" in the link dammit!]
+
+[gdac]: http://gerrit.googlecode.com/svn/documentation/2.1.2/access-control.html
+[jwzq]: http://regex.info/blog/2006-09-15/247
+
+**Administrators**: anyone who has gitolite-admin push privs
+
+**Anonymous Users**: gitolite doesn't do that, though the "ssh-plus" branch,
+combined with git-daemon2 (Ilari) will allow that in future.  When git-daemon2
+becomes mainstream, the supporting code in this branch will also be merged
+into "master".
+
+**Registered Users**: @all
+
+**Account Groups**: @groups in gitolite.  We do allow them to be nested,
+although the parsing is single-pass.  We also don't have group `foo-admin`
+managing membership to group `foo` though; all groups are managed by the eqvt
+of "Administrators".
+
+**Project ACLs**: first, let's remember (again) that we don't have any of the code
+review stuff :)
+
+  * **Reference-level access controls** make no mention of regexes.  I'm not
+    [JWZ][jwzq], and I strongly consider regexes a plus point :)
+
+  * They also make no mention of giving permissions to individual users, only
+    groups.  If this is true, it would be a little cumbersome when managing
+    many small projects -- projects where you have only one QA, one
+    integrator, etc., would end up making many 1-man groups.  [If anyone who's
+    used gerrit can correct me on this I'd appreciate it].
+
+  * **Evaluation** order and priority of access control rules are different.
+    Gerrit goes by specificity, gitolite goes by sequence.  It shouldn't
+    matter; they're probably equivalent except perhaps in some far-fetched
+    scenarios.
+
+  * One big difference is that gitolite does not process "deny" rules ("-1 no
+    Access" in gerrit terms) for *read* access -- we only support those for
+    write access.  Gerrit uses this to "hide a handful of projects on an
+    otherwise public server"; in gitolite you'd better avoid giving `R = @all`
+    in the first place :)
+
+  * [Update 2010-04-14: it appears that Gerrit is also in the process of
+    implementing *read* access control at the branch level -- they can afford
+    to even think of that because they have a full jgit stack to play with.
+    Gitolite is dependent on git itself to provide that -- it just cannot be
+    done without support from git core.  I can see some corporates drooling at
+    this possibility (makes no sense for open source projects IMO) ;-)]
+
+**Categories**:
+
+  * gitolite doesnt have an "owner" for each project in any administrative
+    sense.  Perhaps you could consider whoever has `RW+` perms to be an owner
+    but it doesn't go beyond what that implies.
+
+  * gitolite doesnt do anything special to signed or annotated tags
+
+  * gitolite always allows creating a branch.  The only way to prevent that is
+    to list out allowed branches explicitly (make sure you end the refex with
+    a `$`!).
+
+  * Force push is the same as delete: historically (and by default, even now)
+    gitolite does the same .  However, I've only recently (and somewhat
+    reluctantly) changed gitolite to allow treating these two separately.
+
+    Of course, direct pushing clashes with code review, and gerrit recommends
+    that if you want code review you should not use this feature.  [Normal
+    pushes in gerrit go through a temp branch that is moved to the correct one
+    after a review is done; direct pushes are all that gitolite has].
+
+  * author/committer identity: checking these fields in pushed commits is
+    likely to be important in some projects, but gitolite doesn't have any
+    notion of this.  Hmm... I smell another feature in the future :)
+
+The rest of it is in areas that the two tools have no overlap on (again, code
+review being the main thing).
