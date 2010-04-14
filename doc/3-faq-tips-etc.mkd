@@ -485,6 +485,17 @@ attempting to run git stuff.
 
 Very easy, very simple, and completely transparent to the users :-)
 
+**Note**: sometimes you have a system that already has an older "git"
+installed in one of the system PATHs, but you've installed a newer git in some
+non-standard location and want that picked up.  Because of security reasons,
+gitolite will not prepend `GIT_PATH` to the PATH variable, so the older git
+comes first and it gets kinda frustrating!
+
+Here's a simple workaround.  Ignore the `GIT_PATH` variable, and directly set
+the full PATH in the rc file, like so:
+
+    $ENV{PATH} = "/home/sitaram/bin:$ENV{PATH}";
+
 #### "personal" branches
 
 "personal" branches are great for corporate environments, where
