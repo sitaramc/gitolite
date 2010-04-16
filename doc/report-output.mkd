@@ -1,0 +1,61 @@
+# output of the "info" and "expand" commands
+
+Running "ssh git@server info" or "ssh git@server expand" gives you certain
+output.  This doclet describes the output; you're welcome to help me make it
+clearer :)
+
+There are 3 columns of permissions (create, read, and write) in the output,
+although the first column is often blank.
+
+Here is the output of the 2 commands (info and expand):
+
+### the "info" command
+
+Usage:
+
+    ssh git@server info
+    ssh git@server info [list of users]
+
+The "info" command shows you all the repos (and repo patterns) in the config
+file that you have been given any kind of access to.  If you're an admin you
+can append a list of users to see their permissions instead of your own.
+(Side note: if you installed using easy-install that would probably be `ssh
+gitolite info`, by the way).
+
+  * col 1 (exists only if the "repo" name is actually a pattern)
+      * `@`: `@all` users have permission to create repos matching this
+        pattern
+      * `C`: this user has permission to create repos matching this pattern
+
+  * col 2
+      * `@`: `@all` users have read access to this repo
+      * `r`: this user has read access to `@all` repos
+      * `R`: this user has read access to this repo
+
+  * col 3: same as col 2, but for write access instead of read
+
+### the "expand" command
+
+Usage:
+
+    ssh git@server expand [optional pattern]
+
+The "expand" command trawls through all the repositories on the server,
+limiting to repos matching the pattern you provide (default is all repos
+found).
+
+For each repo found, it searches for it in the config -- either the actual
+repo entry (when the repo is not a wildcard repo), or an entry for the
+wildcard that matches it -- and reports permissions.  It also takes into
+account extra permissions enabled by the `setperms` command (see
+doc/4-wildcard-repositories.mkd).  It shows you the "creater" of the repo as
+an additional column, defaulting to `<gitolite>` if it was not a wildcard
+repo.
+
+  * col 1: not used
+
+  * col 2: same as col 2 for info, except substitute "repo" with "repo or
+    wildcard matching this repo"
+
+  * col 3: same as col 2, but for write access instead of read
+

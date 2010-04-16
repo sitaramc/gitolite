@@ -430,28 +430,30 @@ Sometimes there are too many repos, maybe even named similarly, or with the
 potential for typos, confusion about hyphens/underscores or upper/lower case,
 etc.  You'd just like a simple way to know what repos you have access to.
 
-Easy!  Just use ssh and try to log in as if you were attempting to get a
-shell:
+Easy!  Just use ssh to give the "info" command to the gitolite server:
 
-    $ ssh gitolite info
-    PTY allocation request failed on channel 0
-    hello sitaram, the gitolite version here is v0.6-17-g94ed189
-    you have the following permissions:
-      R  W  Anu-WSD
-      R     ROtest
-      R  W  SecureBrowse
-      R  W  entrans
-      R  W  git-notes
-      R  W  gitolite
-      R  W  gitolite-admin
-      R  W  indic_web_input
-      R  W  proxy
-      @  @  testing
-      R  W  vkc
+    $ ssh git@server info
+    hello sitaram, the gitolite version here is v1.4-9-g34aad34
+    the gitolite config gives you the following access:
+       R W  SecureBrowse
+       R W  anu-wsd
+       R W  entrans
+       @ W  git-notes
+       @ W  gitolite
+       R W  gitolite-admin
+       R W  indic_web_input
+     @ R    private/CREATER/[\w.-]+
+       R W  proxy
+     @ @ W  public/CREATER/[\w.-]+
+       @ @  testing
+       R W  vkc
 
-Note that until this version, we used to put out an ugly `need
-SSH_ORIGINAL_COMMAND` error, just like gitosis used to.  All we did is put
-that code path to better use :-)
+To understand what these symbols mean, please see doc/report-output.mkd.  The
+administrator can also say things like:
+
+    ssh gitolite info u1 u2 u3
+
+to get this info for other user(s).
 
 #### error checking the config file
 
