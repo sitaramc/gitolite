@@ -48,7 +48,7 @@ main() {
     [[ $upgrade == 0 ]] && initial_conf_key
 
     # MANUAL: cd to $GL_ADMINDIR and run "src/gl-compile-conf"
-    ssh -p $port $user@$host "cd $GL_ADMINDIR; \$PWD/src/gl-compile-conf $quiet"
+    ssh $p_port $user@$host "cd $GL_ADMINDIR; \$PWD/src/gl-compile-conf $quiet"
 
     setup_pta
 
@@ -183,7 +183,8 @@ basic_sanity() {
     # That is, running "ssh git@server" should log in straight away, without
     # asking for a password
 
-    ssh -p $port -o PasswordAuthentication=no $user@$host true ||
+    [[ $port -ne 22 ]] && p_port="-p $port"
+    ssh $p_port -o PasswordAuthentication=no $user@$host true ||
         die "pubkey access didn't work; please set it up using 'ssh-copy-id' or something"
 }
 
@@ -200,7 +201,7 @@ version_info() {
 
     # what was the old version there?
     export upgrade_details="you are upgrading \
-    $(ssh -p $port $user@$host cat gitolite-install/conf/VERSION 2>/dev/null || echo '(or installing first-time)' ) \
+    $(ssh $p_port $user@$host cat gitolite-install/conf/VERSION 2>/dev/null || echo '(or installing first-time)' ) \
     to $(cat conf/VERSION)"
 
     prompt "$upgrade_details" "$v_upgrade_details"
@@ -281,8 +282,8 @@ copy_gl() {
     # server, to a directory called (for example) "gitolite-install".  You may
     # have to create the directory first.
 
-    ssh -p $port $user@$host mkdir -p gitolite-install
-    scp $quiet -P $port -p -r src conf doc hooks $user@$host:gitolite-install/
+    ssh $p_port $user@$host mkdir -p gitolite-install
+    scp $quiet ${p_port/p/P} -p -r src conf doc hooks $user@$host:gitolite-install/
 
     # MANUAL: now log on to the server (ssh git@server) and get a command
     # line.  This step is for your convenience; the script does it all from
@@ -296,7 +297,7 @@ copy_gl() {
     prompt "finding/creating gitolite rc..." "$v_edit_glrc"
 
     # lets try and get the file from there first
-    if scp -P $port $user@$host:.gitolite.rc $tmpgli &>/dev/null
+    if scp ${p_port/p/P} $user@$host:.gitolite.rc $tmpgli &>/dev/null
     then
         prompt "    ...trying to reuse existing rc" \
         "Oh hey... you already had a '.gitolite.rc' file on the server.
@@ -329,7 +330,7 @@ Let's see if we can use that instead of the default one..."
     fi
 
     # copy the rc across
-    scp $quiet -P $port $tmpgli/.gitolite.rc $user@$host:
+    scp $quiet ${p_port/p/P} $tmpgli/.gitolite.rc $user@$host:
 }
 
 run_install() {
@@ -337,18 +338,18 @@ run_install() {
     prompt "installing/upgrading..." "$v_ignore_stuff"
 
     # extract the GL_ADMINDIR, REPO_BASE and GIT_PATH locations
-    GL_ADMINDIR=$(ssh -p $port $user@$host "perl -e 'do \".gitolite.rc\"; print \$GL_ADMINDIR'")
-    REPO_BASE=$(  ssh -p $port $user@$host "perl -e 'do \".gitolite.rc\"; print \$REPO_BASE'")
-    GIT_PATH=$(   ssh -p $port $user@$host "perl -e 'do \".gitolite.rc\"; print \$GIT_PATH'")
+    GL_ADMINDIR=$(ssh $p_port $user@$host "perl -e 'do \".gitolite.rc\"; print \$GL_ADMINDIR'")
+    REPO_BASE=$(  ssh $p_port $user@$host "perl -e 'do \".gitolite.rc\"; print \$REPO_BASE'")
+    GIT_PATH=$(   ssh $p_port $user@$host "perl -e 'do \".gitolite.rc\"; print \$GIT_PATH'")
 
     # determine if this is an upgrade; we decide based on whether a file
     # called $GL_ADMINDIR/conf/gitolite.conf exists on the remote side.  We
     # can't do this till we know the correct value for GL_ADMINDIR
     upgrade=0
-    if ssh -p $port $user@$host cat $GL_ADMINDIR/conf/gitolite.conf &> /dev/null
+    if ssh $p_port $user@$host cat $GL_ADMINDIR/conf/gitolite.conf &> /dev/null
     then
         upgrade=1
-        ssh -p $port $user@$host cat $GL_ADMINDIR/conf/gitolite.conf 2> /dev/null | grep '@SHELL' &&
+        ssh $p_port $user@$host cat $GL_ADMINDIR/conf/gitolite.conf 2> /dev/null | grep '@SHELL' &&
             prompt "" "$v_at_shell_bwi"
         [[ -n $admin_name ]] && echo -e "\n    *** WARNING ***: looks like an upgrade... ignoring argument '$admin_name'"
     else
@@ -358,7 +359,7 @@ run_install() {
     # MANUAL: still in the "gitolite-install" directory?  Good.  Run
     # "src/gl-install"
 
-    ssh -p $port $user@$host "cd gitolite-install; src/gl-install $quiet"
+    ssh $p_port $user@$host "cd gitolite-install; src/gl-install $quiet"
 
     # MANUAL: if you're upgrading, run "src/gl-compile-conf" and you're done!
     # -- ignore the rest of this file for the purposes of an upgrade
@@ -388,8 +389,8 @@ repo testing
 " > $tmpgli/gitolite.conf
 
     # send the config and the key to the remote
-    scp $quiet -P $port $tmpgli/gitolite.conf $user@$host:$GL_ADMINDIR/conf/
-    scp $quiet -P $port "$HOME/.ssh/$admin_name.pub" $user@$host:$GL_ADMINDIR/keydir
+    scp $quiet ${p_port/p/P} $tmpgli/gitolite.conf $user@$host:$GL_ADMINDIR/conf/
+    scp $quiet ${p_port/p/P} "$HOME/.ssh/$admin_name.pub" $user@$host:$GL_ADMINDIR/keydir
 }
 
 # ----------------------------------------------------------------------
@@ -413,13 +414,13 @@ setup_pta() {
 PATH=\$PATH:$GIT_PATH
 GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
 GIT_WORK_TREE=$GL_ADMINDIR git diff --cached --quiet 2>/dev/null || GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
-" | ssh -p $port $user@$host
+" | ssh $p_port $user@$host
 
     # MANUAL: now that the admin repo is created, you have to set the hooks
     # properly.  The install program does this.  So cd back to the
     # "gitolite-install" directory and run "src/gl-install"
 
-    ssh -p $port $user@$host "cd gitolite-install; src/gl-install $quiet"
+    ssh $p_port $user@$host "cd gitolite-install; src/gl-install $quiet"
 
     # MANUAL: you're done!  Log out of the server, come back to your
     # workstation, and clone the admin repo using "git clone
