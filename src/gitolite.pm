@@ -277,6 +277,12 @@ sub parse_acl
 #       print a report of $user's basic permissions
 # ----------------------------------------------------------------------------
 
+sub report_version {
+    my($GL_ADMINDIR, $user) = @_;
+    print "hello $user, the gitolite version here is ";
+    system("cat", ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION");
+}
+
 # basic means wildcards will be shown as wildcards; this is pretty much what
 # got parsed by the compile script
 sub report_basic
@@ -286,9 +292,8 @@ sub report_basic
     &parse_acl($GL_CONF_COMPILED, "", "CREATER", "READERS", "WRITERS");
 
     # send back some useful info if no command was given
-    print "hello $user, the gitolite version here is ";
-    system("cat", ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION");
-    print "\ryou have the following permissions:\r\n";
+    &report_version($GL_ADMINDIR, $user);
+    print "\rthe gitolite config gives you the following access:\r\n";
     for my $r (sort keys %repos) {
         # @all repos; meaning of read/write flags:
         #   @ => @all users are allowed access to this repo
@@ -307,8 +312,10 @@ sub report_basic
 
 sub expand_wild
 {
-    my($GL_CONF_COMPILED, $repo_base_abs, $repo, $user) = @_;
+    my($GL_ADMINDIR, $GL_CONF_COMPILED, $repo_base_abs, $repo, $user) = @_;
 
+    &report_version($GL_ADMINDIR, $user);
+    print "\ryou have access to the following repos on the server:\r\n";
     # this is for convenience; he can copy-paste the output of the basic
     # access report instead of having to manually change CREATER to his name
     $repo =~ s/\bCREAT[EO]R\b/$user/g;

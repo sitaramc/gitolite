@@ -127,7 +127,7 @@ if ($ENV{SSH_ORIGINAL_COMMAND} =~ $CUSTOM_COMMANDS) {
     elsif ($verb eq 'expand') {
         # with a wildcard, you can "expand" it to see what repos actually match
         die "$repo has invalid characters" unless "x$repo" =~ $REPOPATT_PATT;
-        expand_wild($GL_CONF_COMPILED, $repo_base_abs, $repo, $user);
+        expand_wild($GL_ADMINDIR, $GL_CONF_COMPILED, $repo_base_abs, $repo, $user);
     } else {
         die "$cmd doesn't make sense to me\n";
     }
