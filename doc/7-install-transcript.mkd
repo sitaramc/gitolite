@@ -17,6 +17,18 @@ transcript is **non**-gitolite stuff :)
 
 ----
 
+### (cleaning out a botched install if needed)
+
+When people have trouble installing gitolite, they often try to change a bunch
+of things manually on the server.  This usually makes things worse ;-) so if
+you're reading this document as a follow-up to a failed install, please
+**first** clean out the botched install (instructions [here][appB]) and
+**then** continue with this document.
+
+[appB]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#uninstall
+
+----
+
 ### create userids on server and client (optional)
 
 Client side: add user, give him a password
