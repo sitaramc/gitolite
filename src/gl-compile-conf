@@ -408,10 +408,10 @@ for my $repo (sort keys %repos) {
     }
 }
 
-warn "\n\t\t***** WARNING *****\n" .
+die "\n\t\t***** AAARGH! *****\n" .
     "\tyour git version is older than 1.6.2\n" .
-    "\tgitolite will work but you MUST read the section on\n" .
-    "\t\"git version dependency\" in doc/3-faq-tips-etc.mkd\n"
+    "\tsince that is now more than one year old, and gitolite needs some of\n" .
+    "\tthe newer features, please upgrade.\n"
     if $git_version < 10602;     # that's 1.6.2 to you
 
 # ----------------------------------------------------------------------------

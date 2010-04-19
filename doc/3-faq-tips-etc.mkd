@@ -61,32 +61,7 @@ In this document:
 
 ## git version dependency
 
-Here's a workaround for a version dependency that the normal flow of gitolite
-has.
-
-When you edit your config file to create a new repo, and push the changes to
-the server, gitolite creates an empty, bare repo for you.  Normally, you're
-expected to clone this on the client side, and start working -- make your
-first commit(s), then push, etc.
-
-However, cloning an empty repo requires a server side git version that is at
-least 1.6.2.  Gitolite detects this when creating a repo, and warns you.
-
-The workaround is to use the older (gitosis-style) method on the client:
-create an empty repo locally, make a commit or two, set an "origin" remote,
-and then push.  Something like:
-
-    mkdir my-new-project
-    cd    my-new-project
-    git init
-    git commit --allow-empty -m 'Initial repository'
-    # or, if your client side git is too old for --allow-empty, just make some
-    # files, "git add" them, then "git commit"
-    git remote add origin git@gitolite-server:my-new-project.git
-    git push origin master:master
-
-Once this is done, the repo is available for cloning by anyone else in the
-normal way, since it's not empty anymore.
+Gitolite (on the server) now refuses to run if git is not at least 1.6.2.
 
 ## other errors, warnings, notes...
 

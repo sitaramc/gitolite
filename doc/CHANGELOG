@@ -2,6 +2,11 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - REFUSE TO RUN ON SERVER GIT < 1.6.2 (do NOT upgrade gitolite to or beyond
+    this point if you are unable to upgrade git itself to at least 1.6.2)
+
+  - "D" must be combined with RW or RW+ (warning: minor backward compat breakage)
+
   - v1.4
 
   - recurse through keydir for pubkeys
