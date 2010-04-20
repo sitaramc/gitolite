@@ -375,6 +375,12 @@ close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
 
 # but it turns out not everyone has "modern" gits :)
 my $git_version = `git --version`;
+die "
+    *** ERROR ***
+    did not get a proper version number.  Please see if git is in the PATH on
+    the server.  If it is not, please edit ~/.gitolite.rc on the server and
+    set the \$GIT_PATH variable to the correct value\n
+" unless $git_version;
 my ($gv_maj, $gv_min, $gv_patchrel) = ($git_version =~ m/git version (\d+)\.(\d+)\.(\d+)/);
 die "$ABRT I can't understand $git_version\n" unless ($gv_maj >= 1);
 $git_version = $gv_maj*10000 + $gv_min*100 + $gv_patchrel;  # now it's "normalised"
