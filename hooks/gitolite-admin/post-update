@@ -1,9 +1,17 @@
 #!/bin/sh
 
+# ensure that the admin is not sneaking in src/ and hooks/ :)
+GIT_WORK_TREE=$GL_ADMINDIR git ls-tree --name-only master |
+    perl -lne 'exit 1 if /^(src|hooks)$/' || {
+        echo "*** ERROR ***" >&2
+        echo "no files/dirs called 'src' or 'hooks' are allowed, sorry" >&2
+        echo "until those files are deleted, the post-update hook will not run" >&2
+        exit 1
+    }
+
 # checkout the master branch to $GL_ADMINDIR
 # (the GL_ADMINDIR env var would have been set by gl-auth-command)
-GIT_WORK_TREE=$GL_ADMINDIR git checkout -f master -- \
-    `git ls-tree --name-only master | perl -lne 'print unless /^(src|hooks)$/'`
+GIT_WORK_TREE=$GL_ADMINDIR git checkout -f master
 
 od=$PWD
 cd $GL_ADMINDIR
