@@ -567,7 +567,7 @@ through some other means than the $admin_name key.
 v_done="
 done!
 
-Reminder:
+IMPORTANT NOTE -- PLEASE READ!!!
     *Your* URL for cloning any repo on this server will be
         gitolite:reponame.git
 

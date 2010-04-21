@@ -2,6 +2,7 @@
 
 In this document:
 
+  * the most common problems that an admin will see
   * basic ssh troubleshooting
       * passphrases versus passwords
       * ssh-agent problems
@@ -29,19 +30,54 @@ In addition to both these documents, there's now a program called
 `sshkeys-lint` that you can run on your client.  Run it without arguments to
 get help on how to run it and what inputs it needs.
 
-Please also note that ssh problems don't always look like ssh problems.  One
-common example: when the remote says the repo you're trying to access "does
-not appear to be a git repository", and yet you are sure it exists, you
-haven't mis-spelled it, etc.  Another example is being able to access
-repositories using the full unix path (typically like
-`git@server:repositories/reponame.git`, assuming default `$REPO_BASE` setting,
-instead of specifying only the part below `$REPO_BASE`, i.e.,
-`git@server:reponame.git`).
+### the most common problems that an admin will see
 
-[Both these errors indicate that you managed to bypass gitolite completely and
-are using your shell access -- instead of running via
-`/some/path/gl-auth-command <your_username>` it is just going to bash and
-working from there!]
+Ironically, these problems **only** happen to the person who installed
+gitolite using easy-install, and has **utterly failed** to read/heed the
+message that shows up at the end of running that command.  This is because
+only the admin has *two* ssh keys to the server (see "basic ssh
+troubleshooting for the main admin" section below for more on this).
+
+Both these problems are caused by using the wrong key, thus **bypassing gitolite
+completely**:
+
+  * you get `fatal: 'reponame' does not appear to be a git repository`, and
+    yet you are sure 'reponame' exists, you haven't mis-spelled it, etc.
+
+  * you are able to clone repositories but are unable to push changes back.
+
+Let us recap the message that appears on a successful run of the "easy-install"
+program; it looks something like this (with suitable values substituted for
+`<user>`, `<server>`, and `<port>`):
+
+    IMPORTANT NOTE -- PLEASE READ!!!
+        *Your* URL for cloning any repo on this server will be
+            gitolite:reponame.git
+
+        *Other* users you set up will have to use
+            <user>@<server>:reponame.git
+        However, if your server uses a non-standard ssh port, they should use
+            ssh://<user>@<server>:<port>/reponame.git
+
+        If this is your first time installing gitolite, please also:
+            tail -31 src/gl-easy-install
+        for next steps.
+
+The first error above happens if you use `git@server:reponame` instead of
+`gitolite:reponame`.  All your repos are actually in a subdirectory pointed to
+by `$REPO_BASE` in the rc file (default: `repositories`).  Gitolite internally
+prefixes this before calling the actual git command you invoked, but since
+you're bypassing gitolite completely, this prefixing does not happen, and so
+the repo is not found.
+
+The second error happens if you use `git@server:repositories/reponame.git`
+(assuming default `$REPO_BASE` setting)  -- that is, you used the full unix
+path.  Since the "prefixing" mentioned above is not required, the shell finds
+the repo and clones ok.  But when you push, gitolite's **update hook** kicks
+in, and fails to run because you some of the environment variables it is
+expecting are not present.
+
+----
 
 <a name="basic"></a>
 
