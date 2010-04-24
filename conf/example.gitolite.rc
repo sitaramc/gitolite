@@ -171,6 +171,15 @@ $GL_WILDREPOS = 0;
 # $ADMIN_POST_UPDATE_CHAINS_TO = "hooks/post-update.secondary";
 
 # --------------------------------------
+# ADMIN DEFINED COMMANDS
+
+# WARNING: Use this feature only if (a) you really really know what you're
+# doing or (b) you really don't care too much about security.  Please read
+# doc/admin-defined-commands.mkd for details.
+
+# $GL_ADC_PATH = "";
+
+# --------------------------------------
 # per perl rules, this should be the last line in such a file:
 1;
 

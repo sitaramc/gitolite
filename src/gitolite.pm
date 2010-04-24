@@ -397,6 +397,14 @@ sub expand_wild
     }
 }
 
+# helper/convenience routine to get rights and ownership from a shell command
+sub cli_repo_rights {
+    my ($perm, $creater) = &repo_rights($_[0]);
+    $perm =~ s/ /_/g;
+    $creater =~ s/^\(|\)$//g;
+    print "$perm $creater\n";
+}
+
 # ----------------------------------------------------------------------------
 #       S P E C I A L   C O M M A N D S
 # ----------------------------------------------------------------------------

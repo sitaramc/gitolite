@@ -24,7 +24,7 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 # these are set by the "rc" file
-our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE, $GL_WILDREPOS);
+our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE, $GL_WILDREPOS, $GL_ADC_PATH);
 # and these are set by gitolite.pm
 our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT);
 our %repos;
@@ -98,6 +98,20 @@ unless ($ENV{SSH_ORIGINAL_COMMAND}) {
     }
     # otherwise, pretend he typed in "info" and carry on...
     $ENV{SSH_ORIGINAL_COMMAND} = 'info';
+}
+
+# ----------------------------------------------------------------------------
+#       admin defined commands
+# ----------------------------------------------------------------------------
+
+# please see doc/admin-defined-commands.mkd for details
+if ($GL_ADC_PATH and -d $GL_ADC_PATH) {
+    my ($cmd, @args) = split ' ', $ENV{SSH_ORIGINAL_COMMAND};
+    if (-x "$GL_ADC_PATH/$cmd") {
+        # yes this is rather strict, sorry.
+        do { die "I don't like $_\n" unless $_ =~ $REPOPATT_PATT } for ($cmd, @args);
+        exec("$GL_ADC_PATH/$cmd", @args);
+    }
 }
 
 # ----------------------------------------------------------------------------
