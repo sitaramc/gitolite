@@ -408,20 +408,20 @@ etc.  You'd just like a simple way to know what repos you have access to.
 Easy!  Just use ssh to give the "info" command to the gitolite server:
 
     $ ssh git@server info
-    hello sitaram, the gitolite version here is v1.4-9-g34aad34
+    hello sitaram, the gitolite version here is v1.4.2-4-g40cbecd
     the gitolite config gives you the following access:
-       R W  SecureBrowse
-       R W  anu-wsd
-       R W  entrans
-       @ W  git-notes
-       @ W  gitolite
-       R W  gitolite-admin
-       R W  indic_web_input
-     @ R    private/CREATER/[\w.-]+
-       R W  proxy
-     @ @ W  public/CREATER/[\w.-]+
-       @ @  testing
-       R W  vkc
+        #R  W       SecureBrowse
+        #R  W       anu-wsd
+        #R  W       entrans
+        @R  W       git-notes
+        @R  W       gitolite
+        #R  W       gitolite-admin
+        #R  W       indic_web_input
+     @C #R          private/CREATER/[\w.-]+
+        #R  W       proxy
+     @C @R  W       public/CREATER/[\w.-]+
+        @R @W       testing
+        #R  W       vkc
 
 To understand what these symbols mean, please see doc/report-output.mkd.  The
 administrator can also say things like:
