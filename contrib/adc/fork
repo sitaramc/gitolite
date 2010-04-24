@@ -1,0 +1,22 @@
+#!/bin/bash
+
+from=$1
+to=$2
+
+. $(dirname $0)/adc.common-functions
+
+# we cannot just say "cd $GL_REPO_BASE_ABS; git clone $from.git $to.git".  That
+# won't set up the hooks or the gl-creater file that gitolite needs.  So we now
+# have a new "git-init" command!
+
+get_rights_and_owner $from
+[[ -z $perm_read ]] && die "no read permissions on $from"
+
+get_rights_and_owner $to
+[[ -z $perm_create ]] && die "no create permissions on $to"
+
+# let gitolite create the repo first
+SSH_ORIGINAL_COMMAND="git-init '$to'" $GL_BINDIR/gl-auth-command $GL_USER
+# then copy the refs from $from
+cd $GL_REPO_BASE_ABS/$to.git
+git fetch $GL_REPO_BASE_ABS/$from.git refs/*:refs/*

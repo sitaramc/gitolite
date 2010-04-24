@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# please make sure this file is NOT chmod +x
+
+die() { echo "$@"; exit 1; }
+
+get_rights_and_owner() {
+    local ans
+    ans=$(perl -I$HOME/.gitolite/src -Mgitolite -e 'cli_repo_rights("'$1'")')
+
+    # set shell variables as needed
+    owner=${ans#* }
+    rights=${ans% *}
+    [[ $rights =~ C ]]  && perm_create=yes  || perm_create=
+    [[ $rights =~ R ]]  && perm_read=yes    || perm_read=
+    [[ $rights =~ W ]]  && perm_write=yes   || perm_write=
+}
