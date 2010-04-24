@@ -1,0 +1,192 @@
+# admin defined commands
+
+**WARNING:  Use this feature only if you really really know what you're doing.
+If you come back to me saying this feature caused a problem, I will only
+laugh.  The worse the problem, the louder I will laugh.  You won't actually
+hear me laughing, but you'll feel it in your bones, trust me!**
+
+There may be other such **WARNING** sections below.  **Read all of them**.
+
+----
+
+In this document:
+
+  * background
+  * setting it up
+  * anatomy of a command
+  * example uses and sample commands in contrib
+      * fork
+      * rmrepo
+      * (bonus) restricted admin
+
+----
+
+### background
+
+Gitolite was named to be short for "gitosis-lite".  Someone now wants to turn
+it into a "github-lite" :-) and even had some code to start me off thinking.
+
+Since my first impulse on being asked for a feature is to say no, I was
+casting about for a reason when he gave me one: he first made some noises
+about perl, then said something about rewriting it all in scheme.  Nice... I
+resisted the urge to point him to [this][xkcd224], told him that's a great
+idea and he should go for it, mentally blessing him for letting me off the
+hook on coding it ;-) [Laziness][lazy] *is* the first virtue you know!
+
+[xkcd224]: http://xkcd.com/224/
+[lazy]: http://c2.com/cgi/wiki?LazinessImpatienceHubris
+
+And that was that.  For a couple of days.
+
+Soon, though, I realised that there could be a pretty big bonus in this for
+tightly controlled setups, so I went and coded it all anyway.  See the section
+on "restricted admin" for what's really exciting about this for *me*.
+
+----
+
+It may be a good idea to read [doc/4-wildcard-repositories.mkd][wild] before
+you continue here though, because this feature builds on top of that.
+
+[wild]: http://github.com/sitaramc/gitolite/blob/pu/doc/4-wildcard-repositories.mkd
+
+The wildcard repo feature is a way to create repositories matching a pattern
+(even if it as simple as `personal/CREATER/.+`), and a way to specify two
+categories of permissions for each such user-created repo.
+
+What we want now is more than that, as you'll see in the examples below.  And
+I'm sure if you think of more uses you'll send them to me as "contrib"
+entries, right?
+
+### setting it up
+
+This can only be setup by someone who has shell access to the server.  Edit
+the rc file and update the `$GL_ADC_PATH` variable to point to, say,
+`/home/git/bin/adc`.  *Nothing happens unless this variable is set and
+pointing to a directory*.  Then put in whatever such commands you create into
+that directory.  If you have a command called "foo" in that directory, then a
+user can invoke it by saying:
+
+    ssh git@server foo argument list
+
+**WARNING: When gitolite takes control, this directory is checked first, and
+if the requested command exists, it is executed.  It is therefore quite easy
+to inadvertently *hide* some of the "official" commands (like "info",
+"expand", "setperms", etc., or worse, say "git-upload-pack"!) by creating
+executable files with those names in this directory.  So don't do that -- you
+have been warned!**
+
+### anatomy of a command
+
+You can basically do whatever you want in such a command -- go wild!  It's
+upto you to check the permissions of *each* repo that the user is manipulating
+using your command -- you can `rm -rf $GL_REPO_BASE_ABS` if you like and
+gitolite wouldn't stop you.
+
+The current directory (`$PWD`) will be set to the `$HOME` of `git@server` (or
+whatever id you're using).  It won't be any specific repo, it won't even be
+the base directory of all the repos.
+
+Gitolite defines a few environment variables, as well as allows you to
+directly query the ownership and access permissions of any repository.
+
+The environment variables available are:
+
+  * `GL_USER` -- the name of the user invoking the command
+  * `GL_BINDIR` -- the directory containing all the binaries (in particular,
+    `gitolite.pm`, which is all we really care about here)
+  * `GL_REPO_BASE_ABS` -- the absolute path of the base directory containing
+    all the repos
+
+There are a few other variables also available but the above are the only ones
+you should rely on.  Please treat any other variables you notice as being
+internal/undocumented/subject to change.
+
+[Implementation note: some of the distro packagers don't seem to like
+`GL_BINDIR`.  I have not tested this in those scenarios, but they probably put
+`gitolite.pm` somewhere in perl's lib path anyway, so it ought to work].
+
+In addition, all the arguments of the command are also available to you, so
+you can define your own command syntaxes.  Gitolite checks these arguments to
+make sure they fit a somewhat conservative pattern (see `$REPOPATT_PATT` in
+`src/gitolite.pm`), so take that into consideration when designing your
+commands and usage.
+
+Finally, you can call gitolite to query ownership and permissions for the
+current user (which may not necessarily be the owner).  This is done loosely
+as follows (don't use this exact code yet though):
+
+    perl -I$HOME/.gitolite/src -Mgitolite -e "cli_repo_rights('reponame')"
+
+which will print two space-separated words, something like `_____R__W u1` or
+maybe `____@R_@W <gitolite>`.  (The former is the response for a wildcard repo
+created by user `u1`, the latter is for a non-wildcard repo)
+
+But that's cumbersome.  There's a bash shell function called
+`get_rights_and_owner` in `contrib/adc/adc.common-functions` that is much more
+convenient.  See any of the other samples for how to use it.
+
+If you don't like this, roll your own.  If you don't like bash, do the eqvt in
+your language of choice.
+
+### example uses and sample commands in contrib
+
+#### fork
+
+A user would use the fork command like this:
+
+    ssh git@server fork from to
+
+where "from" is a repo to which the user invoking the fork has "R" access, and
+"to" is a repo that does not yet exist and to which he has "C" access.
+
+(Reminder: these access checks are done by the "fork" script, **not** within
+gitolite -- once again, you are responsible for making sure your scripts
+maintain the security of the system!)
+
+Strictly speaking this command is not really needed.  Even without all this
+"admin-defined commands" setup you could still do the following, purely from
+the client side:
+
+    git clone git@server:from
+    cd from
+    git remote add new git@server:to
+    git push new refs/*:refs/*
+
+or some such incantation.
+
+**Implementation note**: you might notice that this script does not just do a
+"git clone ...".  This is because creating a repo has to be done via gitolite.
+Otherwise, hooks won't get setup, and the all-important "gl-creater" file
+showing who owns the repo won't get created.
+
+So now we have an actual command to just create a repo and do nothing else:
+`ssh git@server git-init \'reponame\'`.  [Yes; those single quotes are
+required.  Deal with it.]
+
+#### rmrepo
+
+This is one thing that you really could not do before this setup was created.
+Use it like this:
+
+    ssh git@server rmrepo reponame
+
+The script checks to make sure that the repo being deleted was *created* by
+the user invoking it.
+
+#### (bonus) restricted admin
+
+It's rather important to me (and presumably others in the "corporate" world)
+to separate permission to push to the "gitolite-admin" repo from unrestricted
+shell access to the server.  This issue has been visited often in the past.
+
+Until now, though, this was binary -- you either had full shell access or none
+at all.  If there were tasks that legitimately needed to be done from the
+shell on the server, it often meant you had to break that separation or load
+the few people who did have shell access already.
+
+Now, however, it is possible to provide scripts to do what you want, and put
+them in `$GL_ADC_PATH`.  `contrib/adc/restrict-admin` is a commented sample --
+as you can see, it cleverly makes use of the fact that you can now check for
+the invoking uses access to any repo in the system.  In this case it checks if
+he has "W" access to the gitolite-admin repo, and if he does, allows the
+script to proceed.
