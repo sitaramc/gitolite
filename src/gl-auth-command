@@ -168,32 +168,18 @@ $ENV{GL_REPO}=$repo;
 #       first level permissions check
 # ----------------------------------------------------------------------------
 
-if ( -d "$repo_base_abs/$repo.git" ) {
-    # existing repo
-    my ($creater, $user_R, $user_W) = &wild_repo_rights($repo_base_abs, $repo, $user);
-    &parse_acl($GL_CONF_COMPILED, $repo, $creater, $user_R, $user_W);
-} else {
-    &parse_acl($GL_CONF_COMPILED, $repo, $user, "NOBODY", "NOBODY");
-
-    # auto-vivify new repo if you have C access (and wildrepos is on)
-    if ( $GL_WILDREPOS and $repos{$repo}{C}{$user} || $repos{$repo}{C}{'@all'} ) {
-        wrap_chdir("$repo_base_abs");
-        new_repo($repo, "$GL_ADMINDIR/hooks/common", $user);
-        wrap_chdir($ENV{HOME});
-    } else {
-        # repo didn't exist, and you didn't have perms to create it.  Delete
-        # the "convenience" copy of the ACL that parse_acl makes for us
-        delete $repos{$repo};
-    }
+my ($perm, $creater) = &repo_rights($repo);
+if ($perm =~ /C/) {
+    # it was missing, and you have create perms
+    wrap_chdir("$repo_base_abs");
+    new_repo($repo, "$GL_ADMINDIR/hooks/common", $user);
+    wrap_chdir($ENV{HOME});
 }
 
 # we know the user and repo; we just need to know what perm he's trying
-my $perm = ($verb =~ $R_COMMANDS ? 'R' : 'W');
-
-die "$perm access for $repo DENIED to $user\n"
-    unless $repos{$repo}{$perm}{$user}
-        or $repos{'@all'}{$perm}{$user}     # new: access to @all repos
-        or $repos{$repo}{$perm}{'@all'};
+# aa == attempted access
+my $aa = ($verb =~ $R_COMMANDS ? 'R' : 'W');
+die "$aa access for $repo DENIED to $user\n" unless $perm =~ /$aa/;
 
 # ----------------------------------------------------------------------------
 #       over to git now
