@@ -49,7 +49,7 @@ $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 # set the umask before creating any files
 umask($REPO_UMASK);
 
-my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
+my $repo_base_abs = $ENV{GL_REPO_BASE_ABS} = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
 
 # ----------------------------------------------------------------------------
 #       start...
@@ -170,7 +170,7 @@ $ENV{GL_REPO}=$repo;
 
 if ( -d "$repo_base_abs/$repo.git" ) {
     # existing repo
-    my ($creater, $user_R, $user_W) = &repo_rights($repo_base_abs, $repo, $user);
+    my ($creater, $user_R, $user_W) = &wild_repo_rights($repo_base_abs, $repo, $user);
     &parse_acl($GL_CONF_COMPILED, $repo, $creater, $user_R, $user_W);
 } else {
     &parse_acl($GL_CONF_COMPILED, $repo, $user, "NOBODY", "NOBODY");
