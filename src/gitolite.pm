@@ -296,12 +296,12 @@ sub report_basic
     print "\rthe gitolite config gives you the following access:\r\n";
     for my $r (sort keys %repos) {
         # @all repos; meaning of read/write flags:
-        #   @ => @all users are allowed access to this repo
-        # r/w => you        are allowed access to @all repos
-        # R/W => you        are allowed access to this repo
-        my $perm .= ( $repos{$r}{C}{'@all'} ? ' @' :                                     ( $repos{$r}{C}{$user} ? ' C' : '  ' ) );
-        $perm    .= ( $repos{$r}{R}{'@all'} ? ' @' : ( $repos{'@all'}{R}{$user} ? ' r' : ( $repos{$r}{R}{$user} ? ' R' : '  ' )));
-        $perm    .= ( $repos{$r}{W}{'@all'} ? ' @' : ( $repos{'@all'}{W}{$user} ? ' w' : ( $repos{$r}{W}{$user} ? ' W' : '  ' )));
+        # @R => @all users are allowed access to this repo
+        # #R => you're a super user and can see @all repos
+        #  R => normal access
+        my $perm .= ( $repos{$r}{C}{'@all'} ? ' @C' :                                      ( $repos{$r}{C}{$user} ? '  C' : '   ' ) );
+        $perm    .= ( $repos{$r}{R}{'@all'} ? ' @R' : ( $repos{'@all'}{R}{$user} ? ' #R' : ( $repos{$r}{R}{$user} ? '  R' : '   ' )));
+        $perm    .= ( $repos{$r}{W}{'@all'} ? ' @W' : ( $repos{'@all'}{W}{$user} ? ' #W' : ( $repos{$r}{W}{$user} ? '  W' : '   ' )));
         print "$perm\t$r\r\n" if $perm =~ /\S/;
     }
 }
