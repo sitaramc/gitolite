@@ -163,7 +163,7 @@ if ($ENV{SSH_ORIGINAL_COMMAND} =~ $CUSTOM_COMMANDS) {
 #       git-receive-pack 'reponame.git'
 
 my ($verb, $repo) = ($ENV{SSH_ORIGINAL_COMMAND} =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:\.git)?'/);
-unless ( $verb and ( $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS ) and $repo and $repo =~ $REPONAME_PATT ) {
+unless ( $verb and ( $verb eq 'git-init' or $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS ) and $repo and $repo =~ $REPONAME_PATT ) {
     # ok, it's not a normal git command; call the special command helper
     &special_cmd ($GL_ADMINDIR, $GL_CONF_COMPILED, $shell_allowed, $RSYNC_BASE, $HTPASSWD_FILE);
     exit;
@@ -202,4 +202,4 @@ die "$aa access for $repo DENIED to $user\n" unless $perm =~ /$aa/;
 &log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$user\n");
 
 $repo = "'$REPO_BASE/$repo.git'";
-exec("git", "shell", "-c", "$verb $repo");
+exec("git", "shell", "-c", "$verb $repo") unless $verb eq 'git-init';
