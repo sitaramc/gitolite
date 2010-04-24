@@ -320,10 +320,6 @@ sub expand_wild
     # access report instead of having to manually change CREATER to his name
     $repo =~ s/\bCREAT[EO]R\b/$user/g;
 
-    # get the list of repo patterns
-    &parse_acl($GL_CONF_COMPILED, "", "NOBODY", "NOBODY", "NOBODY");
-    my %normal_repos = %repos;
-
     # display matching repos (from *all* the repos in the system) that $user
     # has at least "R" access to
 
@@ -334,26 +330,9 @@ sub expand_wild
         $actual_repo =~ s/\.git$//;
         # actual_repo has to match the pattern being expanded
         next unless $actual_repo =~ /$repo/;
-        # if actual_repo is present "as is" in the config, those
-        # permissions will override anything inherited from a
-        # wildcard that also happens to match
-        my $creater;
-        if ($normal_repos{$actual_repo}) {
-            %repos = %normal_repos;
-            $creater = '<gitolite>';
-        } else {
-            # find the creater and subsitute in repos
-            my ($read, $write);
-            ($creater, $read, $write) = &wild_repo_rights($repo_base_abs, $actual_repo, $user);
-            # get access list with this
-            &parse_acl($GL_CONF_COMPILED, $actual_repo, $creater, $read || "NOBODY", $write || "NOBODY");
-            $creater = "($creater)";
-        }
-        my $perm = '  ';
-        # @all repos; see notes above
-        $perm .= ( $repos{$actual_repo}{R}{'@all'} ? ' @' : ( $repos{'@all'}{R}{$user} ? ' r' : ( $repos{$actual_repo}{R}{$user} ? ' R' : '  ' )));
-        $perm .= ( $repos{$actual_repo}{W}{'@all'} ? ' @' : ( $repos{'@all'}{W}{$user} ? ' w' : ( $repos{$actual_repo}{W}{$user} ? ' W' : '  ' )));
-        next if $perm eq '      ';
+
+        my($perm, $creater) = &repo_rights($actual_repo);
+        next unless $perm =~ /\S/;
         print "$perm\t$creater\t$actual_repo\n";
     }
 }
