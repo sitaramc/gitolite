@@ -94,6 +94,7 @@ unless ($ENV{SSH_ORIGINAL_COMMAND}) {
     if ($shell_allowed) {
         my $shell = $ENV{SHELL};
         $shell =~ s/.*\//-/;    # change "/bin/bash" to "-bash"
+        &log_it("$ENV{GL_TS}\t$shell\t$user\n");
         exec { $ENV{SHELL} } $shell;
     }
     # otherwise, pretend he typed in "info" and carry on...
@@ -110,6 +111,7 @@ if ($GL_ADC_PATH and -d $GL_ADC_PATH) {
     if (-x "$GL_ADC_PATH/$cmd") {
         # yes this is rather strict, sorry.
         do { die "I don't like $_\n" unless $_ =~ $REPOPATT_PATT } for ($cmd, @args);
+        &log_it("$ENV{GL_TS}\t$GL_ADC_PATH/$ENV{SSH_ORIGINAL_COMMAND}\t$ENV{GL_USER}\n");
         exec("$GL_ADC_PATH/$cmd", @args);
     }
 }
@@ -199,7 +201,7 @@ die "$aa access for $repo DENIED to $user\n" unless $perm =~ /$aa/;
 #       over to git now
 # ----------------------------------------------------------------------------
 
-&log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$user\n");
+&log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$ENV{GL_USER}\n");
 
 $repo = "'$REPO_BASE/$repo.git'";
 exec("git", "shell", "-c", "$verb $repo") unless $verb eq 'git-init';

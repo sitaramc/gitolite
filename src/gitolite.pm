@@ -434,6 +434,7 @@ sub special_cmd
         &ext_cmd_rsync($GL_CONF_COMPILED, $RSYNC_BASE, $cmd);
     } else {
         # if the user is allowed a shell, just run the command
+        &log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$ENV{GL_USER}\n");
         exec $ENV{SHELL}, "-c", $cmd if $shell_allowed;
 
         die "bad command: $cmd\n";
@@ -496,7 +497,7 @@ sub ext_cmd_rsync
         # that should "die" if there's a problem
 
     wrap_chdir($RSYNC_BASE);
-    &log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$ENV{USER}\n");
+    &log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$ENV{GL_USER}\n");
     exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND};
 }
 
