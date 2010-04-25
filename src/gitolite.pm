@@ -27,7 +27,7 @@ our $W_COMMANDS=qr/^git[ -]receive-pack$/;
 
 # note that REPONAME_PATT allows "/", while USERNAME_PATT does not
 # also, the reason REPONAME_PATT is a superset of USERNAME_PATT is (duh!)
-# because in this version, a repo can have "CREATER" in the name (see docs)
+# because in this version, a repo can have "CREATOR" in the name (see docs)
 our $REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@/+-]*$); # very simple pattern
 our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple pattern
 # same as REPONAME, plus some common regex metas
@@ -132,19 +132,19 @@ sub where_is_rc
 # NOTE: this sub will change your cwd; caller beware!
 sub new_repo
 {
-    my ($repo, $hooks_dir, $creater) = @_;
+    my ($repo, $hooks_dir, $creator) = @_;
 
     umask($REPO_UMASK);
-    die "wildrepos disabled, can't set creater $creater on new repo $repo\n"
-        if $creater and not $GL_WILDREPOS;
+    die "wildrepos disabled, can't set creator $creator on new repo $repo\n"
+        if $creator and not $GL_WILDREPOS;
 
     system("mkdir", "-p", "$repo.git") and die "$ABRT mkdir $repo.git failed: $!\n";
         # erm, note that's "and die" not "or die" as is normal in perl
     wrap_chdir("$repo.git");
     system("git --bare init >&2");
-    if ($creater) {
-        system("echo $creater > gl-creater");
-        system("git", "config", "gitweb.owner", $creater);
+    if ($creator) {
+        system("echo $creator > gl-creater");
+        system("git", "config", "gitweb.owner", $creator);
     }
     # propagate our own, plus any local admin-defined, hooks
     ln_sf($hooks_dir, "*", "hooks");
@@ -162,7 +162,7 @@ sub new_repo
 sub wild_repo_rights
 {
     my ($repo_base_abs, $repo, $user) = @_;
-    # creater
+    # creator
     my $c = '';
     if (                     -f "$repo_base_abs/$repo.git/gl-creater") {
         my $fh = wrap_open("<", "$repo_base_abs/$repo.git/gl-creater");
@@ -189,8 +189,8 @@ sub wild_repo_rights
 sub get_set_perms
 {
     my($repo_base_abs, $repo, $verb, $user) = @_;
-    my ($creater, $dummy, $dummy2) = &wild_repo_rights($repo_base_abs, $repo, "");
-    die "$repo doesnt exist or is not yours\n" unless $user eq $creater;
+    my ($creator, $dummy, $dummy2) = &wild_repo_rights($repo_base_abs, $repo, "");
+    die "$repo doesnt exist or is not yours\n" unless $user eq $creator;
     wrap_chdir("$repo_base_abs");
     wrap_chdir("$repo.git");
     if ($verb eq 'getperms') {
@@ -209,8 +209,8 @@ sub get_set_perms
 sub get_set_desc
 {
     my($repo_base_abs, $repo, $verb, $user) = @_;
-    my ($creater, $dummy, $dummy2) = &wild_repo_rights($repo_base_abs, $repo, "");
-    die "$repo doesnt exist or is not yours\n" unless $user eq $creater;
+    my ($creator, $dummy, $dummy2) = &wild_repo_rights($repo_base_abs, $repo, "");
+    die "$repo doesnt exist or is not yours\n" unless $user eq $creator;
     wrap_chdir("$repo_base_abs");
     wrap_chdir("$repo.git");
     if ($verb eq 'getdesc') {
@@ -242,7 +242,7 @@ sub parse_acl
     # And in any case, we set those env vars so level 2 can redo the last
     # parse without any special code
 
-    our $creater = $ENV{GL_CREATER} = $c || $ENV{GL_CREATER} || "NOBODY";
+    our $creator = $ENV{GL_CREATOR} = $c || $ENV{GL_CREATOR} || "NOBODY";
     our $readers = $ENV{GL_READERS} = $r || $ENV{GL_READERS} || "NOBODY";
     our $writers = $ENV{GL_WRITERS} = $w || $ENV{GL_WRITERS} || "NOBODY";
     our $gl_user = $ENV{GL_USER};
@@ -289,7 +289,7 @@ sub report_basic
 {
     my($GL_ADMINDIR, $GL_CONF_COMPILED, $user) = @_;
 
-    &parse_acl($GL_CONF_COMPILED, "", "CREATER", "READERS", "WRITERS");
+    &parse_acl($GL_CONF_COMPILED, "", "CREATOR", "READERS", "WRITERS");
 
     # send back some useful info if no command was given
     &report_version($GL_ADMINDIR, $user);
@@ -317,7 +317,7 @@ sub expand_wild
     &report_version($GL_ADMINDIR, $user);
     print "\ryou have access to the following repos on the server:\r\n";
     # this is for convenience; he can copy-paste the output of the basic
-    # access report instead of having to manually change CREATER to his name
+    # access report instead of having to manually change CREATOR to his name
     $repo =~ s/\bCREAT[EO]R\b/$user/g;
 
     # display matching repos (from *all* the repos in the system) that $user
@@ -331,9 +331,9 @@ sub expand_wild
         # actual_repo has to match the pattern being expanded
         next unless $actual_repo =~ /$repo/;
 
-        my($perm, $creater) = &repo_rights($actual_repo);
+        my($perm, $creator) = &repo_rights($actual_repo);
         next unless $perm =~ /\S/;
-        print "$perm\t$creater\t$actual_repo\n";
+        print "$perm\t$creator\t$actual_repo\n";
     }
 }
 
@@ -365,44 +365,44 @@ sub expand_wild
             %normal_repos = %repos;
         }
 
-        my $creater;
+        my $creator;
         my $perm = '   ';
 
         # if repo is present "as is" in the config, those permissions will
         # override anything inherited from a wildcard that may have matched
         if ($normal_repos{$repo}) {
             %repos = %normal_repos;
-            $creater = '<gitolite>';
+            $creator = '<gitolite>';
         } elsif ( -d "$ENV{GL_REPO_BASE_ABS}/$repo.git" ) {
             # must be a wildrepo, and it has already been created; find the
-            # creater and subsitute in repos
+            # creator and subsitute in repos
             my ($read, $write);
-            ($creater, $read, $write) = &wild_repo_rights($ENV{GL_REPO_BASE_ABS}, $repo, $ENV{GL_USER});
+            ($creator, $read, $write) = &wild_repo_rights($ENV{GL_REPO_BASE_ABS}, $repo, $ENV{GL_USER});
             # get access list with these substitutions
-            &parse_acl($GL_CONF_COMPILED, $repo, $creater || "NOBODY", $read || "NOBODY", $write || "NOBODY");
-            $creater = "($creater)";
+            &parse_acl($GL_CONF_COMPILED, $repo, $creator || "NOBODY", $read || "NOBODY", $write || "NOBODY");
+            $creator = "($creator)";
         } else {
             # repo didn't exist; C perms also need to be filled in after
-            # getting access list with only creater filled in
+            # getting access list with only creator filled in
             &parse_acl($GL_CONF_COMPILED, $repo, $ENV{GL_USER}, "NOBODY", "NOBODY");
             $perm = ( $repos{$repo}{C}{'@all'} ? ' @C' : ( $repos{$repo}{C}{$ENV{GL_USER}} ? ' =C' : '   ' )) if $GL_WILDREPOS;
             # if you didn't have perms to create it, delete the "convenience"
             # copy of the ACL that parse_acl makes
             delete $repos{$repo} unless $perm =~ /C/;
-            $creater = "<repo_not_found>";
+            $creator = "<repo_not_found>";
         }
         $perm .= ( $repos{$repo}{R}{'@all'} ? ' @R' : ( $repos{'@all'}{R}{$ENV{GL_USER}} ? ' #R' : ( $repos{$repo}{R}{$ENV{GL_USER}} ? '  R' : '   ' )));
         $perm .= ( $repos{$repo}{W}{'@all'} ? ' @W' : ( $repos{'@all'}{W}{$ENV{GL_USER}} ? ' #W' : ( $repos{$repo}{W}{$ENV{GL_USER}} ? '  W' : '   ' )));
-        return($perm, $creater);
+        return($perm, $creator);
     }
 }
 
 # helper/convenience routine to get rights and ownership from a shell command
 sub cli_repo_rights {
-    my ($perm, $creater) = &repo_rights($_[0]);
+    my ($perm, $creator) = &repo_rights($_[0]);
     $perm =~ s/ /_/g;
-    $creater =~ s/^\(|\)$//g;
-    print "$perm $creater\n";
+    $creator =~ s/^\(|\)$//g;
+    print "$perm $creator\n";
 }
 
 # ----------------------------------------------------------------------------

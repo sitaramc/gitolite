@@ -41,6 +41,6 @@ For each repo found, it searches for it in the config -- either the actual
 repo entry (when the repo is not a wildcard repo), or an entry for the
 wildcard that matches it -- and reports permissions.  It also takes into
 account extra permissions enabled by the `setperms` command (see
-doc/4-wildcard-repositories.mkd).  It shows you the "creater" of the repo as
+doc/4-wildcard-repositories.mkd).  It shows you the "creator" of the repo as
 an additional column, defaulting to `<gitolite>` if it was not a wildcard
 repo.

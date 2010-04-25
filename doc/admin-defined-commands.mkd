@@ -50,7 +50,7 @@ you continue here though, because this feature builds on top of that.
 [wild]: http://github.com/sitaramc/gitolite/blob/pu/doc/4-wildcard-repositories.mkd
 
 The wildcard repo feature is a way to create repositories matching a pattern
-(even if it as simple as `personal/CREATER/.+`), and a way to specify two
+(even if it as simple as `personal/CREATOR/.+`), and a way to specify two
 categories of permissions for each such user-created repo.
 
 What we want now is more than that, as you'll see in the examples below.  And

@@ -417,9 +417,9 @@ Easy!  Just use ssh to give the "info" command to the gitolite server:
         @R  W       gitolite
         #R  W       gitolite-admin
         #R  W       indic_web_input
-     @C #R          private/CREATER/[\w.-]+
+     @C #R          private/CREATOR/[\w.-]+
         #R  W       proxy
-     @C @R  W       public/CREATER/[\w.-]+
+     @C @R  W       public/CREATOR/[\w.-]+
         @R @W       testing
         #R  W       vkc
 

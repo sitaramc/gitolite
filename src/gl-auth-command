@@ -184,7 +184,7 @@ $ENV{GL_REPO}=$repo;
 #       first level permissions check
 # ----------------------------------------------------------------------------
 
-my ($perm, $creater) = &repo_rights($repo);
+my ($perm, $creator) = &repo_rights($repo);
 if ($perm =~ /C/) {
     # it was missing, and you have create perms
     wrap_chdir("$repo_base_abs");

@@ -187,7 +187,7 @@ sub parse_conf_file
                 @repos = expand_list ( @repos );
                 do  { die "$ABRT bad reponame $_\n" unless ($GL_WILDREPOS ? $_ =~ $REPOPATT_PATT : $_ =~ $REPONAME_PATT) } for @repos;
             }
-            s/\bCREAT[EO]R\b/\$creater/g for @repos;
+            s/\bCREAT[EO]R\b/\$creator/g for @repos;
         }
         # actual permission line
         elsif (/^(-|C|R|RW\+?D?) (.* )?= (.+)/)
@@ -212,7 +212,7 @@ sub parse_conf_file
                 unless (@users == 1 and $users[0] eq '@all');
             do  { die "$ABRT bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
 
-            s/\bCREAT[EO]R\b/~\$creater/g for @users;
+            s/\bCREAT[EO]R\b/~\$creator/g for @users;
             s/\bREADERS\b/\$readers/g for @users;
             s/\bWRITERS\b/\$writers/g for @users;
 
@@ -358,10 +358,10 @@ for my $fragment_file (glob("conf/fragments/*.conf"))
 
 my $compiled_fh = wrap_open( ">", $GL_CONF_COMPILED );
 my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
-# the dump uses single quotes, but we convert any strings containing $creater,
+# the dump uses single quotes, but we convert any strings containing $creator,
 # $readers, $writers, to double quoted strings.  A wee bit sneaky, but not too
 # much...
-$dumped_data =~ s/'(?=[^']*\$(?:creater|readers|writers|gl_user))~?(.*?)'/"$1"/g;
+$dumped_data =~ s/'(?=[^']*\$(?:creator|readers|writers|gl_user))~?(.*?)'/"$1"/g;
 print $compiled_fh $dumped_data;
 close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
 
@@ -555,7 +555,7 @@ for my $pubkey (`find . -type f`)
 # lint check 3; a little more severe than the first two I guess...
 for my $user (sort keys %user_list)
 {
-    next if $user =~ /^(gitweb|daemon|\@all|~\$creater|\$readers|\$writers)$/ or $user_list{$user} eq 'has pubkey';
+    next if $user =~ /^(gitweb|daemon|\@all|~\$creator|\$readers|\$writers)$/ or $user_list{$user} eq 'has pubkey';
     print STDERR "$WARN user $user in config, but has no pubkey!\n";
 }
 

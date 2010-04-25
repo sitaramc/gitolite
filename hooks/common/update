@@ -35,12 +35,12 @@ exit 0 if exists $ENV{GL_BYPASS_UPDATE_HOOK};
 # we should already have the GL_RC env var set when we enter this hook
 die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
 # then "do" the compiled config file, whose name we now know.  Before doing
-# that we setup the creater etc from environment variables so that the parse
+# that we setup the creator etc from environment variables so that the parse
 # interpolates them.  We've minimised the duplication but this *does*
 # duplicate a bit of parse_acl from gitolite.pm; we don't want to include that
 # file here just for that little bit
 {
-    our $creater = $ENV{GL_CREATER};
+    our $creator = $ENV{GL_CREATOR};
     our $readers = $ENV{GL_READERS};
     our $writers = $ENV{GL_WRITERS};
     our $gl_user = $ENV{GL_USER};

@@ -20,8 +20,8 @@ workarounds I may not have the time to code it right away.
 In this document:
 
   * wildcard repos
-      * wildcard repos with creater name in them
-      * wildcard repos without creater name in them
+      * wildcard repos with creator name in them
+      * wildcard repos without creator name in them
   * side-note: line-anchored regexes
       * contrast with refexes
   * handing out rights to wildcard-matched repos
@@ -40,7 +40,7 @@ Which of these alternatives you choose depends on your needs, and the social
 aspects of your environment.  The first one is a little more rigid, making it
 harder to make mistakes, and the second is more flexible and trusting.
 
-#### Wildcard repos with creater name in them
+#### Wildcard repos with creator name in them
 
 Here's an example snippet:
 
@@ -48,9 +48,9 @@ Here's an example snippet:
     @TAs        =   u2 u3
     @students   =   u4 u5 u6
 
-    repo    assignments/CREATER/a[0-9][0-9]
+    repo    assignments/CREATOR/a[0-9][0-9]
         C   =   @students
-        RW+ =   CREATER
+        RW+ =   CREATOR
         RW  =   WRITERS @TAs
         R   =   READERS @prof
 
@@ -64,14 +64,14 @@ new repo, as user "u4" (a student):
 
 Notice the *two* empty repo inits, and the order in which they occur ;-)
 
-#### Wildcard repos without creater name in them
+#### Wildcard repos without creator name in them
 
-Here's how the same example would look if you did not want the CREATER's name
+Here's how the same example would look if you did not want the CREATOR's name
 to be part of the actual repo name.
 
     repo    assignments/a[0-9][0-9]
         C   =   @students
-        RW+ =   CREATER
+        RW+ =   CREATOR
         RW  =   WRITERS @TAs
         R   =   READERS @prof
 
@@ -122,7 +122,7 @@ part of this list*** is controlled by the person who created the repository.
 
 The use case is that, although our toy example has only 3 students, in reality
 there will be a few dozen, but each assignment will be worked on only by a
-handful from among those.  This allows the creater to take ad hoc sets of
+handful from among those.  This allows the creator to take ad hoc sets of
 users from among the actual users in the system, and place them into one of
 two categories (whose permissions are, in this example, R and RW
 respectively).  In theory you could do the same thing by creating lots of
@@ -214,20 +214,20 @@ This section tells you what is happening inside gitolite so you can understand
 this feature better.  Let's use the config example at the beginning of this
 document:
 
-    repo    assignments/CREATER/a[0-9][0-9]
+    repo    assignments/CREATOR/a[0-9][0-9]
         C   =   @students
-        RW+ =   CREATER
+        RW+ =   CREATOR
         RW  =   WRITERS @TAs
         R   =   READERS @prof
 
 First we find the set of rules to apply.  This involves replacing the special
-words CREATER, WRITERS, and READERS with appropriate usernames to derive an
+words CREATOR, WRITERS, and READERS with appropriate usernames to derive an
 "effective" ruleset for the repo in question.
 
-For a **new** repo, replace the word CREATER in all repo patterns and rules
+For a **new** repo, replace the word CREATOR in all repo patterns and rules
 with the name of the invoking user.
 
->   (Note: this is why you should never use `C = CREATER`; it becomes `C =
+>   (Note: this is why you should never use `C = CREATOR`; it becomes `C =
 >   invoking_user`!  Unless you really want to allow *all* users to create
 >   repos, you should restrict "C" perms to an actual user or set of users,
 >   like in the examples in this document).
@@ -251,8 +251,8 @@ At this point we have an effective ruleset, and the normal access rules (R,
 RW, etc) apply, with the addition that the invoking user needs "C" access to
 be able to create a repo.
 
->   (Note: "C" rights do not automatically give the CREATER any other rights;
->   they must be specifically given.  `RW+ = CREATER` is recommended in most
+>   (Note: "C" rights do not automatically give the CREATOR any other rights;
+>   they must be specifically given.  `RW+ = CREATOR` is recommended in most
 >   situations, as you can see in our example).
 
 Assuming user "u4" trying to push-create a new repo called
