@@ -185,7 +185,12 @@ sub parse_conf_file
             @repos = split ' ', $1;
             unless (@repos == 1 and $repos[0] eq '@all') {
                 @repos = expand_list ( @repos );
-                do  { die "$ABRT bad reponame $_\n" unless ($GL_WILDREPOS ? $_ =~ $REPOPATT_PATT : $_ =~ $REPONAME_PATT) } for @repos;
+                for (@repos) {
+                    die "$ABRT bad reponame $_\n"
+                        if ($GL_WILDREPOS and $_ !~ $REPOPATT_PATT);
+                    die "$ABRT bad reponame $_ or you forgot to set \$GL_WILDREPOS\n"
+                        if (not $GL_WILDREPOS and $_ !~ $REPONAME_PATT);
+                }
             }
             s/\bCREAT[EO]R\b/\$creator/g for @repos;
         }
@@ -196,7 +201,7 @@ sub parse_conf_file
             my @refs; @refs = split(' ', $2) if $2;
             @refs = expand_list ( @refs );
             my @users = split ' ', $3;
-            die "wildrepos disabled, cant use 'C' in config\n" if $perms eq 'C' and not $GL_WILDREPOS;
+            die "$ABRT \$GL_WILDREPOS is not set, you cant use 'C' in config\n" if $perms eq 'C' and not $GL_WILDREPOS;
 
             # if no ref is given, this PERM applies to all refs
             @refs = qw(refs/.*) unless @refs;
