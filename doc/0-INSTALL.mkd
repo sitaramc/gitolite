@@ -3,8 +3,7 @@
 [Update 2009-11-18: easy install now works from msysgit also!]
 
 Gitolite is somewhat unusual as far as "server" software goes -- every userid
-on the system is a potential "gitolite host" and can install his own version
-if he chooses to.
+on the server is a potential "gitolite host".
 
 This document tells you how to install gitolite.  After the install is done,
 you may want to see the [admin document][admin] for adding users, repos, etc.
@@ -63,9 +62,9 @@ The "system install / user setup" section describes this method.
 
 ### user install
 
-There is an easy install script that makes installing very easy for the common
-case.  **This script will setup everything on the server, but you have to run
-it on your workstation, NOT on the server!**
+The `gl-easy-install` script makes installing very easy for this case.  **This
+script will setup everything on the server, but you have to run it on your
+workstation, NOT on the server!**
 
 Assumptions/pre-requisites:
 
@@ -95,6 +94,11 @@ A typical run for me is:
 of what it is going to do, and no pauses unless absolutely needed.  However,
 if you're doing this for the first time or you appreciate knowing what it is
 actually doing, I suggest you skip the `-q`.
+
+A detailed transcript of an install done using this method can be found in
+[doc/7-install-transcript.mkd][7it].
+
+[7it]: http://github.com/sitaramc/gitolite/blob/pu/doc/7-install-transcript.mkd
 
 #### advantages over the older install methods
 
@@ -136,21 +140,31 @@ opposed to merely creating one which did not exist) is best left to a human.
     *don't* have to know perl to do so, it's fairly easy to guess in this
     limited case.
 
+----
+
 ### system install / user setup
 
-In this mode a system administrator installs gitolite using the server's
-distro package mechanism (yum install, apt-get install, etc).
+(Note: other than getting a public key from the admin's workstation,
+everything in this mode of install happens on the server).
 
-Once this is done, you as a user must run a command like this (unlike in the
-"user install" mode, this is done directly on the server):
+In this mode, the software is first installed system-wide, then the user runs
+a command to set up the hosting, supplying a public key.
 
-    gl-setup yourname.pub
+The root user can **install the software system-wide**, using either a package
+(rpm, deb, etc.), or by using the `gl-system-install` script.  (Run the script
+without any arguments for a brief usage message.  If that's not clear enough,
+read Appendix C below for details.)
 
-where yourname.pub is a copy of a public key from your workstation.  The first
-time you run this, it will create a "gitolite-admin" repo and populate it with
-the right configuration for whoever has the corresponding private key to
-clone and push it.  In other words, that person is the administrator for this
-particular gitolite instance.
+A normal user can then **set up the hosting** by running a command like this:
+
+    gl-setup adminname.pub
+
+where adminname.pub is a copy of a public key from that user's workstation.
+
+The first time this is run, it will create a "gitolite-admin" repo and
+populate it with the right configuration for whoever has the corresponding
+private key to clone and push it.  In other words, that person is the
+administrator for this particular gitolite instance.
 
 If your system administrator upgrades gitolite itself, things will usually
 just work without any change; you should not have to do anything special.
@@ -168,7 +182,7 @@ them, expect trouble :-)
 
 #### multiple gitolite instances
 
-With this mode of install, it's easy to create multiple gitolite instances
+With this mode of install, it's trivial to create multiple gitolite instances
 (say one for each department, on some mega company-wide server).  You can even
 do this without giving shell access to the admins.  Here's an example with
 just two "departments", and their admins Alice and Bob:

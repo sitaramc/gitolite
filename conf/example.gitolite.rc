@@ -8,6 +8,13 @@
 # self-explanatory and easy to maintain perl syntax :-)
 
 # --------------------------------------
+# Do not uncomment these values unless you know what you're doing
+# $GL_PACKAGE_CONF = "";
+# $GL_PACKAGE_HOOKS = "";
+
+# --------------------------------------
+
+# --------------------------------------
 
 # this is where the repos go.  If you provide a relative path (not starting
 # with "/"), it's relative to your $HOME.  You may want to put in something

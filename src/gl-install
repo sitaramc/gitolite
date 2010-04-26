@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+# INTERNAL COMMAND.  NOT MEANT TO BE RUN BY THE USER DIRECTLY.
+
 use strict;
 use warnings;
 

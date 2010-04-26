@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# install the gitolite software *system wide*.  Not too robust, fancy, etc.,
+# but does have a usage message and catches simple problems.
+
+usage() { echo "
+    Usage:
+        $0 shared-bin-dir shared-conf-dir shared-hooks-dir
+
+    Example:
+        $0 /usr/local/bin /var/gitolite/conf /var/gitolite/hooks
+
+    In this example, all the binaries go to /usr/local/bin, and the shared
+    conf and hooks files/directories go to the other 2 directories given
+"
+    exit 1;
+}
+
+die() { echo "$@"; echo; usage; exit 1; }
+
+[ -z "$3" ] && usage
+
+gl_bin_dir=$1
+[ -d $gl_bin_dir ] || die "$gl_bin_dir not found"
+gl_conf_dir=$2
+[ -d $gl_conf_dir ] || die "$gl_conf_dir not found"
+gl_hooks_dir=$3
+[ -d $gl_hooks_dir ] || die "$gl_hooks_dir not found"
+
+bindir=`echo $0 | perl -lpe 's/^/$ENV{PWD}\// unless /^\//; s/\/[^\/]+$//;'`
+cd $bindir/..       # we assume the standard gitolite source tree is here!
+
+cp src/* $gl_bin_dir || die "cp src/* to $gl_bin_dir failed"
+rm $gl_bin_dir/gl-easy-install
+perl -lpi -e "s(^GL_PACKAGE_CONF=.*)(GL_PACKAGE_CONF=$gl_conf_dir)" $gl_bin_dir/gl-setup
+
+cp -R conf/* $gl_conf_dir || die "cp conf/* to $gl_conf_dir failed"
+perl -lpi \
+    -e "s(^#\s*\\\$GL_PACKAGE_CONF\s*=.*)(\\\$GL_PACKAGE_CONF = '$gl_conf_dir';)" \
+        $gl_conf_dir/example.gitolite.rc
+perl -lpi \
+    -e "s(^#\s*\\\$GL_PACKAGE_HOOKS\s*=.*)(\\\$GL_PACKAGE_HOOKS = '$gl_hooks_dir';)" \
+        $gl_conf_dir/example.gitolite.rc
+
+cp -R hooks/* $gl_hooks_dir || die "cp hooks/* to $gl_hooks_dir failed"
