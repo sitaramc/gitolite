@@ -6,7 +6,7 @@ Gitolite is somewhat unusual as far as "server" software goes -- every userid
 on the server is a potential "gitolite host".
 
 This document tells you how to install gitolite.  After the install is done,
-you may want to see the [admin document][admin] for adding users, repos, etc.
+you may want to see [doc/2-admin.mkd][admin] for adding users, repos, etc.
 
 **Please note** that gitolite depends heavily on proper ssh setup and pubkey
 based access.  Sadly, most people don't know ssh as well as they think they
@@ -54,7 +54,9 @@ The "user install" section describes this method.
 
 The **system-install followed by user-setup** mode is used when you (or
 someone who has root) has installed an RPM or DEB of gitolite and you intend
-to use that version.
+to use that version.  [Update 2010-04-27: there is now a script called
+`gl-system-install` that helps you do a system-install if your distribution
+does not yet have a package for gitolite; details below].
 
 The "system install / user setup" section describes this method.
 
@@ -202,11 +204,15 @@ to have a command line on the server, so don't give them the passwords if you
 don't need to -- the pubkey will allow them to be gitolite admins on their
 domain, and that's quite enough for normal operations.
 
+----
+
 ### next steps
 
-The last message produced by the easy install script should tell you how to
-add users, repos, etc., and you will find more details in the [admin][admin]
-document.
+If you installed it using "gl-easy-install", the last message produced by that
+script should tell you how to add users, repos, etc.  In any case, you will
+find more details in [doc/2-admin.mkd][admin].
+
+----
 
 <a name="server_reqs"></a>
 

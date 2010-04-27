@@ -19,7 +19,15 @@ First of all, ***do NOT add new repos manually***, unless you know how to add
 the required hook as well.  Without the hook, branch-level access control will
 not work for that repo, which sorta defeats the idea of using gitolite :-)
 
-Please read on to see how to do this correctly.
+Most normal (day-to-day) gitolite admin work is done by cloning the
+gitolite-admin repo from the server to your workstation, making changes to the
+clone, and pushing those changes back.
+
+If you installed using "gl-easy-install", that script would have already tried
+to clone the repo to your `$HOME`.  Otherwise clone it yourself to any
+convenient location you like.
+
+Once you've cloned it, you're ready to add users and repos.
 
 #### adding users and repos
 
