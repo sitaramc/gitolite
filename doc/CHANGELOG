@@ -2,6 +2,11 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - admin-defined commands; see doc/admin-defined-commands.mkd
+
+  - v1.4.2 (prep for major refactor on rights queries
+  - v1.4.1 (security fix)
+
   - REFUSE TO RUN ON SERVER GIT < 1.6.2 (do NOT upgrade gitolite to or beyond
     this point if you are unable to upgrade git itself to at least 1.6.2)
 
@@ -33,12 +38,12 @@ the tags can help you position stuff approximately
   - v1.1
 
   - contrib directory added
-  - expand now lists non-wildcard repos also (expand is NYD)
+  - expand now lists non-wildcard repos also
   - refs also have groups now (NYD)
-  - allow admins to get "info" for other users (NYD)
+  - allow admins to get "info" for other users
 
   - wildrepos merged
-  - getdesc and setdesc for wildrepos (NYD)
+  - getdesc and setdesc for wildrepos
   - htpasswd subcommand
   - access control for rsync
 

@@ -82,6 +82,8 @@ detail [here][gsdiff].
   * "personal namespace" prefix for each dev
   * migration guide and simple converter for gitosis conf file
   * "exclude" (or "deny") rights at the branch/tag level
+  * specify repos using patterns (patterns may include creator's name)
+  * define powerful operations on the server side, even github-like forking
 
 ### security
 
@@ -93,7 +95,7 @@ normal user (not the gitolite admin) to read a repo, or write/rewind a ref,
 that the config file says he shouldn't, and caused by a bug in *code* that is
 in the "master" branch, (not in the other branches, or the configuration file
 or in Unix, perl, shell, etc.)...  well I can't afford 1000 USD rewards like
-djb, so you'll have to settle for 1000 INR (Indian Rupees) as a "token" prize
+djb, so you'll have to settle for 5000 INR (Indian Rupees) as a "token" prize
 :-)
 
 However, there are a few optional features (which must be explicitly enabled

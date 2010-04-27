@@ -33,6 +33,7 @@ In this document:
           * easier to link gitweb authorisation with gitolite
       * advanced features
           * repos named with wildcards
+          * admin defined commands
           * access control for external commands
   * design choices
       * keeping the parser and the access control separate
@@ -638,6 +639,11 @@ already done and we just use it!
 #### repos named with wildcards
 
 Please see `doc/4-wildcard-repositories.mkd` for all the details.
+
+#### admin defined commands
+
+This requires the wildcards feature to be enabled, but is then an extremely
+powerful feature.  See `doc/admin-defined-commands.mkd`.
 
 #### access control for external commands
 
