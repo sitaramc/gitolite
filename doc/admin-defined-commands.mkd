@@ -45,7 +45,9 @@ on "restricted admin" for what's really exciting about this for *me*.
 ----
 
 It may be a good idea to read [doc/4-wildcard-repositories.mkd][wild] before
-you continue here though, because this feature builds on top of that.
+you continue here though, because most of the uses of this feature also need
+wildcard repos.  (This also means you must set `$GL_WILDREPOS` to "1" in the
+rc file).
 
 [wild]: http://github.com/sitaramc/gitolite/blob/pu/doc/4-wildcard-repositories.mkd
 
@@ -190,3 +192,6 @@ as you can see, it cleverly makes use of the fact that you can now check for
 the invoking uses access to any repo in the system.  In this case it checks if
 he has "W" access to the gitolite-admin repo, and if he does, allows the
 script to proceed.
+
+[Note that this particular use does not require `$GL_WILDREPOS` to be enabled,
+because it's not using any wildcard repos].

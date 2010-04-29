@@ -568,7 +568,7 @@ v_done="
 done!
 
 IMPORTANT NOTE -- PLEASE READ!!!
-    *Your* URL for cloning any repo on this server will be
+    *Your* URL for cloning any repo from this server will be
         gitolite:reponame.git
 
     *Other* users you set up will have to use
