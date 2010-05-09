@@ -503,6 +503,18 @@ You can specify hooks that you want to propagate to all repos, as well as
 per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
 `conf/example.conf` for details.
 
+<a name="svnserve"></a>
+
+#### svnserve ####
+
+If you are transitioning from SVN to gitolite, and have a lot of users using
+public-key authentication with SVN, this feature may be useful to you. Once
+you migrate all users' public keys into gitolite, you can set the `$SVNSERVE`
+variable in `~/.gitolite.rc` to tie `svnserve` with gitolite's authentication
+system. Assuming you installed gitolite to the same user as the one you used
+for SVN, SVN connectivity will be retained, and users will be able to use
+both SVN and git using the same SSH configuration.
+
 <a name="gitweb"></a>
 
 ### helping with gitweb
