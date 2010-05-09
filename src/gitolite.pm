@@ -35,6 +35,7 @@ our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 
 # these come from the RC file
 our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS);
+our ($SVNSERVE);
 our %repos;
 
 # ----------------------------------------------------------------------------
@@ -385,6 +386,8 @@ sub special_cmd
         &ext_cmd_htpasswd($HTPASSWD_FILE);
     } elsif ($RSYNC_BASE and $cmd =~ /^rsync /) {
         &ext_cmd_rsync($GL_CONF_COMPILED, $RSYNC_BASE, $cmd);
+    } elsif ($SVNSERVE and $cmd eq 'svnserve -t') {
+        &ext_cmd_svnserve($SVNSERVE);
     } else {
         # if the user is allowed a shell, just run the command
         exec $ENV{SHELL}, "-c", $cmd if $shell_allowed;
@@ -478,6 +481,19 @@ EOFhtp
     die "empty passwords are not allowed\n" unless $password;
     my $rc = system("htpasswd", "-b", $HTPASSWD_FILE, $ENV{GL_USER}, $password);
     die "htpasswd command seems to have failed with $rc return code...\n" if $rc;
+}
+
+# ----------------------------------------------------------------------------
+#       external command helper: svnserve
+# ----------------------------------------------------------------------------
+
+sub ext_cmd_svnserve
+{
+    my $SVNSERVE = shift;
+
+    $SVNSERVE =~ s/%u/$ENV{GL_USER}/g;
+    exec $SVNSERVE;
+    die "svnserve exec failed\n";
 }
 
 1;
