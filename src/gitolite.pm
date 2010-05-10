@@ -411,7 +411,7 @@ sub cli_repo_rights {
 
 sub special_cmd
 {
-    my ($GL_ADMINDIR, $GL_CONF_COMPILED, $shell_allowed, $RSYNC_BASE, $HTPASSWD_FILE) = @_;
+    my ($GL_ADMINDIR, $GL_CONF_COMPILED, $shell_allowed, $RSYNC_BASE, $HTPASSWD_FILE, $SVNSERVE) = @_;
 
     my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
     my $user = $ENV{GL_USER};
@@ -432,6 +432,8 @@ sub special_cmd
         &ext_cmd_htpasswd($HTPASSWD_FILE);
     } elsif ($RSYNC_BASE and $cmd =~ /^rsync /) {
         &ext_cmd_rsync($GL_CONF_COMPILED, $RSYNC_BASE, $cmd);
+    } elsif ($SVNSERVE and $cmd eq 'svnserve -t') {
+        &ext_cmd_svnserve($SVNSERVE);
     } else {
         # if the user is allowed a shell, just run the command
         &log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$ENV{GL_USER}\n");
@@ -526,6 +528,19 @@ EOFhtp
     die "empty passwords are not allowed\n" unless $password;
     my $rc = system("htpasswd", "-b", $HTPASSWD_FILE, $ENV{GL_USER}, $password);
     die "htpasswd command seems to have failed with $rc return code...\n" if $rc;
+}
+
+# ----------------------------------------------------------------------------
+#       external command helper: svnserve
+# ----------------------------------------------------------------------------
+
+sub ext_cmd_svnserve
+{
+    my $SVNSERVE = shift;
+
+    $SVNSERVE =~ s/%u/$ENV{GL_USER}/g;
+    exec $SVNSERVE;
+    die "svnserve exec failed\n";
 }
 
 1;

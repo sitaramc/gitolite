@@ -151,6 +151,20 @@ $RSYNC_BASE = "";
 # $RSYNC_BASE = "/tmp/up-down";
 
 # --------------------------------------
+# EXTERNAL COMMAND HELPER -- SVNSERVE
+
+# security note: runs an external command (svnserve) with specific arguments,
+# as specified below. %u is substituted with the username.
+
+# This setting allows launching svnserve when requested by the ssh client.
+# This allows using the same SSH setup (hostname/username/public key) for both
+# SVN and git access. Leave it undefined or set to the empty string to disable
+# svnserve access.
+
+$SVNSERVE = "";
+# $SVNSERVE = "/usr/bin/svnserve -r /var/svn/ -t --tunnel-user=%u";
+
+# --------------------------------------
 # ALLOW REPO CONFIG TO USE WILDCARDS
 
 # security note: this used to in a separate "wildrepos" branch.  You can
