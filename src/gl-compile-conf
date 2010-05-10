@@ -52,7 +52,7 @@ $Data::Dumper::Sortkeys = 1;
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 
 # these are set by the "rc" file
-our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $GL_WILDREPOS, $GL_GITCONFIG_KEYS, $GL_PACKAGE_HOOKS, $GL_SETPERMS_OVERRIDES_CONFIG);
+our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $GL_WILDREPOS, $GL_GITCONFIG_KEYS, $GL_PACKAGE_HOOKS, $GL_SETPERMS_OVERRIDES_CONFIG, $GL_BIG_CONFIG);
 # and these are set by gitolite.pm
 our ($REPONAME_PATT, $REPOPATT_PATT, $USERNAME_PATT, $AUTH_COMMAND, $AUTH_OPTIONS, $ABRT, $WARN);
 
@@ -181,10 +181,12 @@ sub parse_conf_file
         # repo(s)
         elsif (/^repo (.*)/)
         {
-            # grab the list and expand any @stuff in it
+            # grab the list...
             @repos = split ' ', $1;
             unless (@repos == 1 and $repos[0] eq '@all') {
-                @repos = expand_list ( @repos );
+                # ...expand groups in the default case
+                @repos = expand_list ( @repos ) unless $GL_BIG_CONFIG;
+                # ...sanity check
                 for (@repos) {
                     die "$ABRT bad reponame $_\n"
                         if ($GL_WILDREPOS and $_ !~ $REPOPATT_PATT);
@@ -214,7 +216,7 @@ sub parse_conf_file
 
             # expand the user list, unless it is just "@all"
             @users = expand_list ( @users )
-                unless (@users == 1 and $users[0] eq '@all');
+                unless ($GL_BIG_CONFIG or (@users == 1 and $users[0] eq '@all'));
             do  { die "$ABRT bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
 
             s/\bCREAT[EO]R\b/~\$creator/g for @users;
@@ -370,6 +372,7 @@ my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
 # much...
 $dumped_data =~ s/'(?=[^']*\$(?:creator|readers|writers|gl_user))~*(.*?)'/"$1"/g;
 print $compiled_fh $dumped_data;
+print $compiled_fh Data::Dumper->Dump([\%groups], [qw(*groups)]) if $GL_BIG_CONFIG and %groups;
 close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
 
 # ----------------------------------------------------------------------------
@@ -406,8 +409,7 @@ wrap_chdir("$repo_base_abs");
 
 for my $repo (sort keys %repos) {
     next unless $repo =~ $REPONAME_PATT;
-    next if $repo =~ m(^EXTCMD/);   # these are not real repos
-    next if $repo eq '@all';
+    next if $repo =~ m(^\@|EXTCMD/);    # these are not real repos
     unless (-d "$repo.git") {
         print STDERR "creating $repo...\n";
         new_repo($repo, "$GL_ADMINDIR/hooks/common");
@@ -457,6 +459,7 @@ wrap_chdir("$repo_base_abs");
 # daemons first...
 for my $repo (sort keys %repos) {
     next unless $repo =~ $REPONAME_PATT;
+    next if $repo =~ m(^\@|EXTCMD/);    # these are not real repos
     my $export_ok = "$repo.git/git-daemon-export-ok";
     if ($repos{$repo}{'R'}{'daemon'}) {
         system("touch $export_ok");
@@ -469,6 +472,7 @@ my %projlist = ();
 # ...then gitwebs
 for my $repo (sort keys %repos) {
     next unless $repo =~ $REPONAME_PATT;
+    next if $repo =~ m(^\@|EXTCMD/);    # these are not real repos
     my $desc_file = "$repo.git/description";
     # note: having a description also counts as enabling gitweb
     if ($repos{$repo}{'R'}{'gitweb'} or $desc{"$repo.git"}) {

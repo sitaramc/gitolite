@@ -34,26 +34,11 @@ exit 0 if exists $ENV{GL_BYPASS_UPDATE_HOOK};
 
 # we should already have the GL_RC env var set when we enter this hook
 die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
-# then "do" the compiled config file, whose name we now know.  Before doing
-# that we setup the creator etc from environment variables so that the parse
-# interpolates them.  We've minimised the duplication but this *does*
-# duplicate a bit of parse_acl from gitolite.pm; we don't want to include that
-# file here just for that little bit
-{
-    our $creator = $ENV{GL_CREATOR};
-    our $readers = $ENV{GL_READERS};
-    our $writers = $ENV{GL_WRITERS};
-    our $gl_user = $ENV{GL_USER};
 
-    die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
-
-    $repos{$ENV{GL_REPO}} = $repos{$ENV{GL_REPOPATT}} if ( $ENV{GL_REPOPATT} );
-}
-my $reported_repo = $ENV{GL_REPO} . ( $ENV{GL_REPOPATT} ? " ($ENV{GL_REPOPATT})" : "" );
-
-# we've started to need some common subs in what used to be a small, cute,
-# little script that barely spanned a few lines :(
 require "$ENV{GL_BINDIR}/gitolite.pm";
+
+my ($perm, $creator, $wild) = &repo_rights($ENV{GL_REPO});
+my $reported_repo = $ENV{GL_REPO} . ( $ENV{GL_REPOPATT} ? " ($ENV{GL_REPOPATT})" : "" );
 
 # ----------------------------------------------------------------------------
 #       start...
@@ -71,17 +56,17 @@ chomp($merge_base = `git merge-base $oldsha $newsha`)
     unless $oldsha eq '0' x 40
         or $newsha eq '0' x 40;
 
-# what are you trying to do?  (is it 'W' or '+'?)
-my $perm = 'W';
+# att_acc == attempted access -- what are you trying to do?  (is it 'W' or '+'?)
+my $att_acc = 'W';
 # rewriting a tag is considered a rewind, in terms of permissions
-$perm = '+' if $ref =~ m(refs/tags/) and $oldsha ne ('0' x 40);
+$att_acc = '+' if $ref =~ m(refs/tags/) and $oldsha ne ('0' x 40);
 # non-ff push to ref
 # notice that ref delete looks like a rewind, as it should
-$perm = '+' if $oldsha ne $merge_base;
+$att_acc = '+' if $oldsha ne $merge_base;
 
 # were any 'D' perms specified?  If they were, it means we have to separate
 # deletes from rewinds, so if the new sha is all 0's, change the '+' to a 'D'
-$perm = 'D' if ( $repos{$ENV{GL_REPO}}{DELETE_IS_D} or $repos{'@all'}{DELETE_IS_D} ) and $newsha eq '0' x 40;
+$att_acc = 'D' if ( $repos{$ENV{GL_REPO}}{DELETE_IS_D} or $repos{'@all'}{DELETE_IS_D} ) and $newsha eq '0' x 40;
 
 my @allowed_refs;
 # @all repos: see comments in similar code in check_access
@@ -113,12 +98,12 @@ if (exists $repos{$ENV{GL_REPO}}{NAME_LIMITS}) {
 # log is the *first* one (which is a *real* ref, like refs/heads/master),
 # while all the rest (if they exist) are like NAME/something.  So we do the
 # first one separately to capture it, then run the rest (if any)
-my $log_refex = check_ref(\@allowed_refs, $ENV{GL_REPO}, (shift @refs), $perm);
-&check_ref               (\@allowed_refs, $ENV{GL_REPO}, $_           , $perm) for @refs;
+my $log_refex = check_ref(\@allowed_refs, $ENV{GL_REPO}, (shift @refs), $att_acc);
+&check_ref               (\@allowed_refs, $ENV{GL_REPO}, $_           , $att_acc) for @refs;
 
 # if we returned at all, all the checks succeeded, so we log the action and exit 0
 
-&log_it("$ENV{GL_TS}  $perm\t" .
+&log_it("$ENV{GL_TS}  $att_acc\t" .
     substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
     "\t$reported_repo\t$ref\t$ENV{GL_USER}\t$log_refex\n");
 

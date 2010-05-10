@@ -28,6 +28,7 @@ our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMIND
 # and these are set by gitolite.pm
 our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT);
 our %repos;
+our %groups;
 
 # the common setup module is in the same directory as this running program is
 my $bindir = $0;
@@ -54,6 +55,10 @@ my $repo_base_abs = $ENV{GL_REPO_BASE_ABS} = ( $REPO_BASE =~ m(^/) ? $REPO_BASE 
 # ----------------------------------------------------------------------------
 #       start...
 # ----------------------------------------------------------------------------
+
+# no arguments given?  default user is $USER (fedorahosted works like this,
+# and it is harmless for others)
+@ARGV = ($ENV{USER}) unless @ARGV;
 
 # if the first argument is a "-s", this user is allowed to get a shell using
 # this key
@@ -184,7 +189,7 @@ $ENV{GL_REPO}=$repo;
 #       first level permissions check
 # ----------------------------------------------------------------------------
 
-my ($perm, $creator) = &repo_rights($repo);
+my ($perm, $creator, $wild) = &repo_rights($repo);
 if ($perm =~ /C/) {
     # it was missing, and you have create perms
     wrap_chdir("$repo_base_abs");
