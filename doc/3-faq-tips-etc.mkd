@@ -503,18 +503,6 @@ You can specify hooks that you want to propagate to all repos, as well as
 per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
 `conf/example.conf` for details.
 
-<a name="svnserve"></a>
-
-#### svnserve ####
-
-If you are transitioning from SVN to gitolite, and have a lot of users using
-public-key authentication with SVN, this feature may be useful to you. Once
-you migrate all users' public keys into gitolite, you can set the `$SVNSERVE`
-variable in `~/.gitolite.rc` to tie `svnserve` with gitolite's authentication
-system. Assuming you installed gitolite to the same user as the one you used
-for SVN, SVN connectivity will be retained, and users will be able to use
-both SVN and git using the same SSH configuration.
-
 <a name="gitweb"></a>
 
 ### helping with gitweb
@@ -656,14 +644,34 @@ Please see `doc/4-wildcard-repositories.mkd` for all the details.
 Gitolite now has a mechanism for allowing access control for arbitrary
 external commands, as long as they are invoked via ssh and present a
 server-side command that contains enough information to make an access control
-decision.  The first (and only, so far) such command implemented is rsync.
+decision.
 
 Note that this is incompatible with giving people shell access as described in
 `doc/6-ssh-troubleshooting.mkd` -- people who have shell access are not
 subject to this mechanism (it wouldn't make sense to try and control someone
 who has shell access anyway).
 
-Please see the config files (both of them) for examples and usage.
+In general, external commands require changes in one or both the config files;
+the sample files in `conf/` double as documentation, so you should look there
+for examples and usage.
+
+Commands implemented so far are:
+
+  * rsync
+  * svnserve (see next section for a brief description; this has been
+    contributed by Simon and Vladimir)
+
+<a name="svnserve"></a>
+
+##### svnserve
+
+If you are transitioning from SVN to gitolite, and have a lot of users using
+public-key authentication with SVN, this feature may be useful to you. Once
+you migrate all users' public keys into gitolite, you can set the `$SVNSERVE`
+variable in `~/.gitolite.rc` to tie `svnserve` with gitolite's authentication
+system. Assuming you installed gitolite to the same user as the one you used
+for SVN, SVN connectivity will be retained, and users will be able to use
+both SVN and git using the same SSH configuration.
 
 ## design choices
 
