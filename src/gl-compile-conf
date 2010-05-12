@@ -173,6 +173,8 @@ sub parse_conf_file
         # user or repo groups
         if (/^(@\S+) = (.*)/)
         {
+            die "$ABRT defining groups is not allowed inside fragments\n"
+                if $GL_BIG_CONFIG and $fragment ne 'master';
             # store the members of each group as hash key.  Keep track of when
             # the group was *first* created by using $fragment as the *value*
             do { $groups{$1}{$_} ||= $fragment } for ( expand_list( split(' ', $2) ) );
@@ -239,6 +241,8 @@ sub parse_conf_file
                     # fragment is also called 'foo' (you're allowed to have a
                     # fragment that is only concerned with one repo)
                     ( $fragment eq $repo ) or
+                    # same thing in big-config-land; foo is just @foo now
+                    ( $GL_BIG_CONFIG and "\@$fragment" eq $repo ) or
                     # fragment is called "bar" and "@bar = foo" has been
                     # defined in the master config
                     ( ($groups{"\@$fragment"}{$repo} || '') eq 'master' )
