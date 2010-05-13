@@ -197,7 +197,12 @@ version_info() {
     # MANUAL: if needed, make a note of the version you are upgrading from, and to
 
     # record which version is being sent across; we assume it's HEAD
-    git describe --tags --long HEAD 2>/dev/null > conf/VERSION || echo '(unknown)' > conf/VERSION
+    if git rev-parse --is-inside-work-tree 2>/dev/null
+    then
+        git describe --tags --long HEAD 2>/dev/null > conf/VERSION || echo '(unknown)' > conf/VERSION
+    else
+        [[ -f conf/VERSION ]] || echo '(unknown)' > conf/VERSION
+    fi
 
     # what was the old version there?
     export upgrade_details="you are upgrading \
