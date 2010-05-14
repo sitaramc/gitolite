@@ -6,6 +6,10 @@
 
 # Note: I'm not sure if that "-r" is a GNU tar extension...
 
+branch := $(shell git rev-parse --abbrev-ref HEAD)
+
+$(branch):	$(branch).tar
+
 .GITOLITE-VERSION:
 	@touch conf/VERSION
 
@@ -14,3 +18,4 @@
 	git archive $* > $@
 	tar -r -f $@ conf/VERSION
 	rm conf/VERSION
+	cp -v $@ /tmp
