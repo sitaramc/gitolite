@@ -110,7 +110,9 @@ $GIT_PATH="";
 # You have 3 choices.  By default $GL_GITCONFIG_KEYS is left empty, which
 # completely disables this feature (meaning you cannot set git configs from
 # the repo config).
+
 $GL_GITCONFIG_KEYS = "";
+
 #
 # The second choice is to give it a space separated list of settings you
 # consider safe.  (These are actually treated as a set of regular expression
@@ -146,7 +148,9 @@ $HTPASSWD_FILE = "";
 # base path of all the files that are accessible via rsync.  Must be an
 # absolute path.  Leave it undefined or set to the empty string to disable the
 # rsync helper.
+
 $RSYNC_BASE = "";
+
 # $RSYNC_BASE = "/home/git/up-down";
 # $RSYNC_BASE = "/tmp/up-down";
 
@@ -177,7 +181,22 @@ $SVNSERVE = "";
 # This has now been rolled into master, with all the functionality gated by
 # this variable.  Set this to 1 if you want to enable the wildrepos features.
 # Please see doc/4-wildcard-repositories.mkd for details.
+
 $GL_WILDREPOS = 0;
+
+# --------------------------------------
+# ALLOW SETPERMS TO OVERRIDE gitolite.conf
+
+# A user can be given permissions to use a "wildcard created" repo using the
+# "setperms" command run by the creator.  However, if that same user is also
+# explicitly listed in the config file as having a specific permission, and if
+# that permission is different from what was specified using `setperms`, there
+# is a conflict.
+
+# Default behaviour is to let the config file permissions override the
+# "setperms" permissions, but if you want it the other way, set this to 1.
+
+$GL_SETPERMS_OVERRIDES_CONFIG = 0;
 
 # --------------------------------------
 # HOOK CHAINING

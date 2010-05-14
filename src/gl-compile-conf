@@ -52,7 +52,7 @@ $Data::Dumper::Sortkeys = 1;
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 
 # these are set by the "rc" file
-our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $GL_WILDREPOS, $GL_GITCONFIG_KEYS, $GL_PACKAGE_HOOKS);
+our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $GL_WILDREPOS, $GL_GITCONFIG_KEYS, $GL_PACKAGE_HOOKS, $GL_SETPERMS_OVERRIDES_CONFIG);
 # and these are set by gitolite.pm
 our ($REPONAME_PATT, $REPOPATT_PATT, $USERNAME_PATT, $AUTH_COMMAND, $AUTH_OPTIONS, $ABRT, $WARN);
 
@@ -220,6 +220,8 @@ sub parse_conf_file
             s/\bCREAT[EO]R\b/~\$creator/g for @users;
             s/\bREADERS\b/\$readers/g for @users;
             s/\bWRITERS\b/\$writers/g for @users;
+            # and double it up if $GL_SETPERMS_OVERRIDES_CONFIG
+            do { s/\$(creator|readers|writers)\b/~\$$1/g for @users } if $GL_SETPERMS_OVERRIDES_CONFIG;
 
             # ok, we can finally populate the %repos hash
             for my $repo (@repos)       # each repo in the current stanza
@@ -366,7 +368,7 @@ my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
 # the dump uses single quotes, but we convert any strings containing $creator,
 # $readers, $writers, to double quoted strings.  A wee bit sneaky, but not too
 # much...
-$dumped_data =~ s/'(?=[^']*\$(?:creator|readers|writers|gl_user))~?(.*?)'/"$1"/g;
+$dumped_data =~ s/'(?=[^']*\$(?:creator|readers|writers|gl_user))~*(.*?)'/"$1"/g;
 print $compiled_fh $dumped_data;
 close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
 
