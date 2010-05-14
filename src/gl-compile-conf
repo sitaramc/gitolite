@@ -405,27 +405,37 @@ die "\n\t\t***** AAARGH! *****\n" .
 # so if it was not already absolute, prefix $HOME.
 my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
 
-wrap_chdir("$repo_base_abs");
+{
+    wrap_chdir("$repo_base_abs");
 
-for my $repo (sort keys %repos) {
-    next unless $repo =~ $REPONAME_PATT;
-    next if $repo =~ m(^\@|EXTCMD/);    # these are not real repos
-    unless (-d "$repo.git") {
-        print STDERR "creating $repo...\n";
-        new_repo($repo, "$GL_ADMINDIR/hooks/common");
-        # new_repo would have chdir'd us away; come back
-        wrap_chdir("$repo_base_abs");
-    }
+    # autocreate repos.  Start with the ones that are normal repos in %repos
+    my @repos = grep { $_ =~ $REPONAME_PATT and not /^@/ } sort keys %repos;
+    # then, for each repogroup, find the members of the group and add them in
+    map { push @repos, keys %{ $groups{$_} } } grep { /^@/ } keys %repos;
+    # weed out duplicates (the code in the loop below is disk activity!)
+    my %seen = map { $_ => 1 } @repos;
+    @repos = sort keys %seen;
 
-    # when repos are copied over from elsewhere, one had to run easy install
-    # once again to make the new (OS-copied) repo contain the proper update
-    # hook.  Perhaps we can make this easier now, and eliminate the easy
-    # install, with a quick check (and a new, empty, "hook" as a sentinel)
-    unless (-l "$repo.git/hooks/gitolite-hooked") {
-        ln_sf("$GL_ADMINDIR/hooks/common", "*", "$repo.git/hooks");
-        # in case of package install, GL_ADMINDIR is no longer the top cop;
-        # override with the package hooks
-        ln_sf("$GL_PACKAGE_HOOKS/common", "*", "$repo.git/hooks") if $GL_PACKAGE_HOOKS;
+    for my $repo (sort @repos) {
+        next unless $repo =~ $REPONAME_PATT;
+        next if $repo =~ m(^\@|EXTCMD/);    # these are not real repos
+        unless (-d "$repo.git") {
+            print STDERR "creating $repo...\n";
+            new_repo($repo, "$GL_ADMINDIR/hooks/common");
+            # new_repo would have chdir'd us away; come back
+            wrap_chdir("$repo_base_abs");
+        }
+
+        # when repos are copied over from elsewhere, one had to run easy install
+        # once again to make the new (OS-copied) repo contain the proper update
+        # hook.  Perhaps we can make this easier now, and eliminate the easy
+        # install, with a quick check (and a new, empty, "hook" as a sentinel)
+        unless (-l "$repo.git/hooks/gitolite-hooked") {
+            ln_sf("$GL_ADMINDIR/hooks/common", "*", "$repo.git/hooks");
+            # in case of package install, GL_ADMINDIR is no longer the top cop;
+            # override with the package hooks
+            ln_sf("$GL_PACKAGE_HOOKS/common", "*", "$repo.git/hooks") if $GL_PACKAGE_HOOKS;
+        }
     }
 }
 
