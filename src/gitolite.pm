@@ -530,7 +530,13 @@ sub get_memberships {
     }
 
     # deal with returning user info first
-    return (@ret) unless $is_repo;
+    unless ($is_repo) {
+        # add in group membership info sent in via second and subsequent
+        # arguments to gl-auth-command; be sure to prefix the "@" sign to each
+        # of them!
+        push @ret, map { s/^/@/; $_; } split(' ', $ENV{GL_GROUP_LIST}) if $ENV{GL_GROUP_LIST};
+        return (@ret);
+    }
 
     # enforce the rule about ignoring all wildcard matches if a non-wild match
     # exists while returning.  (The @ret gating above does not adequately

@@ -71,6 +71,10 @@ if ($ARGV[0] eq '-s') {
 # first, fix the biggest gripe I have with gitosis, a 1-line change
 my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
 
+# if there are any more arguments, they're a list of group names that the user
+# is a member of
+$ENV{GL_GROUP_LIST} = join(" ", @ARGV) if @ARGV;
+
 # ----------------------------------------------------------------------------
 #       logging, timestamp env vars
 # ----------------------------------------------------------------------------
