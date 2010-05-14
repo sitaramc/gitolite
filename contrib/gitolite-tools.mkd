@@ -1,0 +1,15 @@
+# gitolite-tools
+
+gitolite-tools is a collection of external git commands to work with
+gitolite server and repositories:
+
+* git gl-info     - Display gitolite server information
+* git gl-ls       - List accessible gitolite repositories
+* git gl-desc     - Display or edit description of gitolite wildcard repositories
+* git gl-perms    - Display or edit permissions of gitolite wildcard repositories
+* git gl-htpasswd - Set password for gitweb/apache
+
+## Homepage
+
+The project in GitHub:
+[http://github.com/tmatilai/gitolite-tools](http://github.com/tmatilai/gitolite-tools)
