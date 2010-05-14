@@ -1,0 +1,200 @@
+# what is a "big-config"
+
+In this document:
+
+  * when/why do we need it?
+  * how do we use it?
+  * what are the downsides?
+  * (extra coolness) usergroups and LDAP/similar tools
+
+### when/why do we need it?
+
+A "big config" is anything that has more than a few thousand users and a few
+thousand repos, organised into groups that are much smaller in number (like
+maybe a few hundreds of repogroups and a few dozens of usergroups).
+
+So let's say you have
+
+    @wbr    =   lynx firefox
+    @devs   =   alice bob
+
+    repo @wbr
+        RW+     next    =   @devs
+        RW    master    =   @devs
+
+Gitolite internally translates this to
+
+    repo lynx firefox
+        RW+     next    =   alice bob
+        RW    master    =   alice bob
+
+Not just that -- it now generates the actual config rules once for each
+user-repo-ref combination (there are 8 combinations above; the compiled config
+file looks partly like this:
+
+    %repos = (
+      'firefox' => {
+        'R' => {
+          'alice' => 1,
+          'bob' => 1
+        },
+        'W' => {
+          'alice' => 1,
+          'bob' => 1
+        },
+        'alice' => [
+          {
+            'refs/heads/next' => 'RW+'
+          },
+          {
+            'refs/heads/master' => 'RW'
+          }
+        ],
+        'bob' => [
+          {
+            'refs/heads/next' => 'RW+'
+          },
+          {
+            'refs/heads/master' => 'RW'
+          }
+        ]
+      },
+      'lynx' => {
+        'R' => {
+          'alice' => 1,
+          'bob' => 1
+        },
+        'W' => {
+          'alice' => 1,
+          'bob' => 1
+        },
+        'alice' => [
+          {
+            'refs/heads/next' => 'RW+'
+          },
+          {
+            'refs/heads/master' => 'RW'
+          }
+        ],
+        'bob' => [
+          {
+            'refs/heads/next' => 'RW+'
+          },
+          {
+            'refs/heads/master' => 'RW'
+          }
+        ]
+      }
+    );
+
+Phew!
+
+You can imagine what that does when you have 10,000 users and 10,000 repos.
+Let's just say it's not pretty :)
+
+### how do we use it?
+
+Now, if you had all those 10,000 users and repos explicitly listed (no
+groups), then there is no help.  But if, like the above example, you had
+groups like we used above, there is hope.
+
+Just set
+
+    $GL_BIG_CONFIG = 1;
+
+in the `~/.gitolite.rc` file on the server.  When you do that, and push this
+configuration, the compiled file looks like this:
+
+    %repos = (
+      '@wbr' => {
+        '@devs' => [
+          {
+            'refs/heads/next' => 'RW+'
+          },
+          {
+            'refs/heads/master' => 'RW'
+          }
+        ],
+        'R' => {
+          '@devs' => 1
+        },
+        'W' => {
+          '@devs' => 1
+        }
+      },
+    );
+    %groups = (
+      '@devs' => {
+        'alice' => 'master',
+        'bob' => 'master'
+      },
+      '@wbr' => {
+        'firefox' => 'master',
+        'lynx' => 'master'
+      }
+    );
+
+That's a lot smaller, and allows orders of magintude more repos and groups to
+be supported.
+
+### what are the downsides?
+
+There are a few minor issues.
+
+First, "deny" rules (rules whose "permission" is a "-" sign), will not work
+exactly the same as before.
+
+[TODO: add a nice example etc...]
+
+Second, if you use the delegation feature, you can no longer define or extend
+@groups in a fragment, for security reasons.  It will also not let you use any
+group other than the @fragname itself (specifically, groups which contained a
+subset of the allowed @fragname, which would work normally, do not work now).
+
+(If you didn't understand all that, you're probably not using delegation, so
+feel free to ignore it!)
+
+### (extra coolness) usergroups and LDAP/similar tools
+
+[Please NOTE: this is all about *user* groups, not *repo* groups]
+
+Gitolite now allows usergroup information to be passed in from outside.  The
+`gl-auth-commmand` can now take an optional list of usergroup names after the
+first argument (which is the username).
+
+To understand why this is useful, consider the following:
+
+Some people have an LDAP-backed ssh daemon (or some other similar mechanism
+that can speak "ssh" to the client), with pubkeys stored in LDAP, etc., and
+some way (not using `~/.ssh/authorized_keys`) of invoking gitolite.
+
+Such setups also have "usergroups", and a way to tell, for each user, what
+groups he/she is a member of.  So let's say "alice" works on projects "foo"
+and "bar", while "bob" is works on project "bar" and is a member of the
+`L3_support` team.
+
+You can use those group names in the gitolite config file for access control
+as "@foo", "@bar", `@L3_support`, etc.; please note the "@" prefix because
+gitolite requires it.
+
+However, that still leaves a wee little inconvenience.  You still have to add
+lines like this to the gitolite config file:
+
+    @foo        = alice
+    @bar        = alice bob
+    @L3_support = bob
+
+You don't need to do that anymore now.  Tell your authentication system that,
+after authenticating alice, instead of running:
+
+    /some/path/to/gl-auth-command alice
+
+it should first find the groups that alice is a member of, and then run:
+
+    /some/path/to/gl-auth-command alice foo bar
+
+That's it.  Internally, gitolite will behave as if the config file had also
+specified:
+
+    @foo = alice
+    @bar = alice
