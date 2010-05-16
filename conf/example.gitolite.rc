@@ -1,5 +1,4 @@
 # paths and configuration variables for gitolite
-$GL_BIG_CONFIG = 1;
 
 # please read comments before editing
 
@@ -83,7 +82,13 @@ $GIT_PATH="";
 
 # --------------------------------------
 
+# ----------------------------------------------------------------------
+#                   BIG CONFIG SETTINGS
 
+# Please read doc/big-config.mkd for details
+
+$GL_BIG_CONFIG = 0;
+$GL_NO_DAEMON_NO_GITWEB = 0;
 
 # ----------------------------------------------------------------------
 #                   SECURITY SENSITIVE SETTINGS

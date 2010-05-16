@@ -4,14 +4,15 @@ In this document:
 
   * when/why do we need it?
   * how do we use it?
+  * summary of settings in RC file
   * what are the downsides?
   * (extra coolness) usergroups and LDAP/similar tools
 
 ### when/why do we need it?
 
-A "big config" is anything that has more than a few thousand users and a few
-thousand repos, organised into groups that are much smaller in number (like
-maybe a few hundreds of repogroups and a few dozens of usergroups).
+A "big config" is anything that has a few thousand users and a few thousand
+repos, organised into groups that are much smaller in number (like maybe a few
+hundreds of repogroups and a few dozens of usergroups).
 
 So let's say you have
 
@@ -136,6 +137,24 @@ configuration, the compiled file looks like this:
 
 That's a lot smaller, and allows orders of magintude more repos and groups to
 be supported.
+
+### summary of settings in RC file
+
+The default RC file contains the following lines:
+
+    $GL_BIG_CONFIG = 0;
+    $GL_NO_DAEMON_NO_GITWEB = 0;
+
+The first setting means that by default, big-config is off; you can change it
+to 1 to enable it.
+
+The second is a very useful optimisation that you *must* enable if you *do*
+have a large number of repositories, and do *not* use gitolite's support for
+gitweb or git-daemon access (see "[easier to specify gitweb description and
+gitweb/daemon access][gw]" for details).  This will save a lot of time when
+you push the gitolite-admin repo with changes.
+
+[gw]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#gitweb
 
 ### what are the downsides?
 
