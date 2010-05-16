@@ -580,10 +580,16 @@ for my $pubkey (`find . -type f`)
     print $newkeys_fh $pubkey_content;
 }
 # lint check 3; a little more severe than the first two I guess...
-for my $user (sort keys %user_list)
 {
-    next if $user =~ /^(gitweb|daemon|\@.*|~\$creator|\$readers|\$writers)$/ or $user_list{$user} eq 'has pubkey';
-    print STDERR "$WARN user $user in config, but has no pubkey!\n";
+    my @no_pubkey =
+        grep { $_ !~ /^(gitweb|daemon|\@.*|~\$creator|\$readers|\$writers)$/ }
+            grep { $user_list{$_} ne 'has pubkey' }
+                keys %user_list;
+    if (@no_pubkey > 10) {
+        print STDERR "$WARN You have " . scalar(@no_pubkey) . " users WITHOUT pubkeys...!\n";
+    } elsif (@no_pubkey) {
+        print STDERR "$WARN the following users have no pubkeys:\n", join(",", sort @no_pubkey), "\n";
+    }
 }
 
 print $newkeys_fh "# gitolite end\n";
