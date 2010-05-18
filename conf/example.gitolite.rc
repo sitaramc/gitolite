@@ -119,7 +119,6 @@ $GL_NO_DAEMON_NO_GITWEB = 0;
 
 $GL_GITCONFIG_KEYS = "";
 
-#
 # The second choice is to give it a space separated list of settings you
 # consider safe.  (These are actually treated as a set of regular expression
 # patterns, and any one of them must match).  For example:
@@ -189,20 +188,6 @@ $SVNSERVE = "";
 # Please see doc/4-wildcard-repositories.mkd for details.
 
 $GL_WILDREPOS = 0;
-
-# --------------------------------------
-# ALLOW SETPERMS TO OVERRIDE gitolite.conf
-
-# A user can be given permissions to use a "wildcard created" repo using the
-# "setperms" command run by the creator.  However, if that same user is also
-# explicitly listed in the config file as having a specific permission, and if
-# that permission is different from what was specified using `setperms`, there
-# is a conflict.
-
-# Default behaviour is to let the config file permissions override the
-# "setperms" permissions, but if you want it the other way, set this to 1.
-
-$GL_SETPERMS_OVERRIDES_CONFIG = 0;
 
 # --------------------------------------
 # HOOK CHAINING
