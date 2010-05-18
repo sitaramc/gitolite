@@ -1,4 +1,7 @@
 use strict;
+use Data::Dumper;
+$Data::Dumper::Deepcopy = 1;
+
 # this file is commonly used using "require".  It is not required to use "use"
 # (because it doesn't live in a different package)
 
@@ -34,8 +37,9 @@ our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple patter
 our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 
 # these come from the RC file
-our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED);
+our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG);
 our %repos;
+our %groups;
 
 # ----------------------------------------------------------------------------
 #       convenience subs
@@ -253,24 +257,39 @@ sub parse_acl
     # want the config dumped as is, really
     return unless $repo;
 
-    # return with "no wildcard match" status if you found the actual repo in
-    # the config or if wild is unset
-    return $ENV{GL_REPOPATT} = "" if $repos{$repo} or not $GL_WILDREPOS;
+    my ($wild, @repo_plus, @user_plus);
+    # expand $repo and $gl_user into all possible matching values
+    ($wild, @repo_plus) = &get_memberships($repo,    1);
+    (       @user_plus) = &get_memberships($gl_user, 0);
+    # XXX testing notes: the above should return just one entry during
+    # non-BC usage, whether wild or not
+    die "assert 1 failed" if (@repo_plus > 1 and $repo_plus[-1] ne '@all'
+                          or  @repo_plus > 2) and not $GL_BIG_CONFIG;
 
-    # didn't find actual repo in %repos, and wild is set, so find the repo
-    # pattern that matches the actual repo
-    my @matched = grep { $repo =~ /^$_$/ } sort keys %repos;
+    # the old "convenience copy" thing.  Now on steroids :)
 
-    # didn't find a match?  avoid leaking info to user about repo existence;
-    # as before, pretend "no wildcard match" status
-    return $ENV{GL_REPOPATT} = "" unless @matched;
+    # note that when copying the @all entry, we retain the destination name as
+    # @all; we dont change it to $repo or $gl_user
+    for my $r ('@all', @repo_plus) {
+        my $dr = $repo; $dr = '@all' if $r eq '@all';
+        $repos{$dr}{DELETE_IS_D} = 1 if $repos{$r}{DELETE_IS_D};
+        $repos{$dr}{NAME_LIMITS} = 1 if $repos{$r}{NAME_LIMITS};
 
-    die "$repo has multiple matches\n@matched\n" if @matched > 1;
+        for my $u ('@all', @user_plus) {
+            my $du = $gl_user; $du = '@all' if $u eq '@all';
+            $repos{$dr}{C}{$du} = 1 if $repos{$r}{C}{$u};
+            $repos{$dr}{R}{$du} = 1 if $repos{$r}{R}{$u};
+            $repos{$dr}{W}{$du} = 1 if $repos{$r}{W}{$u};
 
-    # found exactly one pattern that matched, copy its ACL for convenience
-    $repos{$repo} = $repos{$matched[0]};
-    # and return the pattern
-    return $ENV{GL_REPOPATT} = $matched[0];
+            next if $r eq $dr and $u eq $du;    # no point duplicating those refexes
+            push @{ $repos{$dr}{$du} }, @{ $repos{$r}{$u} }
+                if exists $repos{$r}{$u} and ref($repos{$r}{$u}) eq 'ARRAY';
+        }
+    }
+
+    $ENV{GL_REPOPATT} = "";
+    $ENV{GL_REPOPATT} = $wild if $wild and $GL_WILDREPOS;
+    return ($wild);
 }
 
 # ----------------------------------------------------------------------------
@@ -295,6 +314,11 @@ sub report_basic
     &report_version($GL_ADMINDIR, $user);
     print "\rthe gitolite config gives you the following access:\r\n";
     for my $r (sort keys %repos) {
+        if ($r =~ $REPONAME_PATT) {
+            &parse_acl($GL_CONF_COMPILED, $r, "NOBODY",      "NOBODY", "NOBODY");
+        } else {
+            &parse_acl($GL_CONF_COMPILED, $r, $ENV{GL_USER}, "NOBODY", "NOBODY");
+        }
         # @all repos; meaning of read/write flags:
         # @R => @all users are allowed access to this repo
         # #R => you're a super user and can see @all repos
@@ -331,7 +355,7 @@ sub expand_wild
         # actual_repo has to match the pattern being expanded
         next unless $actual_repo =~ /$repo/;
 
-        my($perm, $creator) = &repo_rights($actual_repo);
+        my($perm, $creator, $wild) = &repo_rights($actual_repo);
         next unless $perm =~ /\S/;
         print "$perm\t$creator\t$actual_repo\n";
     }
@@ -342,64 +366,67 @@ sub expand_wild
 # how/why).  Regardless of how we're called, we assume $ENV{GL_USER} is
 # already defined
 {
-    my %normal_repos;
-
+    my $last_repo = '';
     sub repo_rights {
         my $repo = shift;
         $repo =~ s/^\.\///;
         $repo =~ s/\.git$//;
+
+        return if $last_repo eq $repo;      # a wee bit o' caching, though not yet needed
 
         # we get passed an actual repo name.  It may be a normal
         # (non-wildcard) repo, in which case it is assumed to exist.  If it's
         # a wildrepo, it may or may not exist.  If it doesn't exist, the "C"
         # perms are also filled in, else that column is left blank
 
-        unless (%normal_repos) {
-            unless ($REPO_BASE) {
-                # means we've been called from outside
-                &where_is_rc();
-                die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
-            }
-
-            &parse_acl($GL_CONF_COMPILED, "", "NOBODY", "NOBODY", "NOBODY");
-            %normal_repos = %repos;
+        unless ($REPO_BASE) {
+            # means we've been called from outside; see doc/admin-defined-commands.mkd
+            &where_is_rc();
+            die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
         }
 
-        my $creator;
         my $perm = '   ';
+        my $creator;
 
-        # if repo is present "as is" in the config, those permissions will
-        # override anything inherited from a wildcard that may have matched
-        if ($normal_repos{$repo}) {
-            %repos = %normal_repos;
-            $creator = '<gitolite>';
-        } elsif ( -d "$ENV{GL_REPO_BASE_ABS}/$repo.git" ) {
-            # must be a wildrepo, and it has already been created; find the
-            # creator and subsitute in repos
+        # get basic info about the repo and fill %repos
+        my $wild = '';
+        my $exists = -d "$ENV{GL_REPO_BASE_ABS}/$repo.git";
+        if ($exists) {
+            # these will be empty if it's not a wildcard repo anyway
             my ($read, $write);
             ($creator, $read, $write) = &wild_repo_rights($ENV{GL_REPO_BASE_ABS}, $repo, $ENV{GL_USER});
             # get access list with these substitutions
-            &parse_acl($GL_CONF_COMPILED, $repo, $creator || "NOBODY", $read || "NOBODY", $write || "NOBODY");
+            $wild = &parse_acl($GL_CONF_COMPILED, $repo, $creator || "NOBODY", $read || "NOBODY", $write || "NOBODY");
+        } else {
+            $wild = &parse_acl($GL_CONF_COMPILED, $repo, $ENV{GL_USER}, "NOBODY", "NOBODY");
+        }
+
+        if ($exists and not $wild) {
+            $creator = '<gitolite>';
+        } elsif ($exists) {
+            # is a wildrepo, and it has already been created
             $creator = "($creator)";
         } else {
-            # repo didn't exist; C perms also need to be filled in after
-            # getting access list with only creator filled in
-            &parse_acl($GL_CONF_COMPILED, $repo, $ENV{GL_USER}, "NOBODY", "NOBODY");
+            # repo didn't exist; C perms need to be filled in
             $perm = ( $repos{$repo}{C}{'@all'} ? ' @C' : ( $repos{$repo}{C}{$ENV{GL_USER}} ? ' =C' : '   ' )) if $GL_WILDREPOS;
             # if you didn't have perms to create it, delete the "convenience"
             # copy of the ACL that parse_acl makes
             delete $repos{$repo} unless $perm =~ /C/;
-            $creator = "<repo_not_found>";
+            $creator = "<notfound>";
         }
         $perm .= ( $repos{$repo}{R}{'@all'} ? ' @R' : ( $repos{'@all'}{R}{$ENV{GL_USER}} ? ' #R' : ( $repos{$repo}{R}{$ENV{GL_USER}} ? '  R' : '   ' )));
         $perm .= ( $repos{$repo}{W}{'@all'} ? ' @W' : ( $repos{'@all'}{W}{$ENV{GL_USER}} ? ' #W' : ( $repos{$repo}{W}{$ENV{GL_USER}} ? '  W' : '   ' )));
-        return($perm, $creator);
+
+        # set up for caching %repos
+        $last_repo = $repo;
+
+        return($perm, $creator, $wild);
     }
 }
 
 # helper/convenience routine to get rights and ownership from a shell command
 sub cli_repo_rights {
-    my ($perm, $creator) = &repo_rights($_[0]);
+    my ($perm, $creator, $wild) = &repo_rights($_[0]);
     $perm =~ s/ /_/g;
     $creator =~ s/^\(|\)$//g;
     print "$perm $creator\n";
@@ -441,6 +468,84 @@ sub special_cmd
 
         die "bad command: $cmd\n";
     }
+}
+
+# ----------------------------------------------------------------------------
+#       get memberships
+# ----------------------------------------------------------------------------
+
+# given a plain reponame or username, return:
+# - the name itself, plus all the groups it belongs to if $GL_BIG_CONFIG is
+#   set
+# OR
+# - (for repos) if the name itself doesn't exist in the config, a wildcard
+#   matching it, plus all the groups that wildcard belongs to (again if
+#   $GL_BIG_CONFIG is set)
+
+# A name can normally appear (repo example) (user example)
+# - directly (repo foo) (RW = bar)
+# - (only for repos) as a direct wildcard (repo foo/.*)
+# but if $GL_BIG_CONFIG is set, it can also appear:
+# - indirectly (@g = foo; repo @g) (@ug = bar; RW = @ug))
+# - (only for repos) as an indirect wildcard (@g = foo/.*; repo @g).
+# things that may not be obvious from the above:
+# - the wildcard stuff does not apply to username memberships
+# - for repos, wildcard appearances are TOTALLY ignored if a non-wild
+#   appearance (direct or indirect) exists
+
+sub get_memberships {
+    my $base = shift;   # reponame or username
+    my $is_repo = shift;    # some true value means a repo name has been passed
+
+    my $wild = '';
+    my (@ret, @ret_w);      # maintain wild matches separately from non-wild
+
+    # direct
+    push @ret, $base if not $is_repo or exists $repos{$base};
+    if ($is_repo and $GL_WILDREPOS and not @ret) {
+        for my $i (sort keys %repos) {
+            if ($base =~ /^$i$/) {
+                die "$ABRT $base matches $wild AND $i\n" if $wild and $wild ne $i;
+                $wild = $i;
+                # direct wildcard
+                push @ret_w, $i;
+            }
+        }
+    }
+
+    if ($GL_BIG_CONFIG) {
+        for my $g (sort keys %groups) {
+            for my $i (sort keys %{ $groups{$g} }) {
+                if ($base eq $i) {
+                    # indirect
+                    push @ret, $g;
+                } elsif ($is_repo and $GL_WILDREPOS and not @ret and $base =~ /^$i$/) {
+                    die "$ABRT $base matches $wild AND $i\n" if $wild and $wild ne $i;
+                    $wild = $i;
+                    # indirect wildcard
+                    push @ret_w, $g;
+                }
+            }
+        }
+    }
+
+    # deal with returning user info first
+    unless ($is_repo) {
+        # add in group membership info sent in via second and subsequent
+        # arguments to gl-auth-command; be sure to prefix the "@" sign to each
+        # of them!
+        push @ret, map { s/^/@/; $_; } split(' ', $ENV{GL_GROUP_LIST}) if $ENV{GL_GROUP_LIST};
+        return (@ret);
+    }
+
+    # enforce the rule about ignoring all wildcard matches if a non-wild match
+    # exists while returning.  (The @ret gating above does not adequately
+    # ensure this, it is only an optimisation).
+    #
+    # Also note that there is an extra return value when called for repos
+    # (compared to usernames)
+
+    return ((@ret ? '' : $wild), (@ret ? @ret : @ret_w));
 }
 
 # ----------------------------------------------------------------------------
