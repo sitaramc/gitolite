@@ -75,14 +75,15 @@ sub check_ref {
     # codes etc., but for now we're happy to just die.
 
     my ($allowed_refs, $repo, $ref, $perm) = @_;
-    for my $ar (@{$allowed_refs}) {
-        my $refex = (keys %$ar)[0];
+    my @allowed_refs = sort { $a->[0] <=> $b->[0] } @{$allowed_refs};
+    for my $ar (@allowed_refs) {
+        my $refex = $ar->[1];
         # refex?  sure -- a regex to match a ref against :)
         next unless $ref =~ /^$refex/;
-        die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->{$refex} eq '-';
+        die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->[2] eq '-';
 
         # as far as *this* ref is concerned we're ok
-        return $refex if ($ar->{$refex} =~ /\Q$perm/);
+        return $refex if ($ar->[2] =~ /\Q$perm/);
     }
     die "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n";
 }
@@ -275,7 +276,7 @@ sub parse_acl
         $repos{$dr}{DELETE_IS_D} = 1 if $repos{$r}{DELETE_IS_D};
         $repos{$dr}{NAME_LIMITS} = 1 if $repos{$r}{NAME_LIMITS};
 
-        for my $u ('@all', @user_plus) {
+        for my $u ('@all', "$gl_user - wild", @user_plus) {
             my $du = $gl_user; $du = '@all' if $u eq '@all';
             $repos{$dr}{C}{$du} = 1 if $repos{$r}{C}{$u};
             $repos{$dr}{R}{$du} = 1 if $repos{$r}{R}{$u};

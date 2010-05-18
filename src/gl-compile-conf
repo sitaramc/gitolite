@@ -95,6 +95,9 @@ our %groups = ();
 # in between :)
 my %repos = ();
 
+# rule sequence number
+my $rule_seq = 0;
+
 # <sigh>...  having been forced to use a list as described above, we lose some
 # efficiency due to the possibility of the same {ref, perms} pair showing up
 # multiple times for the same repo+user.  So...
@@ -286,8 +289,9 @@ sub parse_conf_file
                         # that do *not* use NAME limits.  Setting a flag that
                         # can be checked right away will help us do that
                         $repos{$repo}{NAME_LIMITS} = 1 if $ref =~ /^NAME\//;
-                        push @{ $repos{$repo}{$user} }, { $ref => $perms }
-                            unless $rurp_seen{$repo}{$user}{$ref}{$perms}++;
+                        my $p_user = $user; $p_user =~ s/(creator|readers|writers)$/$1 - wild/;
+                        push @{ $repos{$repo}{$p_user} }, [ $rule_seq++, $ref, $perms ]
+                            unless $rurp_seen{$repo}{$p_user}{$ref}{$perms}++;
                     }
                 }
             }
