@@ -158,14 +158,9 @@ you push the gitolite-admin repo with changes.
 
 ### what are the downsides?
 
-There are a few minor issues.
+There is one minor issue.
 
-First, "deny" rules (rules whose "permission" is a "-" sign), will not work
-exactly the same as before.
-
-[TODO: add a nice example etc...]
-
-Second, if you use the delegation feature, you can no longer define or extend
+If you use the delegation feature, you can no longer define or extend
 @groups in a fragment, for security reasons.  It will also not let you use any
 group other than the @fragname itself (specifically, groups which contained a
 subset of the allowed @fragname, which would work normally, do not work now).
