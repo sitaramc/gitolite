@@ -169,9 +169,17 @@ private key to clone and push it.  In other words, that person is the
 administrator for this particular gitolite instance.
 
 If your system administrator upgrades gitolite itself, things will usually
-just work without any change; you should not have to do anything special.
-However, some new features may require additional settings in your
+just work without any change; you should not normally have to do anything
+special.  However, some new features may require additional settings in your
 `~/.gitolite.rc` file.
+
+>   [The only exception to this is when there is a change in the format of the
+"compiler" output -- then *each* gitolite hosting user must run "`gl-setup`
+again (no arguments needed this time), to fix up the compiled file format.
+
+>   Such a change will be clearly marked with "upgrade notes" both in the
+CHANGELOG and in the commit message.  For example, this applies when upgrading
+to v1.5 or later from any version before it.]
 
 Finally, in the rare case that you managed to lose your keys to the admin repo
 and want to supply a new pubkey, you can use this command to replace any such
