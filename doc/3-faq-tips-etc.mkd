@@ -192,10 +192,10 @@ I have a laptop and a desktop I need to access the server from.  I have
 different private keys on them, but as far as gitolite is concerned both of
 them should be treated as "sitaram".  How does this work?
 
-In gitosis, the admin creates a single "sitaram.pub" containing one line for
-each of my pubkeys.  In gitolite, we keep them separate: "sitaram@laptop.pub"
-and "sitaram@desktop.pub".  The part before the "@" is the username, so
-gitolite knows these two keys belong to the same person.
+The way it works is that you copy one pubkey as "sitaram@laptop.pub" and the
+other as "sitaram@desktop.pub".  The part before the "@" is the username, so
+gitolite knows these two keys belong to the same person.  The part after the
+"@" can be anything you like, of course; gitolite doesn't care.
 
 Note that you don't say "sitaram@laptop" and so on in the **config** file --
 as far as the config file is concerned there's just **one** user called
