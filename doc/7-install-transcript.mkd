@@ -15,19 +15,20 @@ Please note that this entire transcript can be summarised as:
 ...and only that last step is actually gitolite.  In fact, the bulk of the
 transcript is **non**-gitolite stuff :)
 
+**Please also note that this method will setup everything on the server, but
+you have to run it on your workstation, NOT on the server!**
+
+In this document:
+
+  * <a href="#A1">create userids on server and client (optional)</a>
+  * <a href="#A2">get pubkey access from client to server</a>
+  * <a href="#A3">get gitolite source</a>
+  * <a href="#A4">install gitolite</a>
+  * <a href="#A5">examine what you have</a>
+
 ----
 
-### (cleaning out a botched install if needed)
-
-When people have trouble installing gitolite, they often try to change a bunch
-of things manually on the server.  This usually makes things worse ;-) so if
-you're reading this document as a follow-up to a failed install, please
-**first** clean out the botched install (instructions [here][appB]) and
-**then** continue with this document.
-
-[appB]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#uninstall
-
-----
+<a name="A1"></a>
 
 ### create userids on server and client (optional)
 
@@ -73,6 +74,8 @@ because I'm not showing the actual "vi" session):
     Starting sshd:                                                  [  OK  ]
 
 ----
+
+<a name="A2"></a>
 
 ### get pubkey access from client to server
 
@@ -123,6 +126,8 @@ Double check to make sure you can log on to `git@server` without a password:
 
 ----
 
+<a name="A3"></a>
+
 ### get gitolite source
 
     sita@sita-lt:~ $ git clone git://github.com/sitaramc/gitolite gitolite-source
@@ -132,6 +137,8 @@ Double check to make sure you can log on to `git@server` without a password:
     remote: Total 1157 (delta 756), reused 912 (delta 562)
     Receiving objects: 100% (1157/1157), 270.08 KiB | 61 KiB/s, done.
     Resolving deltas: 100% (756/756), done.
+
+<a name="A4"></a>
 
 ### install gitolite
 
@@ -144,7 +151,6 @@ runs on the client but installs gitolite on the server!
 install sequence**.  </font> Run it without any arguments to see a usage
 message.  Run it without the `-q` to get a more verbose, pause-at-every-step,
 install mode that allows you to change the defaults etc.
-
 
     sita@sita-lt:src $ ./gl-easy-install -q git server sitaram
     you are upgrading     (or installing first-time)     to v0.95-38-gb0ce84d
@@ -202,6 +208,8 @@ install mode that allows you to change the defaults etc.
         for next steps.
 
 ----
+
+<a name="A5"></a>
 
 ### examine what you have
 

@@ -1,60 +1,92 @@
 # gitolite
 
->   [Update 2009-10-28: apart from all the nifty new features, there's now an
->   "easy install" script in the src directory.  This script can be used to
->   install as well as upgrade a gitolite install.  Please see the INSTALL
->   document for details]
+Gitolite is an access control layer on top of git, which allows access control
+down to the branch level, including specifying who can and cannot *rewind* a
+given branch.
 
 ----
-
-Gitolite is a rewrite of gitosis, with a completely different config file that
-allows (at last!) access control down to the branch level, including
-specifying who can and cannot *rewind* a given branch.
 
 In this document:
 
-  * what
-  * why
-  * extra features
-  * security
-  * contact and license
+  * <a href="#A1">what</a>
+  * <a href="#A2">why</a>
+  * <a href="#A3">other features</a>
+  * <a href="#A4">security</a>
+  * <a href="#A5">contact and license</a>
 
 ----
+
+<a name="A1"></a>
 
 ### what
 
 Gitolite allows a server to host many git repositories and provide access to
-many developers, without having to give them real userids on the server.  The
-essential magic in doing this is ssh's pubkey access and the `authorized_keys`
-file, and the inspiration was an older program called gitosis.
+many developers, without having to give them real userids on or shell access
+to the server.  The essential magic in doing this is ssh's pubkey access and
+the `authorized_keys` file, and the inspiration was an older program called
+gitosis.
 
 Gitolite can restrict who can read from (clone/fetch) or write to (push) a
 repository.  It can also restrict who can push to what branch or tag, which is
 very important in a corporate environment.  Gitolite can be installed without
 requiring root permissions, and with no additional software than git itself
 and perl.  It also has several other neat features described below and
-elsewhere in the `doc/` directory.
+elsewhere in the [doc/][docs] directory.
+
+<a name="A2"></a>
 
 ### why
 
-I have been using gitosis for a while, and have learnt a lot from it.  But in
-a typical $DAYJOB setting, there are some issues:
+Gitolite is separate from git, and needs to be installed and configured.  So...
+why do we bother?
 
-  * it's not always Linux; you can't just "urpmi gitosis" (or yum or apt-get)
-    and be done
-  * often, "python-setuptools" isn't installed (and on a Solaris9 I was trying
-    to help remotely, we never did manage to install it eventually)
-  * you don't have root access, or the ability to add users (this is also true
-    for people who have just one userid on a hosting provider)
-  * the most requested feature (see below) had to be written anyway
+Gitolite is useful in any server that is going to host multiple git
+repositories, each with many developers, where some sort of access control is
+required.
 
-All of this pointed to a rewrite.  In perl, naturally :-)
+In theory, this can be done with plain old Unix permissions: each user is a
+member of one or more groups, each group "owns" one or more repositories, and
+using unix permissions (especially the setgid bit -- `chmod g+s`) you can
+allow/disallow users access to repos.
 
-### extra features
+But there are several disadvantages here:
+
+  * every user needs a userid and password on the server.  This is usually a
+    killer...!
+  * adding/removing access rights involves complex `usermod -G ...` mumblings
+    which most admins would rather not deal with, thanks to you-know-who
+  * *viewing* (aka auditing) the current set of permissions requires running
+    multiple commands to list directories and their permissions/ownerships,
+    users and their group memberships, and then correlating all these manually
+  * auditing historical permissions or permission changes is pretty much
+    impossible without extraneous tools
+  * errors or omissions in setting the permissions exactly can cause problems
+    of either kind: false accepts or false rejects
+  * without going into ACLs it is not possible to give someone read-only
+    access to a repo; they either get read-write access or no access
+  * it is absolutely impossible to restrict pushing by branch name or tag
+    name.
+
+Gitolite does away with all this:
+
+  * it uses ssh magic to remove the need to give actual unix userids to
+    developers
+  * it uses a simple but powerful config file format to specify access rights
+  * access control changes are affected by modifying this file, adding or
+    removing user's public keys, and "compiling" the configuration
+  * this also makes auditing trivial -- all the data is in one place, and
+    changes to the configuration are also logged, so you can audit them.
+  * finally, the config file allows distinguishing between read-only and
+    read-write access, not only at the repository level, but at the branch
+    level within repositories.
+
+<a name="A3"></a>
+
+### other features
 
 The most important feature I needed was **per-branch permissions**.  This is
 pretty much mandatory in a corporate environment, and is almost the single
-reason I started *thinking* about rolling my own gitosis in the first place.
+reason I started *thinking* about writing gitolite.
 
 It's not just "read-only" versus "read-write".  Rewinding a branch (aka "non
 fast forward push") is potentially dangerous, but sometimes needed.  So is
@@ -63,27 +95,26 @@ something in between allowing anyone to do it (the default) and disabling it
 completely (`receive.denyNonFastForwards` or `receive.denyDeletes`).
 
 Here're **some more features**.  All of them, and more, are documented in
-detail [here][gsdiff].
+detail somewhere in gitolite's [doc/][docs] subdirectory.
 
-[gsdiff]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#diff
-
-  * simpler, yet far more powerful, config file syntax, including specifying
+  * simple, yet powerful, config file syntax, including specifying
     gitweb/daemon access.  You'll need this power if you manage lots of
     users+repos+combinations of access
   * apart from branch-name based restrictions, you can also restrict by
     file/dir name changed (i.e., output of `git diff --name-only`)
-  * config file syntax gets checked upfront, and much more thoroughly
   * if your requirements are still too complex, you can split up the config
     file and delegate authority over parts of it
-  * easier to specify gitweb owner, description and gitweb/daemon access
-  * easier to sync gitweb (http) authorisation with gitolite's access config
-  * more comprehensive logging [aka: management does not think "blame" is just
-    a synonym for "annotate" :-)]
+  * easy to specify gitweb owner, description and gitweb/daemon access
+  * easy to sync gitweb (http) authorisation with gitolite's access config
+  * comprehensive logging [aka: management does not think "blame" is just a
+    synonym for "annotate" :-)]
   * "personal namespace" prefix for each dev
   * migration guide and simple converter for gitosis conf file
   * "exclude" (or "deny") rights at the branch/tag level
   * specify repos using patterns (patterns may include creator's name)
   * define powerful operations on the server side, even github-like forking
+
+<a name="A4"></a>
 
 ### security
 
@@ -105,9 +136,13 @@ details, looking for the word "security".
 
 ----
 
+<a name="A5"></a>
+
 ### contact and license
 
 Gitolite is released under GPL v2.  See COPYING for details.
 
 sitaramc@gmail.com
 mailing list: gitolite@googlegroups.com
+
+[docs]: http://github.com/sitaramc/gitolite/blob/pu/doc

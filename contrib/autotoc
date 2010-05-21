@@ -1,0 +1,28 @@
+#!/usr/bin/perl -w
+
+# filter gitolite's mkd files through this; it's designed to be idempotent of
+# course
+
+undef $/;
+$doc = <>;
+
+$doc =~ s/^<a name="A\d+"><\/a>\n\n//mg;
+
+@toc = $doc =~ /^###.*/mg;
+$i = 0;
+$doc =~ s/^###/$i++; "<a name=\"A$i\"><\/a>\n\n###"/mge;
+
+$i = 0;
+for (@toc) {
+    $i++;
+    s/### (.*)/  * <a href="#A$i">$1<\/a>/;
+    s/^(#+)/'    ' x length($1)/e;
+}
+
+$toc  = "In this document:\n\n";
+$toc .= join("\n", @toc);
+$toc .= "\n\n";
+
+$doc =~ s/^In this document:\n\n.*?\n\n/$toc/sm;
+
+print $doc;

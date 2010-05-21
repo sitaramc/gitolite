@@ -19,21 +19,25 @@ workarounds I may not have the time to code it right away.
 
 In this document:
 
-  * rc file setting required
-  * wildcard repos
-      * wildcard repos with creator name in them
-      * wildcard repos without creator name in them
-  * side-note: line-anchored regexes
-      * contrast with refexes
-  * handing out rights to wildcard-matched repos
-  * setting a gitweb description for a wildcard-matched repo
-  * reporting
-  * other issues and discussion
-  * how it actually works
+  * <a href="#A1">rc file setting required</a>
+  * <a href="#A2">Wildcard repos</a>
+      * <a href="#A3">Wildcard repos with creator name in them</a>
+      * <a href="#A4">Wildcard repos without creator name in them</a>
+  * <a href="#A5">Side-note: Line-anchored regexes</a>
+      * <a href="#A6">Contrast with refexes</a>
+  * <a href="#A7">Handing out rights to wildcard-matched repos</a>
+  * <a href="#A8">setting a gitweb description for a wildcard-matched repo</a>
+  * <a href="#A9">reporting</a>
+  * <a href="#A10">other issues and discussion</a>
+  * <a href="#A11">how it actually works</a>
+
+----
 
 This document is mostly "by example".
 
 ----
+
+<a name="A1"></a>
 
 ### rc file setting required
 
@@ -41,11 +45,15 @@ This feature requires that you set `$GL_WILDREPOS` to "1" in `~/.gitolite.rc`
 on the server.  Please search for that variable and see comments around it in
 `conf/example.gitolite.rc` for more information on this.
 
+<a name="A2"></a>
+
 ### Wildcard repos
 
 Which of these alternatives you choose depends on your needs, and the social
 aspects of your environment.  The first one is a little more rigid, making it
 harder to make mistakes, and the second is more flexible and trusting.
+
+<a name="A3"></a>
 
 #### Wildcard repos with creator name in them
 
@@ -70,6 +78,8 @@ new repo, as user "u4" (a student):
     warning: You appear to have cloned an empty repository.
 
 Notice the *two* empty repo inits, and the order in which they occur ;-)
+
+<a name="A4"></a>
 
 #### Wildcard repos without creator name in them
 
@@ -96,6 +106,8 @@ and have a TA create the repos in advance.
 In either case, they could then use the `setperms` feature to specify which
 users are "READERS" and which are "WRITERS".  See later for details.
 
+<a name="A5"></a>
+
 ### Side-note: Line-anchored regexes
 
 A regex like
@@ -111,6 +123,8 @@ But you may be surprised to find that it does not match even
 `^assignments/S[0-9]+/A[0-9]+$` -- notice the line beginning and ending
 metacharacters.
 
+<a name="A6"></a>
+
 #### Contrast with refexes
 
 Just for interest, note that this is in contrast to the refexes for the normal
@@ -120,6 +134,8 @@ These "refexes" are only anchored at the start; a pattern like
 if no one will actually push such a branch!  You can anchor both sides if you
 really care, by using `master$` instead of `master`, but that is *not* the
 default for refexes.
+
+<a name="A7"></a>
 
 ### Handing out rights to wildcard-matched repos
 
@@ -166,10 +182,14 @@ The following points are important:
   * whoever you specify as "R" will match the special user READERS.  "RW" will
     match WRITERS.
 
+<a name="A8"></a>
+
 ### setting a gitweb description for a wildcard-matched repo
 
 Similar to the getperm/setperm commands, there are the getdesc/setdesc
 commands, thanks to Teemu.
+
+<a name="A9"></a>
 
 ### reporting
 
@@ -195,6 +215,8 @@ Push the config, then try
 
     ssh gitolite expand
 
+<a name="A10"></a>
+
 ### other issues and discussion
 
   * *what if the repo name being pushed matches more than one pattern*?
@@ -214,6 +236,8 @@ Push the config, then try
     were created.  The administrator should be careful not to do this.  Most
     of the time, it won't be difficult; the fixed prefix will usually be
     different anyway so there won't be overlaps.
+
+<a name="A11"></a>
 
 ### how it actually works
 

@@ -1,0 +1,67 @@
+# uninstalling gitolite
+
+Sometimes you might find gitolite is overkill -- you have only one user
+(yourself) pushing maybe.  Or maybe gitolite is just not enough -- you want a
+web-based front end that users can use to manage their keys themselves, etc.,
+in which case you'd probably switch to [github][g1], [girocco][g2],
+[indefero][g3] or [gitorious][g4].  [Gerrit][g5] is quite nice too, if you
+want collaborative code review there's nothing like it.  Either way, you'd
+like to uninstall gitolite.
+
+[g1]: http://github.com
+[g2]: http://repo.or.cz/w/girocco.git
+[g3]: http://www.indefero.net/
+[g4]: http://gitorious.com/
+[g5]: http://code.google.com/p/gerrit/
+
+Uninstalling gitolite is fairly easy, although it is manual.  (We'll assume
+`$REPO_BASE` in the rc file was left at its default of `~/repositories`; if
+not, adjust accordingly):
+
+**server side tasks**
+
+  * edit `~/.ssh/authorized_keys` and delete the `# gitolite start` and `#
+    gitolite end` markers and all the lines between them.  This will prevent
+    any of your users from attempting a push while you are doing this.
+
+    If you are the only user, and/or *need* one or more of those keys to
+    continue to access this account (like if one of them is your laptop or
+    your home desktop etc.) then instead of deleting the line you can just
+    delete everything upto but not including the words "ssh-rsa" or "ssh-dss".
+
+  * Now remove (or move aside or rename to something else if you're paranoid)
+    the following files and directories.
+
+        ~/.gitolite
+        ~/.gitolite.rc
+        ~/repositories/gitolite-admin.git
+
+  * You can remove all of `~/repositories` if you have not really started
+    using gitolite properly yet; that's your choice.
+
+    If you *do* need to preserve the other repos and continue to use them,
+    remove all the `update` hooks that git installs on each repository.  The
+    easiest way is:
+
+        find ~/repositories -wholename "*.git/hooks/update" | xargs rm -f
+
+    but you can do it manually if you want to be careful.
+
+**client side tasks**
+
+  * Any remote users that still have access must update their clone's remote
+    URLs (edit `.git/config` in the repo) to prefix `repositories/` before the
+    actual path used, in order for the remote to still work.  This is because
+    you'll now be accessing it through plain ssh, which means you have to give
+    it the full path.
+
+  * Finally, you as the gitolite admin will probably have a host stanza for
+    "gitolite" in your *client*'s `~/.ssh/config`.  Find and delete lines that
+    look like this:
+
+        host gitolite
+            user git
+            hostname your.server
+            port 22
+            identityfile ~/.ssh/your-gitolite-admin-username
+

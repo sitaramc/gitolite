@@ -2,43 +2,46 @@
 
 In this document:
 
-  * common errors and mistakes
-  * git version dependency
-  * other errors, warnings, notes...
-      * ssh-copy-id
-      * cloning an empty repo
-      * `@all` syntax for repos
-      * umask setting
-  * getting a tar file from a clone
-  * features
-      * syntax and normal usage
-          * simpler syntax
-          * one user, many keys
-      * security, access control, and auditing
-          * two levels of access rights checking
-          * better logging
-          * "exclude" (or "deny") rules
-          * separating delete and rewind rights
-          * file/dir NAME based restrictions
-          * delegating parts of the config file
-      * convenience features
-          * what repos do I have access to?
-          * error checking the config file
-          * including config lines from other files
-          * support for git installed outside default PATH
-          * "personal" branches
-          * custom hooks and custom git config
-      * helping with gitweb
-          * easier to specify gitweb "description" and gitweb/daemon access
-          * easier to link gitweb authorisation with gitolite
-      * advanced features
-          * repos named with wildcards
-          * admin defined commands
-          * access control for external commands
-  * design choices
-      * keeping the parser and the access control separate
+  * <a href="#A1">common errors and mistakes</a>
+  * <a href="#A2">git version dependency</a>
+  * <a href="#A3">other errors, warnings, notes...</a>
+      * <a href="#A4">cloning an empty repo</a>
+      * <a href="#A5">`@all` syntax for repos</a>
+      * <a href="#A6">umask setting</a>
+  * <a href="#A7">getting a tar file from a clone</a>
+  * <a href="#A8">features</a>
+      * <a href="#A9">syntax and normal usage</a>
+          * <a href="#A10">simpler syntax</a>
+          * <a href="#A11">one user, many keys</a>
+      * <a href="#A12">security, access control, and auditing</a>
+          * <a href="#A13">two levels of access rights checking</a>
+          * <a href="#A14">better logging</a>
+          * <a href="#A15">"exclude" (or "deny") rules</a>
+          * <a href="#A16">separating delete and rewind rights</a>
+          * <a href="#A17">file/dir NAME based restrictions</a>
+          * <a href="#A18">delegating parts of the config file</a>
+      * <a href="#A19">convenience features</a>
+          * <a href="#A20">what repos do I have access to?</a>
+          * <a href="#A21">including config lines from other files</a>
+          * <a href="#A22">support for git installed outside default PATH</a>
+          * <a href="#A23">"personal" branches</a>
+          * <a href="#A24">custom hooks and custom git config</a>
+      * <a href="#A25">helping with gitweb</a>
+          * <a href="#A26">easier to specify gitweb "description" and gitweb/daemon access</a>
+          * <a href="#A27">easier to link gitweb authorisation with gitolite</a>
+      * <a href="#A28">advanced features</a>
+          * <a href="#A29">repos named with wildcards</a>
+          * <a href="#A30">admin defined commands</a>
+          * <a href="#A31">access control for external commands</a>
+              * <a href="#A32">svnserve</a>
+  * <a href="#A33">design choices</a>
+      * <a href="#A34">keeping the parser and the access control separate</a>
 
-## common errors and mistakes
+----
+
+<a name="A1"></a>
+
+### common errors and mistakes
 
   * adding `repositories/` at the start of the repo name in the `git clone`.
     This error is typically made by the *admin* himself -- because he knows
@@ -60,36 +63,19 @@ In this document:
 
     Please see doc/6-ssh-troubleshooting.mkd for what all this means.
 
-## git version dependency
+<a name="A2"></a>
+
+### git version dependency
 
 Gitolite (on the server) now refuses to run if git is not at least 1.6.2.
 
-## other errors, warnings, notes...
+<a name="A3"></a>
 
-### ssh-copy-id
+### other errors, warnings, notes...
 
-don't have `ssh-copy-id`?  This is broadly what that command does, if you want
-to replicate it manually.  The input is your pubkey, typically
-`~/.ssh/id_rsa.pub` from your client/workstation.
+<a name="A4"></a>
 
-  * it copies it to the server as some file
-
-  * it appends that file to `~/.ssh/authorized_keys` on the server
-    (creating it if it doesn't already exist)
-
-  * it then makes sure that all these files/directories have go-w perms
-    set (assuming user is "git"):
-
-        /home/git/.ssh/authorized_keys
-        /home/git/.ssh
-        /home/git
-
-[Actually, `sshd` requires that even directories *above* `~` (`/`, `/home`,
-typically) also must be `go-w`, but that needs root.  And typically
-they're already set that way anyway.  (Or if they're not, you've got
-bigger problems than gitolite install not working!)]
-
-### cloning an empty repo
+#### cloning an empty repo
 
 Cloning an empty repo is only possible with clients greater than 1.6.2.  So at
 least one of your clients needs to have a recent git.  Once at least one
@@ -100,7 +86,9 @@ end hung up unexpectedly`.  However, you can ignore this, since it doesn't
 seem to hurt anything.  [Update 2009-09-14; this has been fixed in git
 1.6.4.3]
 
-### `@all` syntax for repos
+<a name="A5"></a>
+
+#### `@all` syntax for repos
 
 There *is* a way to use the `@all` syntax for repos also, as described in
 `conf/example.conf`.  However, there are a couple of minor cautions:
@@ -110,12 +98,16 @@ There *is* a way to use the `@all` syntax for repos also, as described in
     access, we do not support this.
   * don't try giving `@all` users some permission for `@all` repos
 
-### umask setting
+<a name="A6"></a>
+
+#### umask setting
 
 Gitweb not able to read your repos?  You can change the umask for newly
 created repos to something more relaxed -- see the `~/.gitolite.rc` file
 
-## getting a tar file from a clone
+<a name="A7"></a>
+
+### getting a tar file from a clone
 
 You can clone the repo from github or indefero, then execute a make command to
 extract a tar file of the branch you want.  Please use the make command, not a
@@ -131,17 +123,23 @@ plain "git archive", because the Makefile adds a file called
 
 <a name="features"></a>
 
-## features
+<a name="A8"></a>
+
+### features
 
 Apart from the big ones listed in the top level README, and subjective ones
 like "better config file format", gitolite has evolved to have many useful
-fearures than the original goal of "gitosis + branch-level access control".
+features than the original goal of branch-level access control.
 
-### syntax and normal usage
+<a name="A9"></a>
+
+#### syntax and normal usage
 
 <a name="simpler_syntax"></a>
 
-#### simpler syntax
+<a name="A10"></a>
+
+##### simpler syntax
 
 The basic syntax is simpler and cleaner but it goes beyond that: **you can
 specify access in bits and pieces**, even if they overlap.
@@ -186,7 +184,9 @@ See the "specify gitweb/daemon access" section below for one more example.
 
 <a name="multikeys"></a>
 
-#### one user, many keys
+<a name="A11"></a>
+
+##### one user, many keys
 
 I have a laptop and a desktop I need to access the server from.  I have
 different private keys on them, but as far as gitolite is concerned both of
@@ -229,16 +229,19 @@ corresponding derived usernames (which is what goes into the
         sitaramc@gmail.com@laptop.pub           sitaramc@gmail.com
         sitaramc@gmail.com@desktop.pub          sitaramc@gmail.com
 
-### security, access control, and auditing
+<a name="A12"></a>
+
+#### security, access control, and auditing
 
 <a name="two_levels"></a>
 
-#### two levels of access rights checking
+<a name="A13"></a>
+
+##### two levels of access rights checking
 
 Gitolite has two levels of access checks.  The **first check** is what I will
-call the **pre-git** level (this is the only check that gitosis has).  At this
-stage, the `gl-auth-command` has been invoked by `sshd`, and it knows just
-three things:
+call the **pre-git** level.  At this stage, the `gl-auth-command` has been
+invoked by `sshd`, and it knows just three things:
 
   * who,
   * what repository, and
@@ -268,7 +271,9 @@ any of the refexes match, the push succeeds.  If none of them match, it fails.
 Gitolite also allows "exclude" or "deny" rules.  See later in this document
 for details.
 
-#### better logging
+<a name="A14"></a>
+
+##### better logging
 
 If you have been too liberal with the permission to rewind, it has built-in
 logging as an emergency fallback if someone goes too far, or for audit
@@ -294,7 +299,9 @@ The other parts of the log line are the name of the repo, the refname being
 updated, the user updating it, and the refex pattern (from the config file)
 that matched, in case you need to debug the config file itself.
 
-#### "exclude" (or "deny") rules
+<a name="A15"></a>
+
+##### "exclude" (or "deny") rules
 
 Here is an illustrative explanation of "deny" rules.  However, please be sure
 to read the "DENY/EXCLUDE RULES" section in `conf/example.conf` for important
@@ -343,7 +350,9 @@ And here's how it works:
     before the third one, and it has a `-` as the permission, so the push
     fails
 
-#### separating delete and rewind rights
+<a name="A16"></a>
+
+##### separating delete and rewind rights
 
 Since the beginning, `RW+` meant being able to rewind *or* delete a ref.  My
 stand is that these two are fairly similar, and infact a rewind is almost the
@@ -380,7 +389,9 @@ message when you push, a non-existant user.
 
 [sdrr]: http://groups.google.com/group/gitolite/browse_thread/thread/9f2b4358ce406d4c#
 
-#### file/dir NAME based restrictions
+<a name="A17"></a>
+
+##### file/dir NAME based restrictions
 
 In addition to branch-name based restrictions, gitolite also allows you to
 restrict what files or directories can be involved in changes being pushed.
@@ -389,18 +400,24 @@ changed, treating each filename as a "ref" to be matched.
 
 Please see `conf/example.conf` for syntax and examples.
 
-#### delegating parts of the config file
+<a name="A18"></a>
+
+##### delegating parts of the config file
 
 You can now split up the config file and delegate the authority to specify
 access control for their own pieces.  See
 [doc/5-delegation.mkd](http://github.com/sitaramc/gitolite/blob/pu/doc/5-delegation.mkd)
 for details.
 
-### convenience features
+<a name="A19"></a>
+
+#### convenience features
 
 <a name="myrights"></a>
 
-#### what repos do I have access to?
+<a name="A20"></a>
+
+##### what repos do I have access to?
 
 Sometimes there are too many repos, maybe even named similarly, or with the
 potential for typos, confusion about hyphens/underscores or upper/lower case,
@@ -431,20 +448,15 @@ administrator can also say things like:
 
 to get this info for other user(s).
 
-#### error checking the config file
+<a name="A21"></a>
 
-gitosis does not do any.  I just found out that if you mis-spell `members` as
-`member`, gitosis will silently ignore it, and leave you wondering why access
-was denied.
-
-Gitolite "compiles" the config file first and keyword typos *are* caught so
-you know right away.
-
-#### including config lines from other files
+##### including config lines from other files
 
 See the entry under "INCLUDE SOME OTHER FILE" in `conf/example.conf`.
 
-#### support for git installed outside default PATH
+<a name="A22"></a>
+
+##### support for git installed outside default PATH
 
 The normal solution is to add to the system default PATH somehow, either by
 munging `/etc/profile` or by enabling `PermitUserEnvironment` in
@@ -476,7 +488,9 @@ the full PATH in the rc file, like so:
 
     $ENV{PATH} = "/home/sitaram/bin:$ENV{PATH}";
 
-#### "personal" branches
+<a name="A23"></a>
+
+##### "personal" branches
 
 "personal" branches are great for corporate environments, where
 unauthenticated pull/clone is a no-no.  Since a dev workstation cannot do
@@ -498,7 +512,9 @@ important thing is that the "branch" name should contain `/USER/` (including
 the slashes).  At runtime this will match whoever is the current user.  Access
 is still determined by the right hand side of course.
 
-#### custom hooks and custom git config
+<a name="A24"></a>
+
+##### custom hooks and custom git config
 
 You can specify hooks that you want to propagate to all repos, as well as
 per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
@@ -506,13 +522,17 @@ per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
 
 <a name="gitweb"></a>
 
-### helping with gitweb
+<a name="A25"></a>
+
+#### helping with gitweb
 
 Although gitweb is a completely separate program, gitolite can do quite a
 lot to help you manage gitweb access as well; once the initial setup is
 complete, you can do it all from within the gitolite config file!
 
-#### easier to specify gitweb "description" and gitweb/daemon access
+<a name="A26"></a>
+
+##### easier to specify gitweb "description" and gitweb/daemon access
 
 To enable access to a repo via gitweb *and* create a "description" for it to
 show up on the webpage, just add a line like this, anywhere in the config
@@ -561,7 +581,9 @@ Here's an example, using really short reponames because I'm lazy:
 
 <a name="gitwebauth"></a>
 
-#### easier to link gitweb authorisation with gitolite
+<a name="A27"></a>
+
+##### easier to link gitweb authorisation with gitolite
 
 Over and above whether a repo is even *shown* by gitweb, you may want to
 further restrict people, allowing them to view *only* those repos for which
@@ -595,18 +617,26 @@ Gitweb allows you to specify a subroutine to decide on access.  We use that
 feature and tie it to gitolite.  Configuration example can be found in
 `contrib/gitweb/`.
 
-### advanced features
+<a name="A28"></a>
 
-#### repos named with wildcards
+#### advanced features
+
+<a name="A29"></a>
+
+##### repos named with wildcards
 
 Please see `doc/4-wildcard-repositories.mkd` for all the details.
 
-#### admin defined commands
+<a name="A30"></a>
+
+##### admin defined commands
 
 This requires the wildcards feature to be enabled, but is then an extremely
 powerful feature.  See `doc/admin-defined-commands.mkd`.
 
-#### access control for external commands
+<a name="A31"></a>
+
+##### access control for external commands
 
 Gitolite now has a mechanism for allowing access control for arbitrary
 external commands, as long as they are invoked via ssh and present a
@@ -630,7 +660,9 @@ Commands implemented so far are:
 
 <a name="svnserve"></a>
 
-##### svnserve
+<a name="A32"></a>
+
+###### svnserve
 
 If you are transitioning from SVN to gitolite, and have a lot of users using
 public-key authentication with SVN, this feature may be useful to you. Once
@@ -640,9 +672,13 @@ system. Assuming you installed gitolite to the same user as the one you used
 for SVN, SVN connectivity will be retained, and users will be able to use
 both SVN and git using the same SSH configuration.
 
-## design choices
+<a name="A33"></a>
 
-### keeping the parser and the access control separate
+### design choices
+
+<a name="A34"></a>
+
+#### keeping the parser and the access control separate
 
 There are two programs concerned with access control:
 

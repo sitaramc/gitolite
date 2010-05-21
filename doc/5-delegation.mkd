@@ -2,6 +2,19 @@
 
 [Thanks to jeromeag for forcing me to think through this...]
 
+----
+
+In this document:
+
+  * <a href="#A1">lots of repos, lots of users</a>
+  * <a href="#A2">splitting up the set of repos into groups</a>
+  * <a href="#A3">delegating ownership of groups of repos</a>
+  * <a href="#A4">security/philosophy note</a>
+
+----
+
+<a name="A1"></a>
+
 ### lots of repos, lots of users
 
 Gitolite tries to make it easy to manage access to lots of users and repos,
@@ -34,6 +47,8 @@ access control rules for a set of repos they have been given authority for.
 It's easier to show how it all works with an example instead of long
 descriptions.
 
+<a name="A2"></a>
+
 ### splitting up the set of repos into groups
 
 To start with, recall that gitolite allows you to specify **groups** (of users
@@ -47,6 +62,8 @@ or repos, same syntax).  So the basic idea is that the main config file
 
     # any other config as usual, including access control lines for any of the
     # above projects or groups
+
+<a name="A3"></a>
 
 ### delegating ownership of groups of repos
 
@@ -100,7 +117,9 @@ to the bottom of the main file.
 
 ----
 
-### Security/Philosophy note
+<a name="A4"></a>
+
+### security/philosophy note
 
 The delegation feature is meant only for access control rules, not pubkeys.
 Adding/removing pubkeys is a much more significant event than changing branch

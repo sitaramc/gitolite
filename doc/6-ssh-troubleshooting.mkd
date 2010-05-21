@@ -2,38 +2,44 @@
 
 In this document:
 
-  * the most common problems that an admin will see
-  * basic ssh troubleshooting
-      * passphrases versus passwords
-      * ssh-agent problems
-      * basic ssh troubleshooting for the main admin
-      * basic ssh troubleshooting for a normal user
-  * details
-      * files on the server
-      * files on client
-      * why two keys on client
-  * more complex ssh setups
-      * two gitolite servers to manage?
-  * giving shell access to gitolite users
+  * <a href="#A1">the most common problems that an admin will see</a>
+  * <a href="#A2">basic ssh troubleshooting</a>
+      * <a href="#A3">passphrases versus passwords</a>
+      * <a href="#A4">ssh-agent problems</a>
+      * <a href="#A5">basic ssh troubleshooting for the main admin</a>
+      * <a href="#A6">basic ssh troubleshooting for a normal user</a>
+  * <a href="#A7">details</a>
+      * <a href="#A8">files on the server</a>
+      * <a href="#A9">files on client</a>
+      * <a href="#A10">why two keys on client</a>
+  * <a href="#A11">some other tips and tricks</a>
+      * <a href="#A12">two gitolite servers to manage?</a>
+      * <a href="#A13">giving shell access to gitolite users</a>
+      * <a href="#A14">losing your admin key</a>
+      * <a href="#A15">simulating ssh-copy-id</a>
 
 ----
 
 This document should help you troubleshoot ssh-related problems in accessing
 gitolite *after* the install has completed successfully.
 
-In addition, I **strongly** recommend reading [this document][glb] -- it's a
-very detailed look at how gitolite uses ssh's features on the server side.
-Most people don't know ssh as well as they *think* they do; even if you don't
-have any problems right now, it's worth skimming over.
+In addition, I **strongly** recommend reading
+[doc/9-gitolite-and-ssh.mkd][doc9gas], which is a very detailed look at how
+gitolite uses ssh's features on the server side.  Most people don't know ssh
+as well as they *think* they do; even if you don't have any problems right
+now, it's worth skimming over.
 
 In addition to both these documents, there's now a program called
 `sshkeys-lint` that you can run on your client.  Run it without arguments to
 get help on how to run it and what inputs it needs.
 
+<a name="A1"></a>
+
 ### the most common problems that an admin will see
 
 Ironically, these problems **only** happen to the person who installed
-gitolite using easy-install, and has **utterly failed** to read/heed the
+gitolite using easy-install (the "from-client" method in
+[doc/0-INSTALL.mkd][doc0]), and has **utterly failed** to read/heed the
 message that shows up at the end of running that command.  This is because
 only the admin has *two* ssh keys to the server (see "basic ssh
 troubleshooting for the main admin" section below for more on this).
@@ -44,7 +50,9 @@ completely**:
   * you get `fatal: 'reponame' does not appear to be a git repository`, and
     yet you are sure 'reponame' exists, you haven't mis-spelled it, etc.
 
-  * you are able to clone repositories but are unable to push changes back.
+  * you are able to clone repositories but are unable to push changes back
+    (the error complains about the `GL_RC` environment variable not being set,
+    and the `hooks/update` failing in some way).
 
 Let us recap the message that appears on a successful run of the "easy-install"
 program; it looks something like this (with suitable values substituted for
@@ -77,9 +85,7 @@ the repo and clones ok.  But when you push, gitolite's **update hook** kicks
 in, and fails to run because you some of the environment variables it is
 expecting are not present.
 
-----
-
-<a name="basic"></a>
+<a name="A2"></a>
 
 ### basic ssh troubleshooting
 
@@ -91,6 +97,8 @@ username* of the admin.
 
 Unless specifically mentioned, all these commands are run on the user's or
 admin's workstation, not on the server.
+
+<a name="A3"></a>
 
 #### passphrases versus passwords
 
@@ -110,6 +118,8 @@ everything is working, using `ssh-keygen -p`**.
 The second is to use `ssh-agent` (or `keychain`, which in turn uses
 `ssh-agent`) or something like that to manage your keys.  Other than the next
 section, further discussion of this is out of scope of this document.
+
+<a name="A4"></a>
 
 #### ssh-agent problems
 
@@ -134,6 +144,8 @@ This is because ssh-agent has a quirk: if `ssh-add -l` shows *any* keys at
 all, ssh will only use those keys.  Even if you explicitly specify an unlisted
 key using `ssh -i` or an `identityfile` directive in the config file, it won't
 use it.
+
+<a name="A5"></a>
 
 #### basic ssh troubleshooting for the main admin
 
@@ -203,6 +215,8 @@ from scratch:
 
 That's a long sequence but it should work.
 
+<a name="A6"></a>
+
 #### basic ssh troubleshooting for a normal user
 
 For a normal user, life is much simpler.  They should have only one pubkey,
@@ -222,9 +236,13 @@ the admin repo, it won't work.  For reasons why, see below.
 
 <a name="details"></a>
 
+<a name="A7"></a>
+
 ### details
 
 Here's how it all hangs together.
+
+<a name="A8"></a>
 
 #### files on the server
 
@@ -255,6 +273,8 @@ Here's how it all hangs together.
     `gl-auth-command` program is run, and (in this example) is given the
     argument `sitaram`.  This is how gitolite is invoked, (and is told the
     user logging in is "sitaram").
+
+<a name="A9"></a>
 
 #### files on client
 
@@ -326,7 +346,12 @@ Here's how it all hangs together.
 
 <a name="twokeys"></a>
 
+<a name="A10"></a>
+
 #### why two keys on client
+
+[This section is only applicable to installs done using the "from-client"
+method; see [doc/0-INSTALL.mkd][doc0] for details].
 
 Why do I (the admin) need two **different** keypairs?
 
@@ -390,10 +415,11 @@ That should do it.
 
 <a name="complex"></a>
 
-### more complex ssh setups
+<a name="A11"></a>
 
-What do you need to know in order to create more complex ssh setups (for
-instance if you have *two* gitolite servers you are administering)?
+### some other tips and tricks
+
+<a name="A12"></a>
 
 #### two gitolite servers to manage?
 
@@ -415,9 +441,9 @@ instance if you have *two* gitolite servers you are administering)?
   * now access one server's repos as `gitolite:reponame.git` and the other
     server's repos as `gitolite2:reponame.git`.
 
-<a name="shell"></a>
+<a name="A13"></a>
 
-### giving shell access to gitolite users
+#### giving shell access to gitolite users
 
 We've managed (thanks to an idea from Jesse Keating) to make it possible for a
 single key to allow both gitolite access *and* shell access.
@@ -442,3 +468,41 @@ access would not manage to get himself shell access.
 
 Giving someone shell access requires that you should have shell access in the
 first place, so the simplest way is to enable it from the server side only.
+
+<a name="A14"></a>
+
+#### losing your admin key
+
+If you lost the admin key, and need to re-establish ownership of the
+gitolite-admin repository with a fresh key, take a look at the
+`src/gl-emergency-addkey` program.  You will need shell access to the server
+of course.  The top of the script has useful information on how to use it and
+what it needs.
+
+<a name="A15"></a>
+
+#### simulating ssh-copy-id
+
+don't have `ssh-copy-id`?  This is broadly what that command does, if you want
+to replicate it manually.  The input is your pubkey, typically
+`~/.ssh/id_rsa.pub` from your client/workstation.
+
+  * it copies it to the server as some file
+
+  * it appends that file to `~/.ssh/authorized_keys` on the server
+    (creating it if it doesn't already exist)
+
+  * it then makes sure that all these files/directories have go-w perms
+    set (assuming user is "git"):
+
+        /home/git/.ssh/authorized_keys
+        /home/git/.ssh
+        /home/git
+
+[Actually, `sshd` requires that even directories *above* `~` (`/`, `/home`,
+typically) also must be `go-w`, but that needs root.  And typically
+they're already set that way anyway.  (Or if they're not, you've got
+bigger problems than gitolite install not working!)]
+
+[doc0]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd
+[doc9gas]: http://github.com/sitaramc/gitolite/blob/pu/doc/9-gitolite-and-ssh.mkd

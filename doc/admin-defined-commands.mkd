@@ -11,15 +11,17 @@ There may be other such **WARNING** sections below.  **Read all of them**.
 
 In this document:
 
-  * background
-  * setting it up
-  * anatomy of a command
-  * example uses and sample commands in contrib
-      * fork
-      * rmrepo
-      * (bonus) restricted admin
+  * <a href="#A1">background</a>
+  * <a href="#A2">setting it up</a>
+  * <a href="#A3">anatomy of a command</a>
+  * <a href="#A4">example uses and sample commands in contrib</a>
+      * <a href="#A5">fork</a>
+      * <a href="#A6">rmrepo</a>
+      * <a href="#A7">(bonus) restricted admin</a>
 
 ----
+
+<a name="A1"></a>
 
 ### background
 
@@ -59,6 +61,8 @@ What we want now is more than that, as you'll see in the examples below.  And
 I'm sure if you think of more uses you'll send them to me as "contrib"
 entries, right?
 
+<a name="A2"></a>
+
 ### setting it up
 
 This can only be setup by someone who has shell access to the server.  Edit
@@ -76,6 +80,8 @@ to inadvertently *hide* some of the "official" commands (like "info",
 "expand", "setperms", etc., or worse, say "git-upload-pack"!) by creating
 executable files with those names in this directory.  So don't do that -- you
 have been warned!**
+
+<a name="A3"></a>
 
 ### anatomy of a command
 
@@ -130,7 +136,11 @@ convenient.  See any of the other samples for how to use it.
 If you don't like this, roll your own.  If you don't like bash, do the eqvt in
 your language of choice.
 
+<a name="A4"></a>
+
 ### example uses and sample commands in contrib
+
+<a name="A5"></a>
 
 #### fork
 
@@ -165,6 +175,8 @@ So now we have an actual command to just create a repo and do nothing else:
 `ssh git@server git-init \'reponame\'`.  [Yes; those single quotes are
 required.  Deal with it.]
 
+<a name="A6"></a>
+
 #### rmrepo
 
 This is one thing that you really could not do before this setup was created.
@@ -174,6 +186,8 @@ Use it like this:
 
 The script checks to make sure that the repo being deleted was *created* by
 the user invoking it.
+
+<a name="A7"></a>
 
 #### (bonus) restricted admin
 

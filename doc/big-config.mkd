@@ -2,11 +2,13 @@
 
 In this document:
 
-  * when/why do we need it?
-  * how do we use it?
-  * summary of settings in RC file
-  * what are the downsides?
-  * (extra coolness) usergroups and LDAP/similar tools
+  * <a href="#A1">when/why do we need it?</a>
+  * <a href="#A2">how do we use it?</a>
+  * <a href="#A3">summary of settings in RC file</a>
+  * <a href="#A4">what are the downsides?</a>
+  * <a href="#A5">(extra coolness) usergroups and LDAP/similar tools</a>
+
+<a name="A1"></a>
 
 ### when/why do we need it?
 
@@ -93,6 +95,8 @@ Phew!
 You can imagine what that does when you have 10,000 users and 10,000 repos.
 Let's just say it's not pretty :)
 
+<a name="A2"></a>
+
 ### how do we use it?
 
 Now, if you had all those 10,000 users and repos explicitly listed (no
@@ -138,6 +142,8 @@ configuration, the compiled file looks like this:
 That's a lot smaller, and allows orders of magintude more repos and groups to
 be supported.
 
+<a name="A3"></a>
+
 ### summary of settings in RC file
 
 The default RC file contains the following lines:
@@ -156,6 +162,8 @@ you push the gitolite-admin repo with changes.
 
 [gw]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#gitweb
 
+<a name="A4"></a>
+
 ### what are the downsides?
 
 There is one minor issue.
@@ -167,6 +175,8 @@ subset of the allowed @fragname, which would work normally, do not work now).
 
 (If you didn't understand all that, you're probably not using delegation, so
 feel free to ignore it!)
+
+<a name="A5"></a>
 
 ### (extra coolness) usergroups and LDAP/similar tools
 

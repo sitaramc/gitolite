@@ -2,7 +2,7 @@
 
 Git has started to become very popular in corporate environments, which tend to have some additional requirements in terms of access control.  Gitolite was created to help with those requirements.
 
-Gitolite allows you to specify permissions not just by repository (like Gitosis does), but also by branch or tag names within each repository.  That is, you can specify that certain people (or groups of people) can only push certain "refs" (branches or tags) but not others.
+Gitolite allows you to specify permissions not just by repository, but also by branch or tag names within each repository.  That is, you can specify that certain people (or groups of people) can only push certain "refs" (branches or tags) but not others.
 
 ### Installing ###
 
@@ -25,7 +25,7 @@ Next, you clone Gitolite from the project's main site and run the "easy install"
 	$ cd gitolite/src
 	$ ./gl-easy-install -q gitolite gitserver sitaram
 
-And you're done!  Gitolite has now been installed on the server, and you now have a brand new repository called `gitolite-admin` in the home directory of your workstation.  You administer your gitolite setup by making changes to this repository and pushing (just like Gitosis).
+And you're done!  Gitolite has now been installed on the server, and you now have a brand new repository called `gitolite-admin` in the home directory of your workstation.  You administer your gitolite setup by making changes to this repository and pushing.
 
 [By the way, *upgrading* gitolite is also done the same way.  Also, if you're interested, run the script without any arguments to get a usage message.]
 
@@ -57,7 +57,7 @@ So once the install is done, you switch to the `gitolite-admin` repository (plac
 
 Notice that "sitaram" (the last argument in the `gl-easy-install` command you gave earlier) has read-write permissions on the `gitolite-admin` repository as well as a public key file of the same name.
 
-The config file syntax for Gitolite is *quite* different from Gitosis.  Again, this is liberally documented in `conf/example.conf`, so we'll only mention some highlights here.
+The config file syntax for gitolite is liberally documented in `conf/example.conf`, so we'll only mention some highlights here.
 
 You can group users or repos for convenience.  The group names are just like macros; when defining them, it doesn't even matter whether they are projects or users; that distinction is only made when you *use* the "macro".
 
@@ -90,7 +90,7 @@ That rule will just get added to the ruleset for the `gitolite` repository.
 
 At this point you might be wondering how the access control rules are actually applied, so let's go over that briefly.
 
-There are two levels of access control in gitolite.  The first is at the repository level; if you have read (or write) access to *any* ref in the repository, then you have read (or write) access to the repository.  This is the only access control that Gitosis had.
+There are two levels of access control in gitolite.  The first is at the repository level; if you have read (or write) access to *any* ref in the repository, then you have read (or write) access to the repository.
 
 The second level, applicable only to "write" access, is by branch or tag within a repository.  The username, the access being attempted (`W` or `+`), and the refname being updated are known.  The access rules are checked in order of appearance in the config file, looking for a match for this combination (but remember that the refname is regex-matched, not merely string-matched).  If a match is found, the push succeeds.  A fallthrough results in access being denied.
 
