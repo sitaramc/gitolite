@@ -389,9 +389,7 @@ close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
 #       any new repos to be created?
 # ----------------------------------------------------------------------------
 
-# modern gits allow cloning from an empty repo, so we just create it.  Gitosis
-# did not have that luxury, so it was forced to detect the first push and
-# create it then
+# modern gits allow cloning from an empty repo, so we just create it
 
 # but it turns out not everyone has "modern" gits :)
 my $git_version = `git --version`;
@@ -469,8 +467,7 @@ for my $repo (keys %repo_config) {
 #       handle gitweb and daemon
 # ----------------------------------------------------------------------------
 
-# How you specify gitweb and daemon access is quite different from gitosis.  I
-# just assume you'll never have any *real* users called "gitweb" or "daemon"
+# I just assume you'll never have any *real* users called "gitweb" or "daemon"
 # :-)  These are now "pseduo users" -- giving them "R" access to a repo is all
 # you have to do
 
