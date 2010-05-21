@@ -40,6 +40,8 @@ our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG);
 our %repos;
 our %groups;
+our $data_version;
+our $current_data_version = '1.5';
 
 # ----------------------------------------------------------------------------
 #       convenience subs
@@ -253,6 +255,13 @@ sub parse_acl
     our $gl_user = $ENV{GL_USER};
 
     die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
+    unless (defined($data_version) and $data_version eq $current_data_version) {
+        # this cannot happen for 'easy-install' cases, by the way...
+        print STDERR "(INTERNAL: $data_version -> $current_data_version; running gl-setup)\n";
+        system("$ENV{SHELL} -l gl-setup >&2");
+
+        die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
+    }
 
     # basic access reporting doesn't send $repo, and doesn't need to; you just
     # want the config dumped as is, really

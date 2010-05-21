@@ -2,13 +2,16 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v1.5.1 -- tries to eliminate the need to run gl-setup on data version
+    change, thus hopefully obsoleting the upgrade note for v1.5 (just below).
+
   - v1.5 -- IMPORTANT UPGRADE NOTES below
 
-Upgrading to v1.5 from any version prior to v1.5 requires an extra step for
-people who installed gitolite using the "system install / user setup" method
-described in doc/0-INSTALL.mkd.  For such installations, after the
-administrator has upgraded gitolite system-wide, each "gitolite host" user
-must run `gl-setup` once (this time without any arguments).
+    Upgrading to v1.5 from any version prior to v1.5 requires an extra step
+    for people who installed gitolite using the "system install / user setup"
+    method described in doc/0-INSTALL.mkd.  For such installations, after the
+    administrator has upgraded gitolite system-wide, each "gitolite host" user
+    must run `gl-setup` once (this time without any arguments).
 
   - "deny" rules should now work even in "big-config" due to previous change
   - proper rule sequencing (required major format change)

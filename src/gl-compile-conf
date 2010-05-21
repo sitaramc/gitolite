@@ -103,6 +103,8 @@ my $rule_seq = 0;
 # multiple times for the same repo+user.  So...
 my %rurp_seen = ();
 
+our $current_data_version;      # this comes from gitolite.pm
+
 # catch usernames<->pubkeys mismatches; search for "lint" below
 my %user_list = ();
 
@@ -372,6 +374,8 @@ for my $fragment_file (glob("conf/fragments/*.conf"))
 }
 
 my $compiled_fh = wrap_open( ">", $GL_CONF_COMPILED );
+my $data_version = $current_data_version;
+print $compiled_fh Data::Dumper->Dump([$data_version], [qw(*data_version)]);
 my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
 # the dump uses single quotes, but we convert any strings containing $creator,
 # $readers, $writers, to double quoted strings.  A wee bit sneaky, but not too
