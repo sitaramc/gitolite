@@ -13,11 +13,13 @@ In this document:
       * <a href="#A9">(root method) directly on the server, manually, with root access</a>
       * <a href="#A10">(non-root method) directly on the server, manually, without root access</a>
       * <a href="#A11">(from-client method) install from the client to the server</a>
-  * <a href="#A12">special cases -- multiple gitolite instances</a>
-  * <a href="#A13">upgrading</a>
-  * <a href="#A14">uninstalling</a>
-      * <a href="#A15">cleaning out a botched install</a>
-      * <a href="#A16">uninstalling gitolite completely</a>
+  * <a href="#A12">special cases -- multiple gitolite servers</a>
+      * <a href="#A13">package method and root method</a>
+      * <a href="#A14">from-client method</a>
+  * <a href="#A15">upgrading</a>
+  * <a href="#A16">uninstalling</a>
+      * <a href="#A17">cleaning out a botched install</a>
+      * <a href="#A18">uninstalling gitolite completely</a>
 
 ----
 
@@ -162,13 +164,16 @@ including *outputs* of the commands concerned.
 
 <a name="A12"></a>
 
-### special cases -- multiple gitolite instances
+### special cases -- multiple gitolite servers
 
-With the first two methods (package or root methods) of installation, it's
-trivial to create multiple gitolite instances (say one for each department, on
-some mega company-wide server).  You can even do this without giving shell
-access to the admins.  Here's an example with just two "departments", and
-their admins Alice and Bob:
+<a name="A13"></a>
+
+#### package method and root method
+
+With the first two methods of installation, it's trivial to create multiple
+gitolite instances (say one for each department, on some mega company-wide
+server).  You can even do this without giving shell access to the admins.
+Here's an example with just two "departments", and their admins Alice and Bob:
 
   * create userids `webbrowser_repos` and `webserver_repos`
   * ask Alice and Bob for their pubkeys; copy them to the respective home
@@ -185,7 +190,27 @@ to have a command line on the server, so don't give them the passwords if you
 don't need to -- the pubkey will allow them to be gitolite admins on their
 domain, and that's quite enough for normal operations.
 
-<a name="A13"></a>
+<a name="A14"></a>
+
+#### from-client method
+
+Thanks to Matt Perzel, the easy-install command now takes an optional 4th
+parameter, which is the "nickname" of the gitolite server.  It gets defined in
+`~/.ssh/config`, and if not used it defaults to "gitolite".
+
+So if you used the following command to install gitolite to 2 different
+servers:
+
+    ./src/gl-easy-install -q git my.1st.git.server admin_user1 gitolite_server_1
+    ./src/gl-easy-install -q git my.2nd.git.server admin_user1 gitolite_server_2
+
+you will find that `~/gitolite_server_1-admin` and `~/gitolite_server_2-admin`
+have been created as respective clones.  Or you can re-clone elsewhere:
+
+    cd ~/admin1; git clone gitolite_server_1:gitolite-admin.git
+    cd ~/admin2; git clone gitolite_server_2:gitolite-admin.git
+
+<a name="A15"></a>
 
 ### upgrading
 
@@ -197,11 +222,11 @@ arguments!
 Also, remember that some new features may require additional settings in your
 `~/.gitolite.rc` file.
 
-<a name="A14"></a>
+<a name="A16"></a>
 
 ### uninstalling
 
-<a name="A15"></a>
+<a name="A17"></a>
 
 #### cleaning out a botched install
 
@@ -219,7 +244,7 @@ here's how to clean the slate.
       * remove `~/.gitolite`, `~/.gitolite.rc` and
         `~/repositories/gitolite-admin.git`
 
-<a name="A16"></a>
+<a name="A18"></a>
 
 #### uninstalling gitolite completely
 
