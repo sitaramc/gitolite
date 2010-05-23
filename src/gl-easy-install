@@ -450,12 +450,12 @@ clone_it()
 {
     cleanup
     cd "$HOME"
-    if [[ -d gitolite-admin ]]
+    if [[ -d $host_nickname-admin ]]
     then
-        echo $HOME/gitolite-admin exists, skipping clone step...
+        echo $HOME/$host_nickname-admin exists, skipping clone step...
     else
-        prompt "cloning gitolite-admin repo..." "$v_cloning"
-        git clone gitolite:gitolite-admin
+        prompt "cloning $host_nickname-admin repo..." "$v_cloning"
+        git clone $host_nickname:gitolite-admin $host_nickname-admin
     fi
 
     # MANUAL: be sure to read the message below; this applies to you too...
