@@ -103,15 +103,17 @@ Usage: $0 [-q] user host [port] admin_name     # install
   - "admin_name" is *your* name as it should appear in the eventual gitolite
     config file.  For upgrades (ie., gitolite is already installed on the
     server), this argument is not needed, and will be *ignored* if provided.
-  - "host_nickname" is a nickname that can be given to a particular 
-    installation of gitolite. This allows for multiple servers to easily be 
-    administered from this machine; optional, defaults to gitolite
 
-Example usage: $0 git my.git.server sitaram gitolite_server_1
+  - (optional) "host_nickname" is a nickname that can be given to a particular
+    installation of gitolite. This allows for multiple servers to easily be
+    administered from this machine.  Defaults to "gitolite"
+
+Example usage: $0 git my.git.server sitaram [gitolite_server_1]
 
 Notes:
-  - "user","admin_name" and "host_nickname"  must be simple names -- no special 
-    characters etc please (only alphanumerics, dot, hyphen, underscore)
+  - "user","admin_name" and "host_nickname"  must be simple names -- no
+    special characters etc please (only alphanumerics, dot, hyphen,
+    underscore)
   - traditionally, the "user" is "git", but it can be anything you want
   - "admin_name" should be your name, for clarity, or whoever will be the
     gitolite admin
@@ -178,10 +180,10 @@ basic_sanity() {
         die "user '$user' invalid"
     [[ "$user" == "root" ]] && die I refuse to install to root
     echo $admin_name | perl -lne 'exit 1 if /[^a-zA-Z0-9._-]/' ||
-        die "admin_name '$admin_name' invalid"    
+        die "admin_name '$admin_name' invalid"
     echo $host_nickname | perl -lne 'exit 1 if /[^a-zA-Z0-9._-]/' ||
         die "host nickname '$host_nickname' invalid"
-    
+
     # MANUAL: make sure you're in the gitolite directory, at the top level.
     # The following files should all be visible:
 
@@ -271,7 +273,6 @@ setup_local_ssh() {
     #       port 22
     #       identityfile ~/.ssh/sitaram
 
-    
     echo "host $host_nickname
      user $user
      hostname $host
@@ -586,10 +587,10 @@ done!
 
 IMPORTANT NOTE -- PLEASE READ!!!
     *Your* URL for cloning any repo on this server will be
-        \$host_nickname:reponame.git 
+        \$host_nickname:reponame.git
 
     Note: If you are upgrading and you set a host nickname during initial
-          setup, please use that host nickname instead of \"gitolite\" 
+          setup, please use that host nickname instead of \"gitolite\"
           above.
 
     *Other* users you set up will have to use
