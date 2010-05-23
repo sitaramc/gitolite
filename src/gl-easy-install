@@ -103,12 +103,15 @@ Usage: $0 [-q] user host [port] admin_name     # install
   - "admin_name" is *your* name as it should appear in the eventual gitolite
     config file.  For upgrades (ie., gitolite is already installed on the
     server), this argument is not needed, and will be *ignored* if provided.
+  - "host_nickname" is a nickname that can be given to a particular 
+    installation of gitolite. This allows for multiple servers to easily be 
+    administered from this machine; optional, defaults to gitolite
 
-Example usage: $0 git my.git.server sitaram
+Example usage: $0 git my.git.server sitaram gitolite_server_1
 
 Notes:
-  - "user" and "admin_name" must be simple names -- no special characters etc
-    please (only alphanumerics, dot, hyphen, underscore)
+  - "user","admin_name" and "host_nickname"  must be simple names -- no special 
+    characters etc please (only alphanumerics, dot, hyphen, underscore)
   - traditionally, the "user" is "git", but it can be anything you want
   - "admin_name" should be your name, for clarity, or whoever will be the
     gitolite admin
@@ -152,20 +155,33 @@ basic_sanity() {
     host=$2
     port=22
     admin_name=$3
+    host_nickname=$4
+    if [ -z $4 ]
+    then
+        host_nickname="gitolite"
+    fi
+
     # but if the 3rd arg is a number, that's a port number, and the 4th arg is
     # the admin_name
     if echo $3 | perl -lne 'exit 1 unless /^[0-9]+$/'
     then
         port=$3
         admin_name=$4
+        host_nickname=$5
+        if [ -z $5 ]
+        then
+            host_nickname=gitolite
+        fi
     fi
 
     echo $user | perl -lne 'exit 1 if /[^a-zA-Z0-9._-]/' ||
         die "user '$user' invalid"
     [[ "$user" == "root" ]] && die I refuse to install to root
     echo $admin_name | perl -lne 'exit 1 if /[^a-zA-Z0-9._-]/' ||
-        die "admin_name '$admin_name' invalid"
-
+        die "admin_name '$admin_name' invalid"    
+    echo $host_nickname | perl -lne 'exit 1 if /[^a-zA-Z0-9._-]/' ||
+        die "host nickname '$host_nickname' invalid"
+    
     # MANUAL: make sure you're in the gitolite directory, at the top level.
     # The following files should all be visible:
 
@@ -255,13 +271,14 @@ setup_local_ssh() {
     #       port 22
     #       identityfile ~/.ssh/sitaram
 
-    echo "host gitolite
+    
+    echo "host $host_nickname
      user $user
      hostname $host
      port $port
      identityfile ~/.ssh/$admin_name" > $tmpgli/.gl-stanza
 
-    if grep 'host  *gitolite' "$HOME/.ssh/config" &>/dev/null
+    if grep "host  *$host_nickname" "$HOME/.ssh/config" &>/dev/null
     then
         prompt "found gitolite para in ~/.ssh/config; assuming it is correct..." "$v_found_para"
     else
@@ -569,7 +586,11 @@ done!
 
 IMPORTANT NOTE -- PLEASE READ!!!
     *Your* URL for cloning any repo on this server will be
-        gitolite:reponame.git
+        \$host_nickname:reponame.git 
+
+    Note: If you are upgrading and you set a host nickname during initial
+          setup, please use that host nickname instead of \"gitolite\" 
+          above.
 
     *Other* users you set up will have to use
         \$user@\$host:reponame.git
