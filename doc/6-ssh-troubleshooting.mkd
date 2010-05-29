@@ -8,14 +8,15 @@ In this document:
       * <a href="#A4">ssh-agent problems</a>
       * <a href="#A5">basic ssh troubleshooting for the main admin</a>
       * <a href="#A6">basic ssh troubleshooting for a normal user</a>
-  * <a href="#A7">details</a>
-      * <a href="#A8">files on the server</a>
-      * <a href="#A9">files on client</a>
-      * <a href="#A10">why two keys on client</a>
-  * <a href="#A11">some other tips and tricks</a>
-      * <a href="#A12">giving shell access to gitolite users</a>
-      * <a href="#A13">losing your admin key</a>
-      * <a href="#A14">simulating ssh-copy-id</a>
+  * <a href="#A7">windows issues</a>
+  * <a href="#A8">details</a>
+      * <a href="#A9">files on the server</a>
+      * <a href="#A10">files on client</a>
+      * <a href="#A11">why two keys on client</a>
+  * <a href="#A12">some other tips and tricks</a>
+      * <a href="#A13">giving shell access to gitolite users</a>
+      * <a href="#A14">losing your admin key</a>
+      * <a href="#A15">simulating ssh-copy-id</a>
 
 ----
 
@@ -233,15 +234,31 @@ you had command line access to the server *before* you were added as a
 gitolite user.  If you send that same key to your gitolite admin to include in
 the admin repo, it won't work.  For reasons why, see below.
 
+<a name="A7"></a>
+
+### windows issues
+
+On windows, I have only used msysgit, and the openssh that comes with it.
+Over time, I have grown to distrust putty/plink due to the number of people
+who seem to have trouble when those beasts are involved (I myself have never
+used them for any kind of git access).  If you have unusual ssh problems that
+just don't seem to have any explanation, try removing all traces of
+putty/plink, including environment variables, etc., and then try again.
+
+If you can offer an *authoritative* account of the complications involved, and
+how to resolve them and get things working, I'd be happy to credit you and
+include it, either directly here if it is short enough or just an external
+link, or in contrib/ if it's a longer piece of text.
+
 <a name="details"></a>
 
-<a name="A7"></a>
+<a name="A8"></a>
 
 ### details
 
 Here's how it all hangs together.
 
-<a name="A8"></a>
+<a name="A9"></a>
 
 #### files on the server
 
@@ -273,7 +290,7 @@ Here's how it all hangs together.
     argument `sitaram`.  This is how gitolite is invoked, (and is told the
     user logging in is "sitaram").
 
-<a name="A9"></a>
+<a name="A10"></a>
 
 #### files on client
 
@@ -345,7 +362,7 @@ Here's how it all hangs together.
 
 <a name="twokeys"></a>
 
-<a name="A10"></a>
+<a name="A11"></a>
 
 #### why two keys on client
 
@@ -414,11 +431,11 @@ That should do it.
 
 <a name="complex"></a>
 
-<a name="A11"></a>
+<a name="A12"></a>
 
 ### some other tips and tricks
 
-<a name="A12"></a>
+<a name="A13"></a>
 
 #### giving shell access to gitolite users
 
@@ -446,7 +463,7 @@ access would not manage to get himself shell access.
 Giving someone shell access requires that you should have shell access in the
 first place, so the simplest way is to enable it from the server side only.
 
-<a name="A13"></a>
+<a name="A14"></a>
 
 #### losing your admin key
 
@@ -456,7 +473,7 @@ gitolite-admin repository with a fresh key, take a look at the
 of course.  The top of the script has useful information on how to use it and
 what it needs.
 
-<a name="A14"></a>
+<a name="A15"></a>
 
 #### simulating ssh-copy-id
 
