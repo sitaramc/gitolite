@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# WARNING: USES BASH FEATURES...
+
+. $(dirname $0)/adc.common-functions
+
+get_rights_and_owner gitolite-admin
+[[ -z $perm_write ]] && die "just *what* are you trying to pull, young man?"
+
+op=$1
+shift
+
+locs=
+while [[ -n $1 ]]
+do
+    case $1 in
+        '@all' )
+            locs="$locs $HOME"
+            ;;
+        * )
+            [ -d $loc ] && locs="$locs $GL_REPO_BASE_ABS/$1.git"
+            [ -d $loc ] || echo "ignoring $1..."
+            ;;
+    esac
+    shift
+done
+
+case $op in
+    en|enable )
+        for l in $locs
+        do
+            rm -fv $l/.gitolite.down
+        done
+        ;;
+    dis|disable )
+        [[ -t 0 ]] && printf message:
+        read msg <<<$(cat)
+        for l in $locs
+        do
+            echo $msg > $l/.gitolite.down
+        done
+        ;;
+    * )
+        die "argument 1 must be 'en' or 'dis'"
+        ;;
+esac

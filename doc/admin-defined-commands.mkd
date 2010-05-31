@@ -17,7 +17,8 @@ In this document:
   * <a href="#A4">example uses and sample commands in contrib</a>
       * <a href="#A5">fork</a>
       * <a href="#A6">rmrepo</a>
-      * <a href="#A7">(bonus) restricted admin</a>
+      * <a href="#A7">enable/disable push access temporarily</a>
+      * <a href="#A8">(bonus) restricted admin</a>
 
 ----
 
@@ -188,6 +189,44 @@ The script checks to make sure that the repo being deleted was *created* by
 the user invoking it.
 
 <a name="A7"></a>
+
+#### enable/disable push access temporarily
+
+If you want to disable push access to gitolite temporarily (maybe for
+maintenance), anyone with write access to the gitolite-admin repo can do this:
+
+    ssh git@server able dis @all    # able dis ==> dis able
+
+To re-enable after the maint work is done:
+
+    ssh git@server able en @all     # able en ==> en able
+
+You can also do this for one or more individual repos; in place of `@all`,
+just use a space separated list of reponames (exactly as they would appear in
+the config file).  Wildcards are not supported; patches welcome ;-)
+
+**NOTE: This needs a specific secondary update hook**.  Creating a secondary
+update hook is described in the sections on "custom hooks" and "hook chaining"
+in doc/2.  You need code like this in `update.secondary` (don't forget to
+`chmod +x` the file):
+
+    #!/bin/bash
+
+    for f in $HOME/.gitolite.down $PWD/.gitolite.down
+    do
+        if [ -f $f ]
+        then
+            echo >&2
+            echo '*** ABORT ***' >&2
+            echo >&2
+            cat $f >&2
+            exit 1
+        fi
+    done
+
+    exit 0
+
+<a name="A8"></a>
 
 #### (bonus) restricted admin
 
