@@ -34,6 +34,14 @@ cp src/* $gl_bin_dir || die "cp src/* to $gl_bin_dir failed"
 rm $gl_bin_dir/gl-easy-install
 perl -lpi -e "s(^GL_PACKAGE_CONF=.*)(GL_PACKAGE_CONF=$gl_conf_dir)" $gl_bin_dir/gl-setup
 
+# record which version is being sent across; we assume it's HEAD
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1
+then
+    git describe --tags --long HEAD 2>/dev/null > conf/VERSION || die "git describe failed -- this should not happen!"
+else
+    [[ -f conf/VERSION ]] || echo '(unknown)' > conf/VERSION
+fi
+
 cp -R conf/* $gl_conf_dir || die "cp conf/* to $gl_conf_dir failed"
 perl -lpi \
     -e "s(^#\s*\\\$GL_PACKAGE_CONF\s*=.*)(\\\$GL_PACKAGE_CONF = '$gl_conf_dir';)" \
