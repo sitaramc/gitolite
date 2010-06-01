@@ -111,6 +111,8 @@ values as needed.
         cd $HOME
         git clone git://github.com/sitaramc/gitolite gitolite-source
         cd gitolite-source
+        # now checkout whatever branch you want; for early adopters I suggest
+        # "pu", as in "git checkout -t origin/pu" for recent gits
         mkdir -p /usr/local/share/gitolite/conf /usr/local/share/gitolite/hooks
         src/gl-system-install /usr/local/bin /usr/local/share/gitolite/conf /usr/local/share/gitolite/hooks
 
@@ -131,19 +133,20 @@ server so that if you screw up the keys you can still get on, or be able to
   * from your workstation, copy your `~/.ssh/id_rsa.pub` file to the server.
     Put it in `/tmp/sitaram.pub`.
 
+  * if `$HOME/bin` is not on the default PATH, fiddle with your `.bashrc` or
+    `.bash_profile` or similar files and add it somehow.
+
   * (U) on the server, as "git", do the following:
 
         cd $HOME
         git clone git://github.com/sitaramc/gitolite gitolite-source
+        # now checkout whatever branch you want; for early adopters I suggest
+        # "pu", as in "git checkout -t origin/pu" for recent gits
         cd gitolite-source
         mkdir -p $HOME/bin $HOME/share/gitolite/conf $HOME/share/gitolite/hooks
         src/gl-system-install $HOME/bin $HOME/share/gitolite/conf $HOME/share/gitolite/hooks
 
   * on the server, still as "git", run `gl-setup /tmp/sitaram.pub`.
-
-  * if `$HOME/bin` is not on the default PATH, fiddle with your `.bashrc` or
-    `.bash_profile` files and add it somehow.  You can also try adding
-    `$GIT_PATH = "$ENV{HOME}/bin";` to `~/.gitolite.rc` on the server.
 
   * on the client, run `cd; git clone git@server:gitolite-admin`
 
