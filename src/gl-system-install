@@ -39,7 +39,7 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1
 then
     git describe --tags --long HEAD 2>/dev/null > conf/VERSION || die "git describe failed -- this should not happen!"
 else
-    [[ -f conf/VERSION ]] || echo '(unknown)' > conf/VERSION
+    [ -f conf/VERSION ] || echo '(unknown)' > conf/VERSION
 fi
 
 cp -R conf/* $gl_conf_dir || die "cp conf/* to $gl_conf_dir failed"

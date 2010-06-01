@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 
 . $(dirname $0)/adc.common-functions
 
 get_rights_and_owner gitolite-admin
-[[ -z $perm_write ]] && die "just *what* are you trying to pull, young man?"
+[ -z "$perm_write" ] && die "just *what* are you trying to pull, young man?"
 
 # and here you let them do the dangerous stuff
 echo "+rm -rf $GL_REPO_BASE_ABS"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # what/why: re-establish gitolite admin access when admin key(s) lost
 # where:    on server (NOT client!)
@@ -20,7 +20,7 @@
 
 # ENDHELP
 
-[[ -z $1 ]] && { perl -pe "s(\\\$0)($0); last if /ENDHELP/" < $0; exit 1; }
+[ -z "$1" ] && { perl -pe "s(\\\$0)($0); last if /ENDHELP/" < $0; exit 1; }
 
 set -e
 

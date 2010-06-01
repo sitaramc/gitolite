@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 from=$1
 to=$2
@@ -10,10 +10,10 @@ to=$2
 # have a new "git-init" command!
 
 get_rights_and_owner $from
-[[ -z $perm_read ]] && die "no read permissions on $from"
+[ -z "$perm_read" ] && die "no read permissions on $from"
 
 get_rights_and_owner $to
-[[ -z $perm_create ]] && die "no create permissions on $to"
+[ -z "$perm_create" ] && die "no create permissions on $to"
 
 # let gitolite create the repo first
 SSH_ORIGINAL_COMMAND="git-init '$to'" $GL_BINDIR/gl-auth-command $GL_USER

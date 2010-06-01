@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # please make sure this file is NOT chmod +x
 
@@ -11,7 +11,7 @@ get_rights_and_owner() {
     # set shell variables as needed
     owner=${ans#* }
     rights=${ans% *}
-    [[ $rights =~ C ]]  && perm_create=yes  || perm_create=
-    [[ $rights =~ R ]]  && perm_read=yes    || perm_read=
-    [[ $rights =~ W ]]  && perm_write=yes   || perm_write=
+    echo $rights | grep C >/dev/null 2>&1 && perm_create=yes  || perm_create=
+    echo $rights | grep R >/dev/null 2>&1 && perm_read=yes    || perm_read=
+    echo $rights | grep W >/dev/null 2>&1 && perm_write=yes   || perm_write=
 }

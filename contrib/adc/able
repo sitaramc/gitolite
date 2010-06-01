@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# WARNING: USES BASH FEATURES...
+# WARNING: USES BASH FEATURES TO AVOID A TEMP FILE; CAN BE FIXED IF NEEDED
 
 . $(dirname $0)/adc.common-functions
 
 get_rights_and_owner gitolite-admin
-[[ -z $perm_write ]] && die "just *what* are you trying to pull, young man?"
+[ -z "$perm_write" ] && die "just *what* are you trying to pull, young man?"
 
 op=$1
 shift
 
 locs=
-while [[ -n $1 ]]
+while [ -n "$1" ]
 do
     case $1 in
         '@all' )
@@ -33,7 +33,7 @@ case $op in
         done
         ;;
     dis|disable )
-        [[ -t 0 ]] && printf message:
+        # bashism
         read msg <<<$(cat)
         for l in $locs
         do
