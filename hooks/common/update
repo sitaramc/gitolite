@@ -82,6 +82,8 @@ push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{'@all'} || [] };
 # been specified
 
 my @refs = ($ref);      # the first ref to check is the real one
+# if a new ref is being created, add a special ref to record that
+push @refs, 'refs/heads/CREATE_REF' if $oldsha eq '0' x 40;
 # because making it work screws up efficiency like no tomorrow...
 if (exists $repos{$ENV{GL_REPO}}{NAME_LIMITS}) {
     # this is special to git -- the hash of an empty tree
