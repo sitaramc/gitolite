@@ -6,14 +6,14 @@
 
 In this document:
 
-  * <a href="#A1">lots of repos, lots of users</a>
-  * <a href="#A2">splitting up the set of repos into groups</a>
-  * <a href="#A3">delegating ownership of groups of repos</a>
-  * <a href="#A4">security/philosophy note</a>
+  * <a href="#lots_of_repos_lots_of_users">lots of repos, lots of users</a>
+  * <a href="#splitting_up_the_set_of_repos_into_groups">splitting up the set of repos into groups</a>
+  * <a href="#delegating_ownership_of_groups_of_repos">delegating ownership of groups of repos</a>
+  * <a href="#security_philosophy_note">security/philosophy note</a>
 
 ----
 
-<a name="A1"></a>
+<a name="lots_of_repos_lots_of_users"></a>
 
 ### lots of repos, lots of users
 
@@ -47,7 +47,7 @@ access control rules for a set of repos they have been given authority for.
 It's easier to show how it all works with an example instead of long
 descriptions.
 
-<a name="A2"></a>
+<a name="splitting_up_the_set_of_repos_into_groups"></a>
 
 ### splitting up the set of repos into groups
 
@@ -63,7 +63,7 @@ or repos, same syntax).  So the basic idea is that the main config file
     # any other config as usual, including access control lines for any of the
     # above projects or groups
 
-<a name="A3"></a>
+<a name="delegating_ownership_of_groups_of_repos"></a>
 
 ### delegating ownership of groups of repos
 
@@ -117,7 +117,7 @@ to the bottom of the main file.
 
 ----
 
-<a name="A4"></a>
+<a name="security_philosophy_note"></a>
 
 ### security/philosophy note
 

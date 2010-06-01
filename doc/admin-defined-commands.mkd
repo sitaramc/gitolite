@@ -11,18 +11,18 @@ There may be other such **WARNING** sections below.  **Read all of them**.
 
 In this document:
 
-  * <a href="#A1">background</a>
-  * <a href="#A2">setting it up</a>
-  * <a href="#A3">anatomy of a command</a>
-  * <a href="#A4">example uses and sample commands in contrib</a>
-      * <a href="#A5">fork</a>
-      * <a href="#A6">rmrepo</a>
-      * <a href="#A7">enable/disable push access temporarily</a>
-      * <a href="#A8">(bonus) restricted admin</a>
+  * <a href="#background">background</a>
+  * <a href="#setting_it_up">setting it up</a>
+  * <a href="#anatomy_of_a_command">anatomy of a command</a>
+  * <a href="#example_uses_and_sample_commands_in_contrib">example uses and sample commands in contrib</a>
+      * <a href="#fork">fork</a>
+      * <a href="#rmrepo">rmrepo</a>
+      * <a href="#enable_disable_push_access_temporarily">enable/disable push access temporarily</a>
+      * <a href="#bonus_restricted_admin">(bonus) restricted admin</a>
 
 ----
 
-<a name="A1"></a>
+<a name="background"></a>
 
 ### background
 
@@ -62,7 +62,7 @@ What we want now is more than that, as you'll see in the examples below.  And
 I'm sure if you think of more uses you'll send them to me as "contrib"
 entries, right?
 
-<a name="A2"></a>
+<a name="setting_it_up"></a>
 
 ### setting it up
 
@@ -82,7 +82,7 @@ to inadvertently *hide* some of the "official" commands (like "info",
 executable files with those names in this directory.  So don't do that -- you
 have been warned!**
 
-<a name="A3"></a>
+<a name="anatomy_of_a_command"></a>
 
 ### anatomy of a command
 
@@ -137,11 +137,11 @@ convenient.  See any of the other samples for how to use it.
 If you don't like this, roll your own.  If you don't like bash, do the eqvt in
 your language of choice.
 
-<a name="A4"></a>
+<a name="example_uses_and_sample_commands_in_contrib"></a>
 
 ### example uses and sample commands in contrib
 
-<a name="A5"></a>
+<a name="fork"></a>
 
 #### fork
 
@@ -176,7 +176,7 @@ So now we have an actual command to just create a repo and do nothing else:
 `ssh git@server git-init \'reponame\'`.  [Yes; those single quotes are
 required.  Deal with it.]
 
-<a name="A6"></a>
+<a name="rmrepo"></a>
 
 #### rmrepo
 
@@ -188,7 +188,7 @@ Use it like this:
 The script checks to make sure that the repo being deleted was *created* by
 the user invoking it.
 
-<a name="A7"></a>
+<a name="enable_disable_push_access_temporarily"></a>
 
 #### enable/disable push access temporarily
 
@@ -226,7 +226,7 @@ in doc/2.  You need code like this in `update.secondary` (don't forget to
 
     exit 0
 
-<a name="A8"></a>
+<a name="bonus_restricted_admin"></a>
 
 #### (bonus) restricted admin
 

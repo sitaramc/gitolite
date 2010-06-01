@@ -2,21 +2,21 @@
 
 In this document:
 
-  * <a href="#A1">the most common problems that an admin will see</a>
-  * <a href="#A2">basic ssh troubleshooting</a>
-      * <a href="#A3">passphrases versus passwords</a>
-      * <a href="#A4">ssh-agent problems</a>
-      * <a href="#A5">basic ssh troubleshooting for the main admin</a>
-      * <a href="#A6">basic ssh troubleshooting for a normal user</a>
-  * <a href="#A7">windows issues</a>
-  * <a href="#A8">details</a>
-      * <a href="#A9">files on the server</a>
-      * <a href="#A10">files on client</a>
-      * <a href="#A11">why two keys on client</a>
-  * <a href="#A12">some other tips and tricks</a>
-      * <a href="#A13">giving shell access to gitolite users</a>
-      * <a href="#A14">losing your admin key</a>
-      * <a href="#A15">simulating ssh-copy-id</a>
+  * <a href="#the_most_common_problems_that_an_admin_will_see">the most common problems that an admin will see</a>
+  * <a href="#basic_ssh_troubleshooting">basic ssh troubleshooting</a>
+      * <a href="#passphrases_versus_passwords">passphrases versus passwords</a>
+      * <a href="#ssh_agent_problems">ssh-agent problems</a>
+      * <a href="#basic_ssh_troubleshooting_for_the_main_admin">basic ssh troubleshooting for the main admin</a>
+      * <a href="#basic_ssh_troubleshooting_for_a_normal_user">basic ssh troubleshooting for a normal user</a>
+  * <a href="#windows_issues">windows issues</a>
+  * <a href="#details">details</a>
+      * <a href="#files_on_the_server">files on the server</a>
+      * <a href="#files_on_client">files on client</a>
+      * <a href="#why_two_keys_on_client">why two keys on client</a>
+  * <a href="#some_other_tips_and_tricks">some other tips and tricks</a>
+      * <a href="#giving_shell_access_to_gitolite_users">giving shell access to gitolite users</a>
+      * <a href="#losing_your_admin_key">losing your admin key</a>
+      * <a href="#simulating_ssh_copy_id">simulating ssh-copy-id</a>
 
 ----
 
@@ -33,7 +33,7 @@ In addition to both these documents, there's now a program called
 `sshkeys-lint` that you can run on your client.  Run it without arguments to
 get help on how to run it and what inputs it needs.
 
-<a name="A1"></a>
+<a name="the_most_common_problems_that_an_admin_will_see"></a>
 
 ### the most common problems that an admin will see
 
@@ -85,7 +85,7 @@ the repo and clones ok.  But when you push, gitolite's **update hook** kicks
 in, and fails to run because you some of the environment variables it is
 expecting are not present.
 
-<a name="A2"></a>
+<a name="basic_ssh_troubleshooting"></a>
 
 ### basic ssh troubleshooting
 
@@ -98,7 +98,7 @@ username* of the admin.
 Unless specifically mentioned, all these commands are run on the user's or
 admin's workstation, not on the server.
 
-<a name="A3"></a>
+<a name="passphrases_versus_passwords"></a>
 
 #### passphrases versus passwords
 
@@ -119,7 +119,7 @@ The second is to use `ssh-agent` (or `keychain`, which in turn uses
 `ssh-agent`) or something like that to manage your keys.  Other than the next
 section, further discussion of this is out of scope of this document.
 
-<a name="A4"></a>
+<a name="ssh_agent_problems"></a>
 
 #### ssh-agent problems
 
@@ -145,7 +145,7 @@ all, ssh will only use those keys.  Even if you explicitly specify an unlisted
 key using `ssh -i` or an `identityfile` directive in the config file, it won't
 use it.
 
-<a name="A5"></a>
+<a name="basic_ssh_troubleshooting_for_the_main_admin"></a>
 
 #### basic ssh troubleshooting for the main admin
 
@@ -215,7 +215,7 @@ from scratch:
 
 That's a long sequence but it should work.
 
-<a name="A6"></a>
+<a name="basic_ssh_troubleshooting_for_a_normal_user"></a>
 
 #### basic ssh troubleshooting for a normal user
 
@@ -234,7 +234,7 @@ you had command line access to the server *before* you were added as a
 gitolite user.  If you send that same key to your gitolite admin to include in
 the admin repo, it won't work.  For reasons why, see below.
 
-<a name="A7"></a>
+<a name="windows_issues"></a>
 
 ### windows issues
 
@@ -252,13 +252,11 @@ link, or in contrib/ if it's a longer piece of text.
 
 <a name="details"></a>
 
-<a name="A8"></a>
-
 ### details
 
 Here's how it all hangs together.
 
-<a name="A9"></a>
+<a name="files_on_the_server"></a>
 
 #### files on the server
 
@@ -290,7 +288,7 @@ Here's how it all hangs together.
     argument `sitaram`.  This is how gitolite is invoked, (and is told the
     user logging in is "sitaram").
 
-<a name="A10"></a>
+<a name="files_on_client"></a>
 
 #### files on client
 
@@ -360,9 +358,7 @@ Here's how it all hangs together.
     now works as expected, invoking the special keypair instead of the default
     one.
 
-<a name="twokeys"></a>
-
-<a name="A11"></a>
+<a name="why_two_keys_on_client"></a>
 
 #### why two keys on client
 
@@ -429,13 +425,11 @@ that should have enough info to get you going (but it helps to know ssh well):
 
 That should do it.
 
-<a name="complex"></a>
-
-<a name="A12"></a>
+<a name="some_other_tips_and_tricks"></a>
 
 ### some other tips and tricks
 
-<a name="A13"></a>
+<a name="giving_shell_access_to_gitolite_users"></a>
 
 #### giving shell access to gitolite users
 
@@ -463,7 +457,7 @@ access would not manage to get himself shell access.
 Giving someone shell access requires that you should have shell access in the
 first place, so the simplest way is to enable it from the server side only.
 
-<a name="A14"></a>
+<a name="losing_your_admin_key"></a>
 
 #### losing your admin key
 
@@ -473,7 +467,7 @@ gitolite-admin repository with a fresh key, take a look at the
 of course.  The top of the script has useful information on how to use it and
 what it needs.
 
-<a name="A15"></a>
+<a name="simulating_ssh_copy_id"></a>
 
 #### simulating ssh-copy-id
 

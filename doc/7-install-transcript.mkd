@@ -20,15 +20,15 @@ you have to run it on your workstation, NOT on the server!**
 
 In this document:
 
-  * <a href="#A1">create userids on server and client (optional)</a>
-  * <a href="#A2">get pubkey access from client to server</a>
-  * <a href="#A3">get gitolite source</a>
-  * <a href="#A4">install gitolite</a>
-  * <a href="#A5">examine what you have</a>
+  * <a href="#create_userids_on_server_and_client_optional_">create userids on server and client (optional)</a>
+  * <a href="#get_pubkey_access_from_client_to_server">get pubkey access from client to server</a>
+  * <a href="#get_gitolite_source">get gitolite source</a>
+  * <a href="#install_gitolite">install gitolite</a>
+  * <a href="#examine_what_you_have">examine what you have</a>
 
 ----
 
-<a name="A1"></a>
+<a name="create_userids_on_server_and_client_optional_"></a>
 
 ### create userids on server and client (optional)
 
@@ -75,7 +75,7 @@ because I'm not showing the actual "vi" session):
 
 ----
 
-<a name="A2"></a>
+<a name="get_pubkey_access_from_client_to_server"></a>
 
 ### get pubkey access from client to server
 
@@ -126,7 +126,7 @@ Double check to make sure you can log on to `git@server` without a password:
 
 ----
 
-<a name="A3"></a>
+<a name="get_gitolite_source"></a>
 
 ### get gitolite source
 
@@ -138,7 +138,7 @@ Double check to make sure you can log on to `git@server` without a password:
     Receiving objects: 100% (1157/1157), 270.08 KiB | 61 KiB/s, done.
     Resolving deltas: 100% (756/756), done.
 
-<a name="A4"></a>
+<a name="install_gitolite"></a>
 
 ### install gitolite
 
@@ -209,7 +209,7 @@ install mode that allows you to change the defaults etc.
 
 ----
 
-<a name="A5"></a>
+<a name="examine_what_you_have"></a>
 
 ### examine what you have
 

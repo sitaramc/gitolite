@@ -8,15 +8,15 @@ given branch.
 
 In this document:
 
-  * <a href="#A1">what</a>
-  * <a href="#A2">why</a>
-  * <a href="#A3">other features</a>
-  * <a href="#A4">security</a>
-  * <a href="#A5">contact and license</a>
+  * <a href="#what">what</a>
+  * <a href="#why">why</a>
+  * <a href="#other_features">other features</a>
+  * <a href="#security">security</a>
+  * <a href="#contact_and_license">contact and license</a>
 
 ----
 
-<a name="A1"></a>
+<a name="what"></a>
 
 ### what
 
@@ -33,7 +33,7 @@ requiring root permissions, and with no additional software than git itself
 and perl.  It also has several other neat features described below and
 elsewhere in the [doc/][docs] directory.
 
-<a name="A2"></a>
+<a name="why"></a>
 
 ### why
 
@@ -80,7 +80,7 @@ Gitolite does away with all this:
     read-write access, not only at the repository level, but at the branch
     level within repositories.
 
-<a name="A3"></a>
+<a name="other_features"></a>
 
 ### other features
 
@@ -114,7 +114,7 @@ detail somewhere in gitolite's [doc/][docs] subdirectory.
   * specify repos using patterns (patterns may include creator's name)
   * define powerful operations on the server side, even github-like forking
 
-<a name="A4"></a>
+<a name="security"></a>
 
 ### security
 
@@ -136,7 +136,7 @@ details, looking for the word "security".
 
 ----
 
-<a name="A5"></a>
+<a name="contact_and_license"></a>
 
 ### contact and license
 

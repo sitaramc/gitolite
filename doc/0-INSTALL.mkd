@@ -2,32 +2,32 @@
 
 In this document:
 
-  * <a href="#A1">please read this first</a>
-      * <a href="#A2">important notes</a>
-      * <a href="#A3">conventions used</a>
-      * <a href="#A4">requirements</a>
-          * <a href="#A5">client side</a>
-          * <a href="#A6">server side</a>
-  * <a href="#A7">installation and setup</a>
-      * <a href="#A8">(package method) directly on the server, using RPM/DEB</a>
-      * <a href="#A9">(root method) directly on the server, manually, with root access</a>
-      * <a href="#A10">(non-root method) directly on the server, manually, without root access</a>
-      * <a href="#A11">(from-client method) install from the client to the server</a>
-  * <a href="#A12">special cases -- multiple gitolite servers</a>
-      * <a href="#A13">package method and root method</a>
-      * <a href="#A14">from-client method</a>
-  * <a href="#A15">upgrading</a>
-  * <a href="#A16">uninstalling</a>
-      * <a href="#A17">cleaning out a botched install</a>
-      * <a href="#A18">uninstalling gitolite completely</a>
+  * <a href="#please_read_this_first">please read this first</a>
+      * <a href="#important_notes">important notes</a>
+      * <a href="#conventions_used">conventions used</a>
+      * <a href="#requirements">requirements</a>
+          * <a href="#client_side">client side</a>
+          * <a href="#server_side">server side</a>
+  * <a href="#installation_and_setup">installation and setup</a>
+      * <a href="#package_method_directly_on_the_server_using_RPM_DEB">(package method) directly on the server, using RPM/DEB</a>
+      * <a href="#root_method_directly_on_the_server_manually_with_root_access">(root method) directly on the server, manually, with root access</a>
+      * <a href="#non_root_method_directly_on_the_server_manually_without_root_access">(non-root method) directly on the server, manually, without root access</a>
+      * <a href="#from_client_method_install_from_the_client_to_the_server">(from-client method) install from the client to the server</a>
+  * <a href="#special_cases_multiple_gitolite_servers">special cases -- multiple gitolite servers</a>
+      * <a href="#package_method_and_root_method">package method and root method</a>
+      * <a href="#from_client_method">from-client method</a>
+  * <a href="#upgrading">upgrading</a>
+  * <a href="#uninstalling">uninstalling</a>
+      * <a href="#cleaning_out_a_botched_install">cleaning out a botched install</a>
+      * <a href="#uninstalling_gitolite_completely">uninstalling gitolite completely</a>
 
 ----
 
-<a name="A1"></a>
+<a name="please_read_this_first"></a>
 
 ### please read this first
 
-<a name="A2"></a>
+<a name="important_notes"></a>
 
 #### important notes
 
@@ -44,7 +44,7 @@ Please make sure you understand the following points first.
     To make matters worse, ssh problems in gitolite don't always look like ssh
     problems.  See [doc/6-ssh-troubleshooting.mkd][doc6] for help.
 
-<a name="A3"></a>
+<a name="conventions_used"></a>
 
 #### conventions used
 
@@ -52,11 +52,11 @@ We assume the admin user is "sitaram", and his workstation is called "client".
 The hosting user is "git", and the server is called "server".  Substitute your
 values as needed.
 
-<a name="A4"></a>
+<a name="requirements"></a>
 
 #### requirements
 
-<a name="A5"></a>
+<a name="client_side"></a>
 
 ##### client side
 
@@ -68,7 +68,7 @@ values as needed.
     shell is needed
       * again, msysgit on Windows is fine
 
-<a name="A6"></a>
+<a name="server_side"></a>
 
 ##### server side
 
@@ -81,11 +81,11 @@ values as needed.
   * perl (but since git requires it anyway, you probably have it)
   * openssh or any ssh that can understand the `authorized_keys` file format
 
-<a name="A7"></a>
+<a name="installation_and_setup"></a>
 
 ### installation and setup
 
-<a name="A8"></a>
+<a name="package_method_directly_on_the_server_using_RPM_DEB"></a>
 
 #### (package method) directly on the server, using RPM/DEB
 
@@ -99,7 +99,7 @@ values as needed.
 
   * on the client, run `cd; git clone git@server:gitolite-admin`
 
-<a name="A9"></a>
+<a name="root_method_directly_on_the_server_manually_with_root_access"></a>
 
 #### (root method) directly on the server, manually, with root access
 
@@ -119,7 +119,7 @@ values as needed.
 
   * on the client, run `cd; git clone git@server:gitolite-admin`
 
-<a name="A10"></a>
+<a name="non_root_method_directly_on_the_server_manually_without_root_access"></a>
 
 #### (non-root method) directly on the server, manually, without root access
 
@@ -147,7 +147,7 @@ server so that if you screw up the keys you can still get on, or be able to
 
   * on the client, run `cd; git clone git@server:gitolite-admin`
 
-<a name="A11"></a>
+<a name="from_client_method_install_from_the_client_to_the_server"></a>
 
 #### (from-client method) install from the client to the server
 
@@ -162,11 +162,11 @@ documentation.
 This method is verbosely documented in [doc/7-install-transcript.mkd][doc7],
 including *outputs* of the commands concerned.
 
-<a name="A12"></a>
+<a name="special_cases_multiple_gitolite_servers"></a>
 
 ### special cases -- multiple gitolite servers
 
-<a name="A13"></a>
+<a name="package_method_and_root_method"></a>
 
 #### package method and root method
 
@@ -190,7 +190,7 @@ to have a command line on the server, so don't give them the passwords if you
 don't need to -- the pubkey will allow them to be gitolite admins on their
 domain, and that's quite enough for normal operations.
 
-<a name="A14"></a>
+<a name="from_client_method"></a>
 
 #### from-client method
 
@@ -210,7 +210,7 @@ have been created as respective clones.  Or you can re-clone elsewhere:
     cd ~/admin1; git clone gitolite_server_1:gitolite-admin.git
     cd ~/admin2; git clone gitolite_server_2:gitolite-admin.git
 
-<a name="A15"></a>
+<a name="upgrading"></a>
 
 ### upgrading
 
@@ -222,11 +222,11 @@ arguments!
 Also, remember that some new features may require additional settings in your
 `~/.gitolite.rc` file.
 
-<a name="A16"></a>
+<a name="uninstalling"></a>
 
 ### uninstalling
 
-<a name="A17"></a>
+<a name="cleaning_out_a_botched_install"></a>
 
 #### cleaning out a botched install
 
@@ -244,7 +244,7 @@ here's how to clean the slate.
       * remove `~/.gitolite`, `~/.gitolite.rc` and
         `~/repositories/gitolite-admin.git`
 
-<a name="A18"></a>
+<a name="uninstalling_gitolite_completely"></a>
 
 #### uninstalling gitolite completely
 

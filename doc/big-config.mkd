@@ -2,13 +2,13 @@
 
 In this document:
 
-  * <a href="#A1">when/why do we need it?</a>
-  * <a href="#A2">how do we use it?</a>
-  * <a href="#A3">summary of settings in RC file</a>
-  * <a href="#A4">what are the downsides?</a>
-  * <a href="#A5">(extra coolness) usergroups and LDAP/similar tools</a>
+  * <a href="#when_why_do_we_need_it_">when/why do we need it?</a>
+  * <a href="#how_do_we_use_it_">how do we use it?</a>
+  * <a href="#summary_of_settings_in_RC_file">summary of settings in RC file</a>
+  * <a href="#what_are_the_downsides_">what are the downsides?</a>
+  * <a href="#extra_coolness_usergroups_and_LDAP_similar_tools">(extra coolness) usergroups and LDAP/similar tools</a>
 
-<a name="A1"></a>
+<a name="when_why_do_we_need_it_"></a>
 
 ### when/why do we need it?
 
@@ -95,7 +95,7 @@ Phew!
 You can imagine what that does when you have 10,000 users and 10,000 repos.
 Let's just say it's not pretty :)
 
-<a name="A2"></a>
+<a name="how_do_we_use_it_"></a>
 
 ### how do we use it?
 
@@ -142,7 +142,7 @@ configuration, the compiled file looks like this:
 That's a lot smaller, and allows orders of magintude more repos and groups to
 be supported.
 
-<a name="A3"></a>
+<a name="summary_of_settings_in_RC_file"></a>
 
 ### summary of settings in RC file
 
@@ -162,7 +162,7 @@ you push the gitolite-admin repo with changes.
 
 [gw]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#gitweb
 
-<a name="A4"></a>
+<a name="what_are_the_downsides_"></a>
 
 ### what are the downsides?
 
@@ -176,7 +176,7 @@ subset of the allowed @fragname, which would work normally, do not work now).
 (If you didn't understand all that, you're probably not using delegation, so
 feel free to ignore it!)
 
-<a name="A5"></a>
+<a name="extra_coolness_usergroups_and_LDAP_similar_tools"></a>
 
 ### (extra coolness) usergroups and LDAP/similar tools
 
