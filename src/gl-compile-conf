@@ -267,7 +267,15 @@ sub parse_conf_file
                 }
                 for my $user (@users)
                 {
-                    $user_list{$user}++;    # only to catch lint, see later
+                    # lint check, to catch pubkey/username typos
+                    if ($user =~ /^@/ and $user ne '@all') {
+                        # this is a usergroup, not a normal user; happens with GL_BIG_CONFIG
+                        if (exists $groups{$user}) {
+                            $user_list{$_}++ for keys %{ $groups{$user} };
+                        }
+                    } else {
+                        $user_list{$user}++;
+                    }
 
                     # for 1st level check (see faq/tips doc)
                     $repos{$repo}{C}{$user} = 1, next if $perms eq 'C';
