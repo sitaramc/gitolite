@@ -324,9 +324,10 @@ sub report_basic
     &report_version($GL_ADMINDIR, $user);
     print "\rthe gitolite config gives you the following access:\r\n";
     for my $r (sort keys %repos) {
-        if ($r =~ $REPONAME_PATT) {
+        if ($r =~ $REPONAME_PATT and $r !~ /\bCREAT[EO]R\b/) {
             &parse_acl($GL_CONF_COMPILED, $r, "NOBODY",      "NOBODY", "NOBODY");
         } else {
+            $r =~ s/\bCREAT[EO]R\b/$user/g;
             &parse_acl($GL_CONF_COMPILED, $r, $ENV{GL_USER}, "NOBODY", "NOBODY");
         }
         # @all repos; meaning of read/write flags:
