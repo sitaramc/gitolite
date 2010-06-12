@@ -1,0 +1,14 @@
+#!/bin/bash
+
+export TESTDIR=$PWD
+
+rm -rf ~/junk.ga
+mv ~/gitolite-admin ~/junk.ga
+
+# install it
+src/gl-easy-install -q gitolite-test localhost tester
+
+# make the rollback.tar files on both sides
+cd
+tar cf rollback.tar gitolite-admin
+ssh gitolite-test@localhost tar cf rollback.tar .ssh .gitolite .gitolite.rc repositories gitolite-install

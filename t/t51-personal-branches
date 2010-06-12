@@ -1,0 +1,88 @@
+# vim: syn=sh:
+for wr in 0 1
+do
+    for bc in 0 1
+    do
+        cd $TESTDIR
+        $TESTDIR/rollback
+        editrc GL_WILDREPOS $wr
+        editrc GL_BIG_CONFIG $bc
+
+        # ----------
+
+        name "INTERNAL"
+        echo "
+            @staff = u1 u2 u3 u4 u5 u6
+            repo  foo
+                  RW+                       = u1 u2
+                  RW+   personal/USER/      = u3 u4
+                  RW    temp                = u5 u6
+        " | ugc
+
+        cd ~/td
+        runlocal git clone u1:foo
+
+        cd foo
+        mdc; mdc; mdc; mdc; mdc
+
+        name "u1 and u2 can push"
+        runlocal git push origin master
+        expect_push_ok "master -> master"
+        runlocal git push u2:foo master:personal/u1/foo
+        expect_push_ok "master -> personal/u1/foo"
+        runlocal git push origin master:personal/u2/foo
+        expect_push_ok "master -> personal/u2/foo"
+        runlocal git push u1:foo master:personal/u3/foo
+        expect_push_ok "master -> personal/u3/foo"
+
+        mdc;
+        name "u3 cant push u1/u4 personal branches"
+        runlocal git push u3:foo master:personal/u1/foo
+        expect "remote: W refs/heads/personal/u1/foo foo u3 DENIED by fallthru"
+        expect "\[remote rejected\] master -> personal/u1/foo (hook declined)"
+        expect "failed to push"
+        runlocal git push u3:foo master:personal/u4/foo
+        expect "remote: W refs/heads/personal/u4/foo foo u3 DENIED by fallthru"
+        expect "\[remote rejected\] master -> personal/u4/foo (hook declined)"
+        expect "failed to push"
+        name "u4 can push u4 personal branch"
+        runlocal git push u4:foo master:personal/u4/foo
+        expect_push_ok "master -> personal/u4/foo"
+        name "u5 push temp"
+        runlocal git push u5:foo master:temp
+        expect_push_ok "master -> temp"
+
+        runlocal git reset --hard HEAD^^^
+
+        name "u1 and u2 can rewind"
+        runlocal git push -f origin master
+        expect "master -> master (forced update)"
+        runlocal git push -f u2:foo master:personal/u1/foo
+        expect "master -> personal/u1/foo (forced update)"
+        runlocal git push -f origin master:personal/u2/foo
+        expect "master -> personal/u2/foo (forced update)"
+        runlocal git push -f u1:foo master:personal/u3/foo
+        expect "master -> personal/u3/foo (forced update)"
+
+        name "u3 cant rewind u1/u4 personal branches"
+        runlocal git reset --hard HEAD^; mdc
+        runlocal git push -f u3:foo master:personal/u1/foo
+        expect "remote: + refs/heads/personal/u1/foo foo u3 DENIED by fallthru"
+        expect "\[remote rejected\] master -> personal/u1/foo (hook declined)"
+        expect "failed to push"
+        runlocal git push -f u3:foo master:personal/u4/foo
+        expect "remote: + refs/heads/personal/u4/foo foo u3 DENIED by fallthru"
+        expect "\[remote rejected\] master -> personal/u4/foo (hook declined)"
+        expect "failed to push"
+        name "u4 can rewind u4 personal branch"
+        runlocal git push -f u4:foo master:personal/u4/foo
+        expect "master -> personal/u4/foo (forced update)"
+        name "u5 cant rewind temp"
+        runlocal git push -f u5:foo master:temp
+        expect "remote: + refs/heads/temp foo u5 DENIED by fallthru"
+        expect "\[remote rejected\] master -> temp (hook declined)"
+        expect "failed to push"
+
+        name INTERNAL
+    done
+done

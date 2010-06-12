@@ -1,0 +1,70 @@
+# vim: syn=sh:
+$TESTDIR/rollback
+
+# ----------
+name "basic push admin repo"
+echo "
+    repo aa
+        RW+     =   u1
+        RW      =   u2 u3
+" | ugc
+
+expect "To gitolite:gitolite-admin"
+expect "master -> master"
+
+name "basic create repo"
+expect "remote: Initialized empty Git repository in /home/gitolite-test/repositories/aa.git/"
+
+# ----------
+name "basic clone"
+cd ~/td
+runlocal git clone u1:aa u1aa
+expect "Initialized empty Git repository in /home/tester/td/u1aa/.git/"
+expect "warning: You appear to have cloned an empty repository"
+runlocal ls -ald u1aa
+expect "drwxr-xr-x 3 $USER $USER 4096 201.-..-.. ..:.. u1aa"
+
+# ----------
+name "basic clone deny"
+cd ~/td
+runlocal git clone u4:aa u4aa
+expect "R access for aa DENIED to u4"
+runlocal ls -ald u4aa
+expect "ls: cannot access u4aa: No such file or directory"
+
+# ----------
+name "basic push"
+cd ~/td/u1aa
+mdc
+runlocal git push origin HEAD
+expect "To u1:aa"
+expect "\[new branch\] *HEAD -> master"
+
+# ----------
+name "basic rewind"
+cd ~/td/u1aa
+mdc
+mdc
+mdc
+runlocal git push origin HEAD
+runlocal git reset --hard HEAD^
+mdc
+runlocal git push -f origin HEAD
+expect "+ .* HEAD -> master (forced update)"
+name "basic rewind log"
+taillog
+expect "\+.*aa.refs/heads/master.u1.refs/.\*"
+
+# ----------
+name "basic rewind deny"
+cd ~/td
+runlocal git clone u2:aa u2aa
+cd ~/td/u2aa
+mdc
+mdc
+mdc
+runlocal git push origin HEAD
+runlocal git reset --hard HEAD^
+mdc
+runlocal git push -f origin HEAD
+expect "remote: + refs/heads/master aa u2 DENIED by fallthru"

@@ -1,0 +1,51 @@
+# vim: syn=sh:
+for wr in 0 1
+do
+    for bc in 0 1
+    do
+        cd $TESTDIR
+        $TESTDIR/rollback
+        editrc GL_WILDREPOS $wr
+        editrc GL_BIG_CONFIG $bc
+
+        # ----------
+
+        name "INTERNAL"
+        echo "
+            @leads = u1 u2
+            @devs = u1 u2 u3 u4
+            repo    foo
+                RW+             =   @leads
+                -   CREATE_REF  =   @devs
+                RW+             =   @devs
+        " | ugc
+
+        cd ~/td
+        runlocal git clone u1:foo
+
+        cd foo
+        mdc; mdc; mdc; mdc; mdc
+
+        name "u1 can push master"
+        runlocal git push origin master
+        expect_push_ok "master -> master"
+
+        name "u2 can create newbr1"
+        runlocal git push u2:foo master:newbr1
+        expect_push_ok "master -> newbr1"
+
+        name "u3 can push newbr1"
+        mdc; mdc; mdc; mdc; mdc
+        runlocal git push u3:foo master:newbr1
+        expect_push_ok "master -> newbr1"
+
+        name "u4 canNOT push newbr3"
+        mdc; mdc; mdc; mdc; mdc
+        runlocal git push u3:foo master:newbr3
+        expect "remote: W refs/heads/CREATE_REF u3 DENIED by refs/heads/CREATE_REF"
+        expect "\[remote rejected\] master -> newbr3 (hook declined)"
+        expect "failed to push"
+
+        name INTERNAL
+    done
+done

@@ -1,0 +1,24 @@
+# vim: syn=sh:
+cd $TESTDIR
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG 1
+editrc GL_NO_DAEMON_NO_GITWEB 1
+catrc
+expect "GL_BIG_CONFIG *= *1;"
+
+# ----------
+
+name "first round"
+date | hl
+cat data/fedora.conf | ugc
+date | hl
+
+time sync
+
+name "second round"
+date | hl
+echo "
+repo foo
+RW+ = u1 u2
+" | ugc
+date | hl

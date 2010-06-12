@@ -1,0 +1,177 @@
+# vim: syn=sh:
+# ----------
+name "setup"
+echo "
+    @g1 = u1
+    @g2 = u2
+    @g3 = u3
+    repo aa
+        RW+                 =   @g1
+        RW                  =   @g2
+        RW+     master      =   @g3
+        RW      master      =   u4
+        -       master      =   u5
+        RW+     dev         =   u5
+        RW                  =   u5
+" | ugc
+
+# reasonably complex setup; we'll do everything from one repo though
+cd ~/td
+runlocal git clone u1:aa
+cd ~/td/aa
+mdc; mdc; mdc
+mdc; mdc; mdc
+mdc; mdc; mdc
+name "INTERNAL"
+runlocal git push origin HEAD
+expect "To u1:aa"
+expect "\* \[new branch\]      HEAD -> master"
+
+git branch dev
+git branch foo
+
+# u1 tries to rewind master; succeeds
+name "u1 rewind master succeed"
+runlocal git reset --hard HEAD^
+mdc
+runlocal git push origin +master
+expect "+ .* master -> master (forced update)"
+
+# u2 tries to rewind master; fails
+name "u2 rewind master fail"
+runlocal git reset --hard HEAD^
+mdc
+runlocal git push u2:aa +master
+expect "remote: + refs/heads/master aa u2 DENIED by fallthru"
+
+# u3 tries to rewind master; succeeds
+name "u3 rewind master succeed"
+runlocal git reset --hard HEAD^
+mdc
+runlocal git push u3:aa +master
+expect "+ .* master -> master (forced update)"
+
+# u4 tries to push master; succeeds
+name "u4 push master succeed"
+mdc
+runlocal git push u4:aa master
+expect "master -> master"
+
+# u4 then tries to rewind master; fails
+name "u4 rewind master fail"
+runlocal git reset --hard HEAD^
+runlocal git push u4:aa +master
+expect "remote: + refs/heads/master aa u4 DENIED by fallthru"
+
+# u3 and u4 try to push the other 2 branches; fail
+name "u3 and u4 / dev foo -- all 4 fail"
+runlocal git push u3:aa dev
+expect "remote: W refs/heads/dev aa u3 DENIED by fallthru"
+runlocal git push u4:aa dev
+expect "remote: W refs/heads/dev aa u4 DENIED by fallthru"
+runlocal git push u3:aa foo
+expect "remote: W refs/heads/foo aa u3 DENIED by fallthru"
+runlocal git push u4:aa foo
+expect "remote: W refs/heads/foo aa u4 DENIED by fallthru"
+
+# clean up for next set
+runlocal git push -f origin master dev foo
+
+# u5 tries to push master; fails
+name "u5 push master fail"
+mdc
+runlocal git push u5:aa master
+expect "remote: W refs/heads/master u5 DENIED by refs/heads/master"
+
+# u5 tries to rewind dev; succeeds
+name "u5 rewind dev succeed"
+runlocal git push u5:aa +dev^:dev
+expect "+ .* dev^ -> dev (forced update)"
+
+# u5 tries to rewind foo; fails
+name "u5 rewind foo fail"
+runlocal git push u5:aa +foo^:foo
+expect "remote: + refs/heads/foo aa u5 DENIED by fallthru"
+
+# u5 tries to push foo; succeeds
+name "INTERNAL"
+runlocal git checkout foo
+expect "Switched to branch 'foo'"
+
+name "u5 push foo succeed"
+mdc
+runlocal git push u5:aa foo
+expect "foo -> foo"
+
+# u1 tries to delete branch dev
+name "u1 delete branch dev succeed"
+runlocal git push origin :dev
+expect " - \[deleted\] *dev"
+
+# quietly push it back again
+name "INTERNAL"
+runlocal git push origin dev
+expect " * \[new branch\]      dev -> dev"
+
+# u1 tries to delete dev on a new setup
+name "INTERNAL"
+echo "
+    repo aa
+        RWD     dev         =   u4
+" | ugc
+expect "master -> master"
+
+# u1 tries to delete branch dev; fails
+name "u1 delete branch dev fail"
+runlocal git push origin :dev
+expect "remote: D refs/heads/dev aa u1 DENIED by fallthru"
+
+# u4 tries to delete branch dev; succeeds
+name "u4 delete branch dev succeed"
+runlocal git push u4:aa :dev
+expect " - \[deleted\] *dev"
+
+# ----------
+
+name "INTERNAL"
+echo "
+repo r1
+    RW  refs/heads/v[0-9]   = u1
+    RW  refs/heads          = tester
+" | ugc
+notexpect ABORT
+cd ~/td
+runlocal git clone gitolite:r1
+expect "Initialized empty Git repository in /home/tester/td/r1/.git/"
+cd ~/td/r1
+mdc; mdc; mdc
+mdc; mdc; mdc
+runlocal git push origin HEAD
+expect "\* \[new branch\]      HEAD -> master"
+runlocal git branch v1
+runlocal git push origin v1
+name "no deny rules -- push v1 succeeds"
+expect "\* \[new branch\]      v1 -> v1"
+
+name "INTERNAL"
+echo "
+repo r2
+    RW  refs/heads/v[0-9]   = u1
+    -   refs/heads/v[0-9]   = tester
+    RW  refs/heads          = tester
+" | ugc
+notexpect ABORT
+cd ~/td
+runlocal git clone gitolite:r2
+expect "Initialized empty Git repository in /home/tester/td/r2/.git/"
+cd ~/td/r2
+mdc; mdc; mdc
+mdc; mdc; mdc
+runlocal git push origin HEAD
+expect "\* \[new branch\]      HEAD -> master"
+runlocal git branch v1
+runlocal git push origin v1
+name "deny rules -- push v1 fails"
+expect "remote: W refs/heads/v1 tester DENIED by refs/heads/v\[0-9\]"
+
+name "INTERNAL"

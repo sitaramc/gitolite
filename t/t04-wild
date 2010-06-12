@@ -1,0 +1,18 @@
+# vim: syn=sh:
+# ----------
+
+for i in 0 1
+do
+    for j in students all
+    do
+        hl t04-wild with GL_WILDREPOS $i, C=@$j
+
+        cd $TESTDIR
+        $TESTDIR/rollback
+        editrc GL_BIG_CONFIG $i
+        editrc GL_WILDREPOS  1
+        . ./t04a-wild-$j
+
+        cd $TESTDIR
+    done
+done

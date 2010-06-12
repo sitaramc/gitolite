@@ -1,0 +1,93 @@
+# vim: syn=sh:
+for bc in 0 1
+do
+    cd $TESTDIR
+    $TESTDIR/rollback
+    editrc GL_WILDREPOS 1
+    editrc GL_BIG_CONFIG $bc
+
+    # ----------
+
+    name "INTERNAL"
+    echo "
+        @staff = u1 u2 u3
+        repo  foo/CREATOR/.+
+              C       = u1
+              RW+     = CREATOR
+              RW      = WRITERS
+              -       = @staff
+    " | ugc
+
+    cd ~/td
+    runlocal git clone u1:foo/u1/bar
+    expect "Initialized empty Git repository in /home/gitolite-test/repositories/foo/u1/bar.git/"
+
+    cd bar
+    mdc u1file1
+    runlocal git push origin master
+    expect "To u1:foo/u1/bar"
+    expect "\[new branch\]      master -> master"
+    echo RW u2 | runlocal ssh u1 setperms foo/u1/bar
+    runlocal ssh u1 getperms foo/u1/bar
+    expect "RW u2"
+    name "expand"
+    runlocal ssh u2 expand
+    expect "R  W.(u1).foo/u1/bar"
+
+    name "push"
+    cd ~/td
+    runlocal git clone u2:foo/u1/bar u2bar
+    expect "Initialized empty Git repository in /home/tester/td/u2bar/.git/"
+    cd u2bar
+    mdc u2file1
+    runlocal git push
+    expect "master -> master"
+    notexpect "DENIED"
+    notexpect "failed to push"
+
+    name "INTERNAL"
+
+    cd $TESTDIR
+    $TESTDIR/rollback
+    editrc GL_WILDREPOS 1
+    editrc GL_BIG_CONFIG $bc
+
+    # ----------
+
+    name "INTERNAL"
+    echo "
+        @staff = u1 u2 u3
+        repo  foo/CREATOR/.+
+              C       = u1
+              RW+     = CREATOR
+              -       = @staff
+              RW      = WRITERS
+    " | ugc -r
+
+    cd ~/td
+    runlocal git clone u1:foo/u1/bar
+    expect "Initialized empty Git repository in /home/gitolite-test/repositories/foo/u1/bar.git/"
+
+    cd bar
+    mdc u1file1
+    runlocal git push origin master
+    expect "To u1:foo/u1/bar"
+    expect "\[new branch\]      master -> master"
+    echo RW u2 | runlocal ssh u1 setperms foo/u1/bar
+    runlocal ssh u1 getperms foo/u1/bar
+    expect "RW u2"
+    name "expand"
+    runlocal ssh u2 expand
+    expect "R  W.(u1).foo/u1/bar"
+
+    name "push"
+    cd ~/td
+    runlocal git clone u2:foo/u1/bar u2bar
+    expect "Initialized empty Git repository in /home/tester/td/u2bar/.git/"
+    cd u2bar
+    mdc u2file1
+    runlocal git push
+    expect "remote: W refs/heads/master u2 DENIED by refs/.\*"
+
+    name INTERNAL
+done

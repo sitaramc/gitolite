@@ -1,0 +1,58 @@
+# vim: syn=sh:
+# ----------
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG 0
+
+name "base output with no groups"
+echo "
+    repo aa bb
+        RW+     =   u1
+        RW      =   u2 u3
+" | ugc
+
+catconf
+expect_filesame $TESTDIR/out/t01-repo-groups.1
+
+# ----------
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG 0
+
+name "output with eqvt repo groups"
+echo "
+    @g1 = aa bb
+    repo @g1
+        RW+     =   u1
+        RW      =   u2 u3
+" | ugc
+
+catconf
+expect_filesame $TESTDIR/out/t01-repo-groups.1
+
+# ----------
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG 1
+
+name "base output with no groups but GL_BIG_CONFIG on"
+echo "
+    repo aa bb
+        RW+     =   u1
+        RW      =   u2 u3
+" | ugc
+
+catconf
+expect_filesame $TESTDIR/out/t01-repo-groups.1
+
+# ----------
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG 1
+
+name "repo groups with GL_BIG_CONFIG on"
+echo "
+    @g1 = aa bb
+    repo @g1
+        RW+     =   @g1
+        RW      =   @g2
+" | ugc
+
+catconf
+expect_filesame $TESTDIR/out/t01-repo-groups.2

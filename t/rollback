@@ -1,0 +1,11 @@
+#!/bin/bash
+
+export TESTDIR=$PWD
+
+cd
+rm -rf gitolite-admin td
+tar xf rollback.tar
+mkdir td
+
+scp $TESTDIR/rollback.server gitolite-test@localhost:rollback
+ssh gitolite-test@localhost ./rollback

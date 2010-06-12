@@ -1,0 +1,11 @@
+# vim: syn=sh:
+# ----------
+
+for i in 0 1
+do
+    hl t05-delegation with GL_BIG_CONFIG $i
+
+    . ./t05a-delegation $i
+
+    cd $TESTDIR
+done

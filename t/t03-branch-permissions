@@ -1,0 +1,20 @@
+# vim: syn=sh:
+# ----------
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG 0
+
+echo ===== testing with GL_BIG_CONFIG set to 0 =====
+
+cd $TESTDIR
+. ./t03a-branch-permissions
+cd $TESTDIR
+
+# ----------
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG 1
+
+echo ===== testing with GL_BIG_CONFIG set to 1 =====
+
+cd $TESTDIR
+. ./t03a-branch-permissions
+cd $TESTDIR

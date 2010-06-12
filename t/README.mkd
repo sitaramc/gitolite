@@ -1,0 +1,79 @@
+# notes on the testing setup
+
+In this document:
+
+  * <a href="#terminology">terminology</a>
+  * <a href="#notes_and_background">notes and background</a>
+  * <a href="#quick_instructions_for_running_the_test_suite">quick instructions for running the test suite</a>
+  * <a href="#instructions_for_adding_new_tests">instructions for adding new tests</a>
+
+<a name="terminology"></a>
+
+### terminology
+
+    #define PW "patches welcome!"
+    #define TODO PW
+
+<a name="notes_and_background"></a>
+
+### notes and background
+
+  * all testing is done on one machine, using 2 userids
+
+  * test driver exits on the *first* failed test; no fancy counting here.
+    (PW).
+
+  * installs are done using "gl-easy-install".  As such, this test suite is
+    mainly meant for testing **the core (access control) functionality**, and
+    will not help you test the install/upgrade parts themselves.  Those are a
+    lot more difficult to test in an automated fashion, but luckily they also
+    change infrequently and can easily be tested manually when they do.
+    Errors in those are much more visible too.  (PW).
+
+  * the test driver has evolved as new scripts were added; you will see that
+    older scripts are a little less sophisticated.
+
+<a name="quick_instructions_for_running_the_test_suite"></a>
+
+### quick instructions for running the test suite
+
+  * create two brand new user IDs: tester and gitolite-test
+      * these are hard-coded, sorry.  (PW)
+      * give them some passwords
+      * allow ssh into gitolite-test in `/etc/ssh/sshd_config`; preferably use
+        a line like `AllowUsers gitolite-test@127.0.0.1` so that no one can
+        ssh in from outside
+
+  * prepare/push a bare clone of gitolite itself on /tmp so that the "tester"
+    userid can grab it painlessly
+
+        cd your-gitolite-working-repo
+        git clone --bare $PWD /tmp/gitolite                 # first time
+        git push -f --all /tmp/gitolite                     # subsequent times
+
+  * "su" to "tester" and clone/fetch the gitolite source:
+
+        cd $HOME; git clone /tmp/gitolite                   # first time
+        cd gitolite; git fetch origin                       # subsequent times
+
+  * checkout and "install" the branch you want to test (install from "tester"
+    userid to "gitolite-test" userid).  Example, if you want to test "pu"
+    branch:
+
+        git checkout -t origin/pu                           # if needed
+        git checkout -f pu; git reset --hard origin/pu      # subsequent times
+        cd t        # THIS IS IMPORTANT (patches welcome, or will be fixed eventually!)
+        ./install-gitolite
+
+  * run all or some of the tests
+
+        ./test-driver.sh
+        # or
+        ./test-driver.sh t51
+
+<a name="instructions_for_adding_new_tests"></a>
+
+### instructions for adding new tests
+
+(TODO)
+

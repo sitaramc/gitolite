@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd
+rm -rf .ssh .gitolite .gitolite.rc repositories gitolite-install
+tar xf rollback.tar

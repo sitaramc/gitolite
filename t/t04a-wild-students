@@ -1,0 +1,142 @@
+# vim: syn=sh:
+# ----------
+
+name "INTERNAL"
+echo "
+    @prof       =   u1
+    @TAs        =   u2 u3
+    @students   =   u4 u5 u6
+
+    repo    foo/CREATOR/a[0-9][0-9]
+        C   =   @students
+        RW+ =   CREATOR
+        RW  =   WRITERS @TAs
+        R   =   READERS @prof
+
+" | ugc
+notexpect ABORT
+
+# reasonably complex setup; we'll do everything from one repo though
+cd ~/td
+
+name "u1 create fail"
+runlocal git clone u1:foo/u1/a01
+expect "R access for foo/u1/a01 DENIED to u1"
+
+name "u2 create fail"
+runlocal git clone u2:foo/u2/a02
+expect "R access for foo/u2/a02 DENIED to u2"
+
+name "u4 tries to create u2 repo"
+runlocal git clone u4:foo/u2/a12
+expect "R access for foo/u2/a12 DENIED to u4"
+
+name "line anchored regexes"
+runlocal git clone u4:foo/u4/a1234
+expect "R access for foo/u4/a1234 DENIED to u4"
+
+name "u4 tries to create his own repo"
+runlocal git clone u4:foo/u4/a12
+expect "Initialized empty Git repository in /home/gitolite-test/repositories/foo/u4/a12.git/"
+expect "warning: You appear to have cloned an empty repository."
+
+name "u4 push success"
+cd ~/td/a12
+mdc;mdc;mdc;mdc
+runlocal git push origin master
+expect "To u4:foo/u4/a12"
+expect "\* \[new branch\]      master -> master"
+
+name "u1 clone success"
+cd ~/td
+runlocal git clone u1:foo/u4/a12 u1a12
+expect "Initialized empty Git repository in /home/tester/td/u1a12/.git/"
+
+name "u1 push fail"
+cd ~/td/u1a12
+mdc; mdc
+runlocal git push
+expect "W access for foo/u4/a12 DENIED to u1"
+
+name "u2 clone success"
+cd ~/td
+runlocal git clone u2:foo/u4/a12 u2a12
+expect "Initialized empty Git repository in /home/tester/td/u2a12/.git/"
+
+name "u2 push success"
+cd ~/td/u2a12
+mdc; mdc
+runlocal git push
+expect "To u2:foo/u4/a12"
+expect "master -> master"
+
+name "u2 rewind fail"
+runlocal git push -f origin master^:master
+expect "remote: + refs/heads/master foo/u4/a12 u2 DENIED by fallthru"
+expect "remote: error: hook declined to update refs/heads/master"
+expect "To u2:foo/u4/a12"
+expect "\[remote rejected\] master^ -> master (hook declined)"
+expect "error: failed to push some refs to 'u2:foo/u4/a12'"
+
+name INTERNAL
+# u4 pull to sync up
+cd ~/td/a12
+runlocal git pull
+expect "Fast-forward"
+expect "From u4:foo/u4/a12"
+expect "master     -> origin/master"
+
+name "u4 rewind success"
+runlocal git reset --hard HEAD^
+runlocal git push -f
+expect "To u4:foo/u4/a12"
+expect "+ .* master -> master (forced update)"
+
+name "u5 clone fail"
+cd ~/td
+runlocal git clone u5:foo/u4/a12 u5a12
+expect "R access for foo/u4/a12 DENIED to u5"
+
+name "setperm"
+echo "
+R u5
+RW u6
+" | runlocal ssh u4 setperms foo/u4/a12
+expect_filesame $TESTDIR/out/t04-wild1.1
+
+name "getperms"
+runlocal ssh u4 getperms foo/u4/a12
+expect_filesame $TESTDIR/out/t04-wild1.2
+
+name "u5 clone success"
+cd ~/td
+runlocal git clone u5:foo/u4/a12 u5a12
+expect "Initialized empty Git repository in /home/tester/td/u5a12/.git/"
+
+name "u5 push fail"
+cd ~/td/u5a12
+mdc; mdc
+runlocal git push
+expect "W access for foo/u4/a12 DENIED to u5"
+
+name "u6 clone success"
+cd ~/td
+runlocal git clone u6:foo/u4/a12 u6a12
+expect "Initialized empty Git repository in /home/tester/td/u6a12/.git/"
+
+name "u6 push success"
+cd ~/td/u6a12
+mdc; mdc
+runlocal git push u6:foo/u4/a12
+expect "To u6:foo/u4/a12"
+expect "master -> master"
+
+name "u6 rewind fail"
+runlocal git push -f u6:foo/u4/a12 master^:master
+expect "remote: + refs/heads/master foo/u4/a12 u6 DENIED by fallthru"
+expect "remote: error: hook declined to update refs/heads/master"
+expect "To u6:foo/u4/a12"
+expect "\[remote rejected\] master^ -> master (hook declined)"
+expect "error: failed to push some refs to 'u6:foo/u4/a12'"
+
+name "INTERNAL"

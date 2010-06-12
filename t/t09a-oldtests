@@ -1,0 +1,50 @@
+# vim: syn=sh:
+cd $TESTDIR
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG $1
+
+name "bad repo name"
+echo "
+    repo abc*def
+        RW = tester
+" | ugc
+expect "To gitolite:gitolite-admin"
+expect "master -> master"
+[[ $1 == 0 ]] && expect "ABORTING"
+[[ $1 == 0 ]] && expect "bad reponame abc\*def or you forgot to set .GL_WILDREPOS"
+
+name "bad user name"
+echo "
+    repo abc
+        RW = sitaram*tester
+
+    repo abcdef
+        RW = sitaram
+" | ugc -r
+expect "ABORTING"
+expect "bad username sitaram\*tester"
+
+name "NAME deny"
+echo "
+    repo abc
+        RW                  = u1
+        -   NAME/i          = u1
+        RW  NAME/j          = u1
+        RW  NAME/u          = u1
+" | ugc -r
+notexpect "failed to push"
+
+cd ~/td
+runlocal git clone u1:abc
+expect "Initialized empty Git repository in /home/tester/td/abc/.git/"
+cd ~/td/abc
+mdc jfile; runlocal git push origin master
+expect "To u1:abc"
+expect "\[new branch\]      master -> master"
+mdc ufile; runlocal git push origin master
+expect "To u1:abc"
+expect "master -> master"
+mdc ifile; runlocal git push origin master
+expect "remote: W NAME/ifile u1 DENIED by NAME/i"
+
+name INTERNAL

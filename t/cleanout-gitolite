@@ -1,0 +1,22 @@
+#!/bin/bash
+
+export TESTDIR=$PWD
+
+[[ -f /tmp/$1.tar ]] || { echo need tar file 2>&1; exit 1; }
+
+# blank out the client side
+rm -rf ~/gitolite-admin
+# make sure we have the u1-u6 keys and the config to refer to them
+cp $TESTDIR/keys/config     ~/.ssh
+cp $TESTDIR/keys/u[1-6]*    ~/.ssh
+chmod 755 ~/.ssh ~/.ssh/config ~/.ssh/*pub
+chmod 600 ~/.ssh/u?
+
+# blank out the server side
+echo the next command MAY ask for a password
+ssh gitolite-test@localhost rm -rf .ssh .gitolite .gitolite.rc repositories gitolite-install
+echo the next command SHOULD ask for a password
+ssh-copy-id -i ~/.ssh/id_rsa gitolite-test@localhost
+echo the next command should NOT ask for a password
+
+cd ~/gitolite

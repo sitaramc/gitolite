@@ -1,0 +1,64 @@
+# vim: syn=sh:
+# ----------
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG 0
+
+name "base output with no groups"
+echo "
+    repo aa
+        RW+     =   u1
+        RW      =   u2 u3
+" | ugc
+
+catconf
+expect_filesame $TESTDIR/out/t02-user-groups.1
+
+# ----------
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG 0
+
+name "output with eqvt user groups"
+echo "
+    @g1 = u1
+    @g2 = u2 u3
+    @g3 = u4 u5 u6
+
+    repo aa
+        RW+     =   @g1
+        RW      =   @g2
+" | ugc
+
+catconf
+expect_filesame $TESTDIR/out/t02-user-groups.1
+
+# ----------
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG 1
+
+name "base output with no groups but GL_BIG_CONFIG on"
+echo "
+    repo aa
+        RW+     =   u1
+        RW      =   u2 u3
+" | ugc
+
+catconf
+expect_filesame $TESTDIR/out/t02-user-groups.1
+
+# ----------
+$TESTDIR/rollback
+editrc GL_BIG_CONFIG 1
+
+name "user groups with GL_BIG_CONFIG on"
+echo "
+    @g1 = u1
+    @g2 = u2 u3
+    @g3 = u4 u5 u6
+
+    repo aa
+        RW+     =   @g1
+        RW      =   @g2
+" | ugc
+
+catconf
+expect_filesame $TESTDIR/out/t02-user-groups.2

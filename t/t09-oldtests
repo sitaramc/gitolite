@@ -1,0 +1,11 @@
+# vim: syn=sh:
+# ----------
+
+for i in 0 1
+do
+    hl t09-oldtests with GL_BIG_CONFIG $i
+
+    . ./t09a-oldtests $i
+
+    cd $TESTDIR
+done
