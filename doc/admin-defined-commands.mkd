@@ -167,15 +167,6 @@ the client side:
 
 or some such incantation.
 
-**Implementation note**: you might notice that this script does not just do a
-"git clone ...".  This is because creating a repo has to be done via gitolite.
-Otherwise, hooks won't get setup, and the all-important "gl-creater" file
-showing who owns the repo won't get created.
-
-So now we have an actual command to just create a repo and do nothing else:
-`ssh git@server git-init \'reponame\'`.  [Yes; those single quotes are
-required.  Deal with it.]
-
 <a name="rmrepo"></a>
 
 #### rmrepo
