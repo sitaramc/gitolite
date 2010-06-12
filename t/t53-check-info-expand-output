@@ -1,0 +1,50 @@
+# vim: syn=sh:
+for wr in 0 1
+do
+    for bc in 0 1
+    do
+        cd $TESTDIR
+        $TESTDIR/rollback
+        editrc GL_WILDREPOS $wr
+        editrc GL_BIG_CONFIG $bc
+
+        # ----------
+
+        name "INTERNAL"
+        echo "
+            @leads = u1 u2
+            @devs = u1 u2 u3 u4
+            repo    foo/CREATOR/.+
+                C               =   @leads
+                RW+             =   CREATOR
+        " | ugc
+
+        cd ~/td
+
+        name "u1 makes a wildrepo"
+        runlocal git clone u1:foo/u1/bar
+        [ "$wr" = "0" ] && expect "R access for foo/u1/bar DENIED to u1"
+        [ "$wr" = "0" ] && expect "fatal: The remote end hung up unexpectedly"
+        [ "$wr" = "1" ] && expect "Initialized empty Git repository in /home/gitolite-test/repositories/foo/u1/bar.git/"
+
+        name "u3 fails to make a wildrepo"
+        runlocal git clone u3:foo/u3/baz
+        expect "R access for foo/u3/baz DENIED to u3"
+        expect "fatal: The remote end hung up unexpectedly"
+
+        name "u1 info"
+        runlocal ssh u1 info
+        expect "hello u1, the gitolite version here is v"
+        expect "@R.*@W.*testing"
+        [ "$wr" = "1" ] && expect "C.*R.*W.*foo/u1/\\.\\+"
+
+        name "u1 expand"
+        runlocal ssh u1 expand
+        [ "$wr" = "0" ] && expect "wildrepos disabled, sorry"
+        [ "$wr" = "1" ] && expect "hello u1, the gitolite version here is v"
+        [ "$wr" = "1" ] && expect "R.*W.*(u1).*foo/u1/bar"
+        [ "$wr" = "1" ] && expect "@R.*@W.*testing"
+
+        name INTERNAL
+    done
+done
