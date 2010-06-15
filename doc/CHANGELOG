@@ -2,8 +2,24 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
-  - v1.5.1 -- tries to eliminate the need to run gl-setup on data version
-    change, thus hopefully obsoleting the upgrade note for v1.5 (just below).
+  - some small but important doc updates
+  - adc "fork" now much faster (uses git clone -l)
+
+  - v1.5.2
+
+  - added test suite
+
+  - v1.5.1
+
+  - disallow creation of new refs if you want (while allowing push of the
+    same)
+
+  - adc "able" command added to contrib
+  - easy-install now takes a host-nickname parameter for convenience in
+    installing more than one gitolite server
+  - major doc revamp; contrib/autotoc added to make docs look nicer
+  - eliminate the need to run gl-setup on data version change, thus hopefully
+    obsoleting the upgrade note for v1.5 (just below).
 
   - v1.5 -- IMPORTANT UPGRADE NOTES below
 
@@ -61,7 +77,7 @@ the tags can help you position stuff approximately
 
   - contrib directory added
   - expand now lists non-wildcard repos also
-  - refs also have groups now (NYD)
+  - refs also have groups now
   - allow admins to get "info" for other users
 
   - wildrepos merged

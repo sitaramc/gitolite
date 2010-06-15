@@ -12,6 +12,7 @@ In this document:
       * <a href="#specifying_gitweb_and_daemon_access">specifying gitweb and daemon access</a>
       * <a href="#custom_hooks">custom hooks</a>
       * <a href="#hook_chaining">hook chaining</a>
+      * <a href="#environment_variables_available_to_hooks">environment variables available to hooks</a>
       * <a href="#custom_git_config">custom git config</a>
 
 ----
@@ -42,7 +43,9 @@ Once you've cloned it, you're ready to add users and repos.
     extension, like `sitaram.pub` or `john-smith.pub`.  You can also use
     periods and underscores
 
-  * copy all these `*.pub` files to `keydir` in your gitolite-admin repo clone
+  * copy all these `*.pub` files to `keydir` in your gitolite-admin repo
+    clone.  You can also organise them into various subdirectories of `keydir`
+    if you wish, since the entire tree is searched.
 
   * edit the config file (`conf/gitolite.conf` in your admin repo clone).  See
     `conf/example.conf` in the gitolite source for details on what goes in
@@ -158,6 +161,22 @@ exploit this :-)
 Finally, these names (`update.secondary` and `post-update.secondary`) are
 merely the defaults.  You can change them to anything you want; look in
 conf/example.gitolite.rc for details.
+
+<a name="environment_variables_available_to_hooks"></a>
+
+#### environment variables available to hooks
+
+The following environment variables are set, and may be useful for any custom
+processing you wish to do in your hook code:
+
+  * `GL_USER` -- the user doing the push
+  * `GL_REPO` -- the reponame
+  * `GL_REPO_BASE_ABS` -- the absolute base path where all the repos are kept
+
+The following variables are also set, but are generally less useful:
+
+  * `GL_BINDIR` -- where all the binaries live
+  * `GL_ADMINDIR` -- common directory for many gitolite things
 
 <a name="custom_git_config"></a>
 

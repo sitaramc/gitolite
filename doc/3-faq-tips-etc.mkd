@@ -27,6 +27,8 @@ In this document:
           * <a href="#support_for_git_installed_outside_default_PATH">support for git installed outside default PATH</a>
           * <a href="#personal_branches">"personal" branches</a>
           * <a href="#custom_hooks_and_custom_git_config">custom hooks and custom git config</a>
+      * <a href="#INconvenience_features">INconvenience features</a>
+          * <a href="#deleting_a_repo">deleting a repo</a>
       * <a href="#helping_with_gitweb">helping with gitweb</a>
           * <a href="#easier_to_specify_gitweb_description_and_gitweb_daemon_access">easier to specify gitweb "description" and gitweb/daemon access</a>
           * <a href="#easier_to_link_gitweb_authorisation_with_gitolite">easier to link gitweb authorisation with gitolite</a>
@@ -544,6 +546,29 @@ is still determined by the right hand side of course.
 You can specify hooks that you want to propagate to all repos, as well as
 per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
 `conf/example.conf` for details.
+
+<a name="INconvenience_features"></a>
+
+#### INconvenience features
+
+<a name="deleting_a_repo"></a>
+
+##### deleting a repo
+
+By design, there is no code in gitolite to *delete* a repo if the repo was
+specified by name in the config file.  (Wildcard repos *can* be deleted by the
+user; see [here][rmrepo] for details).
+
+[rmrepo]: http://github.com/sitaramc/gitolite/blob/pu/doc/admin-defined-commands.mkd#rmrepo
+
+If you *do* want to permanently delete a *non*-wildcard repo, here's what you
+do:
+
+  * remove the repo from the gitolite-admin repo clone's `conf/gitolite.conf`
+    file.  "add" the change, commit, and push.
+
+  * *then* remove the repo from `~/repositories` on the server (or whatever
+    you set `$GL_REPO_BASE` to in the `~/.gitolite.rc`)
 
 <a name="helping_with_gitweb"></a>
 
