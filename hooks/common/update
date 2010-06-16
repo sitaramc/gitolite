@@ -105,9 +105,8 @@ my $log_refex = check_ref(\@allowed_refs, $ENV{GL_REPO}, (shift @refs), $att_acc
 
 # if we returned at all, all the checks succeeded, so we log the action and exit 0
 
-&log_it("$ENV{GL_TS}  $att_acc\t" .
-    substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
-    "\t$reported_repo\t$ref\t$ENV{GL_USER}\t$log_refex\n");
+&log_it("", "$att_acc\t" .  substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
+    "\t$reported_repo\t$ref\t$log_refex");
 
 # now chain to the local admin defined update hook, if present
 $UPDATE_CHAINS_TO ||= 'hooks/update.secondary';

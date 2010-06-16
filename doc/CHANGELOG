@@ -2,8 +2,12 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v1.5.3
+
+  - log file format changed; minor backward compat breakage if you've been
+    doing any automated log processing
   - some small but important doc updates
-  - adc "fork" now much faster (uses git clone -l)
+  - adc "fork" now much faster and more space-efficient (uses git clone -l)
 
   - v1.5.2
 

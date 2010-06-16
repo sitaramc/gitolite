@@ -53,7 +53,7 @@ runlocal git push -f origin HEAD
 expect "+ .* HEAD -> master (forced update)"
 name "basic rewind log"
 taillog
-expect "\+.*aa.refs/heads/master.u1.refs/.\*"
+expect "	u1	.*	+	.*	aa	refs/heads/master	refs/.\*"
 
 # ----------
 name "basic rewind deny"

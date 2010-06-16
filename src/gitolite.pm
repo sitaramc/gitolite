@@ -58,8 +58,16 @@ sub wrap_open {
 }
 
 sub log_it {
+    my ($ip, $logmsg);
     open my $log_fh, ">>", $ENV{GL_LOG} or die "open log failed: $!\n";
-    print $log_fh @_;
+    # first space sep field is client ip, per "man ssh"
+    ($ip = $ENV{SSH_CONNECTION}) =~ s/ .*//;
+    # the first part of logmsg is the actual command used; it's either passed
+    # in via arg1, or picked up from SSH_ORIGINAL_COMMAND
+    $logmsg = $_[0] || $ENV{SSH_ORIGINAL_COMMAND}; shift;
+    # the rest of it upto the caller; we just dump it into the logfile
+    $logmsg .= "\t@_" if @_;
+    print $log_fh "$ENV{GL_TS}\t$ENV{GL_USER}\t$ip\t$logmsg\n";
     close $log_fh or die "close log failed: $!\n";
 }
 
@@ -474,7 +482,7 @@ sub special_cmd
         &ext_cmd_svnserve($SVNSERVE);
     } else {
         # if the user is allowed a shell, just run the command
-        &log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$ENV{GL_USER}\n");
+        &log_it();
         exec $ENV{SHELL}, "-c", $cmd if $shell_allowed;
 
         die "bad command: $cmd\n";
@@ -615,7 +623,7 @@ sub ext_cmd_rsync
         # that should "die" if there's a problem
 
     wrap_chdir($RSYNC_BASE);
-    &log_it("$ENV{GL_TS}\t$ENV{SSH_ORIGINAL_COMMAND}\t$ENV{GL_USER}\n");
+    &log_it();
     exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND};
 }
 
