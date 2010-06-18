@@ -553,6 +553,7 @@ while (<$authkeys_fh>)
 # options, in the standard ssh authorized_keys format), then the "end" line.
 print $newkeys_fh "# gitolite start\n";
 wrap_chdir($GL_KEYDIR);
+my @not_in_config;  # pubkeys exist but users don't appear in the config file
 for my $pubkey (`find . -type f`)
 {
     chomp($pubkey); $pubkey =~ s(^\./)();
@@ -574,9 +575,8 @@ for my $pubkey (`find . -type f`)
     $user =~ s(.*/)();                  # foo/bar/baz.pub -> baz.pub
     $user =~ s/(\@[^.]+)?\.pub$//;      # baz.pub, baz@home.pub -> baz
 
-    # lint check 2
-    print STDERR "WARNING: pubkey $pubkey exists but user $user not in config\n"
-        unless $user_list{$user};
+    # lint check 2 -- don't print right now; just collect the messages
+    push @not_in_config, "$user($pubkey)" unless $user_list{$user};
     $user_list{$user} = 'has pubkey';
     # apparently some pubkeys don't end in a newline...
     my $pubkey_content = `cat $pubkey`;
@@ -590,6 +590,14 @@ for my $pubkey (`find . -type f`)
     print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";
     print $newkeys_fh $pubkey_content;
 }
+
+# lint check 2 -- print less noisily
+if (@not_in_config > 10) {
+    print STDERR "$WARN You have " . scalar(@not_in_config) . " pubkeys that do not appear to be used in the config\n";
+} elsif (@not_in_config) {
+    print STDERR "$WARN the following users (pubkey files in parens) do not appear in the config file:\n", join(",", sort @not_in_config), "\n";
+}
+
 # lint check 3; a little more severe than the first two I guess...
 {
     my @no_pubkey =
