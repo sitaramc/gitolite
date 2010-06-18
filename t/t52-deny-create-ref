@@ -1,51 +1,105 @@
 # vim: syn=sh:
-for wr in 0 1
+for bc in 0 1
 do
-    for bc in 0 1
-    do
-        cd $TESTDIR
-        $TESTDIR/rollback
-        editrc GL_WILDREPOS $wr
-        editrc GL_BIG_CONFIG $bc
+    cd $TESTDIR
+    $TESTDIR/rollback
+    editrc GL_BIG_CONFIG $bc
 
-        # ----------
+    # ----------
 
-        name "INTERNAL"
-        echo "
-            @leads = u1 u2
-            @devs = u1 u2 u3 u4
-            repo    foo
-                RW+             =   @leads
-                -   CREATE_REF  =   @devs
-                RW+             =   @devs
-        " | ugc
+    # test "C" permissions
 
-        cd ~/td
-        runlocal git clone u1:foo
+    name "INTERNAL"
+    echo "
+        @leads = u1 u2
+        @devs = u1 u2 u3 u4
 
-        cd foo
-        mdc; mdc; mdc; mdc; mdc
+        repo    foo
+            RW+C                =   @leads
+            RW+C personal/USER/ =   @devs
+            RW                  =   @devs
+    " | ugc
 
-        name "u1 can push master"
-        runlocal git push origin master
-        expect_push_ok "master -> master"
+    cd ~/td
+    runlocal git clone u1:foo
 
-        name "u2 can create newbr1"
-        runlocal git push u2:foo master:newbr1
-        expect_push_ok "master -> newbr1"
+    cd foo
+    mdc; mdc; mdc; mdc; mdc
 
-        name "u3 can push newbr1"
-        mdc; mdc; mdc; mdc; mdc
-        runlocal git push u3:foo master:newbr1
-        expect_push_ok "master -> newbr1"
+    name "u1 can push/rewind master on foo"
+    runlocal git push origin master
+    expect_push_ok "master -> master"
+    runlocal git push -f origin master^^:master
+    expect_push_ok "master^^ -> master"
 
-        name "u4 canNOT push newbr3"
-        mdc; mdc; mdc; mdc; mdc
-        runlocal git push u3:foo master:newbr3
-        expect "remote: W refs/heads/CREATE_REF u3 DENIED by refs/heads/CREATE_REF"
-        expect "\[remote rejected\] master -> newbr3 (hook declined)"
-        expect "failed to push"
+    name "u2 can create newbr1 on foo"
+    runlocal git push u2:foo master:newbr1
+    expect_push_ok "master -> newbr1"
 
-        name INTERNAL
-    done
+    name "u3 can push newbr1 on foo"
+    mdc; mdc; mdc; mdc; mdc
+    runlocal git push u3:foo master:newbr1
+    expect_push_ok "master -> newbr1"
+
+    name "u4 canNOT create newbr2 on foo"
+    mdc; mdc; mdc; mdc; mdc
+    runlocal git push u3:foo master:newbr2
+    expect "remote: C refs/heads/newbr2 foo u3 DENIED by fallthru"
+    expect "hook declined"
+    expect "failed to push"
+
+    name "u4 can create/rewind personal/u4/newbr3 on foo"
+    mdc; mdc; mdc; mdc; mdc
+    runlocal git push u4:foo master:personal/u4/newbr3
+    expect_push_ok "master -> personal/u4/newbr3"
+    runlocal git push -f origin master^^:personal/u4/newbr3
+    expect_push_ok "master^^ -> personal/u4/newbr3"
+
+    # bar, without "C" permissions, should behave like old
+
+    name "INTERNAL"
+    echo "
+        @leads = u1 u2
+        @devs = u1 u2 u3 u4
+
+        repo    bar
+            RW+                 =   @leads
+            RW+  personal/USER/ =   @devs
+            RW                  =   @devs
+    " | ugc
+
+    cd ~/td
+    runlocal git clone u1:bar
+
+    cd bar
+    mdc; mdc; mdc; mdc; mdc
+
+    name "u1 can push/rewind master on bar"
+    runlocal git push origin master
+    expect_push_ok "master -> master"
+    runlocal git push -f origin master^^:master
+    expect_push_ok "master^^ -> master"
+
+    name "u2 can create newbr1 on bar"
+    runlocal git push u2:bar master:newbr1
+    expect_push_ok "master -> newbr1"
+
+    name "u3 can push newbr1 on bar"
+    mdc; mdc; mdc; mdc; mdc
+    runlocal git push u3:bar master:newbr1
+    expect_push_ok "master -> newbr1"
+
+    name "u4 can create newbr2 on bar"
+    mdc; mdc; mdc; mdc; mdc
+    runlocal git push u3:bar master:newbr2
+    expect_push_ok "master -> newbr2"
+
+    name "u4 can create/rewind personal/u4/newbr3 on bar"
+    mdc; mdc; mdc; mdc; mdc
+    runlocal git push u4:bar master:personal/u4/newbr3
+    expect_push_ok "master -> personal/u4/newbr3"
+    runlocal git push -f origin master^^:personal/u4/newbr3
+    expect_push_ok "master^^ -> personal/u4/newbr3"
+
+    name INTERNAL
 done

@@ -18,6 +18,7 @@ In this document:
           * <a href="#better_logging">better logging</a>
           * <a href="#exclude_or_deny_rules">"exclude" (or "deny") rules</a>
           * <a href="#separating_delete_and_rewind_rights">separating delete and rewind rights</a>
+          * <a href="#separating_create_and_push_rights">separating create and push rights</a>
           * <a href="#file_dir_NAME_based_restrictions">file/dir NAME based restrictions</a>
           * <a href="#delegating_parts_of_the_config_file">delegating parts of the config file</a>
       * <a href="#convenience_features">convenience features</a>
@@ -381,7 +382,28 @@ Note 2: a quick way to make this the default for *all* your repos is:
 where foo can be either the administrator, or if you can ignore the warning
 message when you push, a non-existant user.
 
+Note 3: you can combine this with the "create a branch" permissions described
+in the next section, as the example line in conf/example.conf shows.
+
 [sdrr]: http://groups.google.com/group/gitolite/browse_thread/thread/9f2b4358ce406d4c#
+
+<a name="separating_create_and_push_rights"></a>
+
+##### separating create and push rights
+
+This feature is similar in spirit to the previous one, so please read that
+section for a general understanding.
+
+Briefly:
+
+  * branch creation is permitted by using `RWC` or `RW+C` -- essentially the
+    current branch permissions with a `C` suffixed
+  * if a repo has a rule containing such a `C`, then the `RW` and `RW+`
+    permissions (for that repo) no longer permit creation of the ref matched;
+    they will only allow pushing to an existing ref
+
+Note: you can combine this with the "delete a branch" permissions described in
+the previous section, as the example line in conf/example.conf shows.
 
 <a name="file_dir_NAME_based_restrictions"></a>
 

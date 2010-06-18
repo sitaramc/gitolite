@@ -67,6 +67,8 @@ $att_acc = '+' if $oldsha ne $merge_base;
 # were any 'D' perms specified?  If they were, it means we have to separate
 # deletes from rewinds, so if the new sha is all 0's, change the '+' to a 'D'
 $att_acc = 'D' if ( $repos{$ENV{GL_REPO}}{DELETE_IS_D} or $repos{'@all'}{DELETE_IS_D} ) and $newsha eq '0' x 40;
+# similarly C for create a branch
+$att_acc = 'C' if ( $repos{$ENV{GL_REPO}}{CREATE_IS_C} or $repos{'@all'}{CREATE_IS_C} ) and $oldsha eq '0' x 40;
 
 my @allowed_refs;
 # @all repos: see comments in similar code in check_access

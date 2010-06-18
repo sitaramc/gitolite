@@ -291,6 +291,7 @@ sub parse_acl
     for my $r ('@all', @repo_plus) {
         my $dr = $repo; $dr = '@all' if $r eq '@all';
         $repos{$dr}{DELETE_IS_D} = 1 if $repos{$r}{DELETE_IS_D};
+        $repos{$dr}{CREATE_IS_C} = 1 if $repos{$r}{CREATE_IS_C};
         $repos{$dr}{NAME_LIMITS} = 1 if $repos{$r}{NAME_LIMITS};
 
         for my $u ('@all', "$gl_user - wild", @user_plus) {
