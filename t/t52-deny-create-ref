@@ -36,6 +36,11 @@ do
     runlocal git push u2:foo master:newbr1
     expect_push_ok "master -> newbr1"
 
+    name "u2 can create newtag on foo"
+    runlocal git tag newtag
+    runlocal git push u2:foo newtag
+    expect_push_ok "newtag -> newtag"
+
     name "u3 can push newbr1 on foo"
     mdc; mdc; mdc; mdc; mdc
     runlocal git push u3:foo master:newbr1
@@ -45,6 +50,13 @@ do
     mdc; mdc; mdc; mdc; mdc
     runlocal git push u3:foo master:newbr2
     expect "remote: C refs/heads/newbr2 foo u3 DENIED by fallthru"
+    expect "hook declined"
+    expect "failed to push"
+
+    name "u4 canNOT create newtag2 on foo"
+    runlocal git tag newtag2
+    runlocal git push u3:foo newtag2
+    expect "remote: C refs/tags/newtag2 foo u3 DENIED by fallthru"
     expect "hook declined"
     expect "failed to push"
 
@@ -84,6 +96,11 @@ do
     runlocal git push u2:bar master:newbr1
     expect_push_ok "master -> newbr1"
 
+    name "u2 can create newtag on bar"
+    runlocal git tag newtag
+    runlocal git push u2:bar newtag
+    expect_push_ok "newtag -> newtag"
+
     name "u3 can push newbr1 on bar"
     mdc; mdc; mdc; mdc; mdc
     runlocal git push u3:bar master:newbr1
@@ -93,6 +110,11 @@ do
     mdc; mdc; mdc; mdc; mdc
     runlocal git push u3:bar master:newbr2
     expect_push_ok "master -> newbr2"
+
+    name "u4 can create newtag2 on bar"
+    runlocal git tag newtag2
+    runlocal git push u3:bar newtag2
+    expect_push_ok "newtag2 -> newtag2"
 
     name "u4 can create/rewind personal/u4/newbr3 on bar"
     mdc; mdc; mdc; mdc; mdc
