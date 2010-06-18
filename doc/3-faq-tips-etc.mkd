@@ -18,7 +18,6 @@ In this document:
           * <a href="#better_logging">better logging</a>
           * <a href="#exclude_or_deny_rules">"exclude" (or "deny") rules</a>
           * <a href="#separating_delete_and_rewind_rights">separating delete and rewind rights</a>
-          * <a href="#separating_create_and_push_rights">separating create and push rights</a>
           * <a href="#file_dir_NAME_based_restrictions">file/dir NAME based restrictions</a>
           * <a href="#delegating_parts_of_the_config_file">delegating parts of the config file</a>
       * <a href="#convenience_features">convenience features</a>
@@ -383,40 +382,6 @@ where foo can be either the administrator, or if you can ignore the warning
 message when you push, a non-existant user.
 
 [sdrr]: http://groups.google.com/group/gitolite/browse_thread/thread/9f2b4358ce406d4c#
-
-<a name="separating_create_and_push_rights"></a>
-
-##### separating create and push rights
-
-[note: the documentation took longer to write than the code ;-)]
-
-Now you can disallow creation of new refs if you like.
-
-Normally, when you try to update a ref (push a branch or a tag), it's checked
-against all the refexes, and if none of them match for the operation you're
-trying (W or +), or it matches a "-", the operation is denied.
-
-That is, most refs are default "deny".
-
-`CREATE_REF` is a "fake" refex that controls the ability to *create* a branch,
-even if you are allowed to *push* changes to it.
-
-The right to create a ref (i.e., push a brand new one), however, defaults to
-"accept" unless a deny rule is found.  This is mainly for backward compat
-reasons, but also because this feature is rarely needed, so there's no point
-burdening everyone with having to create the opposite rule.
-
-So if you want to prevent someone from *creating* any branches that they
-otherwise *can* push, make sure that the first rule that applies to them is a
-`- CREATE_REF` rule, like line #3 below:
-
-    repo    foo
-        RW+             =   @leads
-        -   CREATE_REF  =   @devs
-        RW+             =   @devs
-
-One side effect is that you now can no longer have an *actual* branch called
-`CREATE_REF`.  Oh well, into each life some rain must fall!
 
 <a name="file_dir_NAME_based_restrictions"></a>
 

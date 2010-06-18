@@ -95,7 +95,7 @@ sub check_ref {
         # as far as *this* ref is concerned we're ok
         return $refex if ($ar->[2] =~ /\Q$perm/);
     }
-    die "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n" unless $ref eq 'refs/heads/CREATE_REF';
+    die "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n";
 }
 
 # ln -sf :-)

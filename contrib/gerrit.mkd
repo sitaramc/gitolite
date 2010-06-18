@@ -92,6 +92,10 @@ review stuff :)
 
   * gitolite doesnt do anything special to signed or annotated tags
 
+  * gitolite always allows creating a branch.  The only way to prevent that is
+    to list out allowed branches explicitly (make sure you end the refex with
+    a `$`!).
+
   * Force push is the same as delete: historically (and by default, even now)
     gitolite does the same .  However, I've only recently (and somewhat
     reluctantly) changed gitolite to allow treating these two separately.
