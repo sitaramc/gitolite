@@ -7,5 +7,5 @@ rm -rf gitolite-admin td
 tar xf rollback.tar
 mkdir td
 
-scp $TESTDIR/rollback.server gitolite-test@localhost:rollback
+scp -q $TESTDIR/rollback.server gitolite-test@localhost:rollback || { echo scp failed; exit 1; }
 ssh gitolite-test@localhost ./rollback

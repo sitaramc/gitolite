@@ -1,6 +1,6 @@
 # vim: syn=sh:
 # ----------
-$TESTDIR/rollback
+$TESTDIR/rollback || die "rollback failed"
 editrc GL_BIG_CONFIG 0
 
 name "base output with no groups"
@@ -14,7 +14,7 @@ catconf
 expect_filesame $TESTDIR/out/t02-user-groups.1
 
 # ----------
-$TESTDIR/rollback
+$TESTDIR/rollback || die "rollback failed"
 editrc GL_BIG_CONFIG 0
 
 name "output with eqvt user groups"
@@ -32,7 +32,7 @@ catconf
 expect_filesame $TESTDIR/out/t02-user-groups.1
 
 # ----------
-$TESTDIR/rollback
+$TESTDIR/rollback || die "rollback failed"
 editrc GL_BIG_CONFIG 1
 
 name "base output with no groups but GL_BIG_CONFIG on"
@@ -46,7 +46,7 @@ catconf
 expect_filesame $TESTDIR/out/t02-user-groups.1
 
 # ----------
-$TESTDIR/rollback
+$TESTDIR/rollback || die "rollback failed"
 editrc GL_BIG_CONFIG 1
 
 name "user groups with GL_BIG_CONFIG on"
@@ -62,3 +62,5 @@ echo "
 
 catconf
 expect_filesame $TESTDIR/out/t02-user-groups.2
+
+name INTERNAL

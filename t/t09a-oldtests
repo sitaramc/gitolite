@@ -1,6 +1,6 @@
 # vim: syn=sh:
 cd $TESTDIR
-$TESTDIR/rollback
+$TESTDIR/rollback || die "rollback failed"
 editrc GL_BIG_CONFIG $1
 
 name "bad repo name"

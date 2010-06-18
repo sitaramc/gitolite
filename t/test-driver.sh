@@ -152,9 +152,8 @@ arg1=$1; shift
 for testfile in ${arg1:-t??-}*
 do
     hl $testfile
-    . $testfile "$@"
+    . $testfile "$@" || die "$testfile failed"
     cd $TESTDIR
-    hl $testfile DONE
 done
 
 print_summary

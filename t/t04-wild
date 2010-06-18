@@ -8,7 +8,7 @@ do
         hl t04-wild with GL_WILDREPOS $i, C=@$j
 
         cd $TESTDIR
-        $TESTDIR/rollback
+        $TESTDIR/rollback || die "rollback failed"
         editrc GL_BIG_CONFIG $i
         editrc GL_WILDREPOS  1
         . ./t04a-wild-$j

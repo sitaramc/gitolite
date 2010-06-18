@@ -1,5 +1,5 @@
 # vim: syn=sh:
-$TESTDIR/rollback
+$TESTDIR/rollback || die "rollback failed"
 
 # ----------
 name "basic push admin repo"
@@ -68,3 +68,5 @@ runlocal git reset --hard HEAD^
 mdc
 runlocal git push -f origin HEAD
 expect "remote: + refs/heads/master aa u2 DENIED by fallthru"
+
+name INTERNAL

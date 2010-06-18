@@ -4,7 +4,7 @@ do
     for bc in 0 1
     do
         cd $TESTDIR
-        $TESTDIR/rollback
+        $TESTDIR/rollback || die "rollback failed"
         editrc GL_WILDREPOS $wr
         editrc GL_BIG_CONFIG $bc
 

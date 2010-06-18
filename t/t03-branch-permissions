@@ -1,6 +1,6 @@
 # vim: syn=sh:
 # ----------
-$TESTDIR/rollback
+$TESTDIR/rollback || die "rollback failed"
 editrc GL_BIG_CONFIG 0
 
 echo ===== testing with GL_BIG_CONFIG set to 0 =====
@@ -10,7 +10,7 @@ cd $TESTDIR
 cd $TESTDIR
 
 # ----------
-$TESTDIR/rollback
+$TESTDIR/rollback || die "rollback failed"
 editrc GL_BIG_CONFIG 1
 
 echo ===== testing with GL_BIG_CONFIG set to 1 =====
@@ -18,3 +18,5 @@ echo ===== testing with GL_BIG_CONFIG set to 1 =====
 cd $TESTDIR
 . ./t03a-branch-permissions
 cd $TESTDIR
+
+name INTERNAL
