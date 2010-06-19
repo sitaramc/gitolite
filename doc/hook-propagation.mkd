@@ -1,0 +1,44 @@
+# hook propagation in gitolite
+
+There have been some questions about how hooks propagate, and when.  I'll try
+and set out the logic here.
+
+First: realise that gitolite *wants to make sure* that all the hooks in your
+`hooks/common` directory get copied (symlinked, actually) to *every* repo that
+gets created.  **Not doing so is generally a security risk; because the
+primary purpose of gitolite is access control, people generally *want* hooks
+to run.**
+
+Here's how/when hooks are created/propagated:
+
+1.  anytime you do an install, gitolite trawls through *all* existing repos
+    (using the unix `find` command) and force-links all the hooks in all the
+    repos so they all get the latest and greatest hooks.
+
+2.  anytime you do a "compile" (meaning push changes to the admin repo),
+    gitolite looks through all the repos named in the config.  It first checks
+    if the repo exists, creating it if needed.  It then looks for a sentinel
+    file called "gitolite-hooked" (an empty file in the hooks directory).  If
+    it doesn't find it, it will assume that hooks need to be propagated.
+
+    This is because people often copy a repo from elsewhere, add it to the
+    config, and expect things to work.  Without this step, those repos don't
+    get the hooks, which is bad -- the access control would have failed
+    silently!
+
+3.  anytime a new repo is created, the same force-linking of hooks happens.
+    The 3 places a new repo is created are:
+
+      * the "compile" case mentioned above, where the admin added a normal
+        repo to the config and pushed
+
+      * the wildrepos case, where you have "C" permissions and the repo does
+        not already exist
+
+      * the `fork` command in `contrib/adc`.  In this case the hooks are
+        explicitly copied from the source repo using the `cp` command, not
+        using the code internal to gitolite.
+
+For people who do not want certain hooks to run for certain repos, one simple
+solution that will work right now is to check the value of `$GL_REPO` at the
+start of the hook, and `exit 0` based on what it contains/matches.
