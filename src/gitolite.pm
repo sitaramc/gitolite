@@ -327,6 +327,12 @@ sub report_basic
 {
     my($GL_ADMINDIR, $GL_CONF_COMPILED, $user) = @_;
 
+    # XXX The correct way is actually to give parse_acl another argument
+    # (defaulting to $ENV{GL_USER}, the value being used now).  But for now
+    # this will do, even though it's a bit of a kludge to get the basic access
+    # rights for some other user this way
+    local $ENV{GL_USER} = $user;
+
     &parse_acl($GL_CONF_COMPILED, "", "CREATOR", "READERS", "WRITERS");
 
     # send back some useful info if no command was given
@@ -469,8 +475,11 @@ sub special_cmd
         print "you also have shell access\r\n" if $shell_allowed;
     } elsif ($cmd =~ /^info\s+(.+)$/) {
         my @otherusers = split ' ', $1;
+
+        my($perm, $creator, $wild) = &repo_rights('gitolite-admin');
+        die "you can't ask for others' permissions\n" unless $perm =~ /W/;
+
         &parse_acl($GL_CONF_COMPILED);
-        die "you can't ask for others' permissions\n" unless $repos{'gitolite-admin'}{'R'}{$user};
         for my $otheruser (@otherusers) {
             warn("ignoring illegal username $otheruser\n"), next unless $otheruser =~ $USERNAME_PATT;
             &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $otheruser);
