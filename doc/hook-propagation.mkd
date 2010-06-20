@@ -1,7 +1,135 @@
 # hook propagation in gitolite
 
-There have been some questions about how hooks propagate, and when.  I'll try
-and set out the logic here.
+Advanced users need to know how hooks propagate, and when.  They also need to
+know where to place their hooks, and since there appear to be two places to
+put them, what takes precedence.  I'll try and set out the logic here.
+
+In this document:
+
+  * <a href="#hooks_used_by_gitolite">hooks used by gitolite</a>
+  * <a href="#where_do_I_the_admin_put_the_hooks_">**where** do I (the admin) put the hooks?</a>
+      * <a href="#the_from_client_method">the "from-client" method</a>
+      * <a href="#the_other_3_methods">the other 3 methods</a>
+          * <a href="#the_GL_PACKAGE_HOOKS_directory">the `GL_PACKAGE_HOOKS` directory</a>
+          * <a href="#the_HOME_gitolite_directory">the `$HOME/.gitolite` directory</a>
+      * <a href="#why_two_places_">why two places?</a>
+      * <a href="#special_case_the_non_root_method">special case: the "non-root" method</a>
+  * <a href="#when_do_hooks_propagate_">**when** do hooks propagate?</a>
+
+<a name="hooks_used_by_gitolite"></a>
+
+### hooks used by gitolite
+
+Gitolite uses only 2 hooks.  **All** repos have an `update` hook, without
+which there is no write-level access control (per-branch permissions).  The
+special **gitolite-admin** repo has a special `post-update` hook, which is
+required to do its, umm, special things, like running the "compile" script,
+etc.
+
+In addition there is a "sentinel file" -- an empty file called
+"gitolite-hooked".  We'll see later what this does.
+
+The final objective of all this is that each repo's `hooks/` directory should
+get all the hooks that it is meant to get.
+
+<a name="where_do_I_the_admin_put_the_hooks_"></a>
+
+### **where** do I (the admin) put the hooks?
+
+In general, **all** hooks go into the `hooks/common` directory.  Only the
+special `post-update` hook meant for the admin repo goes into
+`hooks/gitolite-admin`.
+
+Now we'll discuss the locations of these `hooks/common` and
+`hooks/gitolite-admin` directories.  This depends on which install method you
+used.
+
+(Please refer to [doc/0-INSTALL.mkd][0inst] for what these "methods" are).
+
+<a name="the_from_client_method"></a>
+
+#### the "from-client" method
+
+Let's get this out of the way first, because it is simple: if you're using the
+"from-client" method, there's only one place: the `hooks` directory in your
+gitolite clone on the client side.  This is where you run
+`src/gl-easy-install` from.  Nothing else in this section is relevant to this
+method; skip to the next section ("when do hooks propagate") if you installed
+using the "from-client" method.
+
+<a name="the_other_3_methods"></a>
+
+#### the other 3 methods
+
+<a name="the_GL_PACKAGE_HOOKS_directory"></a>
+
+##### the `GL_PACKAGE_HOOKS` directory
+
+You might recall that the "root", and "non-root" methods run a command called
+`gl-system-install`, the third argument of which is some directory of your
+choice (like maybe `/usr/share/gitolite/hooks`).  Even though it is not
+necessary to know this, internally this becomes the value of the
+`$GL_PACKAGE_HOOKS` variable, so in this document we will refer to that
+variable instead of the location (because you might choose any location you
+like for it).
+
+The "package" method also has the same property, except that the packager has
+already decided what that location is, and the package creation/install
+process does the equivalent of `gl-system-install`.
+
+So now we know there's a location called `$GL_PACKAGE_HOOKS` where you can
+place your hooks.
+
+<a name="the_HOME_gitolite_directory"></a>
+
+##### the `$HOME/.gitolite` directory
+
+You might also recall that, in these three methods, each **hosting user** has
+to run `gl-setup`.  This sets up, among other things, `$HOME/.gitolite`
+directory, which also contains a `hooks/` directory.
+
+So now there are two places you can put your hooks, apparently.
+
+<a name="why_two_places_"></a>
+
+#### why two places?
+
+Just think of the "package" and "root" methods for now, even if you're using
+the "non-root" method.
+
+In these two methods, it is reasonable to assume that the entire site (or
+server) has certain policies that they want to implement using hooks.  They
+want to enforce these hooks on *each hosting user*.  These hooks go into
+`$GL_PACKAGE_HOOKS`.
+
+Each hosting user then has the discretion to add his own hooks (modulo name
+clashes, which may necessitate hook chaining, etc., like we already do for the
+hooks that gitolite cares about).  He adds these hooks to his
+`$HOME/.gitolite/hooks` directory.
+
+When hooks propagate, the ones in `$GL_PACKAGE_HOOKS` override/overwrite the
+ones in `$HOME/.gitolite/hooks`.  Otherwise it wouldn't make sense; you
+wouldn't be able to enforce site-wide hooks.
+
+[NOTE: due to a minor quirk, the site-wide hooks in `$GL_PACKAGE_HOOKS` also
+get copied to `$HOME/.gitolite/hooks` when you "install".  I need to fix and
+thoroughly test this later; for now, just ignore the extra files you see in
+there; they're harmless/redundant (TODO)]
+
+<a name="special_case_the_non_root_method"></a>
+
+#### special case: the "non-root" method
+
+This method was created later, just piggy-backing on everything that already
+existed to cater to the "package" and "root" methods.  In this method, the
+`$GL_PACKAGE_HOOKS` is as accessible or under your control as
+`$HOME/.gitolite`, so it doesn't matter where you put your hooks.  I
+*strongly* suggest putting them in `$GL_PACKAGE_HOOKS` and ignoring
+`$HOME/.gitolite` completely.
+
+<a name="when_do_hooks_propagate_"></a>
+
+### **when** do hooks propagate?
 
 First: realise that gitolite *wants to make sure* that all the hooks in your
 `hooks/common` directory get copied (symlinked, actually) to *every* repo that
@@ -42,3 +170,6 @@ Here's how/when hooks are created/propagated:
 For people who do not want certain hooks to run for certain repos, one simple
 solution that will work right now is to check the value of `$GL_REPO` at the
 start of the hook, and `exit 0` based on what it contains/matches.
+
+[0inst]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd
+
