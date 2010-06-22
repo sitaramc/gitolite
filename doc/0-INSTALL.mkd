@@ -222,6 +222,9 @@ marked "(U)".  Also, if you're using either of the two methods that use the
 `src/gl-system-install` command, please make sure you give it the same
 arguments!
 
+If you've added any new hooks, please also run the next step (`gl-setup`)
+also.
+
 Also, remember that some new features may require additional settings in your
 `~/.gitolite.rc` file.
 
