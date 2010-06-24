@@ -607,7 +607,10 @@ for my $pubkey (`find . -type f`)
     # don't trust files with multiple lines (i.e., something after a newline)
     if ($pubkey_content =~ /\n./)
     {
-        print STDERR "WARNING: a pubkey file can only have one line (key); ignoring $pubkey\n";
+        print STDERR "WARNING: a pubkey file can only have one line (key); ignoring $pubkey\n" .
+                     "         If you want to add multiple public keys for a single user, use\n" .
+                     "         \"user\@host.pub\" file names.  See the \"one user, many keys\"\n" .
+                     "         section in doc/3-faq-tips-etc.mkd for details.\n";
         next;
     }
     print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";
