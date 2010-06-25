@@ -146,6 +146,14 @@ $GL_GITCONFIG_KEYS = "";
 #       $GL_GITCONFIG_KEYS = "foo\\..*";
 
 # --------------------------------------
+# ALLOW GITCONFIG KEYS EVEN FOR WILD REPOS
+#
+# This is an efficiency issue more than a security issue, since this requires
+# trawling through all of $REPO_BASE looking for stuff :)
+
+# $GL_GITCONFIG_WILD = 0;
+
+# --------------------------------------
 # EXTERNAL COMMAND HELPER -- HTPASSWD
 
 # security note: runs an external command (htpasswd) with specific arguments,

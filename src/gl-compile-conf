@@ -52,7 +52,7 @@ $Data::Dumper::Sortkeys = 1;
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 
 # these are set by the "rc" file
-our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $GL_WILDREPOS, $GL_GITCONFIG_KEYS, $GL_PACKAGE_HOOKS, $GL_BIG_CONFIG, $GL_NO_DAEMON_NO_GITWEB, $GL_NO_CREATE_REPOS, $GL_NO_SETUP_AUTHKEYS);
+our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $GL_WILDREPOS, $GL_GITCONFIG_KEYS, $GL_GITCONFIG_WILD, $GL_PACKAGE_HOOKS, $GL_BIG_CONFIG, $GL_NO_DAEMON_NO_GITWEB, $GL_NO_CREATE_REPOS, $GL_NO_SETUP_AUTHKEYS);
 # and these are set by gitolite.pm
 our ($REPONAME_PATT, $REPOPATT_PATT, $USERNAME_PATT, $ABRT, $WARN);
 
@@ -311,6 +311,7 @@ sub parse_conf_file
             for my $repo (@repos)       # each repo in the current stanza
             {
                 $repo_config{$repo}{$key} = $value;
+                print STDERR "$WARN git config set for $repo but \$GL_GITCONFIG_WILD not set\n" unless $repo =~ $REPONAME_PATT or $GL_GITCONFIG_WILD;
             }
         }
         # include
@@ -382,6 +383,7 @@ my $compiled_fh = wrap_open( ">", "$GL_CONF_COMPILED.new" );
 my $data_version = $current_data_version;
 print $compiled_fh Data::Dumper->Dump([$data_version], [qw(*data_version)]);
 my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
+$dumped_data .= Data::Dumper->Dump([\%repo_config], [qw(*repo_config)]) if %repo_config;
 # the dump uses single quotes, but we convert any strings containing $creator,
 # $readers, $writers, to double quoted strings.  A wee bit sneaky, but not too
 # much...
@@ -476,14 +478,20 @@ unless ($GL_NO_CREATE_REPOS) {
 #   config hooks.emailprefix = "[foo]"
 
 for my $repo (keys %repo_config) {
-    wrap_chdir("$repo_base_abs/$repo.git");
-    while ( my ($key, $value) = each(%{ $repo_config{$repo} }) ) {
-        if ($value) {
-            $value =~ s/^"(.*)"$/$1/;
-            system("git", "config", $key, $value);
-        } else {
-            system("git", "config", "--unset-all", $key);
-        }
+    &setup_repo_configs(\%repo_config, $repo) if $repo =~ $REPONAME_PATT;
+}
+
+# wild
+if (%repo_config and $GL_WILDREPOS and $GL_GITCONFIG_WILD) {
+    wrap_chdir("$repo_base_abs");
+    for my $repo (`find . -type d -name "*.git"`) {
+        chomp ($repo);
+        next unless -f "$ENV{GL_REPO_BASE_ABS}/$repo/gl-creater";  # all/only wild repos have this file
+
+        # $repo will look like "./foo/bar.git", make it "foo/bar" before
+        # calling the repo config setup sub
+        $repo =~ s(\./(.*)\.git$)($1);
+        &setup_repo_configs(\%repo_config, $repo, 1);
     }
 }
 

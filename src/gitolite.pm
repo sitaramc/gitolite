@@ -244,6 +244,50 @@ sub get_set_desc
 }
 
 # ----------------------------------------------------------------------------
+#       set/unset repo configs
+# ----------------------------------------------------------------------------
+
+sub setup_repo_configs
+{
+    my ($repo_config_p, $repo, $wild) = @_;
+
+    wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
+
+    # prep for wild and non-wild cases separately
+    my $repo_patt = '';     # actually "repo or repo_pattern"
+    if ($wild) {
+        chomp (my $creator = `cat gl-creater`);
+
+        # loop each key of %repo_config and make a copy
+        for my $key (keys %$repo_config_p) {
+            my $key2 = $key;
+            # subst $creator in the copy with the creator name
+            $key2 =~ s/\$creator/$creator/g;
+            # match the new key against $repo
+            if ($repo =~ /^$key2$/) {
+                # if it matches, proceed
+                $repo_patt = $key;
+                last;
+            }
+        }
+        print STDERR "$WARN repo $repo created by $creator is wild but doesn't match any patterns\n" unless $repo_patt;
+    } else {
+        $repo_patt ||= $repo;   # just use the repo itself...
+        # XXX TODO there is a remote possibility of errors if you have a
+        # normal repo that fits a wild pattern; needs some digging into...
+    }
+
+    while ( my ($key, $value) = each(%{ $repo_config_p->{$repo_patt} }) ) {
+        if ($value) {
+            $value =~ s/^"(.*)"$/$1/;
+            system("git", "config", $key, $value);
+        } else {
+            system("git", "config", "--unset-all", $key);
+        }
+    }
+}
+
+# ----------------------------------------------------------------------------
 #       parse the compiled acl
 # ----------------------------------------------------------------------------
 
