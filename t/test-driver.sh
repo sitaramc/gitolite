@@ -30,13 +30,13 @@ hl() {  # highlight function
         echo $normal
     fi
 }
-pause() { echo pausing\; hit enter or ctrl-c...; read; }
+pause() { echo pausing, "$@"\; hit enter or ctrl-c...; read; }
 
 capture() { cf=$1; shift; "$@" >& $TESTDIR/$cf; }
 
 editrc() {
     scp gitolite-test@localhost:.gitolite.rc ~/junk >/dev/null
-    perl -pi -e "print STDERR if /$1/ and s/=.*/= $2;/" ~/junk
+    perl -pi -e "print STDERR if not /^#/ and /$1/ and s/=.*/= $2;/" ~/junk
     scp ~/junk gitolite-test@localhost:.gitolite.rc >/dev/null
 }
 
