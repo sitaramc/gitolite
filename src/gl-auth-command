@@ -28,6 +28,7 @@ our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMIND
 our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT);
 our %repos;
 our %groups;
+our %repo_config;
 
 # the common setup module is in the same directory as this running program is
 my $bindir = $0;
@@ -206,6 +207,7 @@ if ($perm =~ /C/) {
     # it was missing, and you have create perms
     wrap_chdir("$repo_base_abs");
     new_repo($repo, "$GL_ADMINDIR/hooks/common", $user);
+    &setup_repo_configs(\%repo_config, $repo, 1);
     wrap_chdir($ENV{HOME});
 }
 
