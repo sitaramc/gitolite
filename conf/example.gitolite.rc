@@ -132,6 +132,12 @@ $GL_GITCONFIG_KEYS = "";
 # regular expressions) is to allow anything and everything:
 # $GL_GITCONFIG_KEYS = ".*";
 
+# NOTE that due to some quoting and interpolation issues I have not been able
+# to look at, a literal "." needs to be specified in this string as \\.  (two
+# backslashes and a dot).  So this is how you'd allow any keys in the "foo"
+# category:
+#       $GL_GITCONFIG_KEYS = "foo\\..*";
+
 # --------------------------------------
 # EXTERNAL COMMAND HELPER -- HTPASSWD
 
