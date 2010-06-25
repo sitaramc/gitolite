@@ -1,0 +1,87 @@
+# vim: syn=sh:
+for wr in 0 1
+do
+    for bc in 0 1
+    do
+        cd $TESTDIR
+        $TESTDIR/rollback || die "rollback failed"
+        editrc GL_WILDREPOS $wr
+        editrc GL_BIG_CONFIG $bc
+
+        # ----------
+
+        name "fail to set foo.bar"
+        echo "
+            @leads = u1 u2
+            @devs = u1 u2 u3 u4
+
+            repo    bar
+                RW+             =   @leads
+                RW              =   @devs
+                config foo.bar  =   baz
+        " | ugc
+        expect "remote:         git config foo.bar not allowed"
+        runremote cat repositories/bar.git/config
+        notexpect '^.foo'
+        notexpect 'bar = baz'
+
+        name "update rc file to allow foo.*"
+        catrc
+        cp ~/1 ~/junk
+        perl -pi -e 's/GL_GITCONFIG_KEYS = ""/GL_GITCONFIG_KEYS = "foo\\\\..*"/' ~/junk
+        cat ~/junk | runremote dd of=.gitolite.rc
+        catrc
+        expect "GL_GITCONFIG_KEYS.*foo"
+
+        name "ok to set foo.bar"
+        echo "
+            @leads = u1 u2
+            @devs = u1 u2 u3 u4
+
+            repo    bar
+                RW+             =   @leads
+                RW              =   @devs
+                config foo.bar  =   baz
+        " | ugc -r
+        expect "remote: Initialized empty Git repository in /home/gitolite-test/repositories/bar.git/"
+        notexpect "git config.*not allowed"
+        expect_push_ok "master -> master"
+        runremote cat repositories/bar.git/config
+        expect '^.foo'
+        expect 'bar = baz'
+
+        name "fail to set foobar.baz"
+        echo "
+            @leads = u1 u2
+            @devs = u1 u2 u3 u4
+
+            repo    bar
+                RW+             =   @leads
+                RW              =   @devs
+                config foo.bar  =   baz
+                config foobar.baz  =   ooka
+        " | ugc -r
+        expect "remote:         git config foobar.baz not allowed"
+        runremote cat repositories/bar.git/config
+        expect '^.foo'
+        expect 'bar = baz'
+        notexpect '^.foobar'
+        notexpect 'baz = ooka'
+
+        name "delete foo.bar"
+        echo "
+            @leads = u1 u2
+            @devs = u1 u2 u3 u4
+
+            repo    bar
+                RW+             =   @leads
+                RW              =   @devs
+                config foo.bar  =   
+        " | ugc -r
+        runremote cat repositories/bar.git/config
+        expect '^.foo'
+        notexpect 'bar = baz'
+
+        name INTERNAL
+    done
+done
