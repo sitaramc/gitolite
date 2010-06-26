@@ -1,0 +1,126 @@
+# vim: syn=sh:
+for gcw in 0 1
+do
+    cd $TESTDIR
+    $TESTDIR/rollback || die "rollback failed"
+
+    name INTERNAL
+    editrc GL_WILDREPOS 1
+    echo "\$GL_GITCONFIG_WILD = $gcw;" | addrc
+
+    # ----------
+
+    name "fail to set foo.bar"
+    echo "
+        @leads = u1 u2
+        @devs = u1 u2 u3 u4
+
+        repo    bar/CREATOR/..*
+            C               =   @leads
+            RW+             =   CREATOR
+            RW              =   @leads
+            config foo.bar  =   baz
+    " | ugc
+    expect "remote:         git config foo.bar not allowed"
+
+    name "update rc file to allow foo.*"
+    catrc
+    cp ~/1 ~/junk
+    perl -pi -e 's/GL_GITCONFIG_KEYS = ""/GL_GITCONFIG_KEYS = "foo\\\\..*"/' ~/junk
+    cat ~/junk | runremote dd of=.gitolite.rc
+    catrc
+    expect "GL_GITCONFIG_KEYS.*foo"
+
+    name "ok to set foo.bar"
+    echo "
+        @leads = u1 u2
+        @devs = u1 u2 u3 u4
+
+        repo    bar/CREATOR/..*
+            C               =   @leads
+            RW+             =   CREATOR
+            RW              =   @leads
+            config foo.bar  =   baz
+    " | ugc -r
+    [ "$gcw" = "0" ] &&    expect "remote:         git config set for bar/\$creator/..\* but \$GL_GITCONFIG_WILD not set"
+    [ "$gcw" = "1" ] && notexpect "remote:         git config set for bar/\$creator/..\* but \$GL_GITCONFIG_WILD not set"
+    notexpect "git config.*not allowed"
+    expect_push_ok "master -> master"
+
+    [ "$gcw" = "0" ] && continue    # the rest of these tests don't make sense now
+
+    name "fail to set foobar.baz"
+    echo "
+        @leads = u1 u2
+        @devs = u1 u2 u3 u4
+
+        repo    bar/CREATOR/..*
+            C               =   @leads
+            RW+             =   CREATOR
+            RW              =   @leads
+            config foo.bar  =   baz
+            config foobar.baz  =   ooka
+    " | ugc -r
+    expect "remote:         git config foobar.baz not allowed"
+
+    name "u1 create bar/u1/try1"
+    runlocal git ls-remote u1:bar/u1/try1
+    expect "Initialized empty Git repository in /home/gitolite-test/repositories/bar/u1/try1.git/"
+
+    name "check u1 has foo.bar"
+    runremote cat repositories/bar/u1/try1.git/config
+    expect '^.foo'
+    expect 'bar = baz'
+
+    name "delete foo.bar"
+    echo "
+        @leads = u1 u2
+        @devs = u1 u2 u3 u4
+
+        repo    bar/CREATOR/..*
+            C               =   @leads
+            RW+             =   CREATOR
+            RW              =   @leads
+            config foo.bar  =   
+    " | ugc -r
+    expect_push_ok "master -> master"
+
+    name "check u1 doesnt have foo.bar"
+    runremote cat repositories/bar/u1/try1.git/config
+    expect '^.foo'      # git leaves the section header behind
+    notexpect 'bar = baz'
+
+    name "u2 create bar/u2/try2"
+    runlocal git ls-remote u2:bar/u2/try2
+    expect "Initialized empty Git repository in /home/gitolite-test/repositories/bar/u2/try2.git/"
+
+    name "check u2 doesnt have foo.bar"
+    runremote cat repositories/bar/u2/try2.git/config
+    notexpect '^.foo'   # but not here, since this repo never had the key at all
+    notexpect 'bar = baz'
+
+    name "add foo.frob retroactively"
+    echo "
+        @leads = u1 u2
+        @devs = u1 u2 u3 u4
+
+        repo    bar/CREATOR/..*
+            C               =   @leads
+            RW+             =   CREATOR
+            RW              =   @leads
+            config foo.frob =   nitz
+    " | ugc -r
+    expect_push_ok "master -> master"
+
+    name "check u1 has foo.frob"
+    runremote cat repositories/bar/u1/try1.git/config
+    expect '^.foo'
+    expect 'frob = nitz'
+
+    name "check u2 has foo.frob"
+    runremote cat repositories/bar/u2/try2.git/config
+    expect '^.foo'
+    expect 'frob = nitz'
+
+    name INTERNAL
+done
