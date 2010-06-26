@@ -40,6 +40,13 @@ editrc() {
     scp ~/junk gitolite-test@localhost:.gitolite.rc >/dev/null
 }
 
+addrc() {
+    ssh gitolite-test@localhost cat .gitolite.rc < /dev/null > ~/junk
+    tee -a ~/junk
+    echo '1;' >> ~/junk
+    scp ~/junk gitolite-test@localhost:.gitolite.rc >/dev/null
+}
+
 ugc ()
 {
     (
