@@ -270,7 +270,6 @@ sub setup_repo_configs
                 last;
             }
         }
-        print STDERR "$WARN repo $repo created by $creator is wild but doesn't match any patterns\n" unless $repo_patt;
     } else {
         $repo_patt ||= $repo;   # just use the repo itself...
         # XXX TODO there is a remote possibility of errors if you have a
