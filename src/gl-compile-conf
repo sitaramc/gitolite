@@ -433,10 +433,10 @@ die "\n\t\t***** AAARGH! *****\n" .
 
 # repo-base needs to be an absolute path for this loop to work right
 # so if it was not already absolute, prefix $HOME.
-my $repo_base_abs = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
+$ENV{GL_REPO_BASE_ABS} = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
 
 unless ($GL_NO_CREATE_REPOS) {
-    wrap_chdir("$repo_base_abs");
+    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
 
     # autocreate repos.  Start with the ones that are normal repos in %repos
     my @repos = grep { $_ =~ $REPONAME_PATT and not /^@/ } sort keys %repos;
@@ -453,7 +453,7 @@ unless ($GL_NO_CREATE_REPOS) {
             print STDERR "creating $repo...\n";
             new_repo($repo, "$GL_ADMINDIR/hooks/common");
             # new_repo would have chdir'd us away; come back
-            wrap_chdir("$repo_base_abs");
+            wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
         }
 
         # when repos are copied over from elsewhere, one had to run easy install
@@ -483,7 +483,7 @@ for my $repo (keys %repo_config) {
 
 # wild
 if (%repo_config and $GL_WILDREPOS and $GL_GITCONFIG_WILD) {
-    wrap_chdir("$repo_base_abs");
+    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
     for my $repo (`find . -type d -name "*.git"`) {
         chomp ($repo);
         next unless -f "$ENV{GL_REPO_BASE_ABS}/$repo/gl-creater";  # all/only wild repos have this file
@@ -503,7 +503,7 @@ if (%repo_config and $GL_WILDREPOS and $GL_GITCONFIG_WILD) {
 # :-)  These are now "pseduo users" -- giving them "R" access to a repo is all
 # you have to do
 
-wrap_chdir("$repo_base_abs");
+wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
 
 unless ($GL_NO_DAEMON_NO_GITWEB) {
     # daemons first...
