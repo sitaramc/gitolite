@@ -13,6 +13,7 @@ In this document:
       * <a href="#root_method_directly_on_the_server_manually_with_root_access">(root method) directly on the server, manually, with root access</a>
       * <a href="#non_root_method_directly_on_the_server_manually_without_root_access">(non-root method) directly on the server, manually, without root access</a>
       * <a href="#from_client_method_install_from_the_client_to_the_server">(from-client method) install from the client to the server</a>
+  * <a href="#URLs_for_gitolite_managed_repos">URLs for gitolite-managed repos</a>
   * <a href="#special_cases_multiple_gitolite_servers">special cases -- multiple gitolite servers</a>
       * <a href="#package_method_and_root_method">package method and root method</a>
       * <a href="#from_client_method">from-client method</a>
@@ -165,6 +166,21 @@ documentation.
 This method is verbosely documented in [doc/7-install-transcript.mkd][doc7],
 including *outputs* of the commands concerned.
 
+<a name="URLs_for_gitolite_managed_repos"></a>
+
+### URLs for gitolite-managed repos
+
+The URL for normal users (i.e., users other than the admin) is always of the
+form "git@server:reponame".  So, for instance, `git clone git@server:testing`
+gets any valid user a copy of the "testing" repo.
+
+In the first 3 install methods, the admin user will also use the same URL
+format, like `git clone git@server:gitolite-admin`.
+
+However, in the fourth ("from-client") method, the admin user needs a
+different URL (`gitolite:reponame`) to gain access to the gitolite
+repositories.  Check [here][twokeys] for why.
+
 <a name="special_cases_multiple_gitolite_servers"></a>
 
 ### special cases -- multiple gitolite servers
@@ -264,4 +280,4 @@ uninstalling gitolite is described in great detail in
 [doc7]: http://github.com/sitaramc/gitolite/blob/pu/doc/7-install-transcript.mkd
 [doc9unin]: http://github.com/sitaramc/gitolite/blob/pu/doc/9-uninstall.mkd
 [doc9ssh]: http://github.com/sitaramc/gitolite/blob/pu/doc/9-ssh-tips.mkd
-
+[twokeys]: http://github.com/sitaramc/gitolite/blob/pu/doc/6-ssh-troubleshooting.mkd#why_two_keys_on_client
