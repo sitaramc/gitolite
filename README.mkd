@@ -4,6 +4,12 @@ Gitolite is an access control layer on top of git, which allows access control
 down to the branch level, including specifying who can and cannot *rewind* a
 given branch.
 
+This README will give you a quick intro.  All documentation is available
+within the source repo, in markdown format.  If you want to read it *without*
+cloning the source repo, just hit [this link][docs] and read nicely HTML-ised
+versions of all the docs (automatic rendering of markdown to HTML courtesy
+github).
+
 ----
 
 In this document:
