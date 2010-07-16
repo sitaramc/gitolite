@@ -115,6 +115,43 @@ sub ln_sf
     }
 }
 
+# collect repo patterns for all %repos
+
+# for each repo passed (actual repos only please!), use either its own name if
+# it exists as is in the repos hash, or find and use the pattern that matches
+
+sub collect_repo_patts
+{
+    my $repos_p = shift;
+    my %repo_patts = ();
+
+    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+    for my $repo (`find . -type d -name "*.git"`) {
+        chomp ($repo);
+        $repo =~ s(\./(.*)\.git$)($1);
+        # if its non-wild that's all you need
+        if ($repos_p->{$repo}) {
+            $repo_patts{$repo} = $repo;
+        } else {
+            # otherwise it gets a wee bit complicated ;-)
+            chomp (my $creator = `cat $repo.git/gl-creater`);
+            for my $key (keys %$repos_p) {
+                my $key2 = $key;
+                # subst $creator in the copy with the creator name
+                $key2 =~ s/\$creator/$creator/g;
+                # match the new key against $repo
+                if ($repo =~ /^$key2$/) {
+                    # and if it matched you're done for this $repo
+                    $repo_patts{$repo} = $key;
+                    last;
+                }
+            }
+        }
+    }
+
+    return %repo_patts;
+}
+
 
 # ----------------------------------------------------------------------------
 #       where is the rc file hiding?
@@ -244,37 +281,16 @@ sub get_set_desc
 }
 
 # ----------------------------------------------------------------------------
+#       IMPORTANT NOTE: next 3 subs (setup_*) assume $PWD is the bare repo itself
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
 #       set/unset repo configs
 # ----------------------------------------------------------------------------
 
 sub setup_repo_configs
 {
-    my ($repo_config_p, $repo, $wild) = @_;
-
-    wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
-
-    # prep for wild and non-wild cases separately
-    my $repo_patt = '';     # actually "repo or repo_pattern"
-    if ($wild) {
-        chomp (my $creator = `cat gl-creater`);
-
-        # loop each key of %repo_config and make a copy
-        for my $key (keys %$repo_config_p) {
-            my $key2 = $key;
-            # subst $creator in the copy with the creator name
-            $key2 =~ s/\$creator/$creator/g;
-            # match the new key against $repo
-            if ($repo =~ /^$key2$/) {
-                # if it matches, proceed
-                $repo_patt = $key;
-                last;
-            }
-        }
-    } else {
-        $repo_patt ||= $repo;   # just use the repo itself...
-        # XXX TODO there is a remote possibility of errors if you have a
-        # normal repo that fits a wild pattern; needs some digging into...
-    }
+    my ($repo, $repo_patt, $repo_config_p) = @_;
 
     while ( my ($key, $value) = each(%{ $repo_config_p->{$repo_patt} }) ) {
         if ($value) {
@@ -283,6 +299,57 @@ sub setup_repo_configs
         } else {
             system("git", "config", "--unset-all", $key);
         }
+    }
+}
+
+# ----------------------------------------------------------------------------
+#       set/unset daemon access
+# ----------------------------------------------------------------------------
+
+my $export_ok = "git-daemon-export-ok";
+sub setup_daemon_access
+{
+    my ($repo, $allowed) = @_;
+
+    if ($allowed) {
+        system("touch $export_ok");
+    } else {
+        unlink($export_ok);
+    }
+}
+
+# ----------------------------------------------------------------------------
+#       set/unset gitweb access
+# ----------------------------------------------------------------------------
+
+my $desc_file = "description";
+sub setup_gitweb_access
+# this also sets "owner" for gitweb, by the way
+{
+    my ($repo, $allowed, $desc, $owner) = @_;
+
+    if ($allowed) {
+        if ($desc) {
+            open(DESC, ">", $desc_file);
+            print DESC $desc . "\n";
+            close DESC;
+        }
+        if ($owner) {
+            # set the repository owner
+            system("git", "config", "gitweb.owner", $owner);
+        } else {
+            # remove the repository owner setting
+            system("git config --unset-all gitweb.owner 2>/dev/null");
+        }
+    } else {
+        unlink $desc_file;
+        system("git config --unset-all gitweb.owner 2>/dev/null");
+    }
+
+    # if there are no gitweb.* keys set, remove the section to keep the config file clean
+    my $keys = `git config --get-regexp '^gitweb\\.' 2>/dev/null`;
+    if (length($keys) == 0) {
+        system("git config --remove-section gitweb 2>/dev/null");
     }
 }
 

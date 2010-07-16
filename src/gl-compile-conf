@@ -470,94 +470,82 @@ unless ($GL_NO_CREATE_REPOS) {
 }
 
 # ----------------------------------------------------------------------------
-#       update repo configurations
+#       collect repo_patt for each actual repo
 # ----------------------------------------------------------------------------
 
-# no gating required for this.  If you don't have any "config" lines it won't
-# run anyway.  An example of a config line could be:
-#   config hooks.emailprefix = "[foo]"
+# go through each actual repo on disk, and match it to either its own name in
+# the config (non-wild) or a wild pattern that matches it.  Lots of things
+# later will need this correspondence so we may as well snarf it in one shot
 
-for my $repo (keys %repo_config) {
-    &setup_repo_configs(\%repo_config, $repo) if $repo =~ $REPONAME_PATT;
-}
 
-# wild
-if (%repo_config and $GL_WILDREPOS and $GL_GITCONFIG_WILD) {
-    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
-    for my $repo (`find . -type d -name "*.git"`) {
-        chomp ($repo);
-        next unless -f "$ENV{GL_REPO_BASE_ABS}/$repo/gl-creater";  # all/only wild repos have this file
+my %repo_patts = ();
+%repo_patts = &collect_repo_patts(\%repos) unless $GL_NO_DAEMON_NO_GITWEB;
 
-        # $repo will look like "./foo/bar.git", make it "foo/bar" before
-        # calling the repo config setup sub
-        $repo =~ s(\./(.*)\.git$)($1);
-        &setup_repo_configs(\%repo_config, $repo, 1);
-    }
-}
+# NOTE: we're overloading GL_NO_DAEMON_NO_GITWEB to mean "no git config" also.
+# In fact anything that requires trawling through the existing repos doing
+# stuff to all of them is skipped if this variable is set.  This is primarily
+# for the Fedora folks, but it should be useful for anyone who has a huge set
+# of repos and wants to manage gitweb/daemon/etc access via other means (they
+# typically have the whole thing controlled by a web-app and a database
+# anyway, and gitolite is only doing the access control and nothing more).
 
 # ----------------------------------------------------------------------------
-#       handle gitweb and daemon
+#       various updates to all real repos
 # ----------------------------------------------------------------------------
 
-# I just assume you'll never have any *real* users called "gitweb" or "daemon"
-# :-)  These are now "pseduo users" -- giving them "R" access to a repo is all
-# you have to do
+# ----------------------------------------------------------------------------
+#       update repo configurations, gitweb description, daemon export-ok, etc
+# ----------------------------------------------------------------------------
 
-wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+# all these require a "chdir" to the repo, so we club them for efficiency
 
-unless ($GL_NO_DAEMON_NO_GITWEB) {
-    # daemons first...
-    for my $repo (sort keys %repos) {
-        next unless $repo =~ $REPONAME_PATT;
-        next if $repo =~ m(^\@|EXTCMD/);    # these are not real repos
-        my $export_ok = "$repo.git/git-daemon-export-ok";
-        if ($repos{$repo}{'R'}{'daemon'}) {
-            system("touch $export_ok");
-        } else {
-            unlink($export_ok);
-        }
+my %projlist = ();
+
+# for each real repo (and remember this will be empty, thus skipping all this,
+# if $GL_NO_DAEMON_NO_GITWEB is on!)
+for my $repo (keys %repo_patts) {
+    my $repo_patt = $repo_patts{$repo};     # if non-wild, $repo_patt will be eq $repo anyway
+
+    wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
+
+    # git config
+    if ($repo_patt eq $repo or $GL_GITCONFIG_WILD) {
+        # erm, what that means is that it's either a non-wild repo being
+        # config'd or a wild one but gitconfig is allowed on wilds.
+        # XXX do we really need GL_GITCONFIG_WILD now?  It was meant to be
+        # only an efficiency thing, but that was before this whole revamp;
+        # we already trawl through $REPO_BASE exactly once now anyway!
+        # ...need to think about this
+        &setup_repo_configs($repo, $repo_patt, \%repo_config) if $repo_config{$repo_patt};
     }
 
-    my %projlist = ();
-    # ...then gitwebs
-    for my $repo (sort keys %repos) {
-        next unless $repo =~ $REPONAME_PATT;
-        next if $repo =~ m(^\@|EXTCMD/);    # these are not real repos
-        my $desc_file = "$repo.git/description";
-        # note: having a description also counts as enabling gitweb
-        if ($repos{$repo}{'R'}{'gitweb'} or $desc{"$repo.git"}) {
-            $projlist{"$repo.git"} = 1;
-            # add the description file; no messages to user or error checking :)
-            $desc{"$repo.git"} and open(DESC, ">", $desc_file) and print DESC $desc{"$repo.git"} . "\n" and close DESC;
-            if ($owner{"$repo.git"}) {
-                # set the repository owner
-                system("git", "--git-dir=$repo.git", "config", "gitweb.owner", $owner{"$repo.git"});
-            } else {
-                # remove the repository owner setting
-                system("git --git-dir=$repo.git config --unset-all gitweb.owner 2>/dev/null");
-            }
-        } else {
-            # delete the description file; no messages to user or error checking :)
-            unlink $desc_file;
-            # remove the repository owner setting
-            system("git --git-dir=$repo.git config --unset-all gitweb.owner 2>/dev/null");
-        }
+    # daemon is easy
+    &setup_daemon_access($repo, $repos{$repo_patt}{'R'}{'daemon'} || '');
 
-        # unless there are other gitweb.* keys set, remove the section to keep the
-        # config file clean
-        my $keys = `git --git-dir=$repo.git config --get-regexp '^gitweb\\.' 2>/dev/null`;
-        if (length($keys) == 0) {
-            system("git --git-dir=$repo.git config --remove-section gitweb 2>/dev/null");
-        }
+    # gitweb is a little more complicated.  Here're some notes:
+    # - "setup_gitweb_access" also sets "owner", despite the name
+    # - specifying a description also counts as enabling gitweb
+    # - description and owner are not specified for wildrepos; they're
+    #   specified for *actual* repos, even if the repo was created by a
+    #   wild card spec and "C" permissions.  If you see the
+    #   conf/example.conf file, you will see that repo owner/desc don't go
+    #   into the "repo foo" section; they're essentialy independent.
+    #   Anyway, I believe it doesn't make sense to have all wild repos
+    #   (for some pattern) to have the same description and owner.
+    if ($repos{$repo_patt}{'R'}{'gitweb'} or $desc{"$repo.git"}) {
+        $projlist{"$repo.git"} = 1;
+        &setup_gitweb_access($repo, 1, $desc{"$repo.git"} || '', $owner{"$repo.git"} || '');
+    } else {
+        &setup_gitweb_access($repo, 0, '', '');
     }
-
-    # update the project list
-    my $projlist_fh = wrap_open( ">", $PROJECTS_LIST);
-    for my $proj (sort keys %projlist) {
-        print $projlist_fh "$proj\n";
-    }
-    close $projlist_fh;
 }
+
+# write out the project list
+my $projlist_fh = wrap_open( ">", $PROJECTS_LIST);
+for my $proj (sort keys %projlist) {
+    print $projlist_fh "$proj\n";
+}
+close $projlist_fh;
 
 # ----------------------------------------------------------------------------
 #       "compile" ssh authorized_keys

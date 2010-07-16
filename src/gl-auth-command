@@ -23,7 +23,7 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 # these are set by the "rc" file
-our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE, $GL_WILDREPOS, $GL_WILDREPOS_DEFPERMS, $GL_ADC_PATH, $SVNSERVE, $GL_SLAVE_MODE);
+our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE, $GL_WILDREPOS, $GL_WILDREPOS_DEFPERMS, $GL_ADC_PATH, $SVNSERVE, $PROJECTS_LIST, $GL_SLAVE_MODE);
 # and these are set by gitolite.pm
 our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT);
 our %repos;
@@ -207,7 +207,10 @@ if ($perm =~ /C/) {
     # it was missing, and you have create perms
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
     new_repo($repo, "$GL_ADMINDIR/hooks/common", $user);
-    &setup_repo_configs(\%repo_config, $repo, 1);
+    &setup_repo_configs($repo, $ENV{GL_REPOPATT}, \%repo_config);
+    &setup_daemon_access($repo, $repos{$ENV{GL_REPOPATT}}{'R'}{'daemon'} || '');
+    &setup_gitweb_access($repo, $repos{$ENV{GL_REPOPATT}}{'R'}{'gitweb'} || '', '', '');
+    system("echo $repo.git >> $PROJECTS_LIST");
     wrap_chdir($ENV{HOME});
 }
 
