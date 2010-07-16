@@ -142,7 +142,7 @@ repo r1
 notexpect ABORT
 cd ~/td
 runlocal git clone gitolite:r1
-expect "Initialized empty Git repository in /home/tester/td/r1/.git/"
+expect "Cloning into r1..."
 cd ~/td/r1
 mdc; mdc; mdc
 mdc; mdc; mdc
@@ -163,7 +163,7 @@ repo r2
 notexpect ABORT
 cd ~/td
 runlocal git clone gitolite:r2
-expect "Initialized empty Git repository in /home/tester/td/r2/.git/"
+expect "Cloning into r2..."
 cd ~/td/r2
 mdc; mdc; mdc
 mdc; mdc; mdc

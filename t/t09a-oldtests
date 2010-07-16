@@ -36,7 +36,7 @@ notexpect "failed to push"
 
 cd ~/td
 runlocal git clone u1:abc
-expect "Initialized empty Git repository in /home/tester/td/abc/.git/"
+expect "Cloning into abc..."
 cd ~/td/abc
 mdc jfile; runlocal git push origin master
 expect "To u1:abc"

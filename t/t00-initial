@@ -19,7 +19,7 @@ expect "remote: Initialized empty Git repository in /home/gitolite-test/reposito
 name "basic clone"
 cd ~/td
 runlocal git clone u1:aa u1aa
-expect "Initialized empty Git repository in /home/tester/td/u1aa/.git/"
+expect "Cloning into u1aa..."
 expect "warning: You appear to have cloned an empty repository"
 runlocal ls -ald u1aa
 expect "drwxr-xr-x 3 $USER $USER 4096 201.-..-.. ..:.. u1aa"
