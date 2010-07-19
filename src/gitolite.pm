@@ -40,6 +40,7 @@ our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG);
 our %repos;
 our %groups;
+our %repo_config;
 our $data_version;
 our $current_data_version = '1.5';
 
@@ -129,24 +130,9 @@ sub collect_repo_patts
     for my $repo (`find . -type d -name "*.git"`) {
         chomp ($repo);
         $repo =~ s(\./(.*)\.git$)($1);
-        # if its non-wild that's all you need
-        if ($repos_p->{$repo}) {
-            $repo_patts{$repo} = $repo;
-        } else {
-            # otherwise it gets a wee bit complicated ;-)
-            chomp (my $creator = `cat $repo.git/gl-creater`);
-            for my $key (keys %$repos_p) {
-                my $key2 = $key;
-                # subst $creator in the copy with the creator name
-                $key2 =~ s/\$creator/$creator/g;
-                # match the new key against $repo
-                if ($repo =~ /^$key2$/) {
-                    # and if it matched you're done for this $repo
-                    $repo_patts{$repo} = $key;
-                    last;
-                }
-            }
-        }
+        # the key has to be in the list, since the repo physically exists
+        my($perm, $creator, $wild) = &repo_rights($repo);
+        $repo_patts{$repo} = $wild || $repo;
     }
 
     return %repo_patts;
@@ -290,9 +276,9 @@ sub get_set_desc
 
 sub setup_repo_configs
 {
-    my ($repo, $repo_patt, $repo_config_p) = @_;
+    my ($repo, $repo_config_p) = @_;
 
-    while ( my ($key, $value) = each(%{ $repo_config_p->{$repo_patt} }) ) {
+    while ( my ($key, $value) = each(%{ $repo_config_p->{$repo} }) ) {
         if ($value) {
             $value =~ s/^"(.*)"$/$1/;
             system("git", "config", $key, $value);
@@ -306,12 +292,13 @@ sub setup_repo_configs
 #       set/unset daemon access
 # ----------------------------------------------------------------------------
 
+# does not return anything; just touch/unlink the appropriate file
 my $export_ok = "git-daemon-export-ok";
 sub setup_daemon_access
 {
-    my ($repo, $allowed) = @_;
+    my $repo = shift;
 
-    if ($allowed) {
+    if (&can_read($repo, 'daemon')) {
         system("touch $export_ok");
     } else {
         unlink($export_ok);
@@ -322,13 +309,18 @@ sub setup_daemon_access
 #       set/unset gitweb access
 # ----------------------------------------------------------------------------
 
+# returns 1 if gitweb access has happened; this is to allow the caller to add
+# an entry to the projects.list file
 my $desc_file = "description";
 sub setup_gitweb_access
 # this also sets "owner" for gitweb, by the way
 {
-    my ($repo, $allowed, $desc, $owner) = @_;
+    my ($repo, $desc, $owner) = @_;
+    my $ret = 0;
 
-    if ($allowed) {
+    # passing in a descr implies 'R = gitweb'
+    if ($desc or &can_read($repo, 'gitweb')) {
+        $ret = 1;
         if ($desc) {
             open(DESC, ">", $desc_file);
             print DESC $desc . "\n";
@@ -351,6 +343,8 @@ sub setup_gitweb_access
     if (length($keys) == 0) {
         system("git config --remove-section gitweb 2>/dev/null");
     }
+
+    return $ret;
 }
 
 # ----------------------------------------------------------------------------
@@ -409,6 +403,7 @@ sub parse_acl
         $repos{$dr}{DELETE_IS_D} = 1 if $repos{$r}{DELETE_IS_D};
         $repos{$dr}{CREATE_IS_C} = 1 if $repos{$r}{CREATE_IS_C};
         $repos{$dr}{NAME_LIMITS} = 1 if $repos{$r}{NAME_LIMITS};
+        $repo_config{$dr} = $repo_config{$r} if $repo_config{$r};
 
         for my $u ('@all', "$gl_user - wild", @user_plus) {
             my $du = $gl_user; $du = '@all' if $u eq '@all';
@@ -522,8 +517,6 @@ sub expand_wild
         $repo =~ s/^\.\///;
         $repo =~ s/\.git$//;
 
-        return if $last_repo eq $repo;      # a wee bit o' caching, though not yet needed
-
         # we get passed an actual repo name.  It may be a normal
         # (non-wildcard) repo, in which case it is assumed to exist.  If it's
         # a wildrepo, it may or may not exist.  If it doesn't exist, the "C"
@@ -580,6 +573,14 @@ sub cli_repo_rights {
     $perm =~ s/ /_/g;
     $creator =~ s/^\(|\)$//g;
     print "$perm $creator\n";
+}
+
+sub can_read {
+    my $repo = shift;
+    my $user = shift || $ENV{GL_USER};
+    local $ENV{GL_USER} = $user;
+    my ($perm, $creator, $wild) = &repo_rights($repo);
+    return $perm =~ /R/;
 }
 
 # ----------------------------------------------------------------------------

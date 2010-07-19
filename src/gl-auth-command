@@ -207,10 +207,9 @@ if ($perm =~ /C/) {
     # it was missing, and you have create perms
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
     new_repo($repo, "$GL_ADMINDIR/hooks/common", $user);
-    &setup_repo_configs($repo, $ENV{GL_REPOPATT}, \%repo_config);
-    &setup_daemon_access($repo, $repos{$ENV{GL_REPOPATT}}{'R'}{'daemon'} || '');
-    &setup_gitweb_access($repo, $repos{$ENV{GL_REPOPATT}}{'R'}{'gitweb'} || '', '', '');
-    system("echo $repo.git >> $PROJECTS_LIST");
+    &setup_repo_configs($repo, \%repo_config);
+    &setup_daemon_access($repo);
+    system("echo $repo.git >> $PROJECTS_LIST") if &setup_gitweb_access($repo, '', '');
     wrap_chdir($ENV{HOME});
 }
 

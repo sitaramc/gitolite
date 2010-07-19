@@ -105,7 +105,7 @@ our $current_data_version;      # this comes from gitolite.pm
 my %user_list = ();
 
 # repo configurations
-my %repo_config = ();
+our %repo_config = ();
 
 # gitweb descriptions and owners; plain text, keyed by "$repo.git"
 my %desc = ();
@@ -311,7 +311,15 @@ sub parse_conf_file
             for my $repo (@repos)       # each repo in the current stanza
             {
                 $repo_config{$repo}{$key} = $value;
-                print STDERR "$WARN git config set for $repo but \$GL_GITCONFIG_WILD not set\n" unless $repo =~ $REPONAME_PATT or $GL_GITCONFIG_WILD;
+                # no problem if it's a plain repo (non-pattern, non-groupname)
+                # OR wild configs are allowed
+                unless ( ($repo =~ $REPONAME_PATT and $repo !~ /^@/) or $GL_GITCONFIG_WILD) {
+                    my @r = ($repo);                                        # single wildpatt
+                    @r = sort keys %{ $groups{$repo} } if $groups{$repo};   # or a group; get its members
+                    do {
+                        print STDERR "$WARN git config set for $_ but \$GL_GITCONFIG_WILD not set\n" unless $_ =~ $REPONAME_PATT
+                    } for @r;
+                }
             }
         }
         # include
@@ -389,7 +397,12 @@ $dumped_data .= Data::Dumper->Dump([\%repo_config], [qw(*repo_config)]) if %repo
 # much...
 $dumped_data =~ s/'(?=[^']*\$(?:creator|readers|writers|gl_user))~?(.*?)'/"$1"/g;
 print $compiled_fh $dumped_data;
-print $compiled_fh Data::Dumper->Dump([\%groups], [qw(*groups)]) if $GL_BIG_CONFIG and %groups;
+if ($GL_BIG_CONFIG and %groups) {
+    $dumped_data = Data::Dumper->Dump([\%groups], [qw(*groups)]);
+    $dumped_data =~ s/\bCREAT[EO]R\b/\$creator/g;
+    $dumped_data =~ s/'(?=[^']*\$(?:creator|readers|writers|gl_user))~?(.*?)'/"$1"/g;
+    print $compiled_fh $dumped_data;
+}
 close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
 rename "$GL_CONF_COMPILED.new", "$GL_CONF_COMPILED";
 
@@ -504,23 +517,12 @@ my %projlist = ();
 # for each real repo (and remember this will be empty, thus skipping all this,
 # if $GL_NO_DAEMON_NO_GITWEB is on!)
 for my $repo (keys %repo_patts) {
-    my $repo_patt = $repo_patts{$repo};     # if non-wild, $repo_patt will be eq $repo anyway
+    my $repo_patt = $repo_patts{$repo};
 
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
 
-    # git config
-    if ($repo_patt eq $repo or $GL_GITCONFIG_WILD) {
-        # erm, what that means is that it's either a non-wild repo being
-        # config'd or a wild one but gitconfig is allowed on wilds.
-        # XXX do we really need GL_GITCONFIG_WILD now?  It was meant to be
-        # only an efficiency thing, but that was before this whole revamp;
-        # we already trawl through $REPO_BASE exactly once now anyway!
-        # ...need to think about this
-        &setup_repo_configs($repo, $repo_patt, \%repo_config) if $repo_config{$repo_patt};
-    }
-
     # daemon is easy
-    &setup_daemon_access($repo, $repos{$repo_patt}{'R'}{'daemon'} || '');
+    &setup_daemon_access($repo);
 
     # gitweb is a little more complicated.  Here're some notes:
     # - "setup_gitweb_access" also sets "owner", despite the name
@@ -532,12 +534,16 @@ for my $repo (keys %repo_patts) {
     #   into the "repo foo" section; they're essentialy independent.
     #   Anyway, I believe it doesn't make sense to have all wild repos
     #   (for some pattern) to have the same description and owner.
-    if ($repos{$repo_patt}{'R'}{'gitweb'} or $desc{"$repo.git"}) {
-        $projlist{"$repo.git"} = 1;
-        &setup_gitweb_access($repo, 1, $desc{"$repo.git"} || '', $owner{"$repo.git"} || '');
-    } else {
-        &setup_gitweb_access($repo, 0, '', '');
-    }
+    $projlist{"$repo.git"} = 1 if &setup_gitweb_access($repo, $desc{"$repo.git"} || '', $owner{"$repo.git"} || '');
+
+    # git config
+    # implementation note: this must happen *after* one of the previous 2
+    # calls (setup daemon or gitweb).  The reason is that they call
+    # "can_read", which eventually calls parse_acl with the right "creator"
+    # set for the *current* repo, which in turn stores translated values fr
+    # $creator in the repo_config hash, which, (phew!) is needed for a match
+    # that eventually gets you a valid $repo_config{} below
+    &setup_repo_configs($repo, \%repo_config) if $repo_config{$repo};
 }
 
 # write out the project list
