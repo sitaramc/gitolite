@@ -57,6 +57,12 @@ sub wrap_open {
     return $fh;
 }
 
+sub dbg {
+    for my $i (@_) {
+        print STDERR "DBG: $i\n";
+    }
+}
+
 sub log_it {
     my ($ip, $logmsg);
     open my $log_fh, ">>", $ENV{GL_LOG} or die "open log failed: $!\n";

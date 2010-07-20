@@ -8,4 +8,4 @@ tar xf rollback.tar
 mkdir td
 
 scp -q $TESTDIR/rollback.server gitolite-test@localhost:rollback || { echo scp failed; exit 1; }
-ssh gitolite-test@localhost ./rollback
+ssh gitolite-test@localhost ./rollback $GQT

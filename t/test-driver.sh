@@ -54,6 +54,7 @@ ugc ()
         git push ${1:-gitolite}:gitolite-admin master
         git fetch origin >/dev/null 2>&1
     ) >~/1 2>~/2
+    grep DBG: ~/2 >/dev/null && grep . ~/1 ~/2
 }
 
 mdc()

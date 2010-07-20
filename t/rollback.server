@@ -3,3 +3,12 @@
 cd
 rm -rf .ssh .gitolite .gitolite.rc repositories gitolite-install
 tar xf rollback.tar
+
+# if arg1 is a directory, we have to overwrite sources from there (see commit
+# message for details)
+if [ -d "$1" ]
+then
+    cd .gitolite
+    /bin/cp -a $1/{src,hooks} .
+    cd
+fi
