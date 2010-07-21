@@ -58,17 +58,17 @@ my $repo_base_abs = $ENV{GL_REPO_BASE_ABS} = ( $REPO_BASE =~ m(^/) ? $REPO_BASE 
 #       start...
 # ----------------------------------------------------------------------------
 
-# no arguments given?  default user is $USER (fedorahosted works like this,
-# and it is harmless for others)
-@ARGV = ($ENV{USER}) unless @ARGV;
-
 # if the first argument is a "-s", this user is allowed to get a shell using
 # this key
 my $shell_allowed = 0;
-if ($ARGV[0] eq '-s') {
+if (@ARGV and $ARGV[0] eq '-s') {
     $shell_allowed = 1;
     shift;
 }
+
+# no (more) arguments given?  default user is $USER (fedorahosted works like
+# this, and it is harmless for others)
+@ARGV = ($ENV{USER}) unless @ARGV;
 
 # first, fix the biggest gripe I have with gitosis, a 1-line change
 my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
