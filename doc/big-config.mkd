@@ -4,7 +4,7 @@ In this document:
 
   * <a href="#when_why_do_we_need_it_">when/why do we need it?</a>
   * <a href="#how_do_we_use_it_">how do we use it?</a>
-  * <a href="#summary_of_settings_in_RC_file">summary of settings in RC file</a>
+  * <a href="#other_optimisations">other optimisations</a>
   * <a href="#what_are_the_downsides_">what are the downsides?</a>
   * <a href="#extra_coolness_usergroups_and_LDAP_similar_tools">(extra coolness) usergroups and LDAP/similar tools</a>
 
@@ -107,8 +107,9 @@ Just set
 
     $GL_BIG_CONFIG = 1;
 
-in the `~/.gitolite.rc` file on the server.  When you do that, and push this
-configuration, the compiled file looks like this:
+in the `~/.gitolite.rc` file on the server (see next section for more
+variables).  When you do that, and push this configuration, the compiled file
+looks like this:
 
     %repos = (
       '@wbr' => {
@@ -142,23 +143,38 @@ configuration, the compiled file looks like this:
 That's a lot smaller, and allows orders of magintude more repos and groups to
 be supported.
 
-<a name="summary_of_settings_in_RC_file"></a>
+<a name="other_optimisations"></a>
 
-### summary of settings in RC file
+### other optimisations
 
-The default RC file contains the following lines:
+The default RC file contains the following lines (we've already discussed the
+first one):
 
     $GL_BIG_CONFIG = 0;
     $GL_NO_DAEMON_NO_GITWEB = 0;
+    $GL_NO_CREATE_REPOS = 0;
+    $GL_NO_SETUP_AUTHKEYS = 0;
 
-The first setting means that by default, big-config is off; you can change it
-to 1 to enable it.
+`GL_NO_DAEMON_NO_GITWEB` is a very useful optimisation that you *must* enable
+if you *do* have a large number of repositories, and do *not* use gitolite's
+support for gitweb or git-daemon access (see "[easier to specify gitweb
+description and gitweb/daemon access][gw]" for details).  This will save a lot
+of time when you push the gitolite-admin repo with changes.  This variable
+also control whether "git config" lines (such as `config hooks.emailprefix =
+"[gitolite]"`) will be processed or not.
 
-The second is a very useful optimisation that you *must* enable if you *do*
-have a large number of repositories, and do *not* use gitolite's support for
-gitweb or git-daemon access (see "[easier to specify gitweb description and
-gitweb/daemon access][gw]" for details).  This will save a lot of time when
-you push the gitolite-admin repo with changes.
+Setting this is relatively harmless to a normal installation, unlike the next
+two variables :-)  `GL_NO_CREATE_REPOS` and `GL_NO_SETUP_AUTHKEYS` are meant
+for installations where some backend system already exists that does all the
+actual repo creation, and all the authentication setup (ssh auth keys),
+respectively.
+
+Summary: Please **leave those two variables alone** unless you're initials are
+"JK" ;-)
+
+Also note that using all 3 of the `GL_NO_*` variables will result in
+*everything* after the config compile being skipped.  In other words, gitolite
+is being used **only** for its access control language.
 
 [gw]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#gitweb
 

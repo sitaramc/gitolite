@@ -89,6 +89,8 @@ $GIT_PATH="";
 
 $GL_BIG_CONFIG = 0;
 $GL_NO_DAEMON_NO_GITWEB = 0;
+$GL_NO_CREATE_REPOS = 0;
+$GL_NO_SETUP_AUTHKEYS = 0;
 
 # ----------------------------------------------------------------------
 #                   SECURITY SENSITIVE SETTINGS
