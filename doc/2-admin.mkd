@@ -66,12 +66,23 @@ Once you've cloned it, you're ready to add users and repos.
 #### moving pre-existing repos into gitolite
 
 One simple way to add a pre-existing repo to gitolite is to let gitolite
-create it as a brand new repo as in the previous section, and then, from an
-existing clone, "push --all" to the new one.
+create it as a brand new repo as in the previous section, then do the
+following:
 
-However, if you have many existing repos to add, this can be time-consuming
-and error-prone.  Here's how to take a bunch of existing repos and add them to
-gitolite:
+    cd your-copy-of-the-repo
+    # make sure all the branches are correct and no extra stuff, "temp"
+    # branches, etc., are present
+    git push --all git@server:reponame
+    git push --tags git@server:reponame
+
+(You could also use "git push --mirror" instead of separately doing branches
+and tags, but that will carry across *your* remote refs also, and typically
+you may not want that.  Anyway please do a `git ls-remote git@server:repo` to
+make sure all the stuff you want went through, and is named correctly).
+
+All this is actually very simple and easily done.  However, if you have many
+existing repos to add, this can be time-consuming and error-prone.  Here's how
+to take a bunch of existing repos and add them to gitolite:
 
   * make sure they're *bare* repos ;-)
 
