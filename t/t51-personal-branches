@@ -13,7 +13,8 @@ do
         name "INTERNAL"
         echo "
             @staff = u1 u2 u3 u4 u5 u6
-            repo  foo
+            @gfoo = foo
+            repo  @gfoo
                   RW+                       = u1 u2
                   RW+   personal/USER/      = u3 u4
                   RW    temp                = u5 u6

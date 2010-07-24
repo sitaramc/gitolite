@@ -14,7 +14,8 @@ do
         @leads = u1 u2
         @devs = u1 u2 u3 u4
 
-        repo    foo
+        @gfoo = foo
+        repo    @gfoo
             RW+C                =   @leads
             RW+C personal/USER/ =   @devs
             RW                  =   @devs
@@ -74,7 +75,8 @@ do
         @leads = u1 u2
         @devs = u1 u2 u3 u4
 
-        repo    bar
+        @gbar = bar
+        repo    @gbar
             RW+                 =   @leads
             RW+  personal/USER/ =   @devs
             RW                  =   @devs

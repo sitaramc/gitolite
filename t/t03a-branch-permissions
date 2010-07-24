@@ -5,7 +5,8 @@ echo "
     @g1 = u1
     @g2 = u2
     @g3 = u3
-    repo aa
+    @gaa = aa
+    repo @gaa
         RW+                 =   @g1
         RW                  =   @g2
         RW+     master      =   @g3
@@ -116,7 +117,7 @@ expect " * \[new branch\]      dev -> dev"
 # u1 tries to delete dev on a new setup
 name "INTERNAL"
 echo "
-    repo aa
+    repo @gaa
         RWD     dev         =   u4
 " | ugc
 expect "master -> master"
@@ -135,7 +136,8 @@ expect " - \[deleted\] *dev"
 
 name "INTERNAL"
 echo "
-repo r1
+@gr1 = r1
+repo @gr1
     RW  refs/heads/v[0-9]   = u1
     RW  refs/heads          = tester
 " | ugc
@@ -155,7 +157,8 @@ expect "\* \[new branch\]      v1 -> v1"
 
 name "INTERNAL"
 echo "
-repo r2
+@gr2 = r2
+repo @gr2
     RW  refs/heads/v[0-9]   = u1
     -   refs/heads/v[0-9]   = tester
     RW  refs/heads          = tester

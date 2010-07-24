@@ -15,7 +15,8 @@ do
             @leads = u1 u2
             @devs = u1 u2 u3 u4
 
-            repo    bar
+            @gbar = bar
+            repo    @gbar
                 RW+             =   @leads
                 RW              =   @devs
                 config foo.bar  =   baz
@@ -38,7 +39,8 @@ do
             @leads = u1 u2
             @devs = u1 u2 u3 u4
 
-            repo    bar
+            @gbar = bar
+            repo    @gbar
                 RW+             =   @leads
                 RW              =   @devs
                 config foo.bar  =   baz
@@ -55,7 +57,8 @@ do
             @leads = u1 u2
             @devs = u1 u2 u3 u4
 
-            repo    bar
+            @gbar = bar
+            repo    @gbar
                 RW+             =   @leads
                 RW              =   @devs
                 config foo.bar  =   baz
@@ -73,7 +76,8 @@ do
             @leads = u1 u2
             @devs = u1 u2 u3 u4
 
-            repo    bar
+            @gbar = bar
+            repo    @gbar
                 RW+             =   @leads
                 RW              =   @devs
                 config foo.bar  =   

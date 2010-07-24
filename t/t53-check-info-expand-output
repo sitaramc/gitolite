@@ -14,7 +14,8 @@ do
         echo "
             @leads = u1 u2
             @devs = u1 u2 u3 u4
-            repo    foo/CREATOR/.+
+            @gfoo = foo/CREATOR/.+
+            repo    @gfoo
                 C               =   @leads
                 RW+             =   CREATOR
         " | ugc
@@ -36,7 +37,9 @@ do
         runlocal ssh u1 info
         expect "hello u1, the gitolite version here is"
         expect "@R.*@W.*testing"
-        [ "$wr" = "1" ] && expect "C.*R.*W.*foo/u1/\\.\\+"
+        [ "$wr" = "1" ] && [ "$bc" = "0" ] && expect "C.*R.*W.*foo/u1/\\.\\+"
+        [ "$wr" = "1" ] && [ "$bc" = "1" ] && notexpect "C.*R.*W.*foo/u1/\\.\\+"
+        [ "$wr" = "1" ] && [ "$bc" = "1" ] &&    expect "C.*@gfoo"
 
         name "u1 expand"
         runlocal ssh u1 expand

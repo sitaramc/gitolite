@@ -7,7 +7,8 @@ echo "
     @TAs        =   u2 u3
     @students   =   u4 u5 u6
 
-    repo    foo/CREATOR/a[0-9][0-9]
+    @gfoo = foo/CREATOR/a[0-9][0-9]
+    repo    @gfoo
         C   =   @students
         RW+ =   CREATOR
         RW  =   WRITERS @TAs

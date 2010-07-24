@@ -11,7 +11,8 @@ do
     name "INTERNAL"
     echo "
         @staff = u1 u2 u3
-        repo  foo/CREATOR/.+
+        @gfoo = foo/CREATOR/.+
+        repo  @gfoo
               C       = u1
               RW+     = CREATOR
               RW      = WRITERS
@@ -57,7 +58,8 @@ do
     name "INTERNAL"
     echo "
         @staff = u1 u2 u3
-        repo  foo/CREATOR/.+
+        @gfoo = foo/CREATOR/.+
+        repo  @gfoo
               C       = u1
               RW+     = CREATOR
               -       = @staff
