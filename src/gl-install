@@ -103,7 +103,7 @@ if ( -d "gitolite-admin.git/hooks" ) {
 }
 
 # fixup program renames
-for my $oldname qw(pta-hook.sh conf-convert.pl 00-easy-install.sh 99-emergency-addkey.sh install.pl update-hook.pl hooks/update ga-post-update-hook VERSION) {
+for my $oldname qw(pta-hook.sh conf-convert.pl 00-easy-install.sh 99-emergency-addkey.sh gl-emergency-addkey install.pl update-hook.pl hooks/update ga-post-update-hook VERSION) {
     unlink "$GL_ADMINDIR/src/$oldname";
     unlink "$ENV{HOME}/gitolite-install/src/$oldname";
 }

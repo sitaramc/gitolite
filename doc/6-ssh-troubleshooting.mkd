@@ -428,8 +428,8 @@ first place, so the simplest way is to enable it from the server side only.
 
 If you lost the admin key, and need to re-establish ownership of the
 gitolite-admin repository with a fresh key, take a look at the
-`src/gl-emergency-addkey` program.  You will need shell access to the server
-of course.  Run it without arguments to get instructions.
+`src/gl-dont-panic` program.  You will need shell access to the server of
+course.  Run it without arguments to get instructions.
 
 <a name="simulating_ssh_copy_id"></a>
 
