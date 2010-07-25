@@ -28,6 +28,7 @@ then
     echo $pubkey_file | grep '.pub$' >/dev/null || die "$pubkey_file must end in .pub"
     [ -f $pubkey_file ] || die "cant find $pubkey_file"
     admin_name=` basename $pubkey_file .pub`
+    echo $admin_name | grep '@' >/dev/null && die "please don't use '@' in the initial admin name"
 fi
 
 if [ -f $HOME/.gitolite.rc ]
@@ -54,17 +55,20 @@ fi
 
 # setup ssh stuff.  We break our normal rule that we will not fiddle with
 # authkeys etc., because in this case it seems appropriate
-cd
-mkdir -p .ssh
-touch .ssh/authorized_keys
-chmod go-w . .ssh .ssh/authorized_keys
+(
+    cd $HOME
+    mkdir -p .ssh
+    chmod go-rwx .ssh
+    touch .ssh/authorized_keys
+    chmod go-w . .ssh .ssh/authorized_keys
+)
 
 # now we get to gitolite itself
 
 gl-install -q
 
-GL_ADMINDIR=` cd;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR'`
-REPO_BASE=`   cd;perl -e 'do ".gitolite.rc"; print $REPO_BASE'  `
+GL_ADMINDIR=` cd $HOME;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR'`
+REPO_BASE=`   cd $HOME;perl -e 'do ".gitolite.rc"; print $REPO_BASE'  `
 
 [ -f $GL_ADMINDIR/conf/gitolite.conf ] || {
     cat <<EOF > $GL_ADMINDIR/conf/gitolite.conf
