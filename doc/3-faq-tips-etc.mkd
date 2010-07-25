@@ -27,6 +27,7 @@ In this document:
           * <a href="#support_for_git_installed_outside_default_PATH">support for git installed outside default PATH</a>
           * <a href="#personal_branches">"personal" branches</a>
           * <a href="#custom_hooks_and_custom_git_config">custom hooks and custom git config</a>
+          * <a href="#bypassing_gitolite">bypassing gitolite</a>
       * <a href="#INconvenience_features">INconvenience features</a>
           * <a href="#deleting_a_repo">deleting a repo</a>
       * <a href="#helping_with_gitweb">helping with gitweb</a>
@@ -557,6 +558,29 @@ is still determined by the right hand side of course.
 You can specify hooks that you want to propagate to all repos, as well as
 per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
 `conf/example.conf` for details.
+
+<a name="bypassing_gitolite"></a>
+
+##### bypassing gitolite
+
+Sometimes you'll need to access one of the gitolite-managed repos directly on
+the server, without going through gitolite.  Reasons may be some automatic
+updates or some other ad hoc purposes you can dream up.
+
+Cloning a gitolite-controlled repo is easy enough -- just use the full path
+(typically `~/repositories/reponame.git`) instead of just `reponame`, to
+compensate for gitolite not sitting in between and adding those things to the
+repo path.
+
+But when you push, the update hook (which git will invoke anyway) will fail
+because it needs all sorts of access control info that it now doesn't have,
+because the push was invoked without going through gitolite.
+
+In order to bypass the update hook, just set the `GL_BYPASS_UPDATE_HOOK`
+environment variable to "1" or something, export it, and push.  I prefer not
+to set that variable permanently, preferring this mode instead:
+
+    GL_BYPASS_UPDATE_HOOK=1 git push
 
 <a name="INconvenience_features"></a>
 
