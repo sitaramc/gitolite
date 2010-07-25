@@ -473,6 +473,117 @@ sub cli_repo_rights {
 }
 
 # ----------------------------------------------------------------------------
+#       setup the ~/.ssh/authorized_keys file
+# ----------------------------------------------------------------------------
+
+sub setup_authkeys
+{
+    # ARGUMENTS
+
+    my($bindir, $GL_KEYDIR, $user_list_p) = @_;
+    # calling from outside the normal compile script may mean that argument 2
+    # may not be passed; so make sure it's a valid hashref, even if empty
+    $user_list_p = {} unless $user_list_p;
+
+    # CONSTANTS
+
+    # command and options for authorized_keys
+    my $AUTH_COMMAND="$bindir/gl-auth-command";
+    my $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
+
+    # START
+
+    my $authkeys_fh = wrap_open( "<", $ENV{HOME} . "/.ssh/authorized_keys",
+        "\tFor security reasons, gitolite will not *create* this file if it does\n" .
+        "\tnot already exist.  Please see the \"admin\" document for details\n");
+    my $newkeys_fh = wrap_open( ">", $ENV{HOME} . "/.ssh/new_authkeys" );
+    # save existing authkeys minus the GL-added stuff
+    while (<$authkeys_fh>)
+    {
+        print $newkeys_fh $_ unless (/^# gito(sis-)?lite start/../^# gito(sis-)?lite end/);
+    }
+
+    # add our "start" line, each key on its own line (prefixed by command and
+    # options, in the standard ssh authorized_keys format), then the "end" line.
+    print $newkeys_fh "# gitolite start\n";
+    wrap_chdir($GL_KEYDIR);
+    my @not_in_config;  # pubkeys exist but users don't appear in the config file
+    for my $pubkey (`find . -type f`)
+    {
+        chomp($pubkey); $pubkey =~ s(^\./)();
+
+        # security check (thanks to divVerent for catching this)
+        unless ($pubkey =~ $REPONAME_PATT) {
+            print STDERR "$pubkey contains some unsavoury characters; ignored...\n";
+            next;
+        }
+
+        # lint check 1
+        unless ($pubkey =~ /\.pub$/)
+        {
+            print STDERR "WARNING: pubkey files should end with \".pub\", ignoring $pubkey\n";
+            next;
+        }
+
+        my $user = $pubkey;
+        $user =~ s(.*/)();                  # foo/bar/baz.pub -> baz.pub
+        $user =~ s/(\@[^.]+)?\.pub$//;      # baz.pub, baz@home.pub -> baz
+
+        # lint check 2 -- don't print right now; just collect the messages
+        push @not_in_config, "$user($pubkey)" if %$user_list_p and not $user_list_p->{$user};
+        $user_list_p->{$user} = 'has pubkey'  if %$user_list_p;
+        # apparently some pubkeys don't end in a newline...
+        my $pubkey_content;
+        {
+            local $/ = undef;
+            local @ARGV = ($pubkey);
+            $pubkey_content = <>;
+        }
+        $pubkey_content =~ s/\s*$/\n/;
+        # don't trust files with multiple lines (i.e., something after a newline)
+        if ($pubkey_content =~ /\n./)
+        {
+            print STDERR "WARNING: a pubkey file can only have one line (key); ignoring $pubkey\n" .
+                         "         If you want to add multiple public keys for a single user, use\n" .
+                         "         \"user\@host.pub\" file names.  See the \"one user, many keys\"\n" .
+                         "         section in doc/3-faq-tips-etc.mkd for details.\n";
+            next;
+        }
+        print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";
+        print $newkeys_fh $pubkey_content;
+    }
+
+    # lint check 2 -- print less noisily
+    if (@not_in_config > 10) {
+        print STDERR "$WARN You have " . scalar(@not_in_config) . " pubkeys that do not appear to be used in the config\n";
+    } elsif (@not_in_config) {
+        print STDERR "$WARN the following users (pubkey files in parens) do not appear in the config file:\n", join(",", sort @not_in_config), "\n";
+    }
+
+    # lint check 3; a little more severe than the first two I guess...
+    {
+        my @no_pubkey =
+            grep { $_ !~ /^(gitweb|daemon|\@.*|~\$creator|\$readers|\$writers)$/ }
+                grep { $user_list_p->{$_} ne 'has pubkey' }
+                    keys %{$user_list_p};
+        if (@no_pubkey > 10) {
+            print STDERR "$WARN You have " . scalar(@no_pubkey) . " users WITHOUT pubkeys...!\n";
+        } elsif (@no_pubkey) {
+            print STDERR "$WARN the following users have no pubkeys:\n", join(",", sort @no_pubkey), "\n";
+        }
+    }
+
+    print $newkeys_fh "# gitolite end\n";
+    close $newkeys_fh or die "$ABRT close newkeys failed: $!\n";
+
+    # all done; overwrite the file (use cat to avoid perm changes)
+    system("cat $ENV{HOME}/.ssh/authorized_keys > $ENV{HOME}/.ssh/old_authkeys");
+    system("cat $ENV{HOME}/.ssh/new_authkeys > $ENV{HOME}/.ssh/authorized_keys")
+        and die "couldn't write authkeys file\n";
+    system("rm  $ENV{HOME}/.ssh/new_authkeys");
+}
+
+# ----------------------------------------------------------------------------
 #       S P E C I A L   C O M M A N D S
 # ----------------------------------------------------------------------------
 

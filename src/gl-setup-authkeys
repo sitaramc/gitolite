@@ -1,0 +1,54 @@
+#!/usr/bin/perl -w
+
+# shim program
+
+# arg-1: keydir
+
+# - an external program populates "keydir" with *all* keys and then
+#   calls us, giving "keydir" as arg-1
+# - we then call gitolite.pm's "setup_authkeys" function to do its thing
+
+# IMPLEMENTATION NOTE: make sure this is in the same directory as
+# "gitolite.pm" and all the rest of "src/".
+
+# DISCUSSION:
+#
+# For now, we will assume *all* the keys are in the keydir passed.  The
+# setup_authkeys routine factored out from the old gl-compile-conf is
+# not setup to take a partial set of keys and create the
+# ~/.ssh/authorized_keys file.
+#
+# Also, there are issues to do with *deleted* keys that need to be taken
+# care of.
+#
+# All in all, unless it is shown to be quite inefficient, I'd much
+# prefer processing *all* keys each time there is a change.
+
+# setup
+my $bindir = $0;
+$bindir =~ s/\/[^\/]+$//;
+$bindir = "$ENV{PWD}/$bindir" unless $bindir =~ /^\//;
+require "$bindir/gitolite.pm";
+
+# prevent newbie from running it accidentally and clobbering his authkeys
+# file!
+if (@ARGV and $ARGV[0] eq '-batch') {
+    shift;
+} else {
+    print STDERR "
+    This is a cronnable, batchable, program to rewrite ~/.ssh/authorized_keys
+    using public keys in a given directory.
+
+    If you are ABSOLUTELY sure you know what you're doing, here's how:
+
+        $0 -batch keydir
+
+    where 'keydir' contains a bunch of '*.pub' files\n\n";
+    exit 1;
+}
+
+# quick sanity check and run
+my $keydir = shift or die "I need a directory name\n";
+-d $keydir or die "$keydir should be a directory\n";
+
+&setup_authkeys($bindir, $keydir);
