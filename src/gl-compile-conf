@@ -144,6 +144,25 @@ sub expand_list
 #       "compile" GL conf
 # ----------------------------------------------------------------------------
 
+sub check_fragment_repo_disallowed
+{
+    # trying to set access for $repo (='foo')...
+    my ($fragment, $repo) = @_;
+
+    # processing the master config, not a fragment
+    return 0 if $fragment eq 'master';
+    # fragment is also called 'foo' (you're allowed to have a
+    # fragment that is only concerned with one repo)
+    return 0 if $fragment eq $repo;
+    # same thing in big-config-land; foo is just @foo now
+    return 0 if $GL_BIG_CONFIG and ("\@$fragment" eq $repo);
+    my @matched = grep { $repo =~ /^$_$/ }
+                  grep { $groups{"\@$fragment"}{$_} eq 'master' }
+                  sort keys %{ $groups{"\@$fragment"} };
+    return 0 if @matched > 0;
+    return 1;
+}
+
 sub parse_conf_file
 {
     my ($conffile, $fragment) = @_;
@@ -234,32 +253,10 @@ sub parse_conf_file
                 # rights on stuff outside his domain
 
                 # trying to set access for $repo (='foo')...
-                if (
-                    # processing the master config, not a fragment
-                    ( $fragment eq 'master' ) or
-                    # fragment is also called 'foo' (you're allowed to have a
-                    # fragment that is only concerned with one repo)
-                    ( $fragment eq $repo ) or
-                    # same thing in big-config-land; foo is just @foo now
-                    ( $GL_BIG_CONFIG and "\@$fragment" eq $repo ) or
-                    # fragment is called "bar" and "@bar = foo" has been
-                    # defined in the master config
-                    ( ($groups{"\@$fragment"}{$repo} || '') eq 'master' )
-                ) {
-                    # all these are fine
-                } else {
-                    # this is a little more complex
-
-                    # fragment is called "bar", one or more "@bar = regex"
-                    # have been specified in master, and "foo" matches some
-                    # such "regex"
-                    my @matched = grep { $repo =~ /^$_$/ }
-                                  grep { $groups{"\@$fragment"}{$_} eq 'master' }
-                                  sort keys %{ $groups{"\@$fragment"} };
-                    if (@matched < 1) {
-                        $ignored{$fragment}{$repo} = 1;
-                        next;
-                    }
+                if (check_fragment_repo_disallowed($fragment, $repo))
+                {
+                    $ignored{$fragment}{$repo} = 1;
+                    next;
                 }
                 for my $user (@users)
                 {
@@ -339,8 +336,7 @@ sub parse_conf_file
         {
             my ($repo, $owner, $desc) = ($1, $2, $3);
             die "$ABRT bad repo name $repo\n" unless $repo =~ $REPONAME_PATT;
-            die "$WARN $fragment attempting to set description for $repo\n" if
-                $fragment ne 'master' and $fragment ne $repo and ($groups{"\@$fragment"}{$repo} || '') ne 'master';
+            die "$WARN $fragment attempting to set description for $repo\n" if check_fragment_repo_disallowed($fragment, $repo);
             $desc{"$repo.git"} = $desc;
             $owner{"$repo.git"} = $owner || '';
         }
