@@ -213,7 +213,10 @@ file:
 
 Push the config, then try
 
+    # if you installed using the "from-client" method
     ssh gitolite expand
+    # for the other 3 install methods
+    ssh git@server expand
 
 <a name="other_issues_and_discussion"></a>
 

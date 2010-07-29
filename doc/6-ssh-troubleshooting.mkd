@@ -33,6 +33,11 @@ In addition to both these documents, there's now a program called
 `sshkeys-lint` that you can run on your client.  Run it without arguments to
 get help on how to run it and what inputs it needs.
 
+**IMPORTANT NOTE:  A lot of this document applies only if you installed using
+the [from-client method][fc] .  If you used one of the [other 3 methods][o3] ,
+some of it may or may not apply.  At the very least, any mention of `ssh
+gitolite` below will change to `ssh git@server`; see [this][urls] for why.**
+
 <a name="the_most_common_problems_that_an_admin_will_see"></a>
 
 ### the most common problems that an admin will see
@@ -455,3 +460,6 @@ bigger problems than gitolite install not working!)]
 [doc0]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd
 [doc9gas]: http://github.com/sitaramc/gitolite/blob/pu/doc/9-gitolite-and-ssh.mkd
 [install]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd
+[o3]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#installation_and_setup
+[fc]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#from_client_method_install_from_the_client_to_the_server
+[urls]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#URLs_for_gitolite_managed_repos
