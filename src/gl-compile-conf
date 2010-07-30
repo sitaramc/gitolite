@@ -382,7 +382,7 @@ for my $fragment_file (glob("conf/fragments/*.conf"))
     parse_conf_file($fragment_file, $fragment);
 }
 
-my $compiled_fh = wrap_open( ">", $GL_CONF_COMPILED );
+my $compiled_fh = wrap_open( ">", "$GL_CONF_COMPILED.new" );
 my $data_version = $current_data_version;
 print $compiled_fh Data::Dumper->Dump([$data_version], [qw(*data_version)]);
 my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
@@ -393,6 +393,7 @@ $dumped_data =~ s/'(?=[^']*\$(?:creator|readers|writers|gl_user))~?(.*?)'/"$1"/g
 print $compiled_fh $dumped_data;
 print $compiled_fh Data::Dumper->Dump([\%groups], [qw(*groups)]) if $GL_BIG_CONFIG and %groups;
 close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
+rename "$GL_CONF_COMPILED.new", "$GL_CONF_COMPILED";
 
 # ----------------------------------------------------------------------------
 #       (that ends the config file compiler and write)
