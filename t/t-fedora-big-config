@@ -3,6 +3,8 @@ cd $TESTDIR
 $TESTDIR/rollback || die "rollback failed"
 editrc GL_BIG_CONFIG 1
 editrc GL_NO_DAEMON_NO_GITWEB 1
+editrc GL_NO_CREATE_REPOS 1
+editrc GL_NO_SETUP_AUTHKEYS 1
 catrc
 expect "GL_BIG_CONFIG *= *1;"
 
