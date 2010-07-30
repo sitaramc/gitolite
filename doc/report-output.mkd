@@ -13,14 +13,15 @@ Here is the output of the 2 commands (info and expand):
 
 Usage:
 
-    ssh git@server info
-    ssh git@server info [list of users]
+    ssh git@server info [optional_pattern [list of users]]
 
 The "info" command shows you all the repos (and repo patterns) in the config
-file that you have been given any kind of access to.  If you're an admin you
-can append a list of users to see their permissions instead of your own.
-(Side note: if you installed using easy-install that would probably be `ssh
-gitolite info`, by the way).
+file that you have been given any kind of access to.  If you supply an
+optional pattern the output will be limited to repos matching that pattern.
+If you're an admin you can append a list of users to see their permissions
+instead of your own; in this mode the pattern is mandatory, even if you just
+use `.` to cheat.  (Side note: if you installed using easy-install that would
+probably be `ssh gitolite info`, by the way).
 
 The meaning of C, R, and W are self-explanatory, but they might sometimes be
 prefixed by a symbol.  For example, `@R` means that `@all` users have
@@ -31,7 +32,7 @@ root's shell prompt) and so has access to `@all` repos.
 
 Usage:
 
-    ssh git@server expand [optional pattern]
+    ssh git@server expand [optional_pattern]
 
 The "expand" command trawls through all the repositories on the server,
 limiting to repos matching the pattern you provide (default is all repos

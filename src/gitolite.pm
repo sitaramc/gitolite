@@ -325,7 +325,7 @@ sub report_version {
 # got parsed by the compile script
 sub report_basic
 {
-    my($GL_ADMINDIR, $GL_CONF_COMPILED, $user) = @_;
+    my($GL_ADMINDIR, $GL_CONF_COMPILED, $repo, $user) = @_;
 
     # XXX The correct way is actually to give parse_acl another argument
     # (defaulting to $ENV{GL_USER}, the value being used now).  But for now
@@ -338,7 +338,11 @@ sub report_basic
     # send back some useful info if no command was given
     &report_version($GL_ADMINDIR, $user);
     print "\rthe gitolite config gives you the following access:\r\n";
+    my $count = 0;
     for my $r (sort keys %repos) {
+        next unless $r =~ /$repo/i;
+        # if $GL_BIG_CONFIG is on, limit the number of output lines to 5
+        next if $GL_BIG_CONFIG and $count++ >= 5;
         if ($r =~ $REPONAME_PATT and $r !~ /\bCREAT[EO]R\b/) {
             &parse_acl($GL_CONF_COMPILED, $r, "NOBODY",      "NOBODY", "NOBODY");
         } else {
@@ -354,6 +358,7 @@ sub report_basic
         $perm    .= ( $repos{$r}{W}{'@all'} ? ' @W' : ( $repos{'@all'}{W}{$user} ? ' #W' : ( $repos{$r}{W}{$user} ? '  W' : '   ' )));
         print "$perm\t$r\r\n" if $perm =~ /\S/;
     }
+    print "only 5 out of $count candidate repos examined\r\nplease use a partial reponame or regex pattern to limit output\r\n" if $GL_BIG_CONFIG and $count > 5;
 }
 
 # ----------------------------------------------------------------------------
@@ -374,17 +379,20 @@ sub expand_wild
     # has at least "R" access to
 
     chdir("$repo_base_abs") or die "chdir $repo_base_abs failed: $!\n";
+    my $count = 0;
     for my $actual_repo (`find . -type d -name "*.git"|sort`) {
         chomp ($actual_repo);
         $actual_repo =~ s/^\.\///;
         $actual_repo =~ s/\.git$//;
         # actual_repo has to match the pattern being expanded
-        next unless $actual_repo =~ /$repo/;
+        next unless $actual_repo =~ /$repo/i;
+        next if $GL_BIG_CONFIG and $count++ >= 5;
 
         my($perm, $creator, $wild) = &repo_rights($actual_repo);
         next unless $perm =~ /\S/;
         print "$perm\t$creator\t$actual_repo\n";
     }
+    print "only 5 out of $count candidate repos examined\nplease use a partial reponame or regex pattern to limit output\n" if $GL_BIG_CONFIG and $count > 5;
 }
 
 # there will be multiple calls to repo_rights; better to use a closure.  We
@@ -471,18 +479,28 @@ sub special_cmd
 
     # check each special command we know about and call it if enabled
     if ($cmd eq 'info') {
-        &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $user);
+        &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, '^', $user);
         print "you also have shell access\r\n" if $shell_allowed;
     } elsif ($cmd =~ /^info\s+(.+)$/) {
         my @otherusers = split ' ', $1;
+        # the first argument is assumed to be a repo pattern, like in the
+        # expand command
+        my $repo = shift(@otherusers);
+        die "$repo has invalid characters" unless "x$repo" =~ $REPOPATT_PATT;
+        print STDERR "(treating $repo as pattern to limit output)\n";
 
-        my($perm, $creator, $wild) = &repo_rights('gitolite-admin');
-        die "you can't ask for others' permissions\n" unless $perm =~ /W/;
+        # set up the list of users being queried; it's either a list passed in
+        # (allowed only for admin pushers) or just $user
+        if (@otherusers) {
+            my($perm, $creator, $wild) = &repo_rights('gitolite-admin');
+            die "you can't ask for others' permissions\n" unless $perm =~ /W/;
+        }
+        push @otherusers, $user unless @otherusers;
 
         &parse_acl($GL_CONF_COMPILED);
         for my $otheruser (@otherusers) {
             warn("ignoring illegal username $otheruser\n"), next unless $otheruser =~ $USERNAME_PATT;
-            &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $otheruser);
+            &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $repo, $otheruser);
         }
     } elsif ($HTPASSWD_FILE and $cmd eq 'htpasswd') {
         &ext_cmd_htpasswd($HTPASSWD_FILE);
