@@ -1,0 +1,114 @@
+# vim: syn=sh:
+# check basic repo level permissions, including what happens when the repo on
+# disk is missing (non-wildcard only)
+
+for bc in 0 1
+do
+    cd $TESTDIR
+    $TESTDIR/rollback || die "rollback failed"
+    editrc GL_BIG_CONFIG $bc
+
+    name "INTERNAL"
+    echo "
+        @g1 = u1 u2
+        @g2 = u3 u4
+        @g3 = u5 u6
+        repo aa
+            RW+                 =   tester
+            RW                  =   @g1
+            R                   =   @g2
+    " | ugc
+    expect_push_ok "master -> master"
+    expect "remote: Initialized empty Git repository in /home/gitolite-test/repositories/aa.git/"
+
+    cd ~/td
+    name "check u1 can auto-create and push"
+    runlocal git clone u1:aa
+    expect "Cloning into aa..."
+    expect "warning: You appear to have cloned an empty repository"
+    cd ~/td/aa
+    mdc; mdc; mdc
+    mdc; mdc; mdc
+    mdc; mdc; mdc
+    name "INTERNAL"
+    runlocal git push origin HEAD
+    expect "To u1:aa"
+    expect "\* \[new branch\]      HEAD -> master"
+    expect_push_ok "HEAD -> master"
+
+    name "check u1 cant rewind"
+    runlocal git reset --hard HEAD^
+    runlocal git push origin +master
+    expect "remote: + refs/heads/master aa u1 DENIED by fallthru"
+    expect "remote: error: hook declined to update refs/heads/master"
+    expect "\[remote rejected\] master -> master (hook declined)"
+
+    cd ~/td
+    rm -rf aa
+    name "check tester can rewind"
+    runlocal git clone gitolite:aa
+    expect "Cloning into aa..."
+    cd aa
+    runlocal git reset --hard HEAD^
+    runlocal git push origin +master
+    expect_push_ok "master -> master (forced update)"
+
+    cd ~/td
+    rm -rf aa
+    name "check u4 can only read"
+    runlocal git clone u4:aa
+    expect "Cloning into aa..."
+    cd aa
+    mdc; mdc; mdc
+    runlocal git push origin master
+    expect "W access for aa DENIED to u4"
+
+    cd ~/td
+    rm -rf aa
+    name "check u6 cant even read"
+    runlocal git clone u6:aa
+    expect "Cloning into aa..."
+    expect "R access for aa DENIED to u6"
+
+    # now the same thing with the repo-on-disk missing
+    runremote rm -rf repositories/aa.git
+
+    cd ~/td
+    name "repo on disk missing: u1"
+    runlocal git clone u1:aa
+    expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+
+    name "repo on disk missing: tester"
+    runlocal git clone gitolite:aa
+    expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+
+    name "repo on disk missing: u4"
+    runlocal git clone u4:aa
+    expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+
+    name "repo on disk missing: u6"
+    runlocal git clone u6:aa
+    expect "R access for aa DENIED to u6"
+
+    # now the same thing with a repo that is not even in the config
+
+    cd ~/td
+    name "repo on disk missing: u1"
+    runlocal git clone u1:bb
+    expect "R access for bb DENIED to u1"
+
+    name "repo on disk missing: tester"
+    runlocal git clone gitolite:bb
+    expect "R access for bb DENIED to tester"
+
+    name "repo on disk missing: u4"
+    runlocal git clone u4:bb
+    expect "R access for bb DENIED to u4"
+
+    name "repo on disk missing: u6"
+    runlocal git clone u6:bb
+    expect "R access for bb DENIED to u6"
+
+    name INTERNAL
+done
+
