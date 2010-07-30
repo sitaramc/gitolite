@@ -437,7 +437,7 @@ sub expand_wild
             $perm = ( $repos{$repo}{C}{'@all'} ? ' @C' : ( $repos{$repo}{C}{$ENV{GL_USER}} ? ' =C' : '   ' )) if $GL_WILDREPOS;
             # if you didn't have perms to create it, delete the "convenience"
             # copy of the ACL that parse_acl makes
-            delete $repos{$repo} unless $perm =~ /C/;
+            delete $repos{$repo} if $perm !~ /C/ and $wild;
             $creator = "<notfound>";
         }
         $perm .= ( $repos{$repo}{R}{'@all'} ? ' @R' : ( $repos{'@all'}{R}{$ENV{GL_USER}} ? ' #R' : ( $repos{$repo}{R}{$ENV{GL_USER}} ? '  R' : '   ' )));
