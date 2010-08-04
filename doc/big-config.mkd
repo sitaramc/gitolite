@@ -210,7 +210,7 @@ some way (not using `~/.ssh/authorized_keys`) of invoking gitolite.
 
 Such setups also have "usergroups", and a way to tell, for each user, what
 groups he/she is a member of.  So let's say "alice" works on projects "foo"
-and "bar", while "bob" is works on project "bar" and is a member of the
+and "bar", while "bob" works on project "bar" and is a member of the
 `L3_support` team.
 
 You can use those group names in the gitolite config file for access control
