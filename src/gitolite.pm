@@ -131,8 +131,15 @@ sub collect_repo_patts
         chomp ($repo);
         $repo =~ s(\./(.*)\.git$)($1);
         # the key has to be in the list, since the repo physically exists
-        my($perm, $creator, $wild) = &repo_rights($repo);
-        $repo_patts{$repo} = $wild || $repo;
+        # -- my($perm, $creator, $wild) = &repo_rights($repo);
+        # -- $repo_patts{$repo} = $wild || $repo;
+        # turns out we're not using the value anywhere, so no point wasting
+        # all those cycles getting all repos' rights, at least until a real
+        # use for it comes along.  But when it does come along, remember that
+        # $wild is now a space separated list of matching patterns (or empty
+        # if no wild patterns matched $repo).  It is NOT a single value
+        # anymore!
+        $repo_patts{$repo} = 1;
     }
 
     return %repo_patts;
@@ -389,10 +396,6 @@ sub parse_acl
     # expand $repo and $gl_user into all possible matching values
     ($wild, @repo_plus) = &get_memberships($repo,    1);
     (       @user_plus) = &get_memberships($gl_user, 0);
-    # XXX testing notes: the above should return just one entry during
-    # non-BC usage, whether wild or not
-    die "assert 1 failed" if (@repo_plus > 1 and $repo_plus[-1] ne '@all'
-                          or  @repo_plus > 2) and not $GL_BIG_CONFIG;
 
     # the old "convenience copy" thing.  Now on steroids :)
 
@@ -544,11 +547,16 @@ sub expand_wild
             $wild = &parse_acl($GL_CONF_COMPILED, $repo, $ENV{GL_USER}, "NOBODY", "NOBODY");
         }
 
-        if ($exists and not $wild) {
-            $creator = '<gitolite>';
-        } elsif ($exists) {
-            # is a wildrepo, and it has already been created
-            $creator = "($creator)";
+        if ($exists) {
+            if ($creator and $wild) {
+                $creator = "($creator)";
+            } elsif ($creator and not $wild) {
+                # was created wild but then someone (a) removed the pattern
+                # from, and (b) added the actual reponame to, the config
+                $creator = "<was_$creator>"
+            } else {
+                $creator = "<gitolite>";
+            }
         } else {
             # repo didn't exist; C perms need to be filled in
             $perm = ( $repos{$repo}{C}{'@all'} ? ' @C' : ( $repos{$repo}{C}{$ENV{GL_USER}} ? ' =C' : '   ' )) if $GL_WILDREPOS;
@@ -750,40 +758,39 @@ sub special_cmd
 # ----------------------------------------------------------------------------
 
 # given a plain reponame or username, return:
-# - the name itself, plus all the groups it belongs to if $GL_BIG_CONFIG is
-#   set
-# OR
-# - (for repos) if the name itself doesn't exist in the config, a wildcard
-#   matching it, plus all the groups that wildcard belongs to (again if
-#   $GL_BIG_CONFIG is set)
+# - the name itself if it's a user
+# - the name itself if it's a repo and the repo exists in the config
+# plus, if $GL_BIG_CONFIG is set:
+# - all the groups the name belongs to
+# plus, for repos:
+# - all the wildcards matching it
+# plus, if $GL_BIG_CONFIG is set:
+# - all the groups those wildcards belong to
 
 # A name can normally appear (repo example) (user example)
-# - directly (repo foo) (RW = bar)
+# - directly (repo foo) (RW = bob)
 # - (only for repos) as a direct wildcard (repo foo/.*)
 # but if $GL_BIG_CONFIG is set, it can also appear:
-# - indirectly (@g = foo; repo @g) (@ug = bar; RW = @ug))
+# - indirectly (@g = foo; repo @g) (@ug = bob; RW = @ug))
 # - (only for repos) as an indirect wildcard (@g = foo/.*; repo @g).
-# things that may not be obvious from the above:
-# - the wildcard stuff does not apply to username memberships
-# - for repos, wildcard appearances are TOTALLY ignored if a non-wild
-#   appearance (direct or indirect) exists
+# note: the wildcard stuff does not apply to username memberships
 
 sub get_memberships {
     my $base = shift;   # reponame or username
     my $is_repo = shift;    # some true value means a repo name has been passed
 
-    my $wild = '';
-    my (@ret, @ret_w);      # maintain wild matches separately from non-wild
+    my $wild = '';      # will be a space-sep list of matching patterns
+    my @ret;            # list of matching groups/patterns
 
     # direct
     push @ret, $base if not $is_repo or exists $repos{$base};
-    if ($is_repo and $GL_WILDREPOS and not @ret) {
+    if ($is_repo and $GL_WILDREPOS) {
         for my $i (sort keys %repos) {
+            next if $i eq $base;    # "direct" name already done; skip
+            # direct wildcard
             if ($base =~ /^$i$/) {
-                die "$ABRT $base matches $wild AND $i\n" if $wild and $wild ne $i;
-                $wild = $i;
-                # direct wildcard
-                push @ret_w, $i;
+                push @ret, $i;
+                $wild = ($wild ? "$wild $i" : $i);
             }
         }
     }
@@ -794,11 +801,10 @@ sub get_memberships {
                 if ($base eq $i) {
                     # indirect
                     push @ret, $g;
-                } elsif ($is_repo and $GL_WILDREPOS and not @ret and $base =~ /^$i$/) {
-                    die "$ABRT $base matches $wild AND $i\n" if $wild and $wild ne $i;
-                    $wild = $i;
+                } elsif ($is_repo and $GL_WILDREPOS and $base =~ /^$i$/) {
                     # indirect wildcard
-                    push @ret_w, $g;
+                    push @ret, $g;
+                    $wild = ($wild ? "$wild $i" : $i);
                 }
             }
         }
@@ -813,14 +819,9 @@ sub get_memberships {
         return (@ret);
     }
 
-    # enforce the rule about ignoring all wildcard matches if a non-wild match
-    # exists while returning.  (The @ret gating above does not adequately
-    # ensure this, it is only an optimisation).
-    #
-    # Also note that there is an extra return value when called for repos
-    # (compared to usernames)
-
-    return ((@ret ? '' : $wild), (@ret ? @ret : @ret_w));
+    # note that there is an extra return value when called for repos (as
+    # opposed to being called for usernames)
+    return ($wild, @ret);
 }
 
 # ----------------------------------------------------------------------------

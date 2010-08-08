@@ -513,7 +513,6 @@ my %projlist = ();
 # for each real repo (and remember this will be empty, thus skipping all this,
 # if $GL_NO_DAEMON_NO_GITWEB is on!)
 for my $repo (keys %repo_patts) {
-    my $repo_patt = $repo_patts{$repo};
 
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
 
