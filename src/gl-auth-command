@@ -23,7 +23,7 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 # these are set by the "rc" file
-our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE, $GL_WILDREPOS, $GL_WILDREPOS_DEFPERMS, $GL_ADC_PATH, $SVNSERVE);
+our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE, $GL_WILDREPOS, $GL_WILDREPOS_DEFPERMS, $GL_ADC_PATH, $SVNSERVE, $GL_SLAVE_MODE);
 # and these are set by gitolite.pm
 our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT);
 our %repos;
@@ -111,6 +111,13 @@ unless ($ENV{SSH_ORIGINAL_COMMAND}) {
     # otherwise, pretend he typed in "info" and carry on...
     $ENV{SSH_ORIGINAL_COMMAND} = 'info';
 }
+
+# ----------------------------------------------------------------------------
+#       slave mode should not do much
+# ----------------------------------------------------------------------------
+
+die "server is in slave mode; you can only fetch\n"
+    if ($GL_SLAVE_MODE and $ENV{SSH_ORIGINAL_COMMAND} !~ /^(info|expand|get|git-upload-)/);
 
 # ----------------------------------------------------------------------------
 #       admin defined commands

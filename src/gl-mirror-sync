@@ -1,0 +1,38 @@
+#!/bin/bash
+
+mirror=$1
+[ -z "$1" ] && { echo need \"user@host\" or ssh hostalias; exit 1; }
+ssh -o PasswordAuthentication=no $mirror echo hello-there | grep hello-there >/dev/null ||
+    { echo I cant ssh to $mirror; exit 1; }
+
+cd $HOME
+REPO_BASE=` cd $HOME;perl -e 'do ".gitolite.rc"; print $REPO_BASE'`
+cd $REPO_BASE
+
+ssh $mirror cat \$HOME/.gitolite.rc | expand | egrep '^ *\$GL_SLAVE_MODE *= *1; *$' >/dev/null || {
+    echo $mirror does not seem to be in slave mode
+    exit 1;
+}
+
+find . -type d -name "*.git" | cut -c3- | sort | while read r
+do
+    cd $HOME; cd $REPO_BASE; cd $r
+    printf "$r "
+
+    if [ `git rev-parse HEAD` = "HEAD" ]
+    then
+        echo is empty\; skipping
+        continue
+    fi
+
+    # this is essentially the same code as in the post-receive hook
+    if git push --mirror $mirror:$r
+    then
+        :
+    else
+        ssh $mirror mkdir -p $r
+        ssh $mirror git init --bare $r
+        git push --mirror $mirror:$r ||
+            echo "WARNING: mirror push to $mirror failed"
+    fi < /dev/null
+done

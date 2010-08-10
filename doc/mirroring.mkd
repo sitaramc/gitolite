@@ -1,0 +1,313 @@
+# mirroring a gitolite setup
+
+Mirroring git repos is essentially a one-liner.  For each mirror you want to
+update, you just add a post-receive hook that says
+
+    #!/bin/bash
+    git push --mirror slave_user@mirror.host:/path/to/repo.git
+
+But life is never that simple...
+
+**This document has been tested using a 3-server setup, all installed using
+the "non-root" method (see doc/0-INSTALL.mkd).  However, the process is
+probably not going to be very forgiving of human error -- like anything that
+is this deep in "system admin" territory, errors are likely to be costly.  If
+you're the kind who hits enter first and then thinks about what he typed,
+you're in for some fun times ;-)**
+
+**On the plus side, everything we do is done using git commands, so things are
+never *really* lost until you do a `git gc`**.
+
+----
+
+In this document:
+
+  * <a href="#RULE_NUMBER_ONE_">RULE NUMBER ONE!</a>
+  * <a href="#things_that_will_NOT_be_mirrored_by_this_process">things that will NOT be mirrored by this process</a>
+  * <a href="#conventions_in_this_document">conventions in this document</a>
+  * <a href="#setting_up_mirroring">setting up mirroring</a>
+      * <a href="#install_gitolite_on_all_servers">install gitolite on all servers</a>
+      * <a href="#generate_keypairs">generate keypairs</a>
+      * <a href="#setup_the_mirror_shell_on_each_server">setup the mirror-shell on each server</a>
+      * <a href="#set_slaves_to_slave_mode">set slaves to slave mode</a>
+      * <a href="#set_slave_server_lists">set slave server lists</a>
+  * <a href="#syncing_the_mirrors_the_first_time">syncing the mirrors the first time</a>
+  * <a href="#switching_over">switching over</a>
+  * <a href="#the_return_of_foo">the return of foo</a>
+      * <a href="#switching_back">switching back</a>
+      * <a href="#making_foo_a_slave">making foo a slave</a>
+  * <a href="#URLs_that_your_users_will_use">URLs that your users will use</a>
+
+<a name="RULE_NUMBER_ONE_"></a>
+
+### RULE NUMBER ONE!
+
+**RULE OF GIT MIRRORING: users should push directly to only one server**!  All
+the other machines (the slaves) should be updated by the master server.
+
+If a user pushes directly to one of the slaves, those changes will get wiped
+out on the next mirror push from the real master server.
+
+Corollary: if the primary went down and you effected a changeover, you must
+make sure that the primary does not come up in a push-enabled mode when it
+recovers.
+
+<a name="things_that_will_NOT_be_mirrored_by_this_process"></a>
+
+### things that will NOT be mirrored by this process
+
+Let's get this out of the way.  This procedure will only mirror your git
+repositories, using `git push --mirror`.  Therefore, certain files will not be
+mirrored:
+
+  * gitolite log files
+  * "gl-creator" and "gl-perms" files
+  * "projects.list", "description", and entries in the "config" files within
+    each repo
+
+None of these affect actual repo contents of course, but they could be
+important, (especially the gl-creator, although if your wildcard pattern had
+"CREATOR" in it you can recreate those files easily enough anyway).
+
+Your best bet is to use rsync for the log files, and tar for the others, at
+regular intervals.
+
+<a name="conventions_in_this_document"></a>
+
+### conventions in this document
+
+The userid hosting gitolite is `gitolite` on all machines.  The servers are
+foo, bar, and baz.  At the beginning, foo is the master, the other 2 are
+slaves.
+
+<a name="setting_up_mirroring"></a>
+
+### setting up mirroring
+
+<a name="install_gitolite_on_all_servers"></a>
+
+#### install gitolite on all servers
+
+  * before running the final step in the install sequence, make sure you go to
+    the `hooks/common` directory and rename `post-receive.mirrorpush` to
+    `post-receive`.  See doc/hook-propagation.mkd if you're not sure where you
+    should look for `hooks/common`.
+
+  * if the server already has gitolite installed, use the normal methods to
+    make sure this hook gets in.
+
+  * Use the same "admin key" on all the machines, so that the same person has
+    gitolite-admin access to all of them.
+
+<a name="generate_keypairs"></a>
+
+#### generate keypairs
+
+Each server will be potentially logging on to one or more of the other
+servers, so first generate keypairs for all of them (`ssh-keygen`) and copy
+the `.pub` files to all other servers, named appropriately.  So foo will have
+bar.pub and baz.pub, etc.
+
+<a name="setup_the_mirror_shell_on_each_server"></a>
+
+#### setup the mirror-shell on each server
+
+If you installed gitolite using the from client method, run the following:
+
+    # on foo
+    export GL_ADMINDIR=` cd $HOME;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR'`
+    cat bar.pub baz.pub |
+        sed -e 's,^,command="'$GL_ADMINDIR'/src/gl-mirror-shell" ,' >> ~/.ssh/authorized_keys
+
+If you installed using any of the other 3 methods do this:
+
+    cat bar.pub baz.pub |
+        sed -e 's,^,command="'$(which gl-mirror-shell)'" ,' >> ~/.ssh/authorized_keys
+
+Also do the same thing on the other machines.
+
+Now test this access:
+
+    # on foo
+    ssh gitolite@bar pwd
+        # should print /home/gitolite/repositories
+    ssh gitolite@bar uname -a
+        # should print the appropriate info for that server
+
+Similarly test the other combinations.
+
+<a name="set_slaves_to_slave_mode"></a>
+
+#### set slaves to slave mode
+
+Set slave mode on all the *slave* servers by setting `$GL_SLAVE_MODE = 1`
+(uncommenting the line if necessary).
+
+Leave the master server's file as is.
+
+<a name="set_slave_server_lists"></a>
+
+#### set slave server lists
+
+On the master (foo), set the names of the slaves by editing the
+`~/.gitolite.rc` to contain:
+
+    $ENV{GL_SLAVES} = 'gitolite@bar gitolite@baz';
+
+**Note the syntax well; this is critical**:
+
+  * **this must be in single quotes** (or you must remember to escape the `@`)
+  * the variable is an ENV var, not a plain perl var
+  * the values are *space separated*
+  * each value represents the userid and hostname for one server
+
+The basic idea is that this string, should be usable in both the following
+syntaxes:
+
+    git clone gitolite@bar:repo
+    ssh gitolite@bar pwd
+
+You can also use ssh host aliases.  Let's say server "bar" has a non-standard
+port number:
+
+    # in ~/.ssh/config on foo
+    host mybar
+        hostname bar
+        user gitolite
+        port 2222
+
+    # in ~/.gitolite.rc on foo
+    $ENV{GL_SLAVES} = 'bar gitolite@baz';
+
+And that's really all there is, unless...
+
+<a name="syncing_the_mirrors_the_first_time"></a>
+
+### syncing the mirrors the first time
+
+This is fine if you're setting up everything from scratch.  But if your master
+server already had some repos with commits on them, you have to manually sync
+them up once.
+
+    # on foo
+    gl-mirror-sync gitolite@bar
+        # path to "sync" program is ~/.gitolite/src if "from-client" install
+
+<a name="switching_over"></a>
+
+### switching over
+
+Let's say foo goes down.  You want to make bar the main server, and continue
+to have "baz" be a slave.
+
+  * on bar, edit `~/.gitolite.rc` and set
+
+        $GL_SLAVE_MODE = 0;
+        $ENV{GL_SLAVES} = 'gitolite@baz';
+
+  * **sanity check**: go to your gitolite-admin clone, add a remote for "bar",
+    fetch it, and make sure they are the same:
+
+        git remote add bar gitolite@bar:gitolite-admin
+        git fetch bar
+        git branch -a -v
+            # check that all SHAs are the same
+
+  * inform everyone of the new URL for their repos (see next section for more
+    on this)
+
+  * make sure that if "foo" does come up, it will not immediately start
+    serving requests.  You'll be in trouble if (a) foo comes up as it was
+    before, and (b) some developer still had the old URL lying around and
+    started pushing changes to it.
+
+    You could jump in quickly and set `$GL_SLAVE_MODE = 1` as soon as the
+    system comes up.  Better still, use extraneous means to block incoming
+    connections from normal users (out of scope for this document).
+
+<a name="the_return_of_foo"></a>
+
+### the return of foo
+
+<a name="switching_back"></a>
+
+#### switching back
+
+Switching back is fairly easy.
+
+  * synchronise all repos from bar to foo.  This may take some time, depending
+    on how long foo was down.
+
+        # on bar
+        gl-mirror-sync gitolite@foo
+            # path to "sync" program is ~/.gitolite/src if "from-client" install
+
+  * turn off pushes on "bar" by setting slave mode to 1
+  * run the sync once again; this should complete quickly
+
+  * **double check by comparing some the repos on both sides if needed**.  You
+    could run the following snippet on all servers for a quick check:
+
+        cd ~/repositories   # or wherever $REPO_BASE is
+        find . -type d -name "*.git" | sort |
+        while read r
+        do
+            echo $r
+            git ls-remote $r | sort
+        done | md5sum
+
+  * on foo, set the slave list (or check that it is correct)
+  * on foo, set slave mode off
+  * tell everyone to switch back
+
+<a name="making_foo_a_slave"></a>
+
+#### making foo a slave
+
+If "foo" does come up in a controlled manner, you might not want to switch
+back right away.  Unless you're doing DNS tricks, users may be peeved at
+having to do 2 switches.
+
+If you want to make foo a slave, you know the drill by now:
+
+  * set slave mode to 1 on foo
+  * on bar, add foo as a slave
+
+        # in ~/.gitolite.rc on bar
+        $ENV{GL_SLAVES} = 'gitolite@foo gitolite@baz';
+
+I think that should cover pretty much everything.  I *have* tested most of
+this, but YMMV.
+
+----
+
+<a name="URLs_that_your_users_will_use"></a>
+
+### URLs that your users will use
+
+Unless you play DNS tricks, it is more than likely that your users would have
+to change the URLs they use to access their repos if you change the server
+they push to.
+
+I cannot speak for the plethora of git client software out there but for
+normal git, this problem can be mitigated somewhat by doing this:
+
+  * in `~/.ssh/config` on my workstation, I have
+
+        host gl
+            hostname=primary.server.ip
+            user=gitolite
+
+  * all my `git clone` commands use `gl:reponame` as the URL
+
+  * if the primary goes down, and I have to access the secondary, I just
+    change the `hostname` line in `~/.ssh/config`.
+
+That's it.  Every clone of every repo used anywhere in this userid is now
+changed.
+
+To repeat, this may or may not work with all the git clients that exist (like
+jgit, or any of the GUI tools, and especially if you're on Windows).
+
+If anyone has a better idea, something that works more universally, I'd love
+to hear it.

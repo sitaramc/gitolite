@@ -13,6 +13,13 @@
 # $GL_PACKAGE_HOOKS = "";
 
 # --------------------------------------
+# MIRRORING SUPPORT
+
+# $GL_SLAVE_MODE = 0;
+# $ENV{GL_SLAVES} = 'gitolite@server2 gitolite@server3';
+#       PLEASE USE SINGLE QUOTES ABOVE, NOT DOUBLE QUOTES
+
+# see doc/mirroring.mkd for details
 
 # --------------------------------------
 

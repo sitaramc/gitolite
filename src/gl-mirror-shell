@@ -1,0 +1,20 @@
+#!/bin/bash
+
+export GL_BYPASS_UPDATE_HOOK
+GL_BYPASS_UPDATE_HOOK=1
+
+export REPO_BASE=`cd $HOME;perl -e 'do ".gitolite.rc"; print $REPO_BASE'  `
+if echo $SSH_ORIGINAL_COMMAND | egrep git-upload\|git-receive >/dev/null
+then
+
+    # the (special) admin post-update hook needs these, so we cheat
+    export GL_ADMINDIR
+    export GL_BINDIR
+    GL_ADMINDIR=` cd $HOME;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR'`
+    GL_BINDIR=`echo $0 | perl -lpe 's/^/$ENV{PWD}\// unless /^\//; s/\/[^\/]+$//;'`
+
+    SSH_ORIGINAL_COMMAND=`echo $SSH_ORIGINAL_COMMAND | sed -e "s/'/'$REPO_BASE\//"`
+    exec git shell -c "$SSH_ORIGINAL_COMMAND"
+else
+    bash -c "cd $REPO_BASE; $SSH_ORIGINAL_COMMAND"
+fi

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# gitolite mirroring
+
+# please see doc/mirroring.mkd for instructions on how to use this
+
+if [ -n "$GL_SLAVES" ]
+then
+    for mirror in $GL_SLAVES
+    do
+        if git push --mirror $mirror:$GL_REPO.git
+        then
+            :
+        else
+            ssh $mirror mkdir -p $GL_REPO.git
+            ssh $mirror git init --bare $GL_REPO.git
+            git push --mirror $mirror:$GL_REPO.git ||
+                echo "WARNING: mirror push to $mirror failed"
+        fi
+    done
+fi >&2
