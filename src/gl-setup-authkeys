@@ -24,6 +24,8 @@
 # All in all, unless it is shown to be quite inefficient, I'd much
 # prefer processing *all* keys each time there is a change.
 
+our ($GL_PERFLOGT);
+
 # setup
 my $bindir = $0;
 $bindir =~ s/\/[^\/]+$//;

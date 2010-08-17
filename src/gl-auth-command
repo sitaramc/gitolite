@@ -23,7 +23,7 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 # these are set by the "rc" file
-our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE, $GL_WILDREPOS, $GL_WILDREPOS_DEFPERMS, $GL_ADC_PATH, $SVNSERVE, $PROJECTS_LIST, $GL_SLAVE_MODE);
+our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE, $GL_WILDREPOS, $GL_WILDREPOS_DEFPERMS, $GL_ADC_PATH, $SVNSERVE, $PROJECTS_LIST, $GL_SLAVE_MODE, $GL_PERFLOGT);
 # and these are set by gitolite.pm
 our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT);
 our %repos;
@@ -82,19 +82,7 @@ $ENV{GL_GROUP_LIST} = join(" ", @ARGV) if @ARGV;
 #       logging, timestamp env vars
 # ----------------------------------------------------------------------------
 
-# timestamp
-my ($s, $min, $h, $d, $m, $y) = (localtime)[0..5];
-$y += 1900; $m++;               # usual adjustments
-for ($s, $min, $h, $d, $m) {
-    $_ = "0$_" if $_ < 10;
-}
-$ENV{GL_TS} = "$y-$m-$d.$h:$min:$s";
-
-# substitute template parameters and set the logfile name
-$GL_LOGT =~ s/%y/$y/g;
-$GL_LOGT =~ s/%m/$m/g;
-$GL_LOGT =~ s/%d/$d/g;
-$ENV{GL_LOG} = $GL_LOGT;
+$ENV{GL_LOG} = &get_logfilename($GL_LOGT);
 
 # ----------------------------------------------------------------------------
 #       sanity checks on SSH_ORIGINAL_COMMAND

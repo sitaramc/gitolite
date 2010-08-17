@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+
+# this program is a performance measurement wrapper around anything that it is
+# called with; it's arg-1 becomes the program being measured, with arg-2
+# onwards being arg-1's arguments
+
+# sorta like the "time" command... hence the name :-)
+
+use strict;
+use warnings;
+
+use Time::HiRes qw(gettimeofday tv_interval);
+
+our ($GL_PERFLOGT);
+
+# rc file
+do "$ENV{HOME}/.gitolite.rc";
+    # this file is always in a fixed place; code in the main gitolite that
+    # seems to indicate it is not, is obsolete and needs to be fixed.
+
+# the common setup module is in the same directory as this running program is
+my $bindir = $0;
+$bindir =~ s/\/[^\/]+$//;
+$bindir = "$ENV{PWD}/$bindir" unless $bindir =~ /^\//;
+require "$bindir/gitolite.pm";
+
+# ---------------------------------------------------------------
+
+my $starttime = [gettimeofday];
+
+my $pgm = shift;
+my $returncode = system($pgm, @ARGV);
+$returncode >>= 8;
+$ENV{GL_USER} = shift;
+
+my $elapsedtime = tv_interval($starttime);
+
+$ENV{GL_LOG} = &get_logfilename($GL_PERFLOGT);
+# log_it logs to $ENV{GL_LOG}
+&log_it("", "$elapsedtime\trc=$returncode");

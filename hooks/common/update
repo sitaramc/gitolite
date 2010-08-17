@@ -25,7 +25,7 @@ use warnings;
 #       common definitions
 # ----------------------------------------------------------------------------
 
-our ($GL_CONF_COMPILED, $UPDATE_CHAINS_TO);
+our ($GL_CONF_COMPILED, $UPDATE_CHAINS_TO, $GL_PERFLOGT);
 our %repos;
 
 # people with shell access should be allowed to bypass the update hook, simply

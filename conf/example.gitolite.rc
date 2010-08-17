@@ -71,6 +71,17 @@ $GL_LOGT="$GL_ADMINDIR/logs/gitolite-%y-%m.log";
 
 # --------------------------------------
 
+# location of the performance log files
+
+# uncomment and set this variable if you want performance logging
+#
+# perf log files are different from access log files; they store different
+# information, are not meant to be as long-lived, and so on
+
+# $GL_PERFLOGT="$GL_ADMINDIR/logs/perf-gitolite-%y-%m.log";
+
+# --------------------------------------
+
 # Please DO NOT change these three paths
 
 $GL_CONF="$GL_ADMINDIR/conf/gitolite.conf";

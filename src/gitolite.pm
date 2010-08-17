@@ -37,7 +37,7 @@ our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple patter
 our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 
 # these come from the RC file
-our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG);
+our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT);
 our %repos;
 our %groups;
 our %repo_config;
@@ -62,6 +62,24 @@ sub dbg {
     for my $i (@_) {
         print STDERR "DBG: $i\n";
     }
+}
+
+sub get_logfilename {
+    # this sub has a wee little side-effect; it sets $ENV{GL_TS}
+    my($template) = shift;
+
+    my ($s, $min, $h, $d, $m, $y) = (localtime)[0..5];
+    $y += 1900; $m++;               # usual adjustments
+    for ($s, $min, $h, $d, $m) {
+        $_ = "0$_" if $_ < 10;
+    }
+    $ENV{GL_TS} = "$y-$m-$d.$h:$min:$s";
+
+    # substitute template parameters and set the logfile name
+    $template =~ s/%y/$y/g;
+    $template =~ s/%m/$m/g;
+    $template =~ s/%d/$d/g;
+    return ($template);
 }
 
 sub log_it {
@@ -608,6 +626,7 @@ sub setup_authkeys
 
     # command and options for authorized_keys
     my $AUTH_COMMAND="$bindir/gl-auth-command";
+    $AUTH_COMMAND="$bindir/gl-time $bindir/gl-auth-command" if $GL_PERFLOGT;
     my $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
 
     # START

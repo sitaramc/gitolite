@@ -5,7 +5,7 @@
 use strict;
 use warnings;
 
-our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF, $GIT_PATH, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS);
+our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF, $GIT_PATH, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $GL_PERFLOGT);
 
 # setup quiet mode if asked; please do not use this when running manually
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
