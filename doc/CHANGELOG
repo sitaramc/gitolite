@@ -2,6 +2,38 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - more than one wildcard may match a repo, plus it can also be matched by a
+    normal repo line
+
+  - test suite has lots of new tests for the below
+  - (big change) all combinations of wild repos and big configs, including
+    daemon/gitweb/git-config settings, should work now!
+
+  - v1.5.5
+
+  - mirroring support
+
+  - setup_authkeys is now separate; can be called from outside also; useful
+    for people who want to maintain ssh keys via LDAP or something, and not
+    within gitolite
+
+  - (two months too late for towel day) gl-dont-panic!
+    [replaces the old "gl-emergency-addkey" program.  It does more (including
+    recovering from a botched push, not just lost keys), is cleaner, and works
+    for all install methods]
+
+  - document on how to create a mob branch
+
+  - info command now takes a parameter to limit output; this is mandatory if
+    GL_BIG_CONFIG is on
+
+  - v1.5.4
+
+  - new RC variables: GL_NO_CREATE_REPOS and GL_NO_SETUP_AUTHKEYS (inspired by
+    the specific needs that Fedora have, but made as generic as possible)
+  - separating push branch rights from create branch rights changed to use the
+    same mechanism as the (older) mechanism for separating rewind from delete
+
   - v1.5.3
 
   - log file format changed; minor backward compat breakage if you've been
