@@ -1,6 +1,7 @@
 use strict;
 use Data::Dumper;
 $Data::Dumper::Deepcopy = 1;
+$|++;
 
 # this file is commonly used using "require".  It is not required to use "use"
 # (because it doesn't live in a different package)
@@ -397,7 +398,17 @@ sub parse_acl
     our $writers = $ENV{GL_WRITERS} = $w || $ENV{GL_WRITERS} || "NOBODY";
     our $gl_user = $ENV{GL_USER};
 
-    die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
+    # these need to persist across calls to this function, so "our"
+    our $saved_crwu;
+    our (%saved_repos, %saved_groups);
+
+    if ($saved_crwu eq "$creator,$readers,$writers,$gl_user") {
+        %repos = %saved_repos; %groups = %saved_groups;
+    } else {
+        die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
+        $saved_crwu = "$creator,$readers,$writers,$gl_user";
+        %saved_repos = %repos; %saved_groups = %groups;
+    }
     unless (defined($data_version) and $data_version eq $current_data_version) {
         # this cannot happen for 'easy-install' cases, by the way...
         print STDERR "(INTERNAL: $data_version -> $current_data_version; running gl-setup)\n";
@@ -473,8 +484,8 @@ sub report_basic
     my $count = 0;
     for my $r (sort keys %repos) {
         next unless $r =~ /$repo/i;
-        # if $GL_BIG_CONFIG is on, limit the number of output lines to 5
-        next if $GL_BIG_CONFIG and $count++ >= 5;
+        # if $GL_BIG_CONFIG is on, limit the number of output lines to 20
+        next if $GL_BIG_CONFIG and $count++ >= 20;
         if ($r =~ $REPONAME_PATT and $r !~ /\bCREAT[EO]R\b/) {
             &parse_acl($GL_CONF_COMPILED, $r, "NOBODY",      "NOBODY", "NOBODY");
         } else {
@@ -490,7 +501,7 @@ sub report_basic
         $perm    .= ( $repos{$r}{W}{'@all'} ? ' @W' : ( $repos{'@all'}{W}{$user} ? ' #W' : ( $repos{$r}{W}{$user} ? '  W' : '   ' )));
         print "$perm\t$r\r\n" if $perm =~ /\S/;
     }
-    print "only 5 out of $count candidate repos examined\r\nplease use a partial reponame or regex pattern to limit output\r\n" if $GL_BIG_CONFIG and $count > 5;
+    print "only 20 out of $count candidate repos examined\r\nplease use a partial reponame or regex pattern to limit output\r\n" if $GL_BIG_CONFIG and $count > 20;
 }
 
 # ----------------------------------------------------------------------------
@@ -518,13 +529,13 @@ sub expand_wild
         $actual_repo =~ s/\.git$//;
         # actual_repo has to match the pattern being expanded
         next unless $actual_repo =~ /$repo/i;
-        next if $GL_BIG_CONFIG and $count++ >= 5;
+        next if $GL_BIG_CONFIG and $count++ >= 20;
 
         my($perm, $creator, $wild) = &repo_rights($actual_repo);
         next unless $perm =~ /\S/;
         print "$perm\t$creator\t$actual_repo\n";
     }
-    print "only 5 out of $count candidate repos examined\nplease use a partial reponame or regex pattern to limit output\n" if $GL_BIG_CONFIG and $count > 5;
+    print "only 20 out of $count candidate repos examined\nplease use a partial reponame or regex pattern to limit output\n" if $GL_BIG_CONFIG and $count > 20;
 }
 
 # there will be multiple calls to repo_rights; better to use a closure.  We
