@@ -5,7 +5,17 @@
 delete=$1
 
 get_rights_and_owner $delete
+
+# please choose one alternative and delete the other para
+
+# alternative 1 -- only creator can delete
 [ "$owner" = "$GL_USER" ] || die "$delete is not yours to delete!"
+
+# alternative 2 -- creator or anyone with W access to admin repo can delete
+[ "$owner" = "$GL_USER" ] || {
+    get_rights_and_owner gitolite-admin
+    [ -z "$perm_write" ] && die "$delete is not yours to delete and you're not the admin"
+}
 
 cd $GL_REPO_BASE_ABS
 rm -rf $delete.git
