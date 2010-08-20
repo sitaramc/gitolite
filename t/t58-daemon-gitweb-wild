@@ -123,5 +123,18 @@ do
     expect "bar/u1/try2.git"
     expect "bar/u1/try3.git"
 
+    name "add try4 project"
+    runlocal git ls-remote u1:bar/u1/try4
+    runremote ls -al projects.list
+    expect "gitolite-test gitolite-test 76 .* projects.list"
+    runremote cat projects.list
+    expect "testing.git"
+    expect "bar/u1/try1.git"
+    expect "bar/u1/try2.git"
+    expect "bar/u1/try3.git"
+    expect "bar/u1/try4.git"
+    runremote cat repositories/bar/u1/try4.git/description
+    expect "Unnamed repository; edit this file 'description' to name the repository."
+
     name "INTERNAL"
 done
