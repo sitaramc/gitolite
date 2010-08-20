@@ -199,7 +199,7 @@ if ($perm =~ /C/) {
     wrap_print("gl-perms", "$GL_WILDREPOS_DEFPERMS\n") if $GL_WILDREPOS_DEFPERMS;
     &setup_repo_configs($repo, \%repo_config);
     &setup_daemon_access($repo);
-    system("echo $repo.git >> $PROJECTS_LIST") if &setup_gitweb_access($repo, '', '');
+    &add_del_line ("$repo.git", $PROJECTS_LIST, &setup_gitweb_access($repo, '', ''));
     wrap_chdir($ENV{HOME});
 }
 

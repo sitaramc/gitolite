@@ -66,6 +66,26 @@ sub wrap_print {
     close($fh);
 }
 
+sub add_del_line {
+    my ($line, $file, $flag) = @_;
+    my $contents;
+
+    local $/ = undef;
+    my $fh = wrap_open("<", $file);
+    $contents = <$fh>;
+    $contents =~ s/\s+$/\n/;
+
+    if ($flag and $contents !~ /^\Q$line\E$/m) {
+        # add line if it doesn't exist
+        $contents .= "$line\n";
+        wrap_print($file, $contents);
+    }
+    if (not $flag and $contents =~ /^\Q$line\E$/m) {
+        $contents =~ s/^\Q$line\E(\n|$)//m;
+        wrap_print($file, $contents);
+    }
+}
+
 sub dbg {
     for my $i (@_) {
         print STDERR "DBG: $i\n";
@@ -279,7 +299,8 @@ sub get_set_perms
 
         # gitweb and daemon
         setup_daemon_access($repo);
-        system("echo $repo.git >> $PROJECTS_LIST") if &setup_gitweb_access($repo, '', '');
+        # add or delete line (arg1) from file (arg2) depending on arg3
+        &add_del_line ("$repo.git", $PROJECTS_LIST, &setup_gitweb_access($repo, '', ''));
     }
 }
 

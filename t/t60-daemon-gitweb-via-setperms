@@ -109,18 +109,9 @@ do
     runlocal git ls-remote u1:bar/u1/try6
     runremote ls -al repositories/bar/u1/try6.git/git-daemon-export-ok
     expect "ls: cannot access repositories/bar/u1/try6.git/git-daemon-export-ok: No such file or directory"
-    # projects.list currently does not get cleared until a compile, so you
-    # will still see the entry for .../try6
-    runremote ls -al projects.list
-    expect "gitolite-test gitolite-test 76 .* projects.list"
-    runremote cat projects.list
-    expect "bar/u1/try6.git"
-
-    echo | ugc
     runremote ls -al projects.list
     expect "gitolite-test gitolite-test 60 .* projects.list"
     runremote cat projects.list
-    # but *now* it should be gone
     notexpect "bar/u1/try6.git"
 
     name "INTERNAL"

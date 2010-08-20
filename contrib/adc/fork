@@ -19,7 +19,7 @@ git clone --bare -l $GL_REPO_BASE_ABS/$from.git $GL_REPO_BASE_ABS/$to.git
 cd $GL_REPO_BASE_ABS/$to.git
 echo $GL_USER > gl-creater
 git config gitweb.owner "$GL_USER"
-( cd $HOME;perl -e 'do ".gitolite.rc"; print $GL_WILDREPOS_DEFPERMS' ) |
+( cd $HOME;perl -le 'do ".gitolite.rc"; print $GL_WILDREPOS_DEFPERMS' ) |
     SSH_ORIGINAL_COMMAND="setperms $to" $GL_BINDIR/gl-auth-command $GL_USER
 cp -R $GL_REPO_BASE_ABS/$from.git/hooks/* $GL_REPO_BASE_ABS/$to.git/hooks
 

@@ -231,7 +231,7 @@ $GL_WILDREPOS = 0;
 # as desired after repository creation; it is only a default. Note that @all can be
 # used here but is special; no other groups can be used in user-level permissions.
 
-# $GL_WILDREPOS_DEFPERMS = 'R = @all';
+# $GL_WILDREPOS_DEFPERMS = 'R @all';
 
 # --------------------------------------
 # HOOK CHAINING
