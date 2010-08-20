@@ -15,9 +15,12 @@ get_rights_and_owner $to
 git clone --bare -l $GL_REPO_BASE_ABS/$from.git $GL_REPO_BASE_ABS/$to.git
 [ $? -ne 0 ] && exit 1
 
-# fix up creator, and hooks
+# fix up creator, gitweb owner, and hooks
 cd $GL_REPO_BASE_ABS/$to.git
 echo $GL_USER > gl-creater
+git config gitweb.owner "$GL_USER"
+( cd $HOME;perl -e 'do ".gitolite.rc"; print $GL_WILDREPOS_DEFPERMS' ) |
+    SSH_ORIGINAL_COMMAND="setperms $to" $GL_BINDIR/gl-auth-command $GL_USER
 cp -R $GL_REPO_BASE_ABS/$from.git/hooks/* $GL_REPO_BASE_ABS/$to.git/hooks
 
 if [ -n "$GL_WILDREPOS_DEFPERMS" ]; then

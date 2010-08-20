@@ -38,7 +38,7 @@ our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple patter
 our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 
 # these come from the RC file
-our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT);
+our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST);
 our %repos;
 our %groups;
 our %repo_config;
@@ -57,6 +57,13 @@ sub wrap_open {
     open (my $fh, $_[0], $_[1]) or die "$ABRT open $_[1] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n" .
             ( $_[2] || '' );    # suffix custom error message if given
     return $fh;
+}
+
+sub wrap_print {
+    my ($file, $text) = @_;
+    my $fh = wrap_open(">", $file);
+    print $fh $text;
+    close($fh);
 }
 
 sub dbg {
@@ -269,6 +276,10 @@ sub get_set_perms
         system("cat > gl-perms");
         print "New perms are:\n";
         system("cat", "gl-perms");
+
+        # gitweb and daemon
+        setup_daemon_access($repo);
+        system("echo $repo.git >> $PROJECTS_LIST") if &setup_gitweb_access($repo, '', '');
     }
 }
 
@@ -342,26 +353,22 @@ sub setup_gitweb_access
 # this also sets "owner" for gitweb, by the way
 {
     my ($repo, $desc, $owner) = @_;
-    my $ret = 0;
+    my $is_wild = -f "gl-creater";
+        # we may override but we do not remove gitweb.owner and description
+        # for wild repos
 
-    # passing in a descr implies 'R = gitweb'
-    if ($desc or &can_read($repo, 'gitweb')) {
-        $ret = 1;
-        if ($desc) {
-            open(DESC, ">", $desc_file);
-            print DESC $desc . "\n";
-            close DESC;
-        }
-        if ($owner) {
-            # set the repository owner
-            system("git", "config", "gitweb.owner", $owner);
-        } else {
-            # remove the repository owner setting
-            system("git config --unset-all gitweb.owner 2>/dev/null");
-        }
+    if ($desc) {
+        open(DESC, ">", $desc_file);
+        print DESC $desc . "\n";
+        close DESC;
     } else {
-        unlink $desc_file;
-        system("git config --unset-all gitweb.owner 2>/dev/null");
+        unlink $desc_file unless $is_wild;
+    }
+
+    if ($owner) {
+        system("git", "config", "gitweb.owner", $owner);
+    } else {
+        system("git config --unset-all gitweb.owner 2>/dev/null") unless $is_wild;
     }
 
     # if there are no gitweb.* keys set, remove the section to keep the config file clean
@@ -370,7 +377,8 @@ sub setup_gitweb_access
         system("git config --remove-section gitweb 2>/dev/null");
     }
 
-    return $ret;
+    return ($desc or &can_read($repo, 'gitweb'));
+        # this return value is used by the caller to write to projects.list
 }
 
 # ----------------------------------------------------------------------------

@@ -78,7 +78,7 @@ do
     runremote cat repositories/bar/u1/try1.git/description
     expect "this is bar/u1/try1"
     runremote cat repositories/bar/u1/try3.git/description
-    expect "cat: repositories/bar/u1/try3.git/description: No such file or directory"
+    expect "Unnamed repository; edit this file 'description' to name the repository."
 
     name "now compile and recheck try3 stuff"
     echo "

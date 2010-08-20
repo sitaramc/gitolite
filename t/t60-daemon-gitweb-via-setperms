@@ -1,0 +1,128 @@
+# vim: syn=sh:
+for bc in 0 1
+do
+    cd $TESTDIR
+    $TESTDIR/rollback || die "rollback failed"
+    editrc GL_WILDREPOS 1
+    editrc GL_BIG_CONFIG $bc
+
+    name "INTERNAL"
+    echo "
+        @leads = u1 u2
+        @devs = u1 u2 u3 u4
+
+        @gbar = bar/CREATOR/..*
+        repo    @gbar
+            C               =   @leads
+            RW+             =   @leads
+            RW              =   WRITERS @devs
+            R               =   READERS
+    " | ugc
+    name "nothing set yet"
+    expect_push_ok "master -> master"
+
+    runlocal git ls-remote u1:bar/u1/try1
+    runremote ls -al repositories/bar/u1/try1.git/git-daemon-export-ok
+    expect "ls: cannot access repositories/bar/u1/try1.git/git-daemon-export-ok: No such file or directory"
+    runremote ls -al projects.list
+    expect "gitolite-test gitolite-test 12 .* projects.list"
+    runremote cat projects.list
+    notexpect "bar/u1/try1.git"
+
+    runlocal git ls-remote u1:bar/u1/try2
+    runremote ls -al repositories/bar/u1/try2.git/git-daemon-export-ok
+    expect "ls: cannot access repositories/bar/u1/try2.git/git-daemon-export-ok: No such file or directory"
+    runremote ls -al projects.list
+    expect "gitolite-test gitolite-test 12 .* projects.list"
+    runremote cat projects.list
+    notexpect "bar/u1/try2.git"
+
+    name "add daemon access to try1"
+    echo R daemon | runlocal ssh u1 setperms bar/u1/try1
+    expect "R daemon"
+
+    runremote ls -al repositories/bar/u1/try1.git/git-daemon-export-ok
+    expect "gitolite-test gitolite-test .* repositories/bar/u1/try1.git/git-daemon-export-ok"
+    runremote ls -al projects.list
+    expect "gitolite-test gitolite-test 12 .* projects.list"
+    runremote cat projects.list
+    notexpect "bar/u1/try1.git"
+
+    name "add gitweb access to try2"
+    echo R gitweb | runlocal ssh u1 setperms bar/u1/try2
+    expect "R gitweb"
+
+    runremote ls -al repositories/bar/u1/try2.git/git-daemon-export-ok
+    expect "ls: cannot access repositories/bar/u1/try2.git/git-daemon-export-ok: No such file or directory"
+    runremote ls -al projects.list
+    expect "gitolite-test gitolite-test 28 .* projects.list"
+    runremote cat projects.list
+    expect "bar/u1/try2.git"
+
+    echo "\$GL_WILDREPOS_DEFPERMS = 'R daemon';" | addrc
+
+    name "add default daemon access"
+    runlocal git ls-remote u1:bar/u1/try3
+    runremote ls -al repositories/bar/u1/try3.git/git-daemon-export-ok
+    expect "gitolite-test gitolite-test .* repositories/bar/u1/try3.git/git-daemon-export-ok"
+    runremote ls -al projects.list
+    expect "gitolite-test gitolite-test 28 .* projects.list"
+    runremote cat projects.list
+    notexpect "bar/u1/try3.git"
+
+    name "add default gitweb access"
+    echo "\$GL_WILDREPOS_DEFPERMS = 'R gitweb';" | addrc
+
+    runlocal git ls-remote u1:bar/u1/try4
+    runremote ls -al repositories/bar/u1/try4.git/git-daemon-export-ok
+    expect "ls: cannot access repositories/bar/u1/try4.git/git-daemon-export-ok: No such file or directory"
+    runremote ls -al projects.list
+    expect "gitolite-test gitolite-test 44 .* projects.list"
+    runremote cat projects.list
+    expect "bar/u1/try4.git"
+
+    name "add default both access"
+    echo "\$GL_WILDREPOS_DEFPERMS = 'R daemon gitweb';" | addrc
+
+    runlocal git ls-remote u1:bar/u1/try5
+    runremote ls -al repositories/bar/u1/try5.git/git-daemon-export-ok
+    expect "gitolite-test gitolite-test .* repositories/bar/u1/try5.git/git-daemon-export-ok"
+    runremote ls -al projects.list
+    expect "gitolite-test gitolite-test 60 .* projects.list"
+    runremote cat projects.list
+    expect "bar/u1/try5.git"
+
+    name "add default both access with @all also"
+    echo "\$GL_WILDREPOS_DEFPERMS = 'R @all daemon gitweb';" | addrc
+
+    runlocal git ls-remote u1:bar/u1/try6
+    runremote ls -al repositories/bar/u1/try6.git/git-daemon-export-ok
+    expect "gitolite-test gitolite-test .* repositories/bar/u1/try6.git/git-daemon-export-ok"
+    runremote ls -al projects.list
+    expect "gitolite-test gitolite-test 76 .* projects.list"
+    runremote cat projects.list
+    expect "bar/u1/try6.git"
+
+    name "remove all from u6"
+    < /dev/null runlocal ssh u1 setperms bar/u1/try6
+
+    runlocal git ls-remote u1:bar/u1/try6
+    runremote ls -al repositories/bar/u1/try6.git/git-daemon-export-ok
+    expect "ls: cannot access repositories/bar/u1/try6.git/git-daemon-export-ok: No such file or directory"
+    # projects.list currently does not get cleared until a compile, so you
+    # will still see the entry for .../try6
+    runremote ls -al projects.list
+    expect "gitolite-test gitolite-test 76 .* projects.list"
+    runremote cat projects.list
+    expect "bar/u1/try6.git"
+
+    echo | ugc
+    runremote ls -al projects.list
+    expect "gitolite-test gitolite-test 60 .* projects.list"
+    runremote cat projects.list
+    # but *now* it should be gone
+    notexpect "bar/u1/try6.git"
+
+    name "INTERNAL"
+
+done
