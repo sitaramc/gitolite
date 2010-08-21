@@ -393,7 +393,7 @@ $dumped_data .= Data::Dumper->Dump([\%repo_config], [qw(*repo_config)]) if %repo
 # much...
 $dumped_data =~ s/'(?=[^']*\$(?:creator|readers|writers|gl_user))~?(.*?)'/"$1"/g;
 print $compiled_fh $dumped_data;
-if ($GL_BIG_CONFIG and %groups) {
+if (%groups) {
     $dumped_data = Data::Dumper->Dump([\%groups], [qw(*groups)]);
     $dumped_data =~ s/\bCREAT[EO]R\b/\$creator/g;
     $dumped_data =~ s/'(?=[^']*\$(?:creator|readers|writers|gl_user))~?(.*?)'/"$1"/g;

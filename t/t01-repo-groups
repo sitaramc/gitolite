@@ -26,7 +26,7 @@ echo "
 " | ugc
 
 catconf
-expect_filesame $TESTDIR/out/t01-repo-groups.1
+expect_filesame $TESTDIR/out/t01-repo-groups.1b
 
 # ----------
 $TESTDIR/rollback || die "rollback failed"

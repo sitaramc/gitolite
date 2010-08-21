@@ -1,0 +1,72 @@
+# vim: syn=sh:
+for bc in 0 1
+do
+    cd $TESTDIR
+    $TESTDIR/rollback || die "rollback failed"
+    editrc GL_WILDREPOS 1
+    editrc GL_BIG_CONFIG $bc
+
+    name "INTERNAL"
+    echo "
+        @leads = u1 u2
+        @devs = u1 u2 u3 u4
+
+        @gbar = bar/CREATOR/..*
+        repo    @gbar
+            C               =   @leads
+            RW+             =   CREATOR
+            RW              =   WRITERS
+            R               =   READERS
+    " | ugc
+    name "nothing set yet"
+    expect_push_ok "master -> master"
+
+    name "u1 auto-creates a repo"
+    runlocal git ls-remote u1:bar/u1/try1
+    expect "Initialized empty Git repository in /home/gitolite-test/repositories/bar/u1/try1.git/"
+    name "default permissions for u2 and u4"
+    runlocal ssh u1 expand
+    expect R.*W.*u1.*bar/u1/try1
+    runlocal ssh u2 expand
+    notexpect R.*W.*u1.*bar/u1/try1
+    runlocal ssh u4 expand
+    notexpect R.*W.*u1.*bar/u1/try1
+
+    name "@leads can RW try1"
+    echo RW @leads | runlocal ssh u1 setperms bar/u1/try1
+    expect "RW @leads"
+    runlocal ssh u1 expand
+    expect R.*W.*u1.*bar/u1/try1
+    runlocal ssh u2 expand
+    expect R.*W.*u1.*bar/u1/try1
+    runlocal ssh u4 expand
+    notexpect R.*W.*u1.*bar/u1/try1
+
+    name "@devs can R try1"
+    echo R @devs | runlocal ssh u1 setperms bar/u1/try1
+    expect "R @devs"
+    notexpect "RW @leads"
+    runlocal ssh u1 expand
+    expect R.*W.*u1.*bar/u1/try1
+    runlocal ssh u2 expand
+    notexpect R.*W.*u1.*bar/u1/try1
+    expect R.*u1.*bar/u1/try1
+    runlocal ssh u4 expand
+    notexpect R.*W.*u1.*bar/u1/try1
+    expect R.*u1.*bar/u1/try1
+
+    name "combo of previous 2"
+    printf "R @devs\nRW @leads\n" | runlocal ssh u1 setperms bar/u1/try1
+    expect "R @devs"
+    expect "RW @leads"
+    runlocal ssh u1 expand
+    expect R.*W.*u1.*bar/u1/try1
+    runlocal ssh u2 expand
+    expect R.*W.*u1.*bar/u1/try1
+    runlocal ssh u4 expand
+    notexpect R.*W.*u1.*bar/u1/try1
+    expect R.*u1.*bar/u1/try1
+
+    name "INTERNAL"
+
+done

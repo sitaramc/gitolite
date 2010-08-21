@@ -255,28 +255,53 @@ sub new_repo
 #       metaphysics (like, "is there a god?", "who created me?", etc)
 # ----------------------------------------------------------------------------
 
-# "who created this repo", "am I on the R list", and "am I on the RW list"?
-sub wild_repo_rights
 {
-    my ($repo, $user) = @_;
-    # creator
-    my $c = '';
-    if (                     -f "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-creater") {
-        my $fh = wrap_open("<", "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-creater");
-        chomp($c = <$fh>);
-    }
-    # $user's R and W rights
-    my ($r, $w); $r = ''; $w = '';
-    if ($user and            -f "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-perms") {
-        my $fh = wrap_open("<", "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-perms");
-        my $perms = join ("", <$fh>);
-        if ($perms) {
-            $r = $user if $perms =~ /^\s*R(?=\s).*\s(\@all|$user)(\s|$)/m;
-            $w = $user if $perms =~ /^\s*RW(?=\s).*\s(\@all|$user)(\s|$)/m;
-        }
-    }
+    # the following sub needs some persistent data, so we make a closure
+    my $cache_filled = 0;
+    my %cached_groups;
 
-    return ($c, $r, $w);
+    # "who created this repo", "am I on the R list", and "am I on the RW list"?
+    sub wild_repo_rights
+    {
+        my ($repo, $user) = @_;
+        # pull in basic group info
+        unless ($cache_filled) {
+            local(%repos, %groups);
+            # read group info from compiled config.  At the time we're called
+            # this info has not yet been pulled in by the rest of the code, so
+            # we need to do this specially here.  However, the info we're
+            # looking for is not subject to variable substitutions so we don't
+            # really care; we just pull it in once and save it for the rest of
+            # the run
+            do $GL_CONF_COMPILED;
+            %cached_groups = %groups;
+            $cache_filled++;
+        }
+        # creator
+        my $c = '';
+        if (                     -f "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-creater") {
+            my $fh = wrap_open("<", "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-creater");
+            chomp($c = <$fh>);
+        }
+        # $user's R and W rights
+        my ($r, $w); $r = ''; $w = '';
+        if ($user and            -f "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-perms") {
+            my $fh = wrap_open("<", "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-perms");
+            my $perms = join ("", <$fh>);
+            # $perms is say "R alice @foo @bar\nRW bob @baz" (the entire gl-perms
+            # file).  We replace each @foo with $user if $cached_groups{'@foo'}{$user}
+            # exists (i.e., $user is a member of @foo)
+            for my $g ($perms =~ /\s(\@\S+)/g) {
+                $perms =~ s/ $g(?!\S)/ $user/ if $cached_groups{$g}{$user};
+            }
+            if ($perms) {
+                $r = $user if $perms =~ /^\s*R(?=\s).*\s(\@all|$user)(\s|$)/m;
+                $w = $user if $perms =~ /^\s*RW(?=\s).*\s(\@all|$user)(\s|$)/m;
+            }
+        }
+
+        return ($c, $r, $w);
+    }
 }
 
 # ----------------------------------------------------------------------------
