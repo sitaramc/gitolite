@@ -4,10 +4,13 @@ Running "ssh git@server info" or "ssh git@server expand" gives you certain
 output.  This doclet describes the output; you're welcome to help me make it
 clearer :)
 
-There are 3 columns of permissions (create, read, and write) in the output,
-although the first column is often blank.
+(Side note: if you installed using the "from-client" method, and you're the
+administrator, please replace `ssh git@server` with `ssh gitolite`, all
+through this document).
 
-Here is the output of the 2 commands (info and expand):
+----
+
+<a name="the_info_command"></a>
 
 ### the "info" command
 
@@ -20,13 +23,56 @@ file that you have been given any kind of access to.  If you supply an
 optional pattern the output will be limited to repos matching that pattern.
 If you're an admin you can append a list of users to see their permissions
 instead of your own; in this mode the pattern is mandatory, even if you just
-use `.` to cheat.  (Side note: if you installed using easy-install that would
-probably be `ssh gitolite info`, by the way).
+use `.` to cheat.
+
+Here is a sample output of the info command.  There are 3 columns of
+permissions (create, read, and write) in the output, although the first column
+is often blank.
+
+    $ ssh git@server info
+    hello sitaram, the gitolite version here is v1.5.4-19-ga3397d4
+    the gitolite config gives you the following access:
+        #R  W       SecureBrowse
+        #R  W       anu-wsd
+        #R  W       entrans
+        @R  W       git-notes
+        @R  W       gitolite
+        #R  W       gitolite-admin
+        #R  W       indic_web_input
+     @C #R          private/CREATOR/[\w.-]+
+        #R  W       proxy
+     @C @R  W       public/CREATOR/[\w.-]+
+        @R @W       testing
+        #R  W       vkc
 
 The meaning of C, R, and W are self-explanatory, but they might sometimes be
 prefixed by a symbol.  For example, `@R` means that `@all` users have
-beengiven this access, and `#R` means that this user is a "superuser" (think
+been given this access, and `#R` means that this user is a "superuser" (think
 root's shell prompt) and so has access to `@all` repos.
+
+Here are a couple of samples with optional patterns:
+
+    $ ssh git@server info git
+    hello sitaram, the gitolite version here is v1.5.4-19-ga3397d4
+    the gitolite config gives you the following access:
+        @R  W       git-notes
+        @R  W       gitolite
+        #R  W       gitolite-admin
+
+    $ ssh git@server info admin
+    hello sitaram, the gitolite version here is v1.5.4-19-ga3397d4
+    the gitolite config gives you the following access:
+        #R  W       gitolite-admin
+
+In "big-config" mode (i.e., when `GL_BIG_CONFIG` is set) the pattern is
+**mandatory**.  You can try and cheat the system by passing in a "." but
+gitolite truncates the output after 20 results to prevent a DOS.
+
+The pattern is also mandatory when an admin wants to find out what access some
+*other* user has, which you may have guessed from the syntax in the "usage"
+line above.
+
+<a name="the_expand_command"></a>
 
 ### the "expand" command
 

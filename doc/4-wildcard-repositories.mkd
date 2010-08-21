@@ -20,12 +20,12 @@ workarounds I may not have the time to code it right away.
 In this document:
 
   * <a href="#rc_file_setting_required">rc file setting required</a>
-  * <a href="#Wildcard_repos">Wildcard repos</a>
-      * <a href="#Wildcard_repos_with_creator_name_in_them">Wildcard repos with creator name in them</a>
-      * <a href="#Wildcard_repos_without_creator_name_in_them">Wildcard repos without creator name in them</a>
-  * <a href="#Side_note_Line_anchored_regexes">Side-note: Line-anchored regexes</a>
-      * <a href="#Contrast_with_refexes">Contrast with refexes</a>
-  * <a href="#Handing_out_rights_to_wildcard_matched_repos">Handing out rights to wildcard-matched repos</a>
+  * <a href="#wildcard_repos">wildcard repos</a>
+      * <a href="#wildcard_repos_with_creator_name_in_them">wildcard repos with creator name in them</a>
+      * <a href="#wildcard_repos_without_creator_name_in_them">wildcard repos without creator name in them</a>
+  * <a href="#side_note_line_anchored_regexes">side-note: line-anchored regexes</a>
+      * <a href="#contrast_with_refexes">contrast with refexes</a>
+  * <a href="#handing_out_rights_to_wildcard_matched_repos">handing out rights to wildcard-matched repos</a>
   * <a href="#setting_a_gitweb_description_for_a_wildcard_matched_repo">setting a gitweb description for a wildcard-matched repo</a>
   * <a href="#reporting">reporting</a>
   * <a href="#other_issues_and_discussion">other issues and discussion</a>
@@ -45,17 +45,17 @@ This feature requires that you set `$GL_WILDREPOS` to "1" in `~/.gitolite.rc`
 on the server.  Please search for that variable and see comments around it in
 `conf/example.gitolite.rc` for more information on this.
 
-<a name="Wildcard_repos"></a>
+<a name="wildcard_repos"></a>
 
-### Wildcard repos
+### wildcard repos
 
 Which of these alternatives you choose depends on your needs, and the social
 aspects of your environment.  The first one is a little more rigid, making it
 harder to make mistakes, and the second is more flexible and trusting.
 
-<a name="Wildcard_repos_with_creator_name_in_them"></a>
+<a name="wildcard_repos_with_creator_name_in_them"></a>
 
-#### Wildcard repos with creator name in them
+#### wildcard repos with creator name in them
 
 Here's an example snippet:
 
@@ -79,9 +79,9 @@ new repo, as user "u4" (a student):
 
 Notice the *two* empty repo inits, and the order in which they occur ;-)
 
-<a name="Wildcard_repos_without_creator_name_in_them"></a>
+<a name="wildcard_repos_without_creator_name_in_them"></a>
 
-#### Wildcard repos without creator name in them
+#### wildcard repos without creator name in them
 
 Here's how the same example would look if you did not want the CREATOR's name
 to be part of the actual repo name.
@@ -106,9 +106,9 @@ and have a TA create the repos in advance.
 In either case, they could then use the `setperms` feature to specify which
 users are "READERS" and which are "WRITERS".  See later for details.
 
-<a name="Side_note_Line_anchored_regexes"></a>
+<a name="side_note_line_anchored_regexes"></a>
 
-### Side-note: Line-anchored regexes
+### side-note: line-anchored regexes
 
 A regex like
 
@@ -123,9 +123,9 @@ But you may be surprised to find that it does not match even
 `^assignments/S[0-9]+/A[0-9]+$` -- notice the line beginning and ending
 metacharacters.
 
-<a name="Contrast_with_refexes"></a>
+<a name="contrast_with_refexes"></a>
 
-#### Contrast with refexes
+#### contrast with refexes
 
 Just for interest, note that this is in contrast to the refexes for the normal
 "branch" permissions, as described in `conf/example.conf` and elsewhere.
@@ -135,9 +135,9 @@ if no one will actually push such a branch!  You can anchor both sides if you
 really care, by using `master$` instead of `master`, but that is *not* the
 default for refexes.
 
-<a name="Handing_out_rights_to_wildcard_matched_repos"></a>
+<a name="handing_out_rights_to_wildcard_matched_repos"></a>
 
-### Handing out rights to wildcard-matched repos
+### handing out rights to wildcard-matched repos
 
 In the examples above, we saw two special "user" names: READERS and WRITERS.
 The permissions they have are controlled by the config file, but ***who is
@@ -193,30 +193,10 @@ commands, thanks to Teemu.
 
 ### reporting
 
-Remember the cool stuff you see when you just do `ssh git@server` (grep for
-"myrights" in `doc/3-faq-tips-etc.mkd` if you forgot, or go [here][mr]).
+In order to see what repositories were created from a wildcard, use the
+"expand" command, described briefly in [doc/report-output.mkd][repout].
 
-[mr]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#myrights
-
-This still works, except the format is a little more compressed to accommodate
-a new column (at the start) for "C" permissions, which indicate that you are
-allowed to *create* repos matching that pattern.
-
-In addition, there is also the "expand" command, which takes any regex pattern
-and returns you a list of all wildcard-created repos that you have access to
-which fit that pattern.  And if, as an administrator, you wish to list out
-*every single* repo that your users have created, add this to your config
-file:
-
-    repo @all
-        R       =   sitaram     # or whoever you are
-
-Push the config, then try
-
-    # if you installed using the "from-client" method
-    ssh gitolite expand
-    # for the other 3 install methods
-    ssh git@server expand
+[repout]: http://github.com/sitaramc/gitolite/blob/pu/doc/report-output.mkd
 
 <a name="other_issues_and_discussion"></a>
 

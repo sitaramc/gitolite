@@ -184,14 +184,14 @@ Otherwise, run these checks:
     you ran the easy install, or someone fiddled with the
     `~/.ssh/authorized_keys` file on the server.
 
-    If it prints [gitolite version and access info][myrights], you managed to
-    overwrite the `id_rsa` keypair with the `sitaram` keypair, or something
-    equally weird.
+    If it prints the gitolite version and access info (see
+    [doc/report-output.mkd][repout]), you managed to overwrite the `id_rsa`
+    keypair with the `sitaram` keypair, or something equally weird.
 
-2.  `ssh gitolite info` should print some [gitolite version and access
-    info][myrights].  If you get the output of the GNU info command instead,
-    you probably reused your `id_rsa` keypair as your `sitaram` keypair, or
-    overwrote the `sitaram` keypair with the `id_rsa` keypair.
+2.  `ssh gitolite info` should print some gitolite version and access info.
+    If you get the output of the GNU info command instead, you probably reused
+    your `id_rsa` keypair as your `sitaram` keypair, or overwrote the
+    `sitaram` keypair with the `id_rsa` keypair.
 
 There are many ways to fix this, depending on where and what the damage is.
 The most generic way (and therefore time-taking) is to re-install gitolite
@@ -229,10 +229,8 @@ which was previously sent to the gitolite admin to add into the admin repo's
 `keydir` as "user.pub", and then "user" given permissions to some repo.
 
 `ssh git@server info` should get you [gitolite version and access
-info][myrights].  If it asks you for a password, your pubkey was not sent to
-the server properly.  Check with your admin.
-
-[myrights]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#myrights
+info][repout].  If it asks you for a password, your pubkey was not sent to the
+server properly.  Check with your admin.
 
 If it gets you the GNU info command output, you have shell access.  This means
 you had command line access to the server *before* you were added as a
@@ -462,3 +460,4 @@ bigger problems than gitolite install not working!)]
 [o3]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#installation_and_setup
 [fc]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#from_client_method_install_from_the_client_to_the_server
 [urls]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#URLs_for_gitolite_managed_repos
+[repout]: http://github.com/sitaramc/gitolite/blob/pu/doc/report-output.mkd

@@ -438,54 +438,10 @@ Sometimes there are too many repos, maybe even named similarly, or with the
 potential for typos, confusion about hyphens/underscores or upper/lower case,
 etc.  You'd just like a simple way to know what repos you have access to.
 
-Easy!  Just use ssh to give the "info" command to the gitolite server:
+Gitolite provides two commands (`info` and `expand`) to help you find this
+information; please check [doc/report-output.mkd][repout] for details.
 
-    $ ssh git@server info
-    hello sitaram, the gitolite version here is v1.4.2-4-g40cbecd
-    the gitolite config gives you the following access:
-        #R  W       SecureBrowse
-        #R  W       anu-wsd
-        #R  W       entrans
-        @R  W       git-notes
-        @R  W       gitolite
-        #R  W       gitolite-admin
-        #R  W       indic_web_input
-     @C #R          private/CREATOR/[\w.-]+
-        #R  W       proxy
-     @C @R  W       public/CREATOR/[\w.-]+
-        @R @W       testing
-        #R  W       vkc
-
-To understand what these symbols mean, please see doc/report-output.mkd.
-
-You can also pass an extra argument to subset the listing; it's treated as a
-regex pattern that can match anywhere in the reponame.
-
-In "big-config" mode (i.e., when `GL_BIG_CONFIG` is set) this argument is
-**mandatory**.  You can try and cheat the system by passing in a "." but
-gitolite truncates the output after 5 results to prevent a DOS.
-
-    $ ssh git@server info git
-    hello sitaram, the gitolite version here is v1.4.2-4-g40cbecd
-    the gitolite config gives you the following access:
-        @R  W       git-notes
-        @R  W       gitolite
-        #R  W       gitolite-admin
-
-    $ ssh git@server info admin
-    hello sitaram, the gitolite version here is v1.4.2-4-g40cbecd
-    the gitolite config gives you the following access:
-        #R  W       gitolite-admin
-
-The administrator can also say things like:
-
-    # if you installed using the "from-client" method
-    ssh gitolite info foo u1 u2 u3
-    # for the other 3 install methods
-    ssh git@server info foo u1 u2 u3
-
-to get this info for other user(s).  The "foo" is a partial reponame or a
-regex pattern; see above for details.
+[repout]: http://github.com/sitaramc/gitolite/blob/pu/doc/report-output.mkd
 
 <a name="including_config_lines_from_other_files"></a>
 
