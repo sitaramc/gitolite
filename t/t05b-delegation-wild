@@ -1,0 +1,116 @@
+# vim: syn=sh:
+cd $TESTDIR
+$TESTDIR/rollback || die "rollback failed"
+editrc GL_BIG_CONFIG $i
+editrc GL_WILDREPOS 1
+# ----------
+
+name "INTERNAL"
+cd ~/gitolite-admin
+mkdir -p conf/fragments
+echo "
+    # group your projects/repos however you want
+    @u1r    =   r1[ab]
+    @u2r    =   r2[ab]
+    @u3r    =   r3[ab]
+
+    # the admin repo access was probably like this to start with:
+    repo gitolite-admin
+        RW                              = u1 u2 u3
+        RW+ NAME/                       = tester
+        RW  NAME/conf/fragments/u1r     = u1
+        RW  NAME/conf/fragments/u2r     = u2
+        RW  NAME/conf/fragments/u3r     = u3
+" | ugc
+
+echo "
+    repo r1a r1b
+        C       =   @all
+        RW+     =   CREATOR
+    repo @u1r
+        RW+     =   tester
+" > conf/fragments/u1r.conf
+
+echo "
+    repo @u2r
+        C       =   @all
+        RW+     =   CREATOR
+    repo @u2r
+        RW+     =   tester
+" > conf/fragments/u2r.conf
+
+echo "
+    repo @u3r
+        C       =   @all
+        RW+     =   CREATOR
+    repo @u3r
+        RW+     =   tester
+" > conf/fragments/u3r.conf
+
+ugc < /dev/null
+runlocal git ls-remote gitolite:r1a
+runlocal git ls-remote gitolite:r1b
+runlocal git ls-remote gitolite:r2a
+runlocal git ls-remote gitolite:r2b
+runlocal git ls-remote gitolite:r3a
+runlocal git ls-remote gitolite:r3b
+runremote ls repositories
+
+name "u1 push frag u1r"
+cd ~/gitolite-admin
+echo "
+    repo @u1r
+        RW+     =   u5
+" > conf/fragments/u1r.conf
+ugc u1 < /dev/null
+expect "To u1:gitolite-admin"
+expect "master -> master"
+
+name "u2 push main conf fail"
+cd ~/gitolite-admin
+echo "
+    repo @u1r
+        RW+     =   u6
+" | ugc u2
+expect "W NAME/conf/gitolite.conf gitolite-admin u2 DENIED by fallthru"
+expect "To u2:gitolite-admin"
+expect "\[remote rejected\] master -> master (hook declined)"
+git reset --hard origin/master &>/dev/null
+
+name "u2 push frag u1r fail"
+cd ~/gitolite-admin
+echo "
+    repo @u1r
+        RW+     =   u6
+" > conf/fragments/u1r.conf
+ugc u2 < /dev/null
+expect "remote: W NAME/conf/fragments/u1r.conf gitolite-admin u2 DENIED by fallthru"
+expect "To u2:gitolite-admin"
+expect "\[remote rejected\] master -> master (hook declined)"
+git reset --hard origin/master &>/dev/null
+
+name "u3 set perms for r2a fail"
+cd ~/gitolite-admin
+echo "
+    repo r2a
+        RW+     =   u6
+" > conf/fragments/u3r.conf
+ugc u3 < /dev/null
+expect "u3r.conf attempting to set access for r2a"
+git reset --hard origin/master &>/dev/null
+
+name "u3 add r2b to u3r fail"
+cd ~/gitolite-admin
+echo "
+    @u3r    =   r2b
+    repo @u3r
+        RW+     =   u6
+" > conf/fragments/u3r.conf
+ugc u3 < /dev/null
+[[ $1 == 0 ]] && expect "u3r.conf attempting to set access for r2b"
+[[ $1 == 1 ]] && expect "defining groups is not allowed inside fragments"
+[[ $1 == 1 ]] && notexpect "u3r.conf attempting to set access for r2b"
+[[ $1 == 0 ]] && notexpect "defining groups is not allowed inside fragments"
+git reset --hard origin/master &>/dev/null
+
+name INTERNAL

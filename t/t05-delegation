@@ -3,9 +3,18 @@
 
 for i in 0 1
 do
-    hl t05-delegation with GL_BIG_CONFIG $i
+    hl t05a-delegation with GL_BIG_CONFIG $i
 
     . ./t05a-delegation $i
+
+    cd $TESTDIR
+done
+
+for i in 0 1
+do
+    hl t05b-delegation-wild with GL_BIG_CONFIG $i
+
+    . ./t05b-delegation-wild $i
 
     cd $TESTDIR
 done
