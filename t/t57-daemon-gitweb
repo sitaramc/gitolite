@@ -3,113 +3,132 @@ for wr in 0 1
 do
     for bc in 0 1
     do
-        cd $TESTDIR
-        $TESTDIR/rollback || die "rollback failed"
-        editrc GL_WILDREPOS $wr
-        editrc GL_BIG_CONFIG $bc
+        for ais in 0 1
+        do
+            cd $TESTDIR
+            $TESTDIR/rollback || die "rollback failed"
+            editrc GL_WILDREPOS $wr
+            editrc GL_BIG_CONFIG $bc
+            echo "\$GL_ALL_INCLUDES_SPECIAL = $ais;" | addrc
 
-        # ----------
+            # ----------
+            name "INTERNAL"
+            echo|ugc
+            name "daemon access for testing repo"
+            runremote ls -al repositories/testing.git/git-daemon-export-ok
+            [ "$ais" = "0" ] && expect "ls: cannot access repositories/testing.git/git-daemon-export-ok: No such file or directory"
+            [ "$ais" = "1" ] && expect "gitolite-test gitolite-test .* repositories/testing.git/git-daemon-export-ok"
 
-        name "INTERNAL"
-        echo "
-            @leads = u1 u2
-            @devs = u1 u2 u3 u4
+            name "INTERNAL"
+            echo "
+                @leads = u1 u2
+                @devs = u1 u2 u3 u4
 
-            @gbar = bar
-            repo    @gbar
-                RW+             =   @leads
-                RW              =   @devs
-        " | ugc
-        expect_push_ok "master -> master"
-        runremote ls -al repositories/bar.git/git-daemon-export-ok
-        expect "ls: cannot access repositories/bar.git/git-daemon-export-ok: No such file or directory"
-        runremote ls -al projects.list
-        expect "gitolite-test gitolite-test 12 .* projects.list"
-        runremote cat projects.list
-        expect "testing.git"
+                @gbar = bar
+                repo    @gbar
+                    RW+             =   @leads
+                    RW              =   @devs
+            " | ugc
+            expect_push_ok "master -> master"
+            runremote ls -al repositories/bar.git/git-daemon-export-ok
+            expect "ls: cannot access repositories/bar.git/git-daemon-export-ok: No such file or directory"
+            runremote ls -al projects.list
+            [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
+            [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+            runremote cat projects.list
+            [ "$ais" = "0" ] && notexpect "testing.git"
+            [ "$ais" = "1" ] && expect "testing.git"
 
-        name "add daemon access to bar"
-        echo "
-                R               =   daemon
-        " | ugc
-        runremote ls -al repositories/bar.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* repositories/bar.git/git-daemon-export-ok"
-        runremote ls -al projects.list
-        expect "gitolite-test gitolite-test 12 .* projects.list"
+            name "add daemon access to bar"
+            echo "
+                    R               =   daemon
+            " | ugc
+            runremote ls -al repositories/bar.git/git-daemon-export-ok
+            expect "gitolite-test gitolite-test .* repositories/bar.git/git-daemon-export-ok"
+            runremote ls -al projects.list
+            [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
+            [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
 
-        name "add foo with gitweb access"
-        echo "
-            @leads = u1 u2
-            @devs = u1 u2 u3 u4
+            name "add foo with gitweb access"
+            echo "
+                @leads = u1 u2
+                @devs = u1 u2 u3 u4
 
-            @gfoo = foo
-            repo    @gfoo
-                RW+             =   @leads
-                RW              =   @devs
-                R               =   gitweb
-        " | ugc
-        expect_push_ok "master -> master"
-        runremote ls -al projects.list
-        expect "gitolite-test gitolite-test 20 .* projects.list"
-        runremote cat projects.list
-        expect "testing.git"
-        expect "foo.git"
+                @gfoo = foo
+                repo    @gfoo
+                    RW+             =   @leads
+                    RW              =   @devs
+                    R               =   gitweb
+            " | ugc
+            expect_push_ok "master -> master"
+            runremote ls -al projects.list
+            [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 8 .* projects.list"
+            [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 20 .* projects.list"
+            runremote cat projects.list
+            [ "$ais" = "0" ] && notexpect "testing.git"
+            [ "$ais" = "1" ] && expect "testing.git"
+            expect "foo.git"
 
-        name "add gitweb access to bar"
-        echo "
-            repo    @gbar
-                R               =   gitweb
-        " | ugc
-        expect_push_ok "master -> master"
-        runremote ls -al projects.list
-        expect "gitolite-test gitolite-test 28 .* projects.list"
-        runremote cat projects.list
-        expect "testing.git"
-        expect "foo.git"
-        expect "bar.git"
+            name "add gitweb access to bar"
+            echo "
+                repo    @gbar
+                    R               =   gitweb
+            " | ugc
+            expect_push_ok "master -> master"
+            runremote ls -al projects.list
+            [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 16 .* projects.list"
+            [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 28 .* projects.list"
+            runremote cat projects.list
+            [ "$ais" = "0" ] && notexpect "testing.git"
+            [ "$ais" = "1" ] && expect "testing.git"
+            expect "foo.git"
+            expect "bar.git"
 
-        name "add repo baz with description"
-        echo "
-            @gbaz = baz
-            repo    @gbaz
-                RW              =   @leads
+            name "add repo baz with description"
+            echo "
+                @gbaz = baz
+                repo    @gbaz
+                    RW              =   @leads
 
-            baz     =   \"this is repo baz\"
-        " | ugc
-        expect_push_ok "master -> master"
-        expect "remote: Initialized empty Git repository in /home/gitolite-test/repositories/baz.git/"
-        runremote ls -al projects.list
-        expect "gitolite-test gitolite-test 36 .* projects.list"
-        runremote cat projects.list
-        expect "testing.git"
-        expect "foo.git"
-        expect "bar.git"
-        expect "baz.git"
-        runremote ls -al repositories/baz.git/description
-        expect "gitolite-test gitolite-test 17 .* repositories/baz.git/description"
-        runremote cat repositories/baz.git/description
-        expect "this is repo baz"
+                baz     =   \"this is repo baz\"
+            " | ugc
+            expect_push_ok "master -> master"
+            expect "remote: Initialized empty Git repository in /home/gitolite-test/repositories/baz.git/"
+            runremote ls -al projects.list
+            [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 24 .* projects.list"
+            [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 36 .* projects.list"
+            runremote cat projects.list
+            [ "$ais" = "0" ] && notexpect "testing.git"
+            [ "$ais" = "1" ] && expect "testing.git"
+            expect "foo.git"
+            expect "bar.git"
+            expect "baz.git"
+            runremote ls -al repositories/baz.git/description
+            expect "gitolite-test gitolite-test 17 .* repositories/baz.git/description"
+            runremote cat repositories/baz.git/description
+            expect "this is repo baz"
 
-        name "add owner to testing repo"
-        echo "
-            testing \"sitaram\"     =   \"this is the testing repo\"
-        " | ugc
-        expect_push_ok "master -> master"
-        runremote ls -al projects.list
-        expect "gitolite-test gitolite-test 36 .* projects.list"
-        runremote cat projects.list
-        expect "testing.git"
-        expect "foo.git"
-        expect "bar.git"
-        expect "baz.git"
-        runremote cat repositories/testing.git/config
-        expect "\[gitweb\]"
-        expect "owner = sitaram"
-        runremote ls -al repositories/testing.git/description
-        expect "gitolite-test gitolite-test 25 .* repositories/testing.git/description"
-        runremote cat repositories/testing.git/description
-        expect "this is the testing repo"
+            name "add owner to testing repo"
+            echo "
+                testing \"sitaram\"     =   \"this is the testing repo\"
+            " | ugc
+            expect_push_ok "master -> master"
+            runremote ls -al projects.list
+            expect "gitolite-test gitolite-test 36 .* projects.list"
+            runremote cat projects.list
+            expect "testing.git"
+            expect "foo.git"
+            expect "bar.git"
+            expect "baz.git"
+            runremote cat repositories/testing.git/config
+            expect "\[gitweb\]"
+            expect "owner = sitaram"
+            runremote ls -al repositories/testing.git/description
+            expect "gitolite-test gitolite-test 25 .* repositories/testing.git/description"
+            runremote cat repositories/testing.git/description
+            expect "this is the testing repo"
 
-        name INTERNAL
+            name INTERNAL
+        done
     done
 done

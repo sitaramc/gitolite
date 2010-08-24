@@ -1,140 +1,160 @@
 # vim: syn=sh:
 for bc in 0 1
 do
-    cd $TESTDIR
-    $TESTDIR/rollback || die "rollback failed"
-    editrc GL_WILDREPOS 1
-    editrc GL_BIG_CONFIG $bc
+    for ais in 0 1
+    do
+        cd $TESTDIR
+        $TESTDIR/rollback || die "rollback failed"
+        editrc GL_WILDREPOS 1
+        editrc GL_BIG_CONFIG $bc
+        echo "\$GL_ALL_INCLUDES_SPECIAL = $ais;" | addrc
 
-    # ----------
+        # ----------
 
-    name "INTERNAL"
-    echo "
-        @leads = u1 u2
-        @devs = u1 u2 u3 u4
+        name "INTERNAL"
+        echo "
+            @leads = u1 u2
+            @devs = u1 u2 u3 u4
 
-        @gbar = bar/CREATOR/..*
-        repo    @gbar
-            C               =   @leads
-            RW+             =   @leads
-            RW              =   @devs
-    " | ugc
-    expect_push_ok "master -> master"
-    runlocal git ls-remote u1:bar/u1/try1
-    runremote ls -al repositories/bar/u1/try1.git/git-daemon-export-ok
-    expect "ls: cannot access repositories/bar/u1/try1.git/git-daemon-export-ok: No such file or directory"
-    runremote ls -al projects.list
-    expect "gitolite-test gitolite-test 12 .* projects.list"
-    runremote cat projects.list
-    expect "testing.git"
-    notexpect "bar/u1/try1.git"
+            @gbar = bar/CREATOR/..*
+            repo    @gbar
+                C               =   @leads
+                RW+             =   @leads
+                RW              =   @devs
+        " | ugc
+        expect_push_ok "master -> master"
+        runlocal git ls-remote u1:bar/u1/try1
+        runremote ls -al repositories/bar/u1/try1.git/git-daemon-export-ok
+        expect "ls: cannot access repositories/bar/u1/try1.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+        runremote cat projects.list
+        [ "$ais" = "0" ] && notexpect "testing.git"
+        [ "$ais" = "1" ] && expect "testing.git"
+        notexpect "bar/u1/try1.git"
 
-    name "add daemon access"
-    echo "
-            R               =   daemon
-    " | ugc
-    runremote ls -al repositories/bar/u1/try1.git/git-daemon-export-ok
-    expect "gitolite-test gitolite-test .* repositories/bar/u1/try1.git/git-daemon-export-ok"
-    runremote ls -al projects.list
-    expect "gitolite-test gitolite-test 12 .* projects.list"
+        name "add daemon access"
+        echo "
+                R               =   daemon
+        " | ugc
+        runremote ls -al repositories/bar/u1/try1.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* repositories/bar/u1/try1.git/git-daemon-export-ok"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
 
-    name "add one more repo"
-    runlocal git ls-remote u1:bar/u1/try2
-    runremote ls -al repositories/bar/u1/try2.git/git-daemon-export-ok
-    expect "gitolite-test gitolite-test .* repositories/bar/u1/try2.git/git-daemon-export-ok"
-    runremote ls -al projects.list
-    expect "gitolite-test gitolite-test 12 .* projects.list"
-    runremote cat projects.list
-    expect "testing.git"
-    notexpect "bar/u1/try1.git"
-    notexpect "bar/u1/try2.git"
+        name "add one more repo"
+        runlocal git ls-remote u1:bar/u1/try2
+        runremote ls -al repositories/bar/u1/try2.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* repositories/bar/u1/try2.git/git-daemon-export-ok"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+        runremote cat projects.list
+        [ "$ais" = "0" ] && notexpect "testing.git"
+        [ "$ais" = "1" ] && expect "testing.git"
+        notexpect "bar/u1/try1.git"
+        notexpect "bar/u1/try2.git"
 
-    name "add descriptions for try1 and try3 and compile"
-    echo "
-        bar/u1/try1 = \"this is bar/u1/try1\"
-        bar/u1/try3 = \"this is bar/u1/try3\"
-    " | ugc
-    runremote ls -al projects.list
-    expect "gitolite-test gitolite-test 28 .* projects.list"
-    runremote cat projects.list
-    expect "testing.git"
-    expect "bar/u1/try1.git"
-    notexpect "bar/u1/try2.git"
-    notexpect "bar/u1/try3.git"
-    runremote cat repositories/bar/u1/try1.git/description
-    expect "this is bar/u1/try1"
+        name "add descriptions for try1 and try3 and compile"
+        echo "
+            bar/u1/try1 = \"this is bar/u1/try1\"
+            bar/u1/try3 = \"this is bar/u1/try3\"
+        " | ugc
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 16 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 28 .* projects.list"
+        runremote cat projects.list
+        [ "$ais" = "0" ] && notexpect "testing.git"
+        [ "$ais" = "1" ] && expect "testing.git"
+        expect "bar/u1/try1.git"
+        notexpect "bar/u1/try2.git"
+        notexpect "bar/u1/try3.git"
+        runremote cat repositories/bar/u1/try1.git/description
+        expect "this is bar/u1/try1"
 
-    name "add try3 project"
-    runlocal git ls-remote u1:bar/u1/try3
-    runremote ls -al repositories/bar/u1/try3.git/git-daemon-export-ok
-    expect "gitolite-test gitolite-test .* repositories/bar/u1/try3.git/git-daemon-export-ok"
-    runremote ls -al projects.list
-    expect "gitolite-test gitolite-test 28 .* projects.list"
-    runremote cat projects.list
-    expect "testing.git"
-    expect "bar/u1/try1.git"
-    notexpect "bar/u1/try2.git"
-    notexpect "bar/u1/try3.git"
-    runremote cat repositories/bar/u1/try1.git/description
-    expect "this is bar/u1/try1"
-    runremote cat repositories/bar/u1/try3.git/description
-    expect "Unnamed repository; edit this file 'description' to name the repository."
+        name "add try3 project"
+        runlocal git ls-remote u1:bar/u1/try3
+        runremote ls -al repositories/bar/u1/try3.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* repositories/bar/u1/try3.git/git-daemon-export-ok"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 16 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 28 .* projects.list"
+        runremote cat projects.list
+        [ "$ais" = "0" ] && notexpect "testing.git"
+        [ "$ais" = "1" ] && expect "testing.git"
+        expect "bar/u1/try1.git"
+        notexpect "bar/u1/try2.git"
+        notexpect "bar/u1/try3.git"
+        runremote cat repositories/bar/u1/try1.git/description
+        expect "this is bar/u1/try1"
+        runremote cat repositories/bar/u1/try3.git/description
+        expect "Unnamed repository; edit this file 'description' to name the repository."
 
-    name "now compile and recheck try3 stuff"
-    echo "
-    " | ugc
-    runremote ls -al repositories/bar/u1/try3.git/git-daemon-export-ok
-    expect "gitolite-test gitolite-test .* repositories/bar/u1/try3.git/git-daemon-export-ok"
-    runremote ls -al projects.list
-    expect "gitolite-test gitolite-test 44 .* projects.list"
-    runremote cat projects.list
-    expect "testing.git"
-    expect "bar/u1/try1.git"
-    notexpect "bar/u1/try2.git"
-    expect "bar/u1/try3.git"
-    runremote cat repositories/bar/u1/try1.git/description
-    expect "this is bar/u1/try1"
-    runremote cat repositories/bar/u1/try3.git/description
-    expect "this is bar/u1/try3"
+        name "now compile and recheck try3 stuff"
+        echo "
+        " | ugc
+        runremote ls -al repositories/bar/u1/try3.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* repositories/bar/u1/try3.git/git-daemon-export-ok"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 32 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 44 .* projects.list"
+        runremote cat projects.list
+        [ "$ais" = "0" ] && notexpect "testing.git"
+        [ "$ais" = "1" ] && expect "testing.git"
+        expect "bar/u1/try1.git"
+        notexpect "bar/u1/try2.git"
+        expect "bar/u1/try3.git"
+        runremote cat repositories/bar/u1/try1.git/description
+        expect "this is bar/u1/try1"
+        runremote cat repositories/bar/u1/try3.git/description
+        expect "this is bar/u1/try3"
 
-    name "add owner for try2 and compile"
-    echo "
-        bar/u1/try2 \"owner2\" = \"this is bar/u1/try1\"
-    " | ugc
-    runremote cat repositories/bar/u1/try2.git/config
-    expect "\[gitweb\]"
-    expect "owner = owner2"
-    runremote ls -al projects.list
-    expect "gitolite-test gitolite-test 60 .* projects.list"
-    runremote cat projects.list
-    expect "bar/u1/try2.git"
+        name "add owner for try2 and compile"
+        echo "
+            bar/u1/try2 \"owner2\" = \"this is bar/u1/try1\"
+        " | ugc
+        runremote cat repositories/bar/u1/try2.git/config
+        expect "\[gitweb\]"
+        expect "owner = owner2"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 48 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
+        runremote cat projects.list
+        expect "bar/u1/try2.git"
 
-    name "add gitweb access to all"
-    echo "
-        repo    @gbar
-            R               =   gitweb
-    " | ugc
-    expect_push_ok "master -> master"
-    runremote ls -al projects.list
-    expect "gitolite-test gitolite-test 60 .* projects.list"
-    runremote cat projects.list
-    expect "testing.git"
-    expect "bar/u1/try1.git"
-    expect "bar/u1/try2.git"
-    expect "bar/u1/try3.git"
+        name "add gitweb access to all"
+        echo "
+            repo    @gbar
+                R               =   gitweb
+        " | ugc
+        expect_push_ok "master -> master"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 48 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
+        runremote cat projects.list
+        [ "$ais" = "0" ] && notexpect "testing.git"
+        [ "$ais" = "1" ] && expect "testing.git"
+        expect "bar/u1/try1.git"
+        expect "bar/u1/try2.git"
+        expect "bar/u1/try3.git"
 
-    name "add try4 project"
-    runlocal git ls-remote u1:bar/u1/try4
-    runremote ls -al projects.list
-    expect "gitolite-test gitolite-test 76 .* projects.list"
-    runremote cat projects.list
-    expect "testing.git"
-    expect "bar/u1/try1.git"
-    expect "bar/u1/try2.git"
-    expect "bar/u1/try3.git"
-    expect "bar/u1/try4.git"
-    runremote cat repositories/bar/u1/try4.git/description
-    expect "Unnamed repository; edit this file 'description' to name the repository."
+        name "add try4 project"
+        runlocal git ls-remote u1:bar/u1/try4
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 64 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 76 .* projects.list"
+        runremote cat projects.list
+        [ "$ais" = "0" ] && notexpect "testing.git"
+        [ "$ais" = "1" ] && expect "testing.git"
+        expect "bar/u1/try1.git"
+        expect "bar/u1/try2.git"
+        expect "bar/u1/try3.git"
+        expect "bar/u1/try4.git"
+        runremote cat repositories/bar/u1/try4.git/description
+        expect "Unnamed repository; edit this file 'description' to name the repository."
 
-    name "INTERNAL"
+        name "INTERNAL"
+    done
 done

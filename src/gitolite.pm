@@ -38,7 +38,7 @@ our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple patter
 our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 
 # these come from the RC file
-our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST);
+our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST, $GL_ALL_INCLUDES_SPECIAL);
 our %repos;
 our %groups;
 our %repo_config;
@@ -295,8 +295,10 @@ sub new_repo
                 $perms =~ s/ $g(?!\S)/ $user/ if $cached_groups{$g}{$user};
             }
             if ($perms) {
-                $r = $user if $perms =~ /^\s*R(?=\s).*\s(\@all|$user)(\s|$)/m;
-                $w = $user if $perms =~ /^\s*RW(?=\s).*\s(\@all|$user)(\s|$)/m;
+                $r ='@all' if $perms =~ /^\s*R(?=\s).*\s\@all(\s|$)/m;
+                $r = $user if $perms =~ /^\s*R(?=\s).*\s$user(\s|$)/m;
+                $w ='@all' if $perms =~ /^\s*RW(?=\s).*\s\@all(\s|$)/m;
+                $w = $user if $perms =~ /^\s*RW(?=\s).*\s$user(\s|$)/m;
             }
         }
 
@@ -684,7 +686,10 @@ sub can_read {
     my $user = shift || $ENV{GL_USER};
     local $ENV{GL_USER} = $user;
     my ($perm, $creator, $wild) = &repo_rights($repo);
-    return $perm =~ /R/;
+    return ( ($GL_ALL_INCLUDES_SPECIAL || $user !~ /^(gitweb|daemon)$/)
+        ? $perm =~ /R/
+        : $perm =~ /R /
+    );
 }
 
 # ----------------------------------------------------------------------------

@@ -43,6 +43,12 @@ $REPO_UMASK = 0077;         # gets you 'rwx------'
 
 $PROJECTS_LIST = $ENV{HOME} . "/projects.list";
 
+# giving access to @all users (as in "R  =  @all") in the config normally does
+# *not* include the special users "gitweb" and "daemon".  If you want @all to
+# include these two users, set this variable:
+
+# $GL_ALL_INCLUDES_SPECIAL = 0;
+
 # --------------------------------------
 
 # I see no reason anyone may want to change the gitolite admin directory, but
