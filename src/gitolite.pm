@@ -518,6 +518,19 @@ sub report_version {
     system("cat", ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION");
 }
 
+sub perm_code {
+    # print the permission code
+    my($all, $super, $user, $x) = @_;
+    return "    " unless $all or $super or $user;
+    return "  $x " unless $all or $super;   # only $user (explicit access) was given
+    my $ret;
+    $ret = " \@$x" if $all;                 # prefix @ if repo allows access for @all users
+    $ret = " \#$x" if $super;               # prefix # if user has access to @all repos (sort of like a super user)
+    $ret = " \&$x" if $all and $super;      # prefix & if both the above
+    $ret .= ($user ? " " : "_" );           # suffix _ if no explicit access else <space>
+    return $ret;
+}
+
 # basic means wildcards will be shown as wildcards; this is pretty much what
 # got parsed by the compile script
 sub report_basic
@@ -551,8 +564,8 @@ sub report_basic
         # #R => you're a super user and can see @all repos
         #  R => normal access
         my $perm .= ( $repos{$r}{C}{'@all'} ? ' @C' :                                      ( $repos{$r}{C}{$user} ? '  C' : '   ' ) );
-        $perm    .= ( $repos{$r}{R}{'@all'} ? ' @R' : ( $repos{'@all'}{R}{$user} ? ' #R' : ( $repos{$r}{R}{$user} ? '  R' : '   ' )));
-        $perm    .= ( $repos{$r}{W}{'@all'} ? ' @W' : ( $repos{'@all'}{W}{$user} ? ' #W' : ( $repos{$r}{W}{$user} ? '  W' : '   ' )));
+        $perm .= &perm_code( $repos{$r}{R}{'@all'}, $repos{'@all'}{R}{$user}, $repos{$r}{R}{$user}, 'R');
+        $perm .= &perm_code( $repos{$r}{W}{'@all'}, $repos{'@all'}{W}{$user}, $repos{$r}{W}{$user}, 'W');
         print "$perm\t$r\r\n" if $perm =~ /\S/;
     }
     print "only 20 out of $count candidate repos examined\r\nplease use a partial reponame or regex pattern to limit output\r\n" if $GL_BIG_CONFIG and $count > 20;
@@ -648,8 +661,8 @@ sub expand_wild
             delete $repos{$repo} if $perm !~ /C/ and $wild;
             $creator = "<notfound>";
         }
-        $perm .= ( $repos{$repo}{R}{'@all'} ? ' @R' : ( $repos{'@all'}{R}{$ENV{GL_USER}} ? ' #R' : ( $repos{$repo}{R}{$ENV{GL_USER}} ? '  R' : '   ' )));
-        $perm .= ( $repos{$repo}{W}{'@all'} ? ' @W' : ( $repos{'@all'}{W}{$ENV{GL_USER}} ? ' #W' : ( $repos{$repo}{W}{$ENV{GL_USER}} ? '  W' : '   ' )));
+        $perm .= &perm_code( $repos{$repo}{R}{'@all'}, $repos{'@all'}{R}{$ENV{GL_USER}}, $repos{$repo}{R}{$ENV{GL_USER}}, 'R' );
+        $perm .= &perm_code( $repos{$repo}{W}{'@all'}, $repos{'@all'}{W}{$ENV{GL_USER}}, $repos{$repo}{W}{$ENV{GL_USER}}, 'W' );
 
         # set up for caching %repos
         $last_repo = $repo;

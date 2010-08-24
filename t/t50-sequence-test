@@ -33,7 +33,7 @@ do
     expect "RW u2"
     name "expand"
     runlocal ssh u2 expand
-    expect "R  W.(u1).foo/u1/bar"
+    expect "R   W .(u1).foo/u1/bar"
 
     name "push"
     cd ~/td
@@ -80,7 +80,7 @@ do
     expect "RW u2"
     name "expand"
     runlocal ssh u2 expand
-    expect "R  W.(u1).foo/u1/bar"
+    expect "   R   W .(u1).foo/u1/bar"
 
     name "push"
     cd ~/td
