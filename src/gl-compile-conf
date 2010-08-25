@@ -512,13 +512,18 @@ my %projlist = ();
 
 # for each real repo (and remember this will be empty, thus skipping all this,
 # if $GL_NO_DAEMON_NO_GITWEB is on!)
+
+# note: we do them in 2 separate loops to avoid breaking the optimisation in
+# sub parse_acl (look for variable $saved_crwu)
+
 for my $repo (keys %repo_patts) {
-
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
-
     # daemon is easy
     &setup_daemon_access($repo);
+}
 
+for my $repo (keys %repo_patts) {
+    wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
     # gitweb is a little more complicated.  Here're some notes:
     # - "setup_gitweb_access" also sets "owner", despite the name
     # - specifying a description also counts as enabling gitweb
@@ -535,7 +540,7 @@ for my $repo (keys %repo_patts) {
     # implementation note: this must happen *after* one of the previous 2
     # calls (setup daemon or gitweb).  The reason is that they call
     # "can_read", which eventually calls parse_acl with the right "creator"
-    # set for the *current* repo, which in turn stores translated values fr
+    # set for the *current* repo, which in turn stores translated values for
     # $creator in the repo_config hash, which, (phew!) is needed for a match
     # that eventually gets you a valid $repo_config{} below
     &setup_repo_configs($repo, \%repo_config) if $repo_config{$repo};
