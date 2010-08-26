@@ -1,6 +1,6 @@
 # how gitolite uses ssh
 
-Here's a secret: ***gitolite uses far more ssh magic than git magic***!
+***Gitolite is heavily dependent on ssh***!
 
 Most people didn't realise this, and even if they did they didn't know ssh
 well enough to help themselves.  If you don't understand how ssh public key
@@ -152,4 +152,3 @@ a special update hook.  This hook takes all the information presented, looks
 at the config file, and decides to allow or reject the update.
 
 And that's basically it.
-

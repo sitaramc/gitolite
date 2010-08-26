@@ -4,11 +4,27 @@ Gitolite is an access control layer on top of git, which allows access control
 down to the branch level, including specifying who can and cannot *rewind* a
 given branch.
 
-This README will give you a quick intro.  All documentation is available
-within the source repo, in markdown format.  If you want to read it *without*
-cloning the source repo, just hit [this link][docs] and read nicely HTML-ised
-versions of all the docs (automatic rendering of markdown to HTML courtesy
-github).
+Gitolite comes with a **huge** amount of documentation.  If you're absolutely
+new, the suggested reading order is this:
+
+  * the README (this document) for a quick intro
+  * **IMPORTANT:** if you don't know anything about ssh, read [this][doc9gas]
+  * the [INSTALL][install] document
+  * if you run into trouble with ssh, read [this][doc6sts]
+  * the [ADMIN][admin] document
+  * if you're migrating from gitosis, read [this][migr]
+
+Once you've installed it and started using it, you'll want to explore some of
+the more powerful features.  All the documentation is available in the source
+repo as well as [online][docs].  All the longer documents have tables of
+contents, so you can quickly get a feel for what is covered right at the top.
+
+[install]: http://github.com/sitaramc/gitolite/blob/master/doc/0-INSTALL.mkd
+[admin]: http://github.com/sitaramc/gitolite/blob/master/doc/2-admin.mkd
+[migr]: http://github.com/sitaramc/gitolite/blob/master/doc/1-migrate.mkd
+[docs]: http://github.com/sitaramc/gitolite/blob/pu/doc
+[doc9gas]: http://github.com/sitaramc/gitolite/blob/pu/doc/9-gitolite-and-ssh.mkd
+[doc6sts]: http://github.com/sitaramc/gitolite/blob/pu/doc/6-ssh-troubleshooting.mkd
 
 ----
 
@@ -150,5 +166,3 @@ Gitolite is released under GPL v2.  See COPYING for details.
 
 sitaramc@gmail.com
 mailing list: gitolite@googlegroups.com
-
-[docs]: http://github.com/sitaramc/gitolite/blob/pu/doc
