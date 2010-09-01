@@ -1,10 +1,30 @@
 # gitolite install transcript
 
+In this document:
+
+  * <a href="#about_this_document">about this document</a>
+  * <a href="#create_userids_on_server_and_client_optional_">create userids on server and client (optional)</a>
+  * <a href="#get_pubkey_access_from_client_to_server">get pubkey access from client to server</a>
+  * <a href="#get_gitolite_source">get gitolite source</a>
+  * <a href="#install_gitolite">install gitolite</a>
+  * <a href="#VERY_IMPORTANT_">VERY IMPORTANT...</a>
+  * <a href="#examine_what_you_have">examine what you have</a>
+  * <a href="#emergency_password_access">emergency password access</a>
+
+----
+
+<a name="about_this_document"></a>
+
+### about this document
+
 This is a *complete* transcript of a full gitolite install, *from scratch*,
 using brand new userids ("sita" on the client, "git" on the server).  Please
 note that you can use existing userids also, it is not necessary to use
-dedicated user IDs for this.  Also, you don't have to use some *other* server
-for all this, both server and client can be "localhost" if you like.
+dedicated user IDs for this.  In particular, people who have a single user
+hosting account can also use this method, as long as they have password access
+as a fallback if they screw up the keys somewhere.  Also, you don't have to
+use some *other* server for all this, both server and client can be
+"localhost" if you like.
 
 Please note that this entire transcript can be summarised as:
 
@@ -17,14 +37,6 @@ transcript is **non**-gitolite stuff :)
 
 **Please also note that this method will setup everything on the server, but
 you have to run it on your workstation, NOT on the server!**
-
-In this document:
-
-  * <a href="#create_userids_on_server_and_client_optional_">create userids on server and client (optional)</a>
-  * <a href="#get_pubkey_access_from_client_to_server">get pubkey access from client to server</a>
-  * <a href="#get_gitolite_source">get gitolite source</a>
-  * <a href="#install_gitolite">install gitolite</a>
-  * <a href="#examine_what_you_have">examine what you have</a>
 
 ----
 
@@ -209,9 +221,26 @@ install mode that allows you to change the defaults etc.
 
 ----
 
+<a name="VERY_IMPORTANT_"></a>
+
+### VERY IMPORTANT...
+
+Please read the text that the easy-install command produces as output when you
+run it.  People who fail to read this get into trouble later.  And I didn't
+write all that because I wanted to practice typing.
+
+The text just above this section is an approximation; your version will
+contain the correct URLs for your install, including port numbers if
+non-standard ports were used).
+
+Try out that `tail -31 ./gl-easy-install` too :)
+
 <a name="examine_what_you_have"></a>
 
 ### examine what you have
+
+The last step of the previous command creates a local clone of your
+gitolite-admin repo in `~/gitolite-admin`.
 
     sita@sita-lt:src $ cd ~/gitolite-admin/
 
@@ -227,5 +256,15 @@ install mode that allows you to change the defaults etc.
      2 files changed, 13 insertions(+), 0 deletions(-)
 
 And that's really all.  Add keys to keydir here, edit conf/gitolite.conf as
-needed, then add, commit, and push the changes to the server.  Try out that
-`tail -31 ./gl-easy-install` too :)
+needed, then add, commit, and push the changes to the server.
+
+<a name="emergency_password_access"></a>
+
+### emergency password access
+
+If you lose your keys or the worst happens and you use the wrong key for the
+wrong thing and apparently lose all access, but you still know the password,
+this is what you do:
+
+    sita@sita-lt:~ $ ssh -o preferredauthentications=password git@server
+    git@server's password: 

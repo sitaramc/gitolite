@@ -36,6 +36,10 @@ code, and documentation.**
 
 Other resources:
 
+  * people who think this is too hard should take a look at
+    [doc/7-install-transcript.mkd][doc7] to **see how simple it *actually*
+    is**.
+
   * I **strongly** recommend reading [doc/9-gitolite-and-ssh.mkd][doc9gas],
     which is a very detailed look at how gitolite uses ssh's features on the
     server side.  Most people don't know ssh as well as they *think* they do;
@@ -461,3 +465,4 @@ bigger problems than gitolite install not working!)]
 [fc]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#from_client_method_install_from_the_client_to_the_server
 [urls]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#URLs_for_gitolite_managed_repos
 [repout]: http://github.com/sitaramc/gitolite/blob/pu/doc/report-output.mkd
+[doc7]: http://github.com/sitaramc/gitolite/blob/pu/doc/7-install-transcript.mkd
