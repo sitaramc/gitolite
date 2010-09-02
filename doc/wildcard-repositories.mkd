@@ -19,17 +19,17 @@ workarounds I may not have the time to code it right away.
 
 In this document:
 
-  * <a href="#rc_file_setting_required">rc file setting required</a>
-  * <a href="#wildcard_repos">wildcard repos</a>
-      * <a href="#wildcard_repos_with_creator_name_in_them">wildcard repos with creator name in them</a>
-      * <a href="#wildcard_repos_without_creator_name_in_them">wildcard repos without creator name in them</a>
-  * <a href="#side_note_line_anchored_regexes">side-note: line-anchored regexes</a>
-      * <a href="#contrast_with_refexes">contrast with refexes</a>
-  * <a href="#handing_out_rights_to_wildcard_matched_repos">handing out rights to wildcard-matched repos</a>
-  * <a href="#setting_a_gitweb_description_for_a_wildcard_matched_repo">setting a gitweb description for a wildcard-matched repo</a>
-  * <a href="#reporting">reporting</a>
-  * <a href="#other_issues_and_discussion">other issues and discussion</a>
-  * <a href="#how_it_actually_works">how it actually works</a>
+  * <a href="#_rc_file_setting_required">rc file setting required</a>
+  * <a href="#_wildcard_repos">wildcard repos</a>
+      * <a href="#_wildcard_repos_with_creator_name_in_them">wildcard repos with creator name in them</a>
+      * <a href="#_wildcard_repos_without_creator_name_in_them">wildcard repos without creator name in them</a>
+  * <a href="#_side_note_line_anchored_regexes">side-note: line-anchored regexes</a>
+      * <a href="#_contrast_with_refexes">contrast with refexes</a>
+  * <a href="#_handing_out_rights_to_wildcard_matched_repos">handing out rights to wildcard-matched repos</a>
+  * <a href="#_setting_a_gitweb_description_for_a_wildcard_matched_repo">setting a gitweb description for a wildcard-matched repo</a>
+  * <a href="#_reporting">reporting</a>
+  * <a href="#_other_issues_and_discussion">other issues and discussion</a>
+  * <a href="#_how_it_actually_works">how it actually works</a>
 
 ----
 
@@ -37,7 +37,7 @@ This document is mostly "by example".
 
 ----
 
-<a name="rc_file_setting_required"></a>
+<a name="_rc_file_setting_required"></a>
 
 ### rc file setting required
 
@@ -45,7 +45,7 @@ This feature requires that you set `$GL_WILDREPOS` to "1" in `~/.gitolite.rc`
 on the server.  Please search for that variable and see comments around it in
 `conf/example.gitolite.rc` for more information on this.
 
-<a name="wildcard_repos"></a>
+<a name="_wildcard_repos"></a>
 
 ### wildcard repos
 
@@ -53,7 +53,7 @@ Which of these alternatives you choose depends on your needs, and the social
 aspects of your environment.  The first one is a little more rigid, making it
 harder to make mistakes, and the second is more flexible and trusting.
 
-<a name="wildcard_repos_with_creator_name_in_them"></a>
+<a name="_wildcard_repos_with_creator_name_in_them"></a>
 
 #### wildcard repos with creator name in them
 
@@ -79,7 +79,7 @@ new repo, as user "u4" (a student):
 
 Notice the *two* empty repo inits, and the order in which they occur ;-)
 
-<a name="wildcard_repos_without_creator_name_in_them"></a>
+<a name="_wildcard_repos_without_creator_name_in_them"></a>
 
 #### wildcard repos without creator name in them
 
@@ -106,7 +106,7 @@ and have a TA create the repos in advance.
 In either case, they could then use the `setperms` feature to specify which
 users are "READERS" and which are "WRITERS".  See later for details.
 
-<a name="side_note_line_anchored_regexes"></a>
+<a name="_side_note_line_anchored_regexes"></a>
 
 ### side-note: line-anchored regexes
 
@@ -123,7 +123,7 @@ But you may be surprised to find that it does not match even
 `^assignments/S[0-9]+/A[0-9]+$` -- notice the line beginning and ending
 metacharacters.
 
-<a name="contrast_with_refexes"></a>
+<a name="_contrast_with_refexes"></a>
 
 #### contrast with refexes
 
@@ -135,7 +135,7 @@ if no one will actually push such a branch!  You can anchor both sides if you
 really care, by using `master$` instead of `master`, but that is *not* the
 default for refexes.
 
-<a name="handing_out_rights_to_wildcard_matched_repos"></a>
+<a name="_handing_out_rights_to_wildcard_matched_repos"></a>
 
 ### handing out rights to wildcard-matched repos
 
@@ -182,23 +182,21 @@ The following points are important:
   * whoever you specify as "R" will match the special user READERS.  "RW" will
     match WRITERS.
 
-<a name="setting_a_gitweb_description_for_a_wildcard_matched_repo"></a>
+<a name="_setting_a_gitweb_description_for_a_wildcard_matched_repo"></a>
 
 ### setting a gitweb description for a wildcard-matched repo
 
 Similar to the getperms/setperms commands, there are the getdesc/setdesc
 commands, thanks to Teemu.
 
-<a name="reporting"></a>
+<a name="_reporting"></a>
 
 ### reporting
 
 In order to see what repositories were created from a wildcard, use the
 "expand" command, described briefly in [doc/report-output.mkd][repout].
 
-[repout]: http://github.com/sitaramc/gitolite/blob/pu/doc/report-output.mkd
-
-<a name="other_issues_and_discussion"></a>
+<a name="_other_issues_and_discussion"></a>
 
 ### other issues and discussion
 
@@ -220,7 +218,7 @@ In order to see what repositories were created from a wildcard, use the
     of the time, it won't be difficult; the fixed prefix will usually be
     different anyway so there won't be overlaps.
 
-<a name="how_it_actually_works"></a>
+<a name="_how_it_actually_works"></a>
 
 ### how it actually works
 
@@ -295,6 +293,4 @@ I hope that helps.
 Enjoy, and please use with care.  This is pretty powerful stuff.  As they say:
 if you break it, you get to keep both pieces :)
 
-[jwzq]: http://regex.info/blog/2006-09-15/247
-
-[av]: http://en.wikipedia.org/wiki/Autovivification
+[repout]: http://github.com/sitaramc/gitolite/blob/pu/doc/report-output.mkd

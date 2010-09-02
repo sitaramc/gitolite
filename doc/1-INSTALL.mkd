@@ -2,40 +2,42 @@
 
 In this document:
 
-  * <a href="#please_read_this_first">please read this first</a>
-      * <a href="#important_notes">important notes</a>
-      * <a href="#conventions_used">conventions used</a>
-      * <a href="#requirements">requirements</a>
-          * <a href="#client_side">client side</a>
-          * <a href="#server_side">server side</a>
-  * <a href="#installation_and_setup">installation and setup</a>
-      * <a href="#package_method_directly_on_the_server_using_RPM_DEB">(package method) directly on the server, using RPM/DEB</a>
-      * <a href="#root_method_directly_on_the_server_manually_with_root_access">(root method) directly on the server, manually, with root access</a>
-      * <a href="#non_root_method_directly_on_the_server_manually_without_root_access">(non-root method) directly on the server, manually, without root access</a>
-      * <a href="#from_client_method_install_from_the_client_to_the_server">(from-client method) install from the client to the server</a>
-  * <a href="#URLs_for_gitolite_managed_repos">URLs for gitolite-managed repos</a>
-  * <a href="#special_cases_multiple_gitolite_servers">special cases -- multiple gitolite servers</a>
-      * <a href="#package_method_and_root_method">package method and root method</a>
-      * <a href="#from_client_method">from-client method</a>
-  * <a href="#upgrading">upgrading</a>
-  * <a href="#uninstalling">uninstalling</a>
-      * <a href="#cleaning_out_a_botched_install">cleaning out a botched install</a>
-      * <a href="#uninstalling_gitolite_completely">uninstalling gitolite completely</a>
+  * <a href="#_please_read_this_first">please read this first</a>
+      * <a href="#_important_notes">important notes</a>
+      * <a href="#_conventions_used">conventions used</a>
+      * <a href="#_requirements">requirements</a>
+          * <a href="#_client_workstation">client/workstation</a>
+          * <a href="#_server">server</a>
+          * <a href="#_technical_skills">technical skills</a>
+  * <a href="#_installation_and_setup">installation and setup</a>
+      * <a href="#_install_methods_and_deciding_which_one_to_use">install methods and deciding which one to use</a>
+      * <a href="#_package_method_directly_on_the_server_using_RPM_DEB">(package method) directly on the server, using RPM/DEB</a>
+      * <a href="#_root_method_directly_on_the_server_manually_with_root_access">(root method) directly on the server, manually, with root access</a>
+      * <a href="#_non_root_method_directly_on_the_server_manually_without_root_access">(non-root method) directly on the server, manually, without root access</a>
+      * <a href="#_from_client_method_install_from_the_client_to_the_server">(from-client method) install from the client to the server</a>
+  * <a href="#_URLs_for_gitolite_managed_repos">URLs for gitolite-managed repos</a>
+  * <a href="#_special_cases_multiple_gitolite_servers">special cases -- multiple gitolite servers</a>
+      * <a href="#_package_method_and_root_method">package method and root method</a>
+      * <a href="#_from_client_method">from-client method</a>
+  * <a href="#_upgrading">upgrading</a>
+  * <a href="#_uninstalling">uninstalling</a>
+      * <a href="#_cleaning_out_a_botched_install">cleaning out a botched install</a>
+      * <a href="#_uninstalling_gitolite_completely">uninstalling gitolite completely</a>
 
 ----
 
-<a name="please_read_this_first"></a>
+<a name="_please_read_this_first"></a>
 
 ### please read this first
 
-<a name="important_notes"></a>
+<a name="_important_notes"></a>
 
 #### important notes
 
 Please make sure you understand the following points first.
 
-  * gitolite is somewhat unusual as far as "server" software goes -- every
-    userid on the server is a potential "gitolite host".
+  * gitolite runs as a single user on a server, and is invoked via ssh.  Thus,
+    every user on the server is a potential "gitolite host".
 
   * gitolite depends **heavily** on ssh pubkey (passwordless) access.  Do not
     assume you know all about ssh -- most people **don't**.  If in doubt, use
@@ -43,23 +45,45 @@ Please make sure you understand the following points first.
     administration of gitolite.
 
     To make matters worse, ssh problems in gitolite don't always look like ssh
-    problems.  See [doc/6-ssh-troubleshooting.mkd][doc6] for help.
+    problems.  See [doc/ssh-troubleshooting.mkd][doc6] for help.
 
-<a name="conventions_used"></a>
+A gitolite setup has:
+
+  * a server
+  * a "hosting user" on the server -- the userid under which gitolite runs.
+    You can have any number of "hosting users" on one server; in fact every
+    user can host their own gitolite instance
+  * an "admin user" -- the user who sets up gitolite and configures it
+  * the admin user's client or workstation, from which he does all his work
+
+It is possible to have the server and the client be the same machine, and even
+the admin user be also the hosting user, (i.e., `sitaram@server` can install
+and administer a gitolite setup running under `sitaram@server`, a situation
+that is common with some hosting services).  It's actually fairly easy and
+**safe** to do, **as long as you have password access to the server** for
+emergency use.  However, I will not be documenting it because (a) if you know
+ssh you'll know how to extrapolate my instructions to do this and (b) if you
+don't know ssh it'll be a nightmare to support you.
+
+<a name="_conventions_used"></a>
 
 #### conventions used
 
-We assume the admin user is "sitaram", and his workstation is called "client".
-The hosting user is "git", and the server is called "server".  Substitute your
-values as needed.
+Throughout the documentation, we use "sitaram" as the admin user, and his
+workstation is called "client".  The hosting user is "git", and the server is
+called "server".  **Please substitute your values as needed**.
 
-<a name="requirements"></a>
+Also, we often say "the rc file".  This means `~/.gitolite.rc` on the server.
+And when we say the "access control rules", or "conf file", or "config file",
+we mean `conf/gitolite.conf` on your gitolite-admin clone.
+
+<a name="_requirements"></a>
 
 #### requirements
 
-<a name="client_side"></a>
+<a name="_client_workstation"></a>
 
-##### client side
+##### client/workstation
 
   * git version 1.6.2 or greater
       * even msysgit on Windows is fine; please don't ask me for help if
@@ -69,9 +93,9 @@ values as needed.
     shell is needed
       * again, msysgit on Windows is fine
 
-<a name="server_side"></a>
+<a name="_server"></a>
 
-##### server side
+##### server
 
   * any Unix system with a posix compatible "sh".
       * people using "csh" or derivatives please don't ask me for help -- tell
@@ -82,11 +106,47 @@ values as needed.
   * perl (but since git requires it anyway, you probably have it)
   * openssh or any ssh that can understand the `authorized_keys` file format
 
-<a name="installation_and_setup"></a>
+<a name="_technical_skills"></a>
+
+##### technical skills
+
+  * if you're installing gitolite, you're a "system admin", like it or not.
+    Ssh is therefore a necessary skill.  Please take the time to learn at
+    least enough to get passwordless access working.
+
+  * you also need to be somewhat familiar with git itself.  You cannot
+    administer a whole bunch of git repositories if you don't know the basics
+    of git.
+
+  * some familiarity with Unix and shells is probably required
+
+  * regular expressions are a big part of gitolite in many places but
+    familiarity is not necessary to do basic access control.
+
+<a name="_installation_and_setup"></a>
 
 ### installation and setup
 
-<a name="package_method_directly_on_the_server_using_RPM_DEB"></a>
+<a name="methods"></a>
+
+<a name="_install_methods_and_deciding_which_one_to_use"></a>
+
+#### install methods and deciding which one to use
+
+Gitolite has 4 install methods:
+
+  * **package method** if you have a gitolite RPM or a DEB available
+  * **root method** if you have root access to the server, and you plan to
+    have multiple "hosting users" on it
+  * **non-root method** if you don't have root access to the server, but you
+    do have at least one account with a password
+  * **from-client method** if you are not comfortable with public keys and
+    server side commands
+
+Here's how you install using these 3 methods.  Future upgrades are equally
+easy -- the steps required for upgrading are marked "(U)".
+
+<a name="_package_method_directly_on_the_server_using_RPM_DEB"></a>
 
 #### (package method) directly on the server, using RPM/DEB
 
@@ -100,7 +160,7 @@ values as needed.
 
   * on the client, run `cd; git clone git@server:gitolite-admin`
 
-<a name="root_method_directly_on_the_server_manually_with_root_access"></a>
+<a name="_root_method_directly_on_the_server_manually_with_root_access"></a>
 
 #### (root method) directly on the server, manually, with root access
 
@@ -122,7 +182,7 @@ values as needed.
 
   * on the client, run `cd; git clone git@server:gitolite-admin`
 
-<a name="non_root_method_directly_on_the_server_manually_without_root_access"></a>
+<a name="_non_root_method_directly_on_the_server_manually_without_root_access"></a>
 
 #### (non-root method) directly on the server, manually, without root access
 
@@ -151,22 +211,25 @@ server so that if you screw up the keys you can still get on, or be able to
 
   * on the client, run `cd; git clone git@server:gitolite-admin`
 
-<a name="from_client_method_install_from_the_client_to_the_server"></a>
+<a name="fc"></a>
+
+<a name="_from_client_method_install_from_the_client_to_the_server"></a>
 
 #### (from-client method) install from the client to the server
 
-This used to be the most common install method for a long time, and it is
-still the one I use for most of my testing.  The **main advantage** of this
-method is that it **forces you** to solve the ssh pubkey problem **before**
-attempting to install.  Sadly, it also forces the admin to use a **different**
-URL for gitolite repos than normal users, which seems to confuse a heck of a
-lot of people who don't read the prominently displayed messages and/or the
-documentation.
+The advantage of this method is that it forces you to solve the ssh pubkey
+problem **before** attempting to install.  It works best if you have dedicated
+userids, one on the server for installing gitolite, and one the client for
+administering it.
 
-This method is verbosely documented in [doc/7-install-transcript.mkd][doc7],
-including *outputs* of the commands concerned.
+Sadly, it also forces the admin to use a different URL to access gitolite
+repos than normal users, which seems to confuse a heck of a lot of people who
+don't read the prominently displayed messages and/or the documentation.
 
-<a name="URLs_for_gitolite_managed_repos"></a>
+This method is verbosely documented in this [transcript][], including
+*outputs* of the commands concerned.
+
+<a name="_URLs_for_gitolite_managed_repos"></a>
 
 ### URLs for gitolite-managed repos
 
@@ -181,11 +244,11 @@ However, in the fourth ("from-client") method, the admin user needs a
 different URL (`gitolite:reponame`) to gain access to the gitolite
 repositories.  Check [here][twokeys] for why.
 
-<a name="special_cases_multiple_gitolite_servers"></a>
+<a name="_special_cases_multiple_gitolite_servers"></a>
 
 ### special cases -- multiple gitolite servers
 
-<a name="package_method_and_root_method"></a>
+<a name="_package_method_and_root_method"></a>
 
 #### package method and root method
 
@@ -209,7 +272,7 @@ to have a command line on the server, so don't give them the passwords if you
 don't need to -- the pubkey will allow them to be gitolite admins on their
 domain, and that's quite enough for normal operations.
 
-<a name="from_client_method"></a>
+<a name="_from_client_method"></a>
 
 #### from-client method
 
@@ -229,7 +292,7 @@ have been created as respective clones.  Or you can re-clone elsewhere:
     cd ~/admin1; git clone gitolite_server_1:gitolite-admin.git
     cd ~/admin2; git clone gitolite_server_2:gitolite-admin.git
 
-<a name="upgrading"></a>
+<a name="_upgrading"></a>
 
 ### upgrading
 
@@ -244,11 +307,11 @@ also.
 Also, remember that some new features may require additional settings in your
 `~/.gitolite.rc` file.
 
-<a name="uninstalling"></a>
+<a name="_uninstalling"></a>
 
 ### uninstalling
 
-<a name="cleaning_out_a_botched_install"></a>
+<a name="_cleaning_out_a_botched_install"></a>
 
 #### cleaning out a botched install
 
@@ -266,18 +329,17 @@ here's how to clean the slate.
       * remove `~/.gitolite`, `~/.gitolite.rc` and
         `~/repositories/gitolite-admin.git`
 
-<a name="uninstalling_gitolite_completely"></a>
+<a name="_uninstalling_gitolite_completely"></a>
 
 #### uninstalling gitolite completely
 
 There's some duplication between this and the previous section, but
 uninstalling gitolite is described in great detail in
-[doc/9-uninstall.mkd][doc9unin]
+[doc/uninstall.mkd][doc9unin]
 
 ----
 
-[doc6]: http://github.com/sitaramc/gitolite/blob/pu/doc/6-ssh-troubleshooting.mkd
-[doc7]: http://github.com/sitaramc/gitolite/blob/pu/doc/7-install-transcript.mkd
-[doc9unin]: http://github.com/sitaramc/gitolite/blob/pu/doc/9-uninstall.mkd
-[doc9ssh]: http://github.com/sitaramc/gitolite/blob/pu/doc/9-ssh-tips.mkd
-[twokeys]: http://github.com/sitaramc/gitolite/blob/pu/doc/6-ssh-troubleshooting.mkd#why_two_keys_on_client
+[doc6]: http://github.com/sitaramc/gitolite/blob/pu/doc/ssh-troubleshooting.mkd
+[doc9unin]: http://github.com/sitaramc/gitolite/blob/pu/doc/uninstall.mkd
+[twokeys]: http://github.com/sitaramc/gitolite/blob/pu/doc/ssh-troubleshooting.mkd#twokeys
+[transcript]: http://github.com/sitaramc/gitolite/blob/pu/doc/install-transcript.mkd

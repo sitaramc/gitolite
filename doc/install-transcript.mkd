@@ -2,18 +2,18 @@
 
 In this document:
 
-  * <a href="#about_this_document">about this document</a>
-  * <a href="#create_userids_on_server_and_client_optional_">create userids on server and client (optional)</a>
-  * <a href="#get_pubkey_access_from_client_to_server">get pubkey access from client to server</a>
-  * <a href="#get_gitolite_source">get gitolite source</a>
-  * <a href="#install_gitolite">install gitolite</a>
-  * <a href="#VERY_IMPORTANT_">VERY IMPORTANT...</a>
-  * <a href="#examine_what_you_have">examine what you have</a>
-  * <a href="#emergency_password_access">emergency password access</a>
+  * <a href="#_about_this_document">about this document</a>
+  * <a href="#_create_userids_on_server_and_client_optional_">create userids on server and client (optional)</a>
+  * <a href="#_get_pubkey_access_from_client_to_server">get pubkey access from client to server</a>
+  * <a href="#_get_gitolite_source">get gitolite source</a>
+  * <a href="#_install_gitolite">install gitolite</a>
+  * <a href="#_VERY_IMPORTANT_">VERY IMPORTANT...</a>
+  * <a href="#_examine_what_you_have">examine what you have</a>
+  * <a href="#_emergency_password_access">emergency password access</a>
 
 ----
 
-<a name="about_this_document"></a>
+<a name="_about_this_document"></a>
 
 ### about this document
 
@@ -40,7 +40,7 @@ you have to run it on your workstation, NOT on the server!**
 
 ----
 
-<a name="create_userids_on_server_and_client_optional_"></a>
+<a name="_create_userids_on_server_and_client_optional_"></a>
 
 ### create userids on server and client (optional)
 
@@ -87,7 +87,7 @@ because I'm not showing the actual "vi" session):
 
 ----
 
-<a name="get_pubkey_access_from_client_to_server"></a>
+<a name="_get_pubkey_access_from_client_to_server"></a>
 
 ### get pubkey access from client to server
 
@@ -136,9 +136,11 @@ Double check to make sure you can log on to `git@server` without a password:
     sita@sita-lt:~ $ ssh git@server pwd
     /home/git
 
+**DO NOT PROCEED UNTIL THIS WORKS OK!**
+
 ----
 
-<a name="get_gitolite_source"></a>
+<a name="_get_gitolite_source"></a>
 
 ### get gitolite source
 
@@ -150,7 +152,7 @@ Double check to make sure you can log on to `git@server` without a password:
     Receiving objects: 100% (1157/1157), 270.08 KiB | 61 KiB/s, done.
     Resolving deltas: 100% (756/756), done.
 
-<a name="install_gitolite"></a>
+<a name="_install_gitolite"></a>
 
 ### install gitolite
 
@@ -221,7 +223,7 @@ install mode that allows you to change the defaults etc.
 
 ----
 
-<a name="VERY_IMPORTANT_"></a>
+<a name="_VERY_IMPORTANT_"></a>
 
 ### VERY IMPORTANT...
 
@@ -235,7 +237,7 @@ non-standard ports were used).
 
 Try out that `tail -31 ./gl-easy-install` too :)
 
-<a name="examine_what_you_have"></a>
+<a name="_examine_what_you_have"></a>
 
 ### examine what you have
 
@@ -258,7 +260,7 @@ gitolite-admin repo in `~/gitolite-admin`.
 And that's really all.  Add keys to keydir here, edit conf/gitolite.conf as
 needed, then add, commit, and push the changes to the server.
 
-<a name="emergency_password_access"></a>
+<a name="_emergency_password_access"></a>
 
 ### emergency password access
 

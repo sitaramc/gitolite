@@ -1,3 +1,5 @@
+<a name="start"></a>
+
 # gitolite
 
 Gitolite is an access control layer on top of git, which allows access control
@@ -8,45 +10,39 @@ Gitolite comes with a **huge** amount of documentation.  If you're absolutely
 new, the suggested reading order is this:
 
   * the README (this document) for a quick intro
-  * **IMPORTANT:** if you don't know anything about ssh, read [this][doc9gas]
   * the [INSTALL][install] document
-  * if you run into trouble with ssh, read [this][doc6sts]
   * the [ADMIN][admin] document
-  * if you're migrating from gitosis, read [this][migr]
+
+If you run into trouble start [here](#support).  If you're migrating from
+gitosis, read [this][migr].
 
 Once you've installed it and started using it, you'll want to explore some of
 the more powerful features.  All the documentation is available in the source
 repo as well as [online][docs].  All the longer documents have tables of
 contents, so you can quickly get a feel for what is covered right at the top.
 
-[install]: http://github.com/sitaramc/gitolite/blob/master/doc/0-INSTALL.mkd
-[admin]: http://github.com/sitaramc/gitolite/blob/master/doc/2-admin.mkd
-[migr]: http://github.com/sitaramc/gitolite/blob/master/doc/1-migrate.mkd
-[docs]: http://github.com/sitaramc/gitolite/blob/pu/doc
-[doc9gas]: http://github.com/sitaramc/gitolite/blob/pu/doc/9-gitolite-and-ssh.mkd
-[doc6sts]: http://github.com/sitaramc/gitolite/blob/pu/doc/6-ssh-troubleshooting.mkd
-
 ----
 
 In this document:
 
-  * <a href="#what">what</a>
-  * <a href="#why">why</a>
-  * <a href="#other_features">other features</a>
-  * <a href="#security">security</a>
-  * <a href="#contact_and_license">contact and license</a>
+  * <a href="#_what">what</a>
+  * <a href="#_why">why</a>
+  * <a href="#_main_features">main features</a>
+  * <a href="#_support">support</a>
+  * <a href="#_security">security</a>
+  * <a href="#_contact_and_license">contact and license</a>
 
 ----
 
-<a name="what"></a>
+<a name="_what"></a>
 
 ### what
 
-Gitolite allows a server to host many git repositories and provide access to
-many developers, without having to give them real userids on or shell access
-to the server.  The essential magic in doing this is ssh's pubkey access and
-the `authorized_keys` file, and the inspiration was an older program called
-gitosis.
+Gitolite lets you use a single user on a server to host many git repositories
+and provide access to many developers, without having to give them real
+userids on or shell access to the server.  The essential magic in doing this
+is ssh's pubkey access and the `authorized_keys` file, and the inspiration was
+an older program called gitosis.
 
 Gitolite can restrict who can read from (clone/fetch) or write to (push) a
 repository.  It can also restrict who can push to what branch or tag, which is
@@ -55,7 +51,7 @@ requiring root permissions, and with no additional software than git itself
 and perl.  It also has several other neat features described below and
 elsewhere in the [doc/][docs] directory.
 
-<a name="why"></a>
+<a name="_why"></a>
 
 ### why
 
@@ -74,9 +70,9 @@ allow/disallow users access to repos.
 But there are several disadvantages here:
 
   * every user needs a userid and password on the server.  This is usually a
-    killer...!
+    killer, especially in tightly controlled environments
   * adding/removing access rights involves complex `usermod -G ...` mumblings
-    which most admins would rather not deal with, thanks to you-know-who
+    which most admins would rather not deal with
   * *viewing* (aka auditing) the current set of permissions requires running
     multiple commands to list directories and their permissions/ownerships,
     users and their group memberships, and then correlating all these manually
@@ -102,9 +98,9 @@ Gitolite does away with all this:
     read-write access, not only at the repository level, but at the branch
     level within repositories.
 
-<a name="other_features"></a>
+<a name="_main_features"></a>
 
-### other features
+### main features
 
 The most important feature I needed was **per-branch permissions**.  This is
 pretty much mandatory in a corporate environment, and is almost the single
@@ -136,7 +132,26 @@ detail somewhere in gitolite's [doc/][docs] subdirectory.
   * specify repos using patterns (patterns may include creator's name)
   * define powerful operations on the server side, even github-like forking
 
-<a name="security"></a>
+<a name="support"></a>
+
+<a name="_support"></a>
+
+### support
+
+Most installation problems are caused by not knowing ssh.  Take a look at this
+[transcript][] to see how simple it actually is, if your server's ssh daemon
+is behaving itself.
+
+If I suspect your problem is an ssh issue, I will probably ignore it.  Please
+learn how [gitolite uses ssh][doc9gas] and then methodically go through the
+[ssh trouble shooting][doc6sts] document.  These two documents contain
+everything I could possibly tell you.  I have nothing to add.
+
+Even for other topics, please look through at least the table of contents of
+at least the numbered documents to see if your question is already answered,
+before asking.
+
+<a name="_security"></a>
 
 ### security
 
@@ -158,11 +173,21 @@ details, looking for the word "security".
 
 ----
 
-<a name="contact_and_license"></a>
+<a name="_contact_and_license"></a>
 
 ### contact and license
 
 Gitolite is released under GPL v2.  See COPYING for details.
 
-sitaramc@gmail.com
-mailing list: gitolite@googlegroups.com
+  * author: sitaramc@gmail.com, sitaram@atc.tcs.com
+  * mailing list: gitolite@googlegroups.com
+  * list subscribe address : gitolite+subscribe@googlegroups.com
+
+[transcript]: http://github.com/sitaramc/gitolite/blob/pu/doc/install-transcript.mkd
+[install]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd
+[admin]: http://github.com/sitaramc/gitolite/blob/pu/doc/2-admin.mkd
+[migr]: http://github.com/sitaramc/gitolite/blob/pu/doc/migrate.mkd
+[docs]: http://github.com/sitaramc/gitolite/blob/pu/doc
+[doc9gas]: http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite-and-ssh.mkd
+[doc6sts]: http://github.com/sitaramc/gitolite/blob/pu/doc/ssh-troubleshooting.mkd
+

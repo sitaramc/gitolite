@@ -2,20 +2,20 @@
 
 In this document:
 
-  * <a href="#common_ssh_asks_for_a_password">(common) ssh asks for a password</a>
-  * <a href="#problems_when_using_package_root_or_non_root_install_methods">problems when using package, root, or non-root install methods</a>
-  * <a href="#problems_when_using_the_from_client_install_method">problems when using the "from-client" install method</a>
-      * <a href="#sidebar_why_two_keys_on_client_for_the_admin">(sidebar) why two keys on client for the admin</a>
-      * <a href="#bypassing_gitolite_without_intending_to">bypassing gitolite without intending to</a>
-      * <a href="#basic_ssh_troubleshooting_for_the_admin">basic ssh troubleshooting for the admin</a>
-  * <a href="#windows_issues">windows issues</a>
-  * <a href="#details">details</a>
-      * <a href="#files_on_the_server">files on the server</a>
-      * <a href="#files_on_client">files on client</a>
-  * <a href="#some_other_tips_and_tricks">some other tips and tricks</a>
-      * <a href="#giving_shell_access_to_gitolite_users">giving shell access to gitolite users</a>
-      * <a href="#losing_your_admin_key">losing your admin key</a>
-      * <a href="#simulating_ssh_copy_id">simulating ssh-copy-id</a>
+  * <a href="#_common_ssh_asks_for_a_password">(common) ssh asks for a password</a>
+  * <a href="#_problems_when_using_package_root_or_non_root_install_methods">problems when using package, root, or non-root install methods</a>
+  * <a href="#_problems_when_using_the_from_client_install_method">problems when using the "from-client" install method</a>
+      * <a href="#_sidebar_why_two_keys_on_client_for_the_admin">(sidebar) why two keys on client for the admin</a>
+      * <a href="#_bypassing_gitolite_without_intending_to">bypassing gitolite without intending to</a>
+      * <a href="#_basic_ssh_troubleshooting_for_the_admin">basic ssh troubleshooting for the admin</a>
+  * <a href="#_windows_issues">windows issues</a>
+  * <a href="#_details">details</a>
+      * <a href="#_files_on_the_server">files on the server</a>
+      * <a href="#_files_on_client">files on client</a>
+  * <a href="#_some_other_tips_and_tricks">some other tips and tricks</a>
+      * <a href="#_giving_shell_access_to_gitolite_users">giving shell access to gitolite users</a>
+      * <a href="#_losing_your_admin_key">losing your admin key</a>
+      * <a href="#_simulating_ssh_copy_id">simulating ssh-copy-id</a>
 
 ----
 
@@ -36,11 +36,10 @@ code, and documentation.**
 
 Other resources:
 
-  * people who think this is too hard should take a look at
-    [doc/7-install-transcript.mkd][doc7] to **see how simple it *actually*
-    is**.
+  * people who think this is too hard should take a look at this
+    [transcript][] to **see how simple it *actually* is**.
 
-  * I **strongly** recommend reading [doc/9-gitolite-and-ssh.mkd][doc9gas],
+  * I **strongly** recommend reading [doc/gitolite-and-ssh.mkd][doc9gas],
     which is a very detailed look at how gitolite uses ssh's features on the
     server side.  Most people don't know ssh as well as they *think* they do;
     even if you don't have any problems right now, it's worth skimming over.
@@ -51,7 +50,7 @@ Other resources:
 
 ----
 
-<a name="common_ssh_asks_for_a_password"></a>
+<a name="_common_ssh_asks_for_a_password"></a>
 
 ### (common) ssh asks for a password
 
@@ -136,7 +135,7 @@ This is a quick checklist:
 
 ----
 
-<a name="problems_when_using_package_root_or_non_root_install_methods"></a>
+<a name="_problems_when_using_package_root_or_non_root_install_methods"></a>
 
 ### problems when using package, root, or non-root install methods
 
@@ -163,7 +162,7 @@ first match, the second occurrence (which invokes gitolite) is ignored.
 
 You'll have to (create and) use a different keypair for gitolite access.
 
-<a name="problems_when_using_the_from_client_install_method"></a>
+<a name="_problems_when_using_the_from_client_install_method"></a>
 
 ### problems when using the "from-client" install method
 
@@ -191,7 +190,9 @@ key.
 All this applies *only* to the admin.  Normal users will only have one key and
 do not need any of this.
 
-<a name="sidebar_why_two_keys_on_client_for_the_admin"></a>
+<a name="twokeys"></a>
+
+<a name="_sidebar_why_two_keys_on_client_for_the_admin"></a>
 
 #### (sidebar) why two keys on client for the admin
 
@@ -214,7 +215,7 @@ do not need any of this.
 >   methods to install gitolite.  Please see the [install doc][install] for
 >   details.
 
-<a name="bypassing_gitolite_without_intending_to"></a>
+<a name="_bypassing_gitolite_without_intending_to"></a>
 
 #### bypassing gitolite without intending to
 
@@ -261,7 +262,7 @@ the repo and clones ok.  But when you push, gitolite's **update hook** kicks
 in, and fails to run because some of the environment variables it is
 expecting are not present.
 
-<a name="basic_ssh_troubleshooting_for_the_admin"></a>
+<a name="_basic_ssh_troubleshooting_for_the_admin"></a>
 
 #### basic ssh troubleshooting for the admin
 
@@ -310,7 +311,7 @@ from scratch:
 
 That's a long sequence but it should work.
 
-<a name="windows_issues"></a>
+<a name="_windows_issues"></a>
 
 ### windows issues
 
@@ -326,13 +327,13 @@ how to resolve them and get things working, I'd be happy to credit you and
 include it, either directly here if it is short enough or just an external
 link, or in contrib/ if it's a longer piece of text.
 
-<a name="details"></a>
+<a name="_details"></a>
 
 ### details
 
 Here's how it all hangs together.
 
-<a name="files_on_the_server"></a>
+<a name="_files_on_the_server"></a>
 
 #### files on the server
 
@@ -364,7 +365,7 @@ Here's how it all hangs together.
     argument `sitaram`.  This is how gitolite is invoked, (and is told the
     user logging in is "sitaram").
 
-<a name="files_on_client"></a>
+<a name="_files_on_client"></a>
 
 #### files on client
 
@@ -392,11 +393,11 @@ Here's how it all hangs together.
     non-default keypair (unlike command line ssh, which can be given the `-i
     ~/.ssh/sitaram` flag to do so).
 
-<a name="some_other_tips_and_tricks"></a>
+<a name="_some_other_tips_and_tricks"></a>
 
 ### some other tips and tricks
 
-<a name="giving_shell_access_to_gitolite_users"></a>
+<a name="_giving_shell_access_to_gitolite_users"></a>
 
 #### giving shell access to gitolite users
 
@@ -415,7 +416,7 @@ or
 
 The first method is to be used if you used the **user-install** mode, while
 the second method is for the **system-install followed by user-setup** mode
-(see doc/0-INSTALL.mkd, section on "install methods", for more on this)
+(see doc/1-INSTALL.mkd, section on "install methods", for more on this)
 
 **IMPORTANT UPGRADE NOTE**: previous implementations of this feature were
 crap.  There was no easy/elegant way to ensure that someone who had repo admin
@@ -424,7 +425,7 @@ access would not manage to get himself shell access.
 Giving someone shell access requires that you should have shell access in the
 first place, so the simplest way is to enable it from the server side only.
 
-<a name="losing_your_admin_key"></a>
+<a name="_losing_your_admin_key"></a>
 
 #### losing your admin key
 
@@ -433,7 +434,7 @@ gitolite-admin repository with a fresh key, take a look at the
 `src/gl-dont-panic` program.  You will need shell access to the server of
 course.  Run it without arguments to get instructions.
 
-<a name="simulating_ssh_copy_id"></a>
+<a name="_simulating_ssh_copy_id"></a>
 
 #### simulating ssh-copy-id
 
@@ -458,11 +459,10 @@ typically) also must be `go-w`, but that needs root.  And typically
 they're already set that way anyway.  (Or if they're not, you've got
 bigger problems than gitolite install not working!)]
 
-[doc0]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd
-[doc9gas]: http://github.com/sitaramc/gitolite/blob/pu/doc/9-gitolite-and-ssh.mkd
-[install]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd
-[o3]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#installation_and_setup
-[fc]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#from_client_method_install_from_the_client_to_the_server
-[urls]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd#URLs_for_gitolite_managed_repos
+[doc9gas]: http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite-and-ssh.mkd
+[install]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd
+[o3]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd#methods
+[fc]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd#fc
+[urls]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd#URLs_for_gitolite_managed_repos
 [repout]: http://github.com/sitaramc/gitolite/blob/pu/doc/report-output.mkd
-[doc7]: http://github.com/sitaramc/gitolite/blob/pu/doc/7-install-transcript.mkd
+[transcript]: http://github.com/sitaramc/gitolite/blob/pu/doc/install-transcript.mkd

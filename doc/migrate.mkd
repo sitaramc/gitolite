@@ -36,8 +36,6 @@ Here's how we migrated my work repos:
 
 Now, log off the server and get back to the client:
 
-[inst]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd
-
 1.  follow instructions to install gitolite; see the [install document][inst].
     Make sure that you **don't** change the default path for `$REPO_BASE` if
     you edit the config file!
@@ -87,4 +85,4 @@ Now, log off the server and get back to the client:
 5.  Check all your changes to your gitolite-admin clone, commit, and push
 
 [mk]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#multikeys
-
+[inst]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd

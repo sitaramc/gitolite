@@ -9,7 +9,7 @@ update, you just add a post-receive hook that says
 But life is never that simple...
 
 **This document has been tested using a 3-server setup, all installed using
-the "non-root" method (see doc/0-INSTALL.mkd).  However, the process is
+the "non-root" method (see doc/1-INSTALL.mkd).  However, the process is
 probably not going to be very forgiving of human error -- like anything that
 is this deep in "system admin" territory, errors are likely to be costly.  If
 you're the kind who hits enter first and then thinks about what he typed,
@@ -22,23 +22,23 @@ never *really* lost until you do a `git gc`**.
 
 In this document:
 
-  * <a href="#RULE_NUMBER_ONE_">RULE NUMBER ONE!</a>
-  * <a href="#things_that_will_NOT_be_mirrored_by_this_process">things that will NOT be mirrored by this process</a>
-  * <a href="#conventions_in_this_document">conventions in this document</a>
-  * <a href="#setting_up_mirroring">setting up mirroring</a>
-      * <a href="#install_gitolite_on_all_servers">install gitolite on all servers</a>
-      * <a href="#generate_keypairs">generate keypairs</a>
-      * <a href="#setup_the_mirror_shell_on_each_server">setup the mirror-shell on each server</a>
-      * <a href="#set_slaves_to_slave_mode">set slaves to slave mode</a>
-      * <a href="#set_slave_server_lists">set slave server lists</a>
-  * <a href="#syncing_the_mirrors_the_first_time">syncing the mirrors the first time</a>
-  * <a href="#switching_over">switching over</a>
-  * <a href="#the_return_of_foo">the return of foo</a>
-      * <a href="#switching_back">switching back</a>
-      * <a href="#making_foo_a_slave">making foo a slave</a>
-  * <a href="#URLs_that_your_users_will_use">URLs that your users will use</a>
+  * <a href="#_RULE_NUMBER_ONE_">RULE NUMBER ONE!</a>
+  * <a href="#_things_that_will_NOT_be_mirrored_by_this_process">things that will NOT be mirrored by this process</a>
+  * <a href="#_conventions_in_this_document">conventions in this document</a>
+  * <a href="#_setting_up_mirroring">setting up mirroring</a>
+      * <a href="#_install_gitolite_on_all_servers">install gitolite on all servers</a>
+      * <a href="#_generate_keypairs">generate keypairs</a>
+      * <a href="#_setup_the_mirror_shell_on_each_server">setup the mirror-shell on each server</a>
+      * <a href="#_set_slaves_to_slave_mode">set slaves to slave mode</a>
+      * <a href="#_set_slave_server_lists">set slave server lists</a>
+  * <a href="#_syncing_the_mirrors_the_first_time">syncing the mirrors the first time</a>
+  * <a href="#_switching_over">switching over</a>
+  * <a href="#_the_return_of_foo">the return of foo</a>
+      * <a href="#_switching_back">switching back</a>
+      * <a href="#_making_foo_a_slave">making foo a slave</a>
+  * <a href="#_URLs_that_your_users_will_use">URLs that your users will use</a>
 
-<a name="RULE_NUMBER_ONE_"></a>
+<a name="_RULE_NUMBER_ONE_"></a>
 
 ### RULE NUMBER ONE!
 
@@ -52,7 +52,7 @@ Corollary: if the primary went down and you effected a changeover, you must
 make sure that the primary does not come up in a push-enabled mode when it
 recovers.
 
-<a name="things_that_will_NOT_be_mirrored_by_this_process"></a>
+<a name="_things_that_will_NOT_be_mirrored_by_this_process"></a>
 
 ### things that will NOT be mirrored by this process
 
@@ -72,7 +72,7 @@ important, (especially the gl-creator, although if your wildcard pattern had
 Your best bet is to use rsync for the log files, and tar for the others, at
 regular intervals.
 
-<a name="conventions_in_this_document"></a>
+<a name="_conventions_in_this_document"></a>
 
 ### conventions in this document
 
@@ -80,11 +80,11 @@ The userid hosting gitolite is `gitolite` on all machines.  The servers are
 foo, bar, and baz.  At the beginning, foo is the master, the other 2 are
 slaves.
 
-<a name="setting_up_mirroring"></a>
+<a name="_setting_up_mirroring"></a>
 
 ### setting up mirroring
 
-<a name="install_gitolite_on_all_servers"></a>
+<a name="_install_gitolite_on_all_servers"></a>
 
 #### install gitolite on all servers
 
@@ -99,7 +99,7 @@ slaves.
   * Use the same "admin key" on all the machines, so that the same person has
     gitolite-admin access to all of them.
 
-<a name="generate_keypairs"></a>
+<a name="_generate_keypairs"></a>
 
 #### generate keypairs
 
@@ -108,7 +108,7 @@ servers, so first generate keypairs for all of them (`ssh-keygen`) and copy
 the `.pub` files to all other servers, named appropriately.  So foo will have
 bar.pub and baz.pub, etc.
 
-<a name="setup_the_mirror_shell_on_each_server"></a>
+<a name="_setup_the_mirror_shell_on_each_server"></a>
 
 #### setup the mirror-shell on each server
 
@@ -136,7 +136,7 @@ Now test this access:
 
 Similarly test the other combinations.
 
-<a name="set_slaves_to_slave_mode"></a>
+<a name="_set_slaves_to_slave_mode"></a>
 
 #### set slaves to slave mode
 
@@ -145,7 +145,7 @@ Set slave mode on all the *slave* servers by setting `$GL_SLAVE_MODE = 1`
 
 Leave the master server's file as is.
 
-<a name="set_slave_server_lists"></a>
+<a name="_set_slave_server_lists"></a>
 
 #### set slave server lists
 
@@ -181,7 +181,7 @@ port number:
 
 And that's really all there is, unless...
 
-<a name="syncing_the_mirrors_the_first_time"></a>
+<a name="_syncing_the_mirrors_the_first_time"></a>
 
 ### syncing the mirrors the first time
 
@@ -193,7 +193,7 @@ them up once.
     gl-mirror-sync gitolite@bar
         # path to "sync" program is ~/.gitolite/src if "from-client" install
 
-<a name="switching_over"></a>
+<a name="_switching_over"></a>
 
 ### switching over
 
@@ -225,11 +225,11 @@ to have "baz" be a slave.
     system comes up.  Better still, use extraneous means to block incoming
     connections from normal users (out of scope for this document).
 
-<a name="the_return_of_foo"></a>
+<a name="_the_return_of_foo"></a>
 
 ### the return of foo
 
-<a name="switching_back"></a>
+<a name="_switching_back"></a>
 
 #### switching back
 
@@ -260,7 +260,7 @@ Switching back is fairly easy.
   * on foo, set slave mode off
   * tell everyone to switch back
 
-<a name="making_foo_a_slave"></a>
+<a name="_making_foo_a_slave"></a>
 
 #### making foo a slave
 
@@ -281,7 +281,7 @@ this, but YMMV.
 
 ----
 
-<a name="URLs_that_your_users_will_use"></a>
+<a name="_URLs_that_your_users_will_use"></a>
 
 ### URLs that your users will use
 

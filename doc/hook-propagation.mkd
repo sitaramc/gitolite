@@ -6,17 +6,17 @@ put them, what takes precedence.  I'll try and set out the logic here.
 
 In this document:
 
-  * <a href="#hooks_used_by_gitolite">hooks used by gitolite</a>
-  * <a href="#where_do_I_the_admin_put_the_hooks_">**where** do I (the admin) put the hooks?</a>
-      * <a href="#the_from_client_method">the "from-client" method</a>
-      * <a href="#the_other_3_methods">the other 3 methods</a>
-          * <a href="#the_GL_PACKAGE_HOOKS_directory">the `GL_PACKAGE_HOOKS` directory</a>
-          * <a href="#the_HOME_gitolite_directory">the `$HOME/.gitolite` directory</a>
-      * <a href="#why_two_places_">why two places?</a>
-      * <a href="#special_case_the_non_root_method">special case: the "non-root" method</a>
-  * <a href="#when_do_hooks_propagate_">**when** do hooks propagate?</a>
+  * <a href="#_hooks_used_by_gitolite">hooks used by gitolite</a>
+  * <a href="#_where_do_I_the_admin_put_the_hooks_">**where** do I (the admin) put the hooks?</a>
+      * <a href="#_the_from_client_method">the "from-client" method</a>
+      * <a href="#_the_other_3_methods">the other 3 methods</a>
+          * <a href="#_the_GL_PACKAGE_HOOKS_directory">the `GL_PACKAGE_HOOKS` directory</a>
+          * <a href="#_the_HOME_gitolite_directory">the `$HOME/.gitolite` directory</a>
+      * <a href="#_why_two_places_">why two places?</a>
+      * <a href="#_special_case_the_non_root_method">special case: the "non-root" method</a>
+  * <a href="#_when_do_hooks_propagate_">**when** do hooks propagate?</a>
 
-<a name="hooks_used_by_gitolite"></a>
+<a name="_hooks_used_by_gitolite"></a>
 
 ### hooks used by gitolite
 
@@ -32,7 +32,7 @@ In addition there is a "sentinel file" -- an empty file called
 The final objective of all this is that each repo's `hooks/` directory should
 get all the hooks that it is meant to get.
 
-<a name="where_do_I_the_admin_put_the_hooks_"></a>
+<a name="_where_do_I_the_admin_put_the_hooks_"></a>
 
 ### **where** do I (the admin) put the hooks?
 
@@ -44,9 +44,9 @@ Now we'll discuss the locations of these `hooks/common` and
 `hooks/gitolite-admin` directories.  This depends on which install method you
 used.
 
-(Please refer to [doc/0-INSTALL.mkd][0inst] for what these "methods" are).
+(Please refer to [doc/1-INSTALL.mkd][0inst] for what these "methods" are).
 
-<a name="the_from_client_method"></a>
+<a name="_the_from_client_method"></a>
 
 #### the "from-client" method
 
@@ -57,11 +57,11 @@ gitolite clone on the client side.  This is where you run
 method; skip to the next section ("when do hooks propagate") if you installed
 using the "from-client" method.
 
-<a name="the_other_3_methods"></a>
+<a name="_the_other_3_methods"></a>
 
 #### the other 3 methods
 
-<a name="the_GL_PACKAGE_HOOKS_directory"></a>
+<a name="_the_GL_PACKAGE_HOOKS_directory"></a>
 
 ##### the `GL_PACKAGE_HOOKS` directory
 
@@ -80,7 +80,7 @@ process does the equivalent of `gl-system-install`.
 So now we know there's a location called `$GL_PACKAGE_HOOKS` where you can
 place your hooks.
 
-<a name="the_HOME_gitolite_directory"></a>
+<a name="_the_HOME_gitolite_directory"></a>
 
 ##### the `$HOME/.gitolite` directory
 
@@ -90,7 +90,7 @@ directory, which also contains a `hooks/` directory.
 
 So now there are two places you can put your hooks, apparently.
 
-<a name="why_two_places_"></a>
+<a name="_why_two_places_"></a>
 
 #### why two places?
 
@@ -116,7 +116,7 @@ get copied to `$HOME/.gitolite/hooks` when you "install".  I need to fix and
 thoroughly test this later; for now, just ignore the extra files you see in
 there; they're harmless/redundant (TODO)]
 
-<a name="special_case_the_non_root_method"></a>
+<a name="_special_case_the_non_root_method"></a>
 
 #### special case: the "non-root" method
 
@@ -127,7 +127,7 @@ existed to cater to the "package" and "root" methods.  In this method, the
 *strongly* suggest putting them in `$GL_PACKAGE_HOOKS` and ignoring
 `$HOME/.gitolite` completely.
 
-<a name="when_do_hooks_propagate_"></a>
+<a name="_when_do_hooks_propagate_"></a>
 
 ### **when** do hooks propagate?
 
@@ -171,5 +171,5 @@ For people who do not want certain hooks to run for certain repos, one simple
 solution that will work right now is to check the value of `$GL_REPO` at the
 start of the hook, and `exit 0` based on what it contains/matches.
 
-[0inst]: http://github.com/sitaramc/gitolite/blob/pu/doc/0-INSTALL.mkd
+[0inst]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd
 

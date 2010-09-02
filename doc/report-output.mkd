@@ -10,14 +10,14 @@ through this document).
 
 In this document:
 
-  * <a href="#the_info_command">the "info" command</a>
-      * <a href="#interpreting_the_output">interpreting the output</a>
-      * <a href="#using_patterns_to_limit_output">using patterns to limit output</a>
-  * <a href="#the_expand_command">the "expand" command</a>
+  * <a href="#_the_info_command">the "info" command</a>
+      * <a href="#_interpreting_the_output">interpreting the output</a>
+      * <a href="#_using_patterns_to_limit_output">using patterns to limit output</a>
+  * <a href="#_the_expand_command">the "expand" command</a>
 
 ----
 
-<a name="the_info_command"></a>
+<a name="_the_info_command"></a>
 
 ### the "info" command
 
@@ -52,7 +52,7 @@ is often blank.
             @R_ @W_	testing
              R   W 	vkc
 
-<a name="interpreting_the_output"></a>
+<a name="_interpreting_the_output"></a>
 
 #### interpreting the output
 
@@ -77,7 +77,7 @@ suffixed by a symbol:
 The `_` suffix is special.  This says the user has only implicit access (due
 to one of the `@all` uses), but no explicit access.
 
-<a name="using_patterns_to_limit_output"></a>
+<a name="_using_patterns_to_limit_output"></a>
 
 #### using patterns to limit output
 
@@ -103,7 +103,7 @@ The pattern is also mandatory when an admin wants to find out what access some
 *other* user has, which you may have guessed from the syntax in the "usage"
 line above.
 
-<a name="the_expand_command"></a>
+<a name="_the_expand_command"></a>
 
 ### the "expand" command
 
@@ -119,6 +119,6 @@ For each repo found, it searches for it in the config -- either the actual
 repo entry (when the repo is not a wildcard repo), or an entry for the
 wildcard that matches it -- and reports permissions.  It also takes into
 account extra permissions enabled by the `setperms` command (see
-doc/4-wildcard-repositories.mkd).  It shows you the "creator" of the repo as
+doc/wildcard-repositories.mkd).  It shows you the "creator" of the repo as
 an additional column, defaulting to `<gitolite>` if it was not a wildcard
 repo.
