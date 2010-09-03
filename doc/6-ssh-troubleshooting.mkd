@@ -258,7 +258,7 @@ The second error happens if you use `git@server:repositories/reponame.git`
 (assuming default `$REPO_BASE` setting)  -- that is, you used the full unix
 path.  Since the "prefixing" mentioned above is not required, the shell finds
 the repo and clones ok.  But when you push, gitolite's **update hook** kicks
-in, and fails to run because you some of the environment variables it is
+in, and fails to run because some of the environment variables it is
 expecting are not present.
 
 <a name="basic_ssh_troubleshooting_for_the_admin"></a>

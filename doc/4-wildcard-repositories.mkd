@@ -186,7 +186,7 @@ The following points are important:
 
 ### setting a gitweb description for a wildcard-matched repo
 
-Similar to the getperm/setperm commands, there are the getdesc/setdesc
+Similar to the getperms/setperms commands, there are the getdesc/setdesc
 commands, thanks to Teemu.
 
 <a name="reporting"></a>
