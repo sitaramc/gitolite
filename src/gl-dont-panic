@@ -73,8 +73,8 @@ then
     git clone $REPO_BASE/gitolite-admin.git $TEMPDIR
     cd $TEMPDIR
 
-    echo printing the previous 9 commits to the config; echo
-    git log --date=relative --format="%h %ar%x09%s" | perl -pe 'print "$.\t"'
+    echo printing the last 9 commits to the config; echo
+    git log -9 --date=relative --format="%h %ar%x09%s" | perl -pe 'print "$.\t"'
     echo; read -p 'please enter how many commits you want to rewind: ' n
     good=`git rev-parse --short HEAD~$n`
 
