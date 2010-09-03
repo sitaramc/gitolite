@@ -13,6 +13,8 @@ get_rights_and_owner $delete
 
 # alternative 2 -- creator or anyone with W access to admin repo can delete
 [ "$owner" = "$GL_USER" ] || {
+    # but only if it is wild
+    [ "$owner" = "<gitolite>" ] && die "$delete is not a wild repo"
     get_rights_and_owner gitolite-admin
     [ -z "$perm_write" ] && die "$delete is not yours to delete and you're not the admin"
 }
