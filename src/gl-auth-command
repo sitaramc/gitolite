@@ -195,7 +195,7 @@ if ($perm =~ /C/) {
     # it was missing, and you have create perms
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
     new_repo($repo, "$GL_ADMINDIR/hooks/common", $user);
-        # note pwd is not the bare "repo.git"; new_repo does that...
+        # note pwd is now the bare "repo.git"; new_repo does that...
     wrap_print("gl-perms", "$GL_WILDREPOS_DEFPERMS\n") if $GL_WILDREPOS_DEFPERMS;
     &setup_repo_configs($repo, \%repo_config);
     &setup_daemon_access($repo);
