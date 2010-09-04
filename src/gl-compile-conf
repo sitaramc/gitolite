@@ -163,6 +163,180 @@ sub check_fragment_repo_disallowed
     return 1;
 }
 
+sub parse_conf_line
+{
+    my ($line, $fragment, $repos_p, $ignored_p) = @_;
+
+    # user or repo groups
+    if ($line =~ /^(@\S+) = (.*)/)
+    {
+        die "$ABRT defining groups is not allowed inside fragments\n"
+            if $GL_BIG_CONFIG and $fragment ne 'master';
+        # store the members of each group as hash key.  Keep track of when
+        # the group was *first* created by using $fragment as the *value*
+        do { $groups{$1}{$_} ||= $fragment } for ( expand_list( split(' ', $2) ) );
+        die "$ABRT bad group $1\n" unless $1 =~ $REPONAME_PATT;
+    }
+    # repo(s)
+    elsif ($line =~ /^repo (.*)/)
+    {
+        # grab the list...
+        @{ $repos_p } = split ' ', $1;
+        unless (@{ $repos_p } == 1 and $repos_p->[0] eq '@all') {
+            # ...expand groups in the default case
+            @{ $repos_p } = expand_list ( @{ $repos_p } ) unless $GL_BIG_CONFIG;
+            # ...sanity check
+            for (@{ $repos_p }) {
+                die "$ABRT bad reponame $_\n"
+                    if ($GL_WILDREPOS and $_ !~ $REPOPATT_PATT);
+                die "$ABRT bad reponame $_ or you forgot to set \$GL_WILDREPOS\n"
+                    if (not $GL_WILDREPOS and $_ !~ $REPONAME_PATT);
+            }
+        }
+        s/\bCREAT[EO]R\b/\$creator/g for @{ $repos_p };
+    }
+    # actual permission line
+    elsif ($line =~ /^(-|C|R|RW\+?(?:C?D?|D?C?)) (.* )?= (.+)/)
+    {
+        my $perms = $1;
+        my @refs; @refs = split( ' ', $2 ) if $2;
+        @refs = expand_list ( @refs );
+        my @users = split ' ', $3;
+        die "$ABRT \$GL_WILDREPOS is not set, you cant use 'C' in config\n" if $perms eq 'C' and not $GL_WILDREPOS;
+
+        # if no ref is given, this PERM applies to all refs
+        @refs = qw(refs/.*) unless @refs;
+        # deprecation warning
+        map { warn "WARNING: old syntax 'PATH/' found; please use new syntax 'NAME/'\n" if s(^PATH/)(NAME/) } @refs;
+        # fully qualify refs that dont start with "refs/" or "NAME/";
+        # prefix them with "refs/heads/"
+        @refs = map { m(^(refs|NAME)/) or s(^)(refs/heads/); $_ } @refs;
+        @refs = map { s(/USER/)(/\$gl_user/); $_ } @refs;
+
+        # expand the user list, unless it is just "@all"
+        @users = expand_list ( @users )
+            unless ($GL_BIG_CONFIG or (@users == 1 and $users[0] eq '@all'));
+        do  { die "$ABRT bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
+
+        s/\bCREAT[EO]R\b/~\$creator/g for @users;
+        s/\bREADERS\b/\$readers/g for @users;
+        s/\bWRITERS\b/\$writers/g for @users;
+
+        # ok, we can finally populate the %repos hash
+        for my $repo (@{ $repos_p })       # each repo in the current stanza
+        {
+            # if we're processing a delegated config file (not the master
+            # config), we need to prevent attempts by that admin to obtain
+            # rights on stuff outside his domain
+
+            # trying to set access for $repo (='foo')...
+            if (check_fragment_repo_disallowed( $fragment, $repo ))
+            {
+                $ignored_p->{$fragment}{$repo} = 1;
+                next;
+            }
+            for my $user (@users)
+            {
+                # lint check, to catch pubkey/username typos
+                if ($user =~ /^@/ and $user ne '@all') {
+                    # this is a usergroup, not a normal user; happens with GL_BIG_CONFIG
+                    if (exists $groups{$user}) {
+                        $user_list{$_}++ for keys %{ $groups{$user} };
+                    }
+                } else {
+                    $user_list{$user}++;
+                }
+
+                # for 1st level check (see faq/tips doc)
+                $repos{$repo}{C}{$user} = 1, next if $perms eq 'C';
+                $repos{$repo}{R}{$user} = 1 if $perms =~ /R/;
+                $repos{$repo}{W}{$user} = 1 if $perms =~ /W|D/;
+
+                # if the user specified even a single 'D' anywhere, make
+                # that fact easy to find; this changes the meaning of RW+
+                # to no longer permit deletes (see update hook)
+                $repos{$repo}{DELETE_IS_D} = 1 if $perms =~ /D/;
+                $repos{$repo}{CREATE_IS_C} = 1 if $perms =~ /RW.*C/;
+
+                # for 2nd level check, store each "ref, perms" pair in order
+                for my $ref (@refs)
+                {
+                    # checking NAME based restrictions is expensive for
+                    # the update hook (see the changes to src/hooks/update
+                    # in this commit for why) so we would *very* much like
+                    # to avoid doing it for the large majority of repos
+                    # that do *not* use NAME limits.  Setting a flag that
+                    # can be checked right away will help us do that
+                    $repos{$repo}{NAME_LIMITS} = 1 if $ref =~ /^NAME\//;
+                    my $p_user = $user; $p_user =~ s/(creator|readers|writers)$/$1 - wild/;
+                    push @{ $repos{$repo}{$p_user} }, [ $rule_seq++, $ref, $perms ]
+                        unless $rurp_seen{$repo}{$p_user}{$ref}{$perms}++;
+                }
+            }
+        }
+    }
+    # configuration
+    elsif ($line =~ /^config (.+) = ?(.*)/)
+    {
+        my ($key, $value) = ($1, $2);
+        my @validkeys = split(' ', ($GL_GITCONFIG_KEYS || '') );
+        my @matched = grep { $key =~ /^$_$/ } @validkeys;
+        die "$ABRT git config $key not allowed\n" if (@matched < 1);
+        for my $repo (@{ $repos_p })       # each repo in the current stanza
+        {
+            $repo_config{$repo}{$key} = $value;
+            # no problem if it's a plain repo (non-pattern, non-groupname)
+            # OR wild configs are allowed
+            unless ( ($repo =~ $REPONAME_PATT and $repo !~ /^@/) or $GL_GITCONFIG_WILD) {
+                my @r = ($repo);                                        # single wildpatt
+                @r = sort keys %{ $groups{$repo} } if $groups{$repo};   # or a group; get its members
+                do {
+                    print STDERR "$WARN git config set for $_ but \$GL_GITCONFIG_WILD not set\n" unless $_ =~ $REPONAME_PATT
+                } for @r;
+            }
+        }
+    }
+    # include
+    elsif ($line =~ /^include "(.+)"/)
+    {
+        my $file = $1;
+        $file = "$GL_ADMINDIR/conf/$file" unless $file =~ /^\//;
+        die "$WARN $fragment attempting to include configuration\n" if $fragment ne 'master';
+        die "$ABRT included file not found: '$file'\n" unless -f $file;
+
+        parse_conf_file( $file, $fragment );
+    }
+    # very simple syntax for the gitweb description of repo; one of:
+    #       reponame = "some description string"
+    #       reponame "owner name" = "some description string"
+    elsif ($line =~ /^(\S+)(?: "(.*?)")? = "(.*)"$/)
+    {
+        my ($repo, $owner, $desc) = ($1, $2, $3);
+        die "$ABRT bad repo name $repo\n" unless $repo =~ $REPONAME_PATT;
+        die "$WARN $fragment attempting to set description for $repo\n" if check_fragment_repo_disallowed( $fragment, $repo );
+        $desc{"$repo.git"} = $desc;
+        $owner{"$repo.git"} = $owner || '';
+    }
+    else
+    {
+        die "$ABRT can't make head or tail of '$line'\n";
+    }
+}
+
+sub cleanup_conf_line
+{
+    my ($line) = @_;
+
+    # kill comments, but take care of "#" inside *simple* strings
+    $line =~ s/^((".*?"|[^#"])*)#.*/$1/;
+    # normalise whitespace; keeps later regexes very simple
+    $line =~ s/=/ = /;
+    $line =~ s/\s+/ /g;
+    $line =~ s/^ //;
+    $line =~ s/ $//;
+    return $line;
+}
+
 sub parse_conf_file
 {
     my ($conffile, $fragment) = @_;
@@ -178,178 +352,20 @@ sub parse_conf_file
     # the syntax is fairly simple, so we parse it inline
 
     my @repos;
+    my $line;
     while (<$conf_fh>)
     {
-        # kill comments, but take care of "#" inside *simple* strings
-        s/^((".*?"|[^#"])*)#.*/$1/;
-        # normalise whitespace; keeps later regexes very simple
-        s/=/ = /;
-        s/\s+/ /g;
-        s/^ //;
-        s/ $//;
-        # and blank lines
-        next unless /\S/;
+        $line = cleanup_conf_line($_);
+        # skip blank lines
+        next unless $line =~ /\S/;
 
-        # user or repo groups
-        if (/^(@\S+) = (.*)/)
-        {
-            die "$ABRT defining groups is not allowed inside fragments\n"
-                if $GL_BIG_CONFIG and $fragment ne 'master';
-            # store the members of each group as hash key.  Keep track of when
-            # the group was *first* created by using $fragment as the *value*
-            do { $groups{$1}{$_} ||= $fragment } for ( expand_list( split(' ', $2) ) );
-            die "$ABRT bad group $1\n" unless $1 =~ $REPONAME_PATT;
-        }
-        # repo(s)
-        elsif (/^repo (.*)/)
-        {
-            # grab the list...
-            @repos = split ' ', $1;
-            unless (@repos == 1 and $repos[0] eq '@all') {
-                # ...expand groups in the default case
-                @repos = expand_list ( @repos ) unless $GL_BIG_CONFIG;
-                # ...sanity check
-                for (@repos) {
-                    die "$ABRT bad reponame $_\n"
-                        if ($GL_WILDREPOS and $_ !~ $REPOPATT_PATT);
-                    die "$ABRT bad reponame $_ or you forgot to set \$GL_WILDREPOS\n"
-                        if (not $GL_WILDREPOS and $_ !~ $REPONAME_PATT);
-                }
-            }
-            s/\bCREAT[EO]R\b/\$creator/g for @repos;
-        }
-        # actual permission line
-        elsif (/^(-|C|R|RW\+?(?:C?D?|D?C?)) (.* )?= (.+)/)
-        {
-            my $perms = $1;
-            my @refs; @refs = split(' ', $2) if $2;
-            @refs = expand_list ( @refs );
-            my @users = split ' ', $3;
-            die "$ABRT \$GL_WILDREPOS is not set, you cant use 'C' in config\n" if $perms eq 'C' and not $GL_WILDREPOS;
-
-            # if no ref is given, this PERM applies to all refs
-            @refs = qw(refs/.*) unless @refs;
-            # deprecation warning
-            map { warn "WARNING: old syntax 'PATH/' found; please use new syntax 'NAME/'\n" if s(^PATH/)(NAME/) } @refs;
-            # fully qualify refs that dont start with "refs/" or "NAME/";
-            # prefix them with "refs/heads/"
-            @refs = map { m(^(refs|NAME)/) or s(^)(refs/heads/); $_ } @refs;
-            @refs = map { s(/USER/)(/\$gl_user/); $_ } @refs;
-
-            # expand the user list, unless it is just "@all"
-            @users = expand_list ( @users )
-                unless ($GL_BIG_CONFIG or (@users == 1 and $users[0] eq '@all'));
-            do  { die "$ABRT bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
-
-            s/\bCREAT[EO]R\b/~\$creator/g for @users;
-            s/\bREADERS\b/\$readers/g for @users;
-            s/\bWRITERS\b/\$writers/g for @users;
-
-            # ok, we can finally populate the %repos hash
-            for my $repo (@repos)       # each repo in the current stanza
-            {
-                # if we're processing a delegated config file (not the master
-                # config), we need to prevent attempts by that admin to obtain
-                # rights on stuff outside his domain
-
-                # trying to set access for $repo (='foo')...
-                if (check_fragment_repo_disallowed($fragment, $repo))
-                {
-                    $ignored{$fragment}{$repo} = 1;
-                    next;
-                }
-                for my $user (@users)
-                {
-                    # lint check, to catch pubkey/username typos
-                    if ($user =~ /^@/ and $user ne '@all') {
-                        # this is a usergroup, not a normal user; happens with GL_BIG_CONFIG
-                        if (exists $groups{$user}) {
-                            $user_list{$_}++ for keys %{ $groups{$user} };
-                        }
-                    } else {
-                        $user_list{$user}++;
-                    }
-
-                    # for 1st level check (see faq/tips doc)
-                    $repos{$repo}{C}{$user} = 1, next if $perms eq 'C';
-                    $repos{$repo}{R}{$user} = 1 if $perms =~ /R/;
-                    $repos{$repo}{W}{$user} = 1 if $perms =~ /W|D/;
-
-                    # if the user specified even a single 'D' anywhere, make
-                    # that fact easy to find; this changes the meaning of RW+
-                    # to no longer permit deletes (see update hook)
-                    $repos{$repo}{DELETE_IS_D} = 1 if $perms =~ /D/;
-                    $repos{$repo}{CREATE_IS_C} = 1 if $perms =~ /RW.*C/;
-
-                    # for 2nd level check, store each "ref, perms" pair in order
-                    for my $ref (@refs)
-                    {
-                        # checking NAME based restrictions is expensive for
-                        # the update hook (see the changes to src/hooks/update
-                        # in this commit for why) so we would *very* much like
-                        # to avoid doing it for the large majority of repos
-                        # that do *not* use NAME limits.  Setting a flag that
-                        # can be checked right away will help us do that
-                        $repos{$repo}{NAME_LIMITS} = 1 if $ref =~ /^NAME\//;
-                        my $p_user = $user; $p_user =~ s/(creator|readers|writers)$/$1 - wild/;
-                        push @{ $repos{$repo}{$p_user} }, [ $rule_seq++, $ref, $perms ]
-                            unless $rurp_seen{$repo}{$p_user}{$ref}{$perms}++;
-                    }
-                }
-            }
-        }
-        # configuration
-        elsif (/^config (.+) = ?(.*)/)
-        {
-            my ($key, $value) = ($1, $2);
-            my @validkeys = split (' ', ($GL_GITCONFIG_KEYS || ''));
-            my @matched = grep { $key =~ /^$_$/ } @validkeys;
-            die "$ABRT git config $key not allowed\n" if (@matched < 1);
-            for my $repo (@repos)       # each repo in the current stanza
-            {
-                $repo_config{$repo}{$key} = $value;
-                # no problem if it's a plain repo (non-pattern, non-groupname)
-                # OR wild configs are allowed
-                unless ( ($repo =~ $REPONAME_PATT and $repo !~ /^@/) or $GL_GITCONFIG_WILD) {
-                    my @r = ($repo);                                        # single wildpatt
-                    @r = sort keys %{ $groups{$repo} } if $groups{$repo};   # or a group; get its members
-                    do {
-                        print STDERR "$WARN git config set for $_ but \$GL_GITCONFIG_WILD not set\n" unless $_ =~ $REPONAME_PATT
-                    } for @r;
-                }
-            }
-        }
-        # include
-        elsif (/^include "(.+)"/)
-        {
-            my $file = $1;
-            $file = "$GL_ADMINDIR/conf/$file" unless $file =~ /^\//;
-            die "$WARN $fragment attempting to include configuration\n" if $fragment ne 'master';
-            die "$ABRT included file not found: '$file'\n" unless -f $file;
-
-            parse_conf_file($file, $fragment);
-        }
-        # very simple syntax for the gitweb description of repo; one of:
-        #       reponame = "some description string"
-        #       reponame "owner name" = "some description string"
-        elsif (/^(\S+)(?: "(.*?)")? = "(.*)"$/)
-        {
-            my ($repo, $owner, $desc) = ($1, $2, $3);
-            die "$ABRT bad repo name $repo\n" unless $repo =~ $REPONAME_PATT;
-            die "$WARN $fragment attempting to set description for $repo\n" if check_fragment_repo_disallowed($fragment, $repo);
-            $desc{"$repo.git"} = $desc;
-            $owner{"$repo.git"} = $owner || '';
-        }
-        else
-        {
-            die "$ABRT can't make head or tail of '$_'\n";
-        }
+        parse_conf_line( $line, $fragment, \@repos, \%ignored );
     }
     for my $ig (sort keys %ignored)
     {
         warn "\n\t\t***** WARNING *****\n" .
-            "\t$ig.conf attempting to set access for " .
-            join (", ", sort keys %{ $ignored{$ig} }) . "\n";
+             "\t$ig.conf attempting to set access for " .
+             join (", ", sort keys %{ $ignored{$ig} }) . "\n";
     }
 }
 
