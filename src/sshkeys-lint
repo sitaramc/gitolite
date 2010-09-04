@@ -3,6 +3,9 @@
 use strict;
 our (%users, %linenos);
 
+my $thisbin = $0;
+$thisbin = "$ENV{PWD}/$thisbin" unless $thisbin =~ /^\//;
+
 &usage unless $ARGV[0] and -f $ARGV[0];
 my @authlines = &filelines($ARGV[0]);
 my $lineno = 0;
@@ -88,7 +91,7 @@ On your *client*:
   - cd to the ~/.ssh directory (which contains all the pub keys this client
     can use)
 
-  - run "$0 /tmp/foo"
+  - run "$thisbin /tmp/foo"
 
 Note: people who have so many keypairs they keep them in *sub*-directories of
 ~/.ssh [you know who you are ;-)] can figure it out themselves; you clearly
