@@ -3,20 +3,29 @@
 use strict;
 use warnings;
 
-# === auth-command ===
-# the command that GL users actually run
-
-# part of the gitolite (GL) suite
-
-# how run:      via sshd, being listed in "command=" in ssh authkeys
-# when:         every login by a GL user
-# input:        $1 is GL username, plus $SSH_ORIGINAL_COMMAND
-# output:
-# security:
-
-# robustness:
-
-# other notes:
+# ----------------------------------------------------------------------------
+# you:  what's the invocation?
+# me:   Hail, O Lord Ganesha, destroyer of obsta...
+# you:  err hmm not *that* sort of invocation... I meant how does this program
+#       get invoked?
+# me:   oh hehe <hides sheepish grin>, ok here we go...
+#
+# ssh mode
+# - started by sshd
+# - one argument, the "user" name
+# - one env var, SSH_ORIGINAL_COMMAND, containing the command
+# - command typically: git-(receive|upload)-pack 'reponame(.git)?'
+# - special gitolite commands: info, expand, (get|set)(perms|desc)
+# - special non-gitolite commands: rsync, svnserve, htpasswd
+# - other commands: anything in $GL_ADC_PATH if defined (see rc file)
+#
+# (smart) http mode
+# - started by apache (httpd)
+# - no arguments
+# - REQUEST_URI contains verb and repo, REMOTE_USER contains username
+# - REQUEST_URI looks like /path/reponame.git/(info/refs\?service=)?git-(receive|upload)-pack
+# - no special processing commands currently handled
+# ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
 #       common definitions
@@ -67,12 +76,43 @@ if (@ARGV and $ARGV[0] eq '-s') {
     shift;
 }
 
-# no (more) arguments given?  default user is $USER (fedorahosted works like
-# this, and it is harmless for others)
-@ARGV = ($ENV{USER}) unless @ARGV;
+# ----------------------------------------------------------------------------
+#       set up SSH_ORIGINAL_COMMAND and SSH_CONNECTION in http mode
+# ----------------------------------------------------------------------------
 
-# first, fix the biggest gripe I have with gitosis, a 1-line change
-my $user=$ENV{GL_USER}=shift;       # there; now that's available everywhere!
+# fake out SSH_ORIGINAL_COMMAND and SSH_CONNECTION so the rest of the code
+# stays the same (except the exec at the end).
+
+my $user;
+if ($ENV{REQUEST_URI}) {
+    # these patterns indicate normal git usage; see "services[]" in
+    # http-backend.c for how I got that.  Also note that "info" is overloaded;
+    # git uses "info/refs...", while gitolite uses "info" or "info?...".  So
+    # there's a "/" after info in the list below
+    if ($ENV{PATH_INFO} =~ m(/(HEAD$|info/refs$|objects/|git-(?:upload|receive)-pack$))) {
+        my ($repo) = ($ENV{PATH_INFO} =~ m(^/(.*)\.git(?:/|$)));
+        my ($verb) = ($ENV{REQUEST_URI} =~ m((git-(?:receive|upload)-pack)));
+        print STDERR "(gitolite) no verb found in $ENV{REQUEST_URI}\n" unless $verb;
+        $verb ||= 'git-upload-pack';
+        $ENV{SSH_ORIGINAL_COMMAND} = "$verb '$repo'";
+    } else {
+        # this is one of our custom commands; could be anything really,
+        # because of the adc feature
+        my ($verb) = ($ENV{PATH_INFO} =~ m(^/(\S+)));
+        my $args = $ENV{QUERY_STRING};
+        $args =~ s/\+/ /g;
+        $ENV{SSH_ORIGINAL_COMMAND} = $verb;
+        $ENV{SSH_ORIGINAL_COMMAND} .= " $args" if $args;
+        &print_http_headers();  # in preparation for the eventual output!
+    }
+    $ENV{SSH_CONNECTION} = "$ENV{REMOTE_ADDR} $ENV{REMOTE_PORT} $ENV{SERVER_ADDR} $ENV{SERVER_PORT}";
+    $user = $ENV{GL_USER} = $ENV{REMOTE_USER};
+} else {
+    # no (more) arguments given in ssh mode?  default user is $USER
+    # (fedorahosted works like this, and it is harmless for others)
+    @ARGV = ($ENV{USER}) unless @ARGV;
+    $user=$ENV{GL_USER}=shift;
+}
 
 # if there are any more arguments, they're a list of group names that the user
 # is a member of
@@ -211,6 +251,13 @@ die "$aa access for $repo DENIED to $user\n" unless $perm =~ /$aa/;
 # ----------------------------------------------------------------------------
 #       over to git now
 # ----------------------------------------------------------------------------
+
+if ($ENV{REQUEST_URI}) {
+    &log_it($ENV{REQUEST_URI});
+    exec $ENV{GIT_HTTP_BACKEND};
+    # the GIT_HTTP_BACKEND env var should be set either by the rc file, or as
+    # a SetEnv in the apache config somewhere
+}
 
 &log_it();
 

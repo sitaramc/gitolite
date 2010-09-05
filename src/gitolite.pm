@@ -92,6 +92,22 @@ sub dbg {
     }
 }
 
+my $http_headers_printed = 0;
+sub print_http_headers {
+    my($code, $text) = @_;
+
+    return if $http_headers_printed++;
+    $code ||= 200;
+    $text ||= "OK - gitolite";
+
+    $|++;
+    print "Status: $code $text\r\n";
+    print "Expires: Fri, 01 Jan 1980 00:00:00 GMT\r\n";
+    print "Pragma: no-cache\r\n";
+    print "Cache-Control: no-cache, max-age=0, must-revalidate\r\n";
+    print "\r\n";
+}
+
 sub get_logfilename {
     # this sub has a wee little side-effect; it sets $ENV{GL_TS}
     my($template) = shift;
