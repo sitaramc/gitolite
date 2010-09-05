@@ -21,14 +21,21 @@ GL_PACKAGE_CONF=/tmp/share/gitolite/conf
 
 die() { echo "$@"; exit 1; }
 
-pubkey_file=$1
-admin_name=
-if [ -n "$pubkey_file" ]
+
+if [ -n "$GITOLITE_HTTP_HOME" ]
 then
-    echo $pubkey_file | grep '.pub$' >/dev/null || die "$pubkey_file must end in .pub"
-    [ -f $pubkey_file ] || die "cant find $pubkey_file"
-    admin_name=` basename $pubkey_file .pub`
-    echo $admin_name | grep '@' >/dev/null && die "please don't use '@' in the initial admin name"
+    HOME=$GITOLITE_HTTP_HOME
+    admin_name=$1
+else
+    pubkey_file=$1
+    admin_name=
+    if [ -n "$pubkey_file" ]
+    then
+        echo $pubkey_file | grep '.pub$' >/dev/null || die "$pubkey_file must end in .pub"
+        [ -f $pubkey_file ] || die "cant find $pubkey_file"
+        admin_name=` basename $pubkey_file .pub`
+        echo $admin_name | grep '@' >/dev/null && die "please don't use '@' in the initial admin name"
+    fi
 fi
 
 if [ -f $HOME/.gitolite.rc ]
@@ -49,7 +56,9 @@ then
     fi
     rm -f .newvars .oldvars .diffvars
 else
-    [ -n "$pubkey_file" ] || die "looks like first run -- I need a pubkey file"
+    [ -n "$GITOLITE_HTTP_HOME" ] || [ -n "$pubkey_file" ] || die "looks like first run -- I need a pubkey file"
+    [ -z "$GITOLITE_HTTP_HOME" ] || [ -n "$admin_name"  ] || die "looks like first run -- I need an admin name"
+
     cp $GL_PACKAGE_CONF/example.gitolite.rc $HOME/.gitolite.rc
 fi
 
