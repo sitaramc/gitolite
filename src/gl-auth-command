@@ -85,6 +85,8 @@ if (@ARGV and $ARGV[0] eq '-s') {
 
 my $user;
 if ($ENV{REQUEST_URI}) {
+    die "fallback to DAV not supported\n" if $ENV{REQUEST_METHOD} eq 'PROPFIND';
+
     # these patterns indicate normal git usage; see "services[]" in
     # http-backend.c for how I got that.  Also note that "info" is overloaded;
     # git uses "info/refs...", while gitolite uses "info" or "info?...".  So
