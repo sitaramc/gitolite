@@ -89,11 +89,9 @@ if ($ENV{REQUEST_URI}) {
     # http-backend.c for how I got that.  Also note that "info" is overloaded;
     # git uses "info/refs...", while gitolite uses "info" or "info?...".  So
     # there's a "/" after info in the list below
-    if ($ENV{PATH_INFO} =~ m(/(HEAD$|info/refs$|objects/|git-(?:upload|receive)-pack$))) {
-        my ($repo) = ($ENV{PATH_INFO} =~ m(^/(.*)\.git(?:/|$)));
-        my ($verb) = ($ENV{REQUEST_URI} =~ m((git-(?:receive|upload)-pack)));
-        print STDERR "(gitolite) no verb found in $ENV{REQUEST_URI}\n" unless $verb;
-        $verb ||= 'git-upload-pack';
+    if ($ENV{PATH_INFO} =~ m(^/(.*)/(HEAD$|info/refs$|objects/|git-(?:upload|receive)-pack$))) {
+        my $repo = $1;
+        my $verb = ($ENV{REQUEST_URI} =~ /git-receive-pack/) ?  'git-receive-pack' : 'git-upload-pack';
         $ENV{SSH_ORIGINAL_COMMAND} = "$verb '$repo'";
     } else {
         # this is one of our custom commands; could be anything really,
