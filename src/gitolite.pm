@@ -209,33 +209,50 @@ sub collect_repo_patts
 
 
 # ----------------------------------------------------------------------------
-#       where is the rc file hiding?
+#       birth and death registration ;-)
 # ----------------------------------------------------------------------------
+
+# background
+
+# till now, the rc file was in one fixed place: .gitolite.rc in $HOME of the
+# user hosting the gitolite repos.  This was fine, because gitolite is all
+# about empowering non-root users :-)
+
+# but in smart http mode, running under "apache", you should actually use
+# $GITOLITE_HTTP_HOME instead of $HOME (in fact $HOME may not even be
+# defined).  However, the dependency on $HOME is so pervasive that we'd best
+# just set it here and be done.  We also set $ENV{GL_RC} to point to the rc
+# file
+
+# every gitolite program ends up calling this anyway, so that's birth
+
+# the second thing we need to do is handle death a little better.  A plain
+# "die" was fine for ssh but http has all that extra gunk it needs.  So we
+# need to, in effect, create a "death handler".
+
+# the name of the sub, however, is a holdover from when that was the sole
+# purpose.  I suck at function names anyway...
 
 sub where_is_rc
 {
-    # till now, the rc file was in one fixed place: .gitolite.rc in $HOME of
-    # the user hosting the gitolite repos.  This was fine, because gitolite is
-    # all about empowering non-root users :-)
+    die "I need either HOME or GITOLITE_HTTP_HOME env vars set\n" unless $ENV{GITOLITE_HTTP_HOME} or $ENV{HOME};
+    if ($ENV{GITOLITE_HTTP_HOME}) {
+        # smart http mode; GITOLITE_HTTP_HOME becomes our HOME
+        $ENV{HOME} = $ENV{GITOLITE_HTTP_HOME};
 
-    # then we wanted to make a debian package out of it (thank you, Rhonda!)
-    # which means (a) it's going to be installed by root anyway and (b) any
-    # config files have to be in /etc/<something>
-
-    # the only way to resolve this in a backward compat way is to look for the
-    # $HOME one, and if you don't find it look for the /etc one
-
-    # this common routine does that, setting an env var for the first one it
-    # finds
+        $SIG{__DIE__} = sub {
+            my $msg = shift; chomp($msg);
+            &print_http_headers(500, "error - gitolite");
+            print "$msg\r\n";
+            print STDERR "$msg\n";
+            exit 0;     # if it's ok for die_webcgi in git.git/http-backend.c, it's ok for me ;-)
+        }
+    }
 
     return if $ENV{GL_RC};
 
-    for my $glrc ( $ENV{HOME} . "/.gitolite.rc", "/etc/gitolite/gitolite.rc" ) {
-        if (-f $glrc) {
-            $ENV{GL_RC} = $glrc;
-            return;
-        }
-    }
+    my $glrc = $ENV{HOME} . "/.gitolite.rc";
+    $ENV{GL_RC} = $glrc if (-f $glrc);
 }
 
 # ----------------------------------------------------------------------------
