@@ -2,6 +2,14 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - (BIG ONE!) SMART HTTP SUPPORT!
+
+  - @all can now include gitweb/daemon also (default, not include)
+  - allow @groups in setperms
+  - gitweb/daemon now work within setperms
+
+  - log elapsed time (optional)
+
   - more than one wildcard may match a repo, plus it can also be matched by a
     normal repo line
 
