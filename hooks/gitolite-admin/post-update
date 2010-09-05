@@ -19,7 +19,7 @@ $GL_BINDIR/gl-compile-conf
 
 cd $od
 
-ADMIN_POST_UPDATE_CHAINS_TO=` cd;perl -e 'do ".gitolite.rc"; print $ADMIN_POST_UPDATE_CHAINS_TO'`
+ADMIN_POST_UPDATE_CHAINS_TO=` cd $HOME;perl -e 'do ".gitolite.rc"; print $ADMIN_POST_UPDATE_CHAINS_TO'`
 [ -n "$ADMIN_POST_UPDATE_CHAINS_TO" ] || ADMIN_POST_UPDATE_CHAINS_TO=hooks/post-update.secondary
 
 if [ -f $ADMIN_POST_UPDATE_CHAINS_TO ] || [ -L $ADMIN_POST_UPDATE_CHAINS_TO ]
