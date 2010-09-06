@@ -22,18 +22,6 @@ In this document:
     `~/.netrc` file and making it `chmod 600`.  Anyway, http based access is
     inherently less secure than pubkeys so not much point worrying about it.
 
-  * messages from first level errors (where gitolite's 'gl-auth-command' bombs
-    out without letting git even get control, due to inadequate access) don't
-    come to the user.  The git client is swallowing up a perfectly good error
-    message -- you can see it if you manually retry like this:
-
-        $ curl http://bob:bob@127.0.0.1/git/foo/alice/a1.git/info/refs?service=git-receive-pack
-        W access for foo/alice/a1 DENIED to bob
-
-    What's worse, when this failure happens, the git client retries a few
-    other things, eventually ending up doing a `PROPFIND` webdav attempt so
-    you get a DAV error of some kind.
-
   * I have not tested any of the ancillary standalone programs (like
     gl-dont-panic) in this mode.  They're most likely going to crash and burn
     because `$HOME` is not defined or in the wrong place; manually set

@@ -242,7 +242,7 @@ sub where_is_rc
 
         $SIG{__DIE__} = sub {
             my $msg = shift; chomp($msg);
-            &print_http_headers(500, "error - gitolite");
+            &print_http_headers();  # remote-curl.c requires 200 OK even if you want to report an error
             print "$msg\r\n";
             print STDERR "$msg\n";
             exit 0;     # if it's ok for die_webcgi in git.git/http-backend.c, it's ok for me ;-)
