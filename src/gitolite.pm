@@ -241,10 +241,22 @@ sub where_is_rc
         $ENV{HOME} = $ENV{GITOLITE_HTTP_HOME};
 
         $SIG{__DIE__} = sub {
-            my $msg = shift; chomp($msg);
-            &print_http_headers();  # remote-curl.c requires 200 OK even if you want to report an error
-            print "$msg\r\n";
-            print STDERR "$msg\n";
+            my $service = ($ENV{SSH_ORIGINAL_COMMAND} =~ /git-receive-pack/ ?  'git-receive-pack' : 'git-upload-pack');
+            my $message = shift; chomp($message);
+            print STDERR "$message\n";
+
+            # format the service response, then the message.  With initial
+            # help from Ilari and then a more detailed email from Shawn...
+            $service = "# service=$service\n"; $message = "ERR $message\n";
+            $service = sprintf("%04X", length($service)+4) . "$service";        # no CRLF on this one
+            $message = sprintf("%04X", length($message)+4) . "$message";
+
+            &print_http_headers();
+            print $service;
+            print "0000";       # flush-pkt, apparently
+            print $message;
+            print STDERR $service;
+            print STDERR $message;
             exit 0;     # if it's ok for die_webcgi in git.git/http-backend.c, it's ok for me ;-)
         }
     }
