@@ -31,7 +31,8 @@ In this document:
   * tested on stock Fedora 13; if you test on other environments please let me
     know how it worked out and if we need to adjust this document
 
-  * tested only http, not https; if you do, and it works, please tell me
+  * tested https with dummy certs and `GIT_SSL_NO_VERIFY`; no reason why it
+    shouldn't work on a proper setup with everything in place
 
   * have not tried making repos available to both ssh *and* http mode clients;
     (I'd guess it ought to work fine if the "apache" user was made login-able
