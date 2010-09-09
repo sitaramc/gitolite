@@ -19,13 +19,21 @@ usage() {
       - (FIX #1: REWINDING BAD ADMIN COMMITS) if your last commit(s) to the
         gitolite-admin repo pushed a very bad config and you want to rewind it
         to a known good state, run this:
-            ./gl-dont-panic rewind
+
+            $0 rewind
+
         (this doesn't actually rewind; it creates a new commit that has
         the same state as the last good commit, which has the same effect)
 
-      - (FIX #2: PUSHING A NEW ADMIN KEY) if you lost your admin key, run this
-        with the new pubkey:
-            ./gl-dont-panic sitaram.pub
+      - (FIX #2: PUSHING A NEW ADMIN KEY) if you lost your admin key, or you
+        had used the wrong key initially, then you get yourself a new keypair
+        and run this with the new pubkey:
+
+            $0 sitaram.pub          # example using my name
+
+        Please note that this simply *replaces* the key for user "sitaram".
+        It does NOT add a new admin called "sitaram".  In fact it does not
+        touch the config file (access rules) at all.
 
     Step 3: completing the fix (on your workstation)
 
