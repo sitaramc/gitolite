@@ -85,6 +85,11 @@ because I'm not showing the actual "vi" session):
     Stopping sshd:                                                  [  OK  ]
     Starting sshd:                                                  [  OK  ]
 
+**NOTE**: if the `AllowUsers` setting is completely missing from the sshd
+config file, all users are allowed (see `man sshd_config`).  You may prefer to
+leave it that way -- your choice.  I prefer to make the usernames explicit
+because I'm paranoid ;-)
+
 ----
 
 <a name="_get_pubkey_access_from_client_to_server"></a>

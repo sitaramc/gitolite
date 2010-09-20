@@ -140,15 +140,22 @@ for the special usernames or remove the description line.
 
 #### custom hooks
 
-You can supply your own, custom, hook scripts if you wish.  Just put a
-**tested** hook script in `hooks/common` of your gitolite clone (as
-distributed, there are only two files there).  For each file in that
-directory, a symlink pointing to it will be placed in the `hooks/`
-subdirectory of every *new* repo created.
+You can supply your own, custom, hook scripts if you wish.  Install gitolite
+as usual, then:
 
-If you added any new hooks and wish to propagate them to *existing* repos as
-well, just run gl-easy-install (or gl-setup, if you installed directly on the
-server) once.
+  * if you installed using "from-client" method (gl-easy-install):
+      * go to the gitolite *source* clone from which you did the original
+        install
+      * add your new hook into "hooks/common"
+      * run src/gl-easy-install with the same arguments as you ran the first
+        time
+  * if you installed using one of the other methods
+      * go to ~/.gitolite/hooks/common on the server and put your new hook
+        there
+      * now run "gl-setup" again
+
+You can use this procedure to install new hooks as well as to update hooks
+that you had previously installed.
 
 **VERY IMPORTANT SECURITY NOTE:  the `update` hook in `hooks/common` is what
 implements all the branch-level permissions in gitolite.  If you fiddle with
