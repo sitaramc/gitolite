@@ -294,6 +294,12 @@ sub new_repo
     # override with the package hooks
     ln_sf("$GL_PACKAGE_HOOKS/common", "*", "hooks") if $GL_PACKAGE_HOOKS;
     chmod 0755, "hooks/update";
+
+    # run gitolite's post-init hook if you can.  GL_REPO will be correct on a
+    # wildcard create but on a normal (config file) create it will actually be
+    # set to "gitolite-admin", so we need to make sure that for the duration
+    # of the hook it is set correctly.
+    system("env GL_REPO='$repo' hooks/gl-post-init") if -x "hooks/gl-post-init";
 }
 
 # ----------------------------------------------------------------------------

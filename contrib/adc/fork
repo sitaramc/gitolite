@@ -27,3 +27,6 @@ if [ -n "$GL_WILDREPOS_DEFPERMS" ]; then
   echo "$GL_WILDREPOS_DEFPERMS" > gl-perms
 fi
 
+# run gitolite's post-init hook if you can (hook code expects GL_REPO to be set)
+export GL_REPO; GL_REPO="$to"
+[ -x hooks/gl-post-init ] && hooks/gl-post-init
