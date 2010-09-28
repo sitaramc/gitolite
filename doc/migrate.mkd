@@ -55,7 +55,24 @@ Now, log off the server and get back to the client:
 
         cp $GSAC/keydir/* $GLAC/keydir
 
-4.  **Important: expand any multi-key files you may have**.  [Here][mk]'s an
+4.  **IMPORTANT**: if you have any users with names like `user@foo`, where the
+    part after the `@` does *not* have a `.` in it (i.e., does not look like
+    an email address), you need to change them, because gitolite uses that
+    syntax for enabling multi keys.
+
+    You have two choices in how to fix this.  You can change the gitolite
+    config so that all mention of `user@foo` is changed to just `user`.
+
+    Or you can change each occurrence of `user@foo` to, say, `user_foo` *and*
+    change the pubkey filename in keydir/ also the same way (`user_foo.pub`).
+
+    Just to repeat, you do NOT need to do this if the username was like
+    `user@foo.bar`, i.e., the part after the `@` had a `.` in it, because then
+    it looks like an email address.
+
+    [This][mk] will tell you more about these nuances.
+
+5.  **IMPORTANT: expand any multi-key files you may have**.  [Here][mk]'s an
     explanation of what multi-keys are, how gitosis does them and how gitolite
     does it differently.
 
@@ -82,7 +99,7 @@ Now, log off the server and get back to the client:
     "sitaram@laptop.pub" and "sitaram@desktop.pub" or whatever.  *Please check
     the files to make sure this worked properly*
 
-5.  Check all your changes to your gitolite-admin clone, commit, and push
+6.  Check all your changes to your gitolite-admin clone, commit, and push
 
 [mk]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#multikeys
 [inst]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd
