@@ -16,6 +16,9 @@ new, the suggested reading order is this:
 If you run into trouble start [here](#support).  If you're migrating from
 gitosis, read [this][migr].
 
+And [here][who]'s some information on some of the projects and people using
+gitolite (and who, in turn, have helped shape its features).
+
 Once you've installed it and started using it, you'll want to explore some of
 the more powerful features.  All the documentation is available in the source
 repo as well as [online][docs].  All the longer documents have tables of
@@ -190,4 +193,5 @@ Gitolite is released under GPL v2.  See COPYING for details.
 [docs]: http://github.com/sitaramc/gitolite/blob/pu/doc
 [doc9gas]: http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite-and-ssh.mkd
 [doc6sts]: http://github.com/sitaramc/gitolite/blob/pu/doc/ssh-troubleshooting.mkd
+[who]: http://github.com/sitaramc/gitolite/blob/pu/doc/who-uses-it.mkd
 

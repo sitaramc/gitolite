@@ -1,0 +1,41 @@
+# who uses gitolite
+
+>   >   If you're using gitolite and find it very useful in some way, I would
+>   >   love to describe your use of it or add a link to your own description
+>   >   of it here.  Of course, you can anonymise it as much as you need to.
+
+The **Fedora Project** controls access to over 10,000 package management
+repositories accessed by over 1,000 package maintainers [using
+gitolite][fedora].  This is probably the largest *confirmed* gitolite
+installation anywhere.  The whole [big-config][bc] thing was initially done
+for them (their config file was so big that without the big-config changes
+gitolite would just run out of memory and die!).
+
+[fedora]: http://lists.fedoraproject.org/pipermail/devel-announce/2010-July/000647.html
+[bc]: http://github.com/sitaramc/gitolite/blob/pu/doc/big-config.mkd
+
+The **KDE project** is currently [testing][kdet] gitolite to see if it will
+suit their needs (in combination with redmine for issue tracking and
+reviewboard for code review), after an initial [review of alternatives][kdera]
+by a core group.  Apart from the usual access control, the KDE folks will be
+using many of the "ad hoc repo creation" features enabled by wildrepos and the
+accompanying commands.  Some of the changes to the "admin defined commands"
+were inspired by KDE's needs.
+
+[kdet]: http://www.omat.nl/2010/07/07/move-to-git-the-progress-so-far/
+[kdera]: http://permalink.gmane.org/gmane.comp.kde.scm-interest/1437
+
+**Prof. Hiren Patel** of the University of Waterloo is responsible for the
+existence of the fairly popular "[wildrepos][wild]" feature.  The
+documentation was pretty much written with his use case in mind, but of course
+it turns out to be useful for a lot of people.
+
+In fact, he surprised the heck out of me recently by saying that if it hadn't
+been for this feature, he might not have used git itself -- which is a pretty
+serious compliment if you think about the magnitude of the git project and my
+little one-man show!
+
+He explains his use of it [here][hiren].
+
+[wild]: http://github.com/sitaramc/gitolite/blob/pu/doc/wildcard-repositories.mkd
+[hiren]: http://ece.uwaterloo.ca/~hdpatel/uwhtml/?p=470
