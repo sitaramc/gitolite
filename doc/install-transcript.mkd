@@ -169,7 +169,9 @@ runs on the client but installs gitolite on the server!
 <font color="red"> **This is the only gitolite specific command in a typical
 install sequence**.  </font> Run it without any arguments to see a usage
 message.  Run it without the `-q` to get a more verbose, pause-at-every-step,
-install mode that allows you to change the defaults etc.
+install mode that allows you to change the defaults (for example, if you want
+a different UMASK setting, or you want the repos to be in a different place,
+etc.)
 
     sita@sita-lt:src $ ./gl-easy-install -q git server sitaram
     you are upgrading     (or installing first-time)     to v0.95-38-gb0ce84d

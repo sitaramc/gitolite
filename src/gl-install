@@ -5,7 +5,7 @@
 use strict;
 use warnings;
 
-our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF, $GIT_PATH, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $GL_PERFLOGT);
+our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF, $GIT_PATH, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $GL_PERFLOGT, $REPO_UMASK);
 
 # setup quiet mode if asked; please do not use this when running manually
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
@@ -15,11 +15,13 @@ open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 sub wrap_mkdir
 {
     my $dir = shift;
+    my $perm = shift;       # optional
     if ( -d $dir ) {
         print "$dir already exists\n";
         return;
     }
     mkdir($dir) or die "mkdir $dir failed: $!\n";
+    chmod $perm, $dir if $perm;
     print "created $dir\n";
 }
 
@@ -49,14 +51,17 @@ die "parse $ENV{GL_RC} failed: " . ($! or $@) unless do $ENV{GL_RC};
 # add a custom path for git binaries, if specified
 $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 
+# set the umask before creating any files/directories
+umask($REPO_UMASK);
+
 # mkdir $REPO_BASE, $GL_ADMINDIR if they don't already exist
 $ENV{GL_REPO_BASE_ABS} = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
 wrap_mkdir($ENV{GL_REPO_BASE_ABS});
-wrap_mkdir($GL_ADMINDIR);
+wrap_mkdir($GL_ADMINDIR, 0700);
 # mkdir $GL_ADMINDIR's subdirs
 for my $dir qw(conf doc keydir logs src hooks hooks/common hooks/gitolite-admin) {
     # some of them will stay empty; too lazy to fix right now ;-)
-    wrap_mkdir("$GL_ADMINDIR/$dir");
+    wrap_mkdir("$GL_ADMINDIR/$dir", 0700);
 }
 
 # "src" and "doc" will be overwritten on each install, but not conf
