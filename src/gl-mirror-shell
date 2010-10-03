@@ -4,6 +4,9 @@ export GL_BYPASS_UPDATE_HOOK
 GL_BYPASS_UPDATE_HOOK=1
 
 export REPO_BASE=`cd $HOME;perl -e 'do ".gitolite.rc"; print $REPO_BASE'  `
+export REPO_UMASK=`cd $HOME;perl -e 'do ".gitolite.rc"; print $REPO_UMASK'  `
+umask $REPO_UMASK
+
 if echo $SSH_ORIGINAL_COMMAND | egrep git-upload\|git-receive >/dev/null
 then
 
