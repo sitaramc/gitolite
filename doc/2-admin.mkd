@@ -180,6 +180,8 @@ to take a bunch of existing repos and add them to gitolite:
     `conf/gitolite.conf` in your gitolite-admin repo clone.  Then add, commit,
     push.
 
+<a name="gwd"></a>
+
 <a name="_specifying_gitweb_and_daemon_access"></a>
 
 #### specifying gitweb and daemon access
@@ -188,10 +190,15 @@ This is a feature that I personally do not use (corporate environments don't
 like unauthenticated access of any kind to any repo!), but someone wanted it,
 so here goes.
 
-To make a repo or repo group accessible via "git daemon", just give read
-permission to the special user "daemon".
+Gitolite defines two "special" usernames: `daemon` and `gitweb`.
 
-There's a special user called "gitweb" also, which works the same way.
+To make a repo or repo group accessible via "git daemon", just give read
+permission to the special user "daemon".  Similarly, give read permission to
+`gitweb` to allow the gitweb CGI to show the repo.
+
+This gives you a quick way to offer multiple repos up for gitweb/daemon
+access.
+
 However, setting a description for the project also enables gitweb permissions
 so you may as well use that method and kill two birds with one stone, like so:
 
@@ -201,8 +208,8 @@ You can also specify an owner for gitweb to show, if you like:
 
     gitolite "Sitaram Chamarty" = "fast, secure, access control for git in a corporate environment"
 
-Note that gitolite does **not** install or configure gitweb/daemon -- that is
-a one-time setup you must do separately.  All this does is:
+Note that gitolite does **not** install or configure gitweb/git-daemon -- that
+is a one-time setup you must do separately.  All gitolite does is:
 
   * for daemon, create the file `git-daemon-export-ok` in the repository
   * for gitweb, add the repo (plus owner name, if given) to the list of
@@ -214,6 +221,13 @@ a one-time setup you must do separately.  All this does is:
 The "compile" script will keep these files consistent with the config settings
 -- this includes removing such settings/files if you remove "read" permissions
 for the special usernames or remove the description line.
+
+Please **note** that giving permissions to these special users via `@all`
+(that is, using either `repo @all` or `R = @all`), will not work unless you
+set the rc-file variable `$GL_ALL_INCLUDES_SPECIAL` to `1`.  Also, **NOTE**
+that giving them read access to `repo @all` means the `gitolite-admin` repo is
+also accessible.  **It is upto you to decide if that is OK in your
+environment**.
 
 <a name="_custom_git_config"></a>
 

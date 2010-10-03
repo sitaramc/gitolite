@@ -569,22 +569,11 @@ complete, you can do it all from within the gitolite config file!
 
 ##### easier to specify gitweb "description" and gitweb/daemon access
 
-To enable access to a repo via gitweb *and* create a "description" for it to
-show up on the webpage, just add a line like this, anywhere in the config
-file:
+Please see [gwd] for details on how to do this if you've never done this
+before.  This section is only about how gitolite makes it easy to specify
+different combinations of access for different sets of repos.
 
-    reponame = "one line of description"
-
-You can also specify an "owner":
-
-    reponame "owner name" = "one line of description"
-
-To enable access to one or more repos via git daemon, just give "read"
-permissions to the special username `daemon`.
-
-There is also a special user called `gitweb` to specify gitweb access; useful
-if you don't care about specifying individual descriptions for each repo and
-just want to quickly enable gitweb access to one or more repos.
+[gwd]: http://github.com/sitaramc/gitolite/blob/pu/doc/2-admin.mkd#gwd
 
 Remember gitolite lets you specify the access control specs in bits and
 pieces, so you can keep all the daemon/gitweb access in one place, even if
