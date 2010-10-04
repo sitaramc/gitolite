@@ -261,6 +261,19 @@ $GL_WILDREPOS = 0;
 # $GL_ADC_PATH = "";
 
 # --------------------------------------
+# SITE-SPECIFIC INFORMATION
+
+# Some installations would like to give their users customised information
+# (like a link to their own websites, for example) so that each end user does
+# not have to grok all the gitolite documentation.
+
+# If this variable is defined, the "info" command will print it at the end of
+# the listing.
+
+# $GL_SITE_INFO = "";
+# $GL_SITE_INFO = "XYZ.COM DEVELOPERS: PLEASE SEE http://xyz.com/gitolite/help first";
+
+# --------------------------------------
 # per perl rules, this should be the last line in such a file:
 1;
 

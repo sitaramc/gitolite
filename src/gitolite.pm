@@ -38,7 +38,7 @@ our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple patter
 our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 
 # these come from the RC file
-our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST, $GL_ALL_INCLUDES_SPECIAL);
+our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST, $GL_ALL_INCLUDES_SPECIAL, $GL_SITE_INFO);
 our %repos;
 our %groups;
 our %repo_config;
@@ -622,6 +622,7 @@ sub report_basic
         print "$perm\t$r\r\n" if $perm =~ /\S/;
     }
     print "only 20 out of $count candidate repos examined\r\nplease use a partial reponame or regex pattern to limit output\r\n" if $GL_BIG_CONFIG and $count > 20;
+    print "$GL_SITE_INFO\n" if $GL_SITE_INFO;
 }
 
 # ----------------------------------------------------------------------------
@@ -656,6 +657,7 @@ sub expand_wild
         print "$perm\t$creator\t$actual_repo\n";
     }
     print "only 20 out of $count candidate repos examined\nplease use a partial reponame or regex pattern to limit output\n" if $GL_BIG_CONFIG and $count > 20;
+    print "$GL_SITE_INFO\n" if $GL_SITE_INFO;
 }
 
 # there will be multiple calls to repo_rights; better to use a closure.  We
