@@ -1,0 +1,90 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+# - show fake "reflog" from gitolite server
+# - recover deleted branches
+# - recover from bad force pushes
+
+# --------------------
+
+# - PROOF OF CONCEPT ONLY
+# - NO ARGUMENT OR ERROR CHECKING DONE; DO NOT USE IN PRODUCTION UNTIL THAT IS FIXED
+
+# --------------------
+
+# WARNING
+# - heavily dependent on the gitolite log file format (duh!)
+
+# USAGE
+#   ssh git@server gl-reflog show r1 refs/heads/b1
+#       # shows last 10 updates to branch b1 in repo r1
+#   ssh git@server gl-reflog show r1 refs/heads/b1 20
+#       # shows last 20 entries...
+#   ssh git@server gl-reflog recover r1 refs/heads/b1
+#       # recovers the last update to b1 in r1 if it was a "+"
+
+# NOTES
+# - the verb "recover" is used because this is expected to be used most often
+#   to recover deleted branches.  Plus there's enough confusion in git land
+#   caused by "reset" and "revert" I thought I should add my bit to it ;-)
+# - git's internal reflog is NOT recovered, even if you recover the branch.
+#   I'm good but not *that* good ;-)
+# - since this program produces a log entry that satisfies it's own criteria,
+#   it acts as a "toggle" for its own action for rewinds (but not for deletes)
+
+my($cmd, $repo, $ref, $limit) = @ARGV;
+$limit ||= 10;
+
+my @logfiles = sort glob("$ENV{GL_ADMINDIR}/logs/*");
+
+# TODO figure out how to avoid reading *all* the log files when you really
+# only need the last few
+
+our @loglines;
+{
+    my @f;
+    local(@ARGV) = @logfiles;
+    while (<>) {
+        chomp;
+        @f = split /\t/;
+        # field 2 is the userid, 5 is W or +, 6/7 are old/new SHAs
+        # 8 is reponame, 9 is refname (but all those are 1-based)
+        next unless $f[1] eq $ENV{GL_USER};
+        next unless $f[3] =~ /^(git-receive-pack|gl-reflog recover) /;
+        next unless $f[8];
+        next unless $f[7] eq $repo;
+        next unless $f[8] eq $ref;
+        push @loglines, $_;
+    }
+}
+
+if ( $cmd eq 'show' ) {
+    my $start = @loglines - $limit;
+    $start = 0 if $start < 0;
+    map { print "$loglines[$_]\n" } $start .. $#loglines;
+
+    exit 0;
+}
+
+if ( $cmd eq 'recover' ) {
+    my @f = split /\t/, $loglines[$#loglines];
+    die "sorry, the last commit was not a rewind or delete\n"
+        unless $f[4] eq '+';
+
+    my($oldsha, $newsha) = @f[5,6];
+    if ($newsha =~ /^0+$/) {
+        print "recovering $repo $ref at $oldsha (was deleted)\n";
+    } else {
+        print "recovering $repo $ref at $oldsha (was forced to $newsha)\n";
+    }
+    chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
+    require "$ENV{GL_BINDIR}/gitolite.pm" or die "parse gitolite.pm failed\n";
+
+    my $newsha2 = $newsha;
+    $newsha2 = '' if $newsha =~ /^0+$/;
+    system("git", "update-ref", $ref, $oldsha, $newsha2) and
+        die "repo $repo, update-ref $ref $oldsha $newsha failed...\n";
+    &log_it("", "+\t$newsha\t$oldsha\t$repo\t$ref");
+}
