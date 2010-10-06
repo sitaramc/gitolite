@@ -36,6 +36,8 @@ our $REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@/+-]*$); # very simple patter
 our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple pattern
 # same as REPONAME, but used for wildcard repos, allows some common regex metas
 our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
+# ADC commands and arguments must match this pattern
+our $ADC_CMD_ARGS_PATT=qr(^[0-9a-zA-Z._\@/+-]*$);
 
 # these come from the RC file
 our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST, $GL_ALL_INCLUDES_SPECIAL, $GL_SITE_INFO);
@@ -509,7 +511,7 @@ sub parse_acl
     our $saved_crwu;
     our (%saved_repos, %saved_groups);
 
-    if ($saved_crwu eq "$creator,$readers,$writers,$gl_user") {
+    if ($saved_crwu and $saved_crwu eq "$creator,$readers,$writers,$gl_user") {
         %repos = %saved_repos; %groups = %saved_groups;
     } else {
         die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;

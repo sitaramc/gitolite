@@ -34,7 +34,7 @@ use warnings;
 # these are set by the "rc" file
 our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE, $GL_WILDREPOS, $GL_WILDREPOS_DEFPERMS, $GL_ADC_PATH, $SVNSERVE, $PROJECTS_LIST, $GL_SLAVE_MODE, $GL_PERFLOGT);
 # and these are set by gitolite.pm
-our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT);
+our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT, $ADC_CMD_ARGS_PATT);
 our %repos;
 our %groups;
 our %repo_config;
@@ -157,7 +157,7 @@ if ($GL_ADC_PATH and -d $GL_ADC_PATH) {
     my ($cmd, @args) = split ' ', $ENV{SSH_ORIGINAL_COMMAND};
     if (-x "$GL_ADC_PATH/$cmd") {
         # yes this is rather strict, sorry.
-        do { die "I don't like $_\n" unless $_ =~ $REPOPATT_PATT } for ($cmd, @args);
+        do { die "I don't like $_\n" unless $_ =~ $ADC_CMD_ARGS_PATT } for ($cmd, @args);
         &log_it("$GL_ADC_PATH/$ENV{SSH_ORIGINAL_COMMAND}");
         exec("$GL_ADC_PATH/$cmd", @args);
     }
