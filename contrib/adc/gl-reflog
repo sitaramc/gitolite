@@ -9,13 +9,9 @@ use warnings;
 
 # --------------------
 
-# - PROOF OF CONCEPT ONLY
-# - NO ARGUMENT OR ERROR CHECKING DONE; DO NOT USE IN PRODUCTION UNTIL THAT IS FIXED
-
-# --------------------
-
 # WARNING
 # - heavily dependent on the gitolite log file format (duh!)
+# - cannot recover if some other commits were made after the force push
 
 # USAGE
 #   ssh git@server gl-reflog show r1 refs/heads/b1
@@ -37,6 +33,10 @@ use warnings;
 my($cmd, $repo, $ref, $limit) = @ARGV;
 $limit ||= 10;
 
+require "$ENV{GL_BINDIR}/gitolite.pm" or die "parse gitolite.pm failed\n";
+my ($perm, $creator, $wild) = &repo_rights($repo);
+die "you don't have read access to $repo\n" unless $perm =~ /R/;
+
 my @logfiles = sort glob("$ENV{GL_ADMINDIR}/logs/*");
 
 # TODO figure out how to avoid reading *all* the log files when you really
@@ -51,7 +51,6 @@ our @loglines;
         @f = split /\t/;
         # field 2 is the userid, 5 is W or +, 6/7 are old/new SHAs
         # 8 is reponame, 9 is refname (but all those are 1-based)
-        next unless $f[1] eq $ENV{GL_USER};
         next unless $f[3] =~ /^(git-receive-pack|gl-reflog recover) /;
         next unless $f[8];
         next unless $f[7] eq $repo;
@@ -70,8 +69,8 @@ if ( $cmd eq 'show' ) {
 
 if ( $cmd eq 'recover' ) {
     my @f = split /\t/, $loglines[$#loglines];
-    die "sorry, the last commit was not a rewind or delete\n"
-        unless $f[4] eq '+';
+    die "the last push was not yours\n" unless $f[1] eq $ENV{GL_USER};
+    die "the last push was not a rewind or delete\n" unless $f[4] eq '+';
 
     my($oldsha, $newsha) = @f[5,6];
     if ($newsha =~ /^0+$/) {
@@ -80,7 +79,6 @@ if ( $cmd eq 'recover' ) {
         print "recovering $repo $ref at $oldsha (was forced to $newsha)\n";
     }
     chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
-    require "$ENV{GL_BINDIR}/gitolite.pm" or die "parse gitolite.pm failed\n";
 
     my $newsha2 = $newsha;
     $newsha2 = '' if $newsha =~ /^0+$/;
