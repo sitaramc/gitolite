@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# this command is pretty cool, even if I may say so myself :)
+
+# for any ADC that a normal user can run, like
+
+#       ssh git@server adc arguments
+
+# this adc lets a "super user" (defined as "have write access to the
+# gitolite-admin repo"), do this
+
+#       ssh git@server sudo normal_user adc arguments
+
+. $(dirname $0)/adc.common-functions
+
+get_rights_and_owner gitolite-admin
+[ -z "$perm_write" ] && die "just *what* are you trying to pull, young man?"
+
+user="$1"; shift
+cmd="$1"; shift
+
+GL_USER=$user; export GL_USER
+exec $(dirname $0)/$cmd "$@"
