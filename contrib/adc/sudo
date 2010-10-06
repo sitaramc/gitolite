@@ -20,4 +20,5 @@ user="$1"; shift
 cmd="$1"; shift
 
 GL_USER=$user; export GL_USER
+[ -x $(dirname $0)/$cmd ] || die "no adc called $cmd"
 exec $(dirname $0)/$cmd "$@"
