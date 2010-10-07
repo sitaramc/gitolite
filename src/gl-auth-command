@@ -114,10 +114,6 @@ if ($ENV{REQUEST_URI}) {
     $user=$ENV{GL_USER}=shift;
 }
 
-# if there are any more arguments, they're a list of group names that the user
-# is a member of
-$ENV{GL_GROUP_LIST} = join(" ", @ARGV) if @ARGV;
-
 # ----------------------------------------------------------------------------
 #       logging, timestamp env vars
 # ----------------------------------------------------------------------------

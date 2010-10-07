@@ -6,7 +6,9 @@ In this document:
   * <a href="#_how_do_we_use_it_">how do we use it?</a>
   * <a href="#_other_optimisations">other optimisations</a>
   * <a href="#_what_are_the_downsides_">what are the downsides?</a>
-  * <a href="#_extra_coolness_usergroups_and_LDAP_similar_tools">(extra coolness) usergroups and LDAP/similar tools</a>
+  * <a href="#_storing_usergroup_information_outside_gitolite_like_in_LDAP_">storing usergroup information outside gitolite (like in LDAP)</a>
+      * <a href="#_why">why</a>
+      * <a href="#_how">how</a>
 
 <a name="_when_why_do_we_need_it_"></a>
 
@@ -190,51 +192,58 @@ subset of the allowed @fragname, which would work normally, do not work now).
 (If you didn't understand all that, you're probably not using delegation, so
 feel free to ignore it!)
 
-<a name="_extra_coolness_usergroups_and_LDAP_similar_tools"></a>
+<a name="_storing_usergroup_information_outside_gitolite_like_in_LDAP_"></a>
 
-### (extra coolness) usergroups and LDAP/similar tools
+### storing usergroup information outside gitolite (like in LDAP)
 
 [Please NOTE: this is all about *user* groups, not *repo* groups]
 
-Gitolite now allows usergroup information to be passed in from outside.  The
-`gl-auth-commmand` can now take an optional list of usergroup names after the
-first argument (which is the username).
+[WARNING: the earlier method of doing this has been discontinued; please see
+the commit message for details]
 
-To understand why this is useful, consider the following:
+Gitolite now allows usergroup information to be stored outside its own config
+file.  We'll see "why" first, then the "how".
 
-Some people have an LDAP-backed ssh daemon (or some other similar mechanism
-that can speak "ssh" to the client), with pubkeys stored in LDAP, etc., and
-some way (not using `~/.ssh/authorized_keys`) of invoking gitolite.
+<a name="_why"></a>
 
-Such setups also have "usergroups", and a way to tell, for each user, what
-groups he/she is a member of.  So let's say "alice" works on projects "foo"
-and "bar", while "bob" works on project "bar" and is a member of the
-`L3_support` team.
+#### why
 
-You can use those group names in the gitolite config file for access control
-as "@foo", "@bar", `@L3_support`, etc.; please note the "@" prefix because
-gitolite requires it.
+Large sites often have LDAP servers that already contain user and group
+information, including group membership details.  Such sites may prefer that
+gitolite just pick up that info instead of having to redundantly put it in
+gitolite's config file.
 
-However, that still leaves a wee little inconvenience.  You still have to add
-lines like this to the gitolite config file:
+Consider this example config for one repo:
 
-    @foo        = alice
-    @bar        = alice bob
-    @L3_support = bob
+    repo foo
+        RW+ =   @lead_devs
+        RW  =   @devs
+        R   =   @interns
 
-You don't need to do that anymore now.  Tell your authentication system that,
-after authenticating alice, instead of running:
+Normally, you would also need to specify:
 
-    /some/path/to/gl-auth-command alice
+    @lead_devs  =   dilbert alice
+    @devs       =   wally
+    @interns    =   ashok
 
-it should first find the groups that alice is a member of, and then run:
+However, if the corporate LDAP server already tags these people correctly, and
+if there is some way of getting that information out **at run time**, that
+would be cool.
 
-    /some/path/to/gl-auth-command alice foo bar
+<a name="_how"></a>
 
-That's it.  Internally, gitolite will behave as if the config file had also
-specified:
+#### how
 
-    @foo = alice
-    @bar = alice
+All you need is a script that, given a username, queries your LDAP or similar
+server, and returns a space-separated list of all the groups she is a member
+of.  If an invalid user name is sent in, or the user is valid but is not part
+of any groups, it should print nothing.
+
+This script will probably be specific to your site.  [**Help wanted**: I don't
+know LDAP, so if someone wants to contribute some sample code I'd be happy to
+put it in contrib/, with credit of course!]
+
+Then set the `$GL_GET_MEMBERSHIPS_PGM` variable in the rc file to the full
+path to this program, set `$GL_BIG_CONFIG` to 1, and that will be that.
 
 [gwd]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#gwd

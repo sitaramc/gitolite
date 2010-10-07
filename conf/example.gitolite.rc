@@ -274,6 +274,18 @@ $GL_WILDREPOS = 0;
 # $GL_SITE_INFO = "XYZ.COM DEVELOPERS: PLEASE SEE http://xyz.com/gitolite/help first";
 
 # --------------------------------------
+# USERGROUP HANDLING
+
+# Some sites would like to store group membership outside gitolite, because
+# they already have it in (usually) their LDAP server, and it doesn't make
+# sense to be forced to duplicate this information.
+
+# Set the following variable to the name of a script that, given a username as
+# argument, will return a list of groups that she is a member of.
+
+# $GL_GET_MEMBERSHIPS_PGM = "/usr/local/bin/expand-ldap-user-to-groups"
+
+# --------------------------------------
 # per perl rules, this should be the last line in such a file:
 1;
 

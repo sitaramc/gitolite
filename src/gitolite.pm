@@ -40,7 +40,7 @@ our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 our $ADC_CMD_ARGS_PATT=qr(^[0-9a-zA-Z._\@/+-]*$);
 
 # these come from the RC file
-our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST, $GL_ALL_INCLUDES_SPECIAL, $GL_SITE_INFO);
+our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST, $GL_ALL_INCLUDES_SPECIAL, $GL_SITE_INFO, $GL_GET_MEMBERSHIPS_PGM);
 our %repos;
 our %groups;
 our %repo_config;
@@ -932,6 +932,7 @@ sub special_cmd
 # - (only for repos) as an indirect wildcard (@g = foo/.*; repo @g).
 # note: the wildcard stuff does not apply to username memberships
 
+our %extgroups_cache;
 sub get_memberships {
     my $base = shift;   # reponame or username
     my $is_repo = shift;    # some true value means a repo name has been passed
@@ -969,10 +970,17 @@ sub get_memberships {
 
     # deal with returning user info first
     unless ($is_repo) {
-        # add in group membership info sent in via second and subsequent
-        # arguments to gl-auth-command; be sure to prefix the "@" sign to each
-        # of them!
-        push @ret, map { s/^/@/; $_; } split(' ', $ENV{GL_GROUP_LIST}) if $ENV{GL_GROUP_LIST};
+        # bring in group membership info stored externally, by running
+        # $GL_GET_MEMBERSHIPS_PGM if it is defined
+
+        if ($extgroups_cache{$base}) {
+            push @ret, @{ $extgroups_cache{$base} };
+        } elsif ($GL_GET_MEMBERSHIPS_PGM) {
+            my @extgroups = map { s/^/@/; $_; } split ' ', `$GL_GET_MEMBERSHIPS_PGM $base`;
+            $extgroups_cache{$base} = \@extgroups;
+            push @ret, @extgroups;
+        }
+
         return (@ret);
     }
 
