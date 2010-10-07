@@ -242,7 +242,8 @@ if ($perm =~ /C/) {
 # we know the user and repo; we just need to know what perm he's trying
 # aa == attempted access
 my $aa = ($verb =~ $R_COMMANDS ? 'R' : 'W');
-die "$aa access for $repo DENIED to $user\n" unless $perm =~ /$aa/;
+die "$aa access for $repo DENIED to $user
+(Or there may be no repository at the given path. Did you spell it correctly?)\n" unless $perm =~ /$aa/;
 
 # ----------------------------------------------------------------------------
 #       over to git now
