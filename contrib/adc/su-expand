@@ -1,0 +1,56 @@
+#!/bin/sh
+
+# adc for someone with admin privs to invoke "expand" on other users.
+
+# This doc block as "WHY", "HOW", and "CAVEATS" sections; I mention that only
+# for those people with very small xterms who may miss the CAVEATS section
+# otherwise...!
+
+# WHY
+# ===
+
+    # ...because info has it, and expand doesn't :-)
+
+    # (Possible question: Why not add that capability to expand instead to be
+    # consistent?  Probable answer: how about we go the other way and make
+    # "info" also work like this, and remove that code from core?  I like
+    # having less less code in core!)
+
+# HOW
+# ===
+
+    #   ssh gitolite su-expand . user1 user2 user3
+
+    # note that the first argument is still treated as a "pattern", so at
+    # least put in a "." for a catch-all pattern.  Also see caveats for
+    # patterns below.
+
+    # This will output the same thing as "ssh git@server expand ." performed
+    # by the individual users
+
+# CAVEATS
+# =======
+
+# (1) LIMITS TO THE PATTERN
+
+    # Due to this being an ADC, and ADC arguments being very, Very, VERY,
+    # stricly limited, you won't be able to use any regex meta characters
+    # expect ".".  I'll worry about changing it if enough people complain.
+
+# (2) NAME OF THIS SCRIPT
+
+    # please name this script something other than "expand", because we can't
+    # have name clashes between internal commands (info, expand,
+    # (get|set)(perms|desc), etc) and admin-defined (external) commands.  I'm
+    # calling it su-expand; feel free to change it.
+
+. $(dirname $0)/adc.common-functions
+
+get_rights_and_owner gitolite-admin
+[ -z "$perm_write" ] && die "just *what* are you trying to pull here, $GL_USER?"
+pat="$1"; shift
+
+for user
+do
+    SSH_ORIGINAL_COMMAND="expand $pat" $GL_BINDIR/gl-auth-command $user
+done
