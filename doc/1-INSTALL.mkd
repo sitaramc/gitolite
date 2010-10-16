@@ -219,12 +219,16 @@ server so that if you screw up the keys you can still get on, or be able to
 
 The advantage of this method is that it forces you to solve the ssh pubkey
 problem **before** attempting to install.  It works best if you have dedicated
-userids, one on the server for installing gitolite, and one the client for
+userids, one on the server for installing gitolite, and one on the client for
 administering it.
 
-Sadly, it also forces the admin to use a different URL to access gitolite
-repos than normal users, which seems to confuse a heck of a lot of people who
-don't read the prominently displayed messages and/or the documentation.
+The disadvantage is that the admin user ends up with [two keys][twokeys] --
+one for shell access (that he started with) and one for gitolite access (which
+the script creates if needed).
+
+This in turn forces the admin to use a different URL to access gitolite repos
+than normal users, which seems to confuse a heck of a lot of people who don't
+read the prominently displayed messages and/or the documentation.
 
 This method is verbosely documented in this [transcript][], including
 *outputs* of the commands concerned.
