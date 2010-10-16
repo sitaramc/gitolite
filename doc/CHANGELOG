@@ -2,6 +2,15 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v1.5.6
+
+  - new method for passing usergroup info (minor backward compat breakage);
+    see commit message and doc/big-config.mkd for more on this
+
+  - added "sudo" (adc)
+  - added "gl-reflog" (adc) to get a fake reflog from the server!
+  - added support for a post-repo-create hook called "gl-post-init"
+
   - (BIG ONE!) SMART HTTP SUPPORT!
 
   - @all can now include gitweb/daemon also (default, not include)
