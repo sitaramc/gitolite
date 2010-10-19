@@ -176,7 +176,7 @@ sub ln_sf
     for my $hook ( glob("$srcdir/$glob") ) {
         $hook =~ s/$srcdir\///;
         unlink                   "$dstdir/$hook";
-        symlink "$srcdir/$hook", "$dstdir/$hook" or die "could not symlink $hook\n";
+        symlink "$srcdir/$hook", "$dstdir/$hook" or die "could not symlink $srcdir/$hook to $dstdir\n";
     }
 }
 
