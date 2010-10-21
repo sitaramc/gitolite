@@ -1,0 +1,13 @@
+#!/bin/sh
+
+. $(dirname $0)/adc.common-functions
+
+# this is a helper ADC for "trash"; see that one for option settings etc
+
+cd $TRASH_CAN 2>/dev/null || exit 0
+find . -name gl-creater | sort | while read t
+do
+    owner=
+    owner=`cat "$t"`
+    [ "$owner" = "$GL_USER" ] && dirname $t
+done | cut -c3-

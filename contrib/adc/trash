@@ -1,0 +1,29 @@
+#!/bin/sh
+
+. $(dirname $0)/adc.common-functions
+
+# options settable in adc.common-functions are
+#   TRASH_CAN -- where the trashed repos are moved.  Can be anywhere that the
+#       hosting user has write access to.  Does not have to be (and ideally
+#       should NOT be) inside $GL_REPO_BASE_ABS (but see note below)
+#   TRASH_SUFFIX -- a timestamp, (ideally and by default), to be
+#       suffixed to the moved repo
+
+# helper ADCs: list-trash, undelete
+
+# NOTE: although I would NOT advise it in the interests of keeping things
+# simple, it *is* possible to have even deleted repos be *directly* accessible
+# via normal gitolite mechanisms (clone, etc).  Here's how:
+#   (1) make TRASH_CAN point somewhere *within* $REPO_BASE
+#   (2) change TRASH_SUFFIX to something that has a .git at the end, like:
+#           TRASH_SUFFIX=`date +%Y-%m-%d-%H-%M-%S`.git
+#   (3) set ACL rules in conf/gitolite.conf for repos named
+#           deleted/foo/sitaram/bar.*
+
+# cd to repo base and make sure arg1 is a valid repo (also sets $repo)
+valid_owned_repo $1
+
+mkdir -p $TRASH_CAN/$repo 2>/dev/null || die "failed creating directory in trashcan"
+[ -d $TRASH_CAN/$repo/$TRASH_SUFFIX ] && die try again in a few seconds
+mv $repo.git $TRASH_CAN/$repo/$TRASH_SUFFIX
+echo $repo moved to trashcan

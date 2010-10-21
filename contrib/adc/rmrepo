@@ -1,17 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
-. $(dirname $0)/adc.common-functions
-
-delete=$1
-
-get_rights_and_owner $delete
-
-[ "$owner" = "$GL_USER" ] || die "$delete is not yours to delete!"
-
-cd $GL_REPO_BASE_ABS
-rm -rf $delete.git
-
-cd $HOME
-PROJECTS_LIST=$(perl -e 'do ".gitolite.rc"; print $PROJECTS_LIST')
-export delete
-perl -ni -e 'print unless /^\Q$ENV{delete}.git\E$/' $PROJECTS_LIST
+echo this command has been superceded by the \"rm\" and \"trash\" commands
+exit 1

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+. $(dirname $0)/adc.common-functions
+
+repo=$1
+[ -z "$1" ] && die need a repo name
+
+owner=
+owner=`cat $TRASH_CAN/$repo/gl-creater 2>/dev/null`
+[ "$owner" = "$GL_USER" ] || die "$repo is not yours!"
+
+cd $TRASH_CAN
+realrepo=`dirname $repo`
+[ -d $GL_REPO_BASE_ABS/$realrepo.git ] && die $realrepo already exists
+mv $repo $GL_REPO_BASE_ABS/$realrepo.git
+echo $repo restored to $realrepo

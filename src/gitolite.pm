@@ -37,7 +37,7 @@ our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple patter
 # same as REPONAME, but used for wildcard repos, allows some common regex metas
 our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 # ADC commands and arguments must match this pattern
-our $ADC_CMD_ARGS_PATT=qr(^[0-9a-zA-Z._\@/+-]*$);
+our $ADC_CMD_ARGS_PATT=qr(^[0-9a-zA-Z._\@/+:-]*$);
 
 # these come from the RC file
 our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST, $GL_ALL_INCLUDES_SPECIAL, $GL_SITE_INFO, $GL_GET_MEMBERSHIPS_PGM);

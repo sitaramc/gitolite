@@ -1,0 +1,48 @@
+# deleting repos safely
+
+(see http://groups.google.com/group/gitolite/browse_thread/thread/fb9cf5a464b6dfee )
+
+By default, the old 'rmrepo' ADC (admin-defined command) just went and deleted
+the repo -- no questions asked!  Sometimes, that could be a disaster -- you
+lose the whole thing in one mad moment of typo-ing or frustration.  Ouch.
+
+This has been replaced by 2 families of ADCs.  I say "families" because each
+has one main command and 2 ancillary ones.  Admins can choose to install
+either, both, or neither family of commands.
+
+Local settings for these ADCs can be found in the common settings file
+"adc.common-functions".
+
+1.  'rm' will remove the repo.  If USE_LOCK_UNLOCK is set, rm will refuse to
+    remove a locked repo.  All repos are locked by default, and you have to
+    explicitly 'unlock' a repo to remove it.  You can also 'lock' it again
+    instead of removing it of course.
+
+    There's also ARE_YOU_SURE, for situations where a simple warning suffices.
+
+    You can also use both these flags if you wish.
+
+2.  'trash' will move the repo to a safe location.  There are settings for
+    where this location is and what suffix is added to the repo name.  You can
+    'list-trash' to see what trash you have collected, and you can 'undelete'
+    one of the listed repos.
+
+    It's easy to automatically clean out the trash occasionally.  By default,
+    entries in the trash look like this:
+
+        foo/r1/2010-10-22_13:14:24
+        foo/r1/2010-10-22_13:14:50
+
+    This shows a repo foo/r1 that was created and trashed twice.
+
+    Since the date appears in the name, you can use it with a cutoff to clean
+    up old repos.  Untested example:
+
+        cutoff=`date -I -d '28 days ago'`
+        find $TRASH_CAN -type d -name "20??-??-??_*" | while read r
+        do
+            d=`basename $r`
+            [[ $d < $cutoff ]] && rm -rf $d
+        done
+
+    Put this in cron to run once a day and that should be it.

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+. $(dirname $0)/adc.common-functions
+
+# this is a helper ADC for "rm"; see that one for documentation
+
+# cd to repo base and make sure arg1 is a valid repo (also sets $repo)
+valid_owned_repo $1
+
+touch $repo.git/gl-rm-ok
+
+echo "$repo has been unlocked and can be 'rm'ed or 'lock'ed once again"
