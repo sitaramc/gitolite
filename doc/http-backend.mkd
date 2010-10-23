@@ -1,5 +1,11 @@
 # how to setup gitolite to use smart http mode
 
+**Note**: "smart http" refers to the feature that came with git 1.6.6, late
+2009 or so.  The base documentation for this is `man git-http-backend`.  Do
+**NOT** read `Documentation/howto/setup-git-server-over-http.txt` and think
+that is the same or even relevant -- that is from 2006 and is quite different
+(and arguably obsolete).
+
 In this document:
 
   * <a href="#_WARNINGS_plus_stuff_I_need_help_with">WARNINGS, plus stuff I need help with</a>

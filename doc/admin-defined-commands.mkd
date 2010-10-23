@@ -111,7 +111,7 @@ internal/undocumented/subject to change.
 
 In addition, all the arguments of the command are also available to you, so
 you can define your own command syntaxes.  Gitolite checks these arguments to
-make sure they fit a somewhat conservative pattern (see `$REPOPATT_PATT` in
+make sure they fit a very conservative pattern (see `$ADC_CMD_ARGS_PATT` in
 `src/gitolite.pm`), so take that into consideration when designing your
 commands and usage.
 

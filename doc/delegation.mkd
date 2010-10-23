@@ -36,7 +36,7 @@ an admin from creating access rules for *any* repo in the system -- i.e., set
 limits on what repos he can control.  This would be a nice "security" feature.
 
 Delegation offers a way to do all that.  Note that delegated admins cannot
-create or remove users, not can they define new repos.  They can only define
+create or remove users, nor can they define new repos.  They can only define
 access control rules for a set of repos they have been given authority for.
 
 ----

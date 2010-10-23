@@ -534,6 +534,12 @@ to set that variable permanently, preferring this mode instead:
 
     GL_BYPASS_UPDATE_HOOK=1 git push
 
+**WARNING**: Do **NOT** try this with the special `gitolite-admin` repo.  That
+repo also runs a `post-update` hook which needs additional information which
+is NOT available if you bypass gitolite.  Mucking with that repo in this
+manner is strongly discouraged, as in "are you feeling lucky today?".  Use
+`gl-dont-panic` if you need to do some server-side surgery for that repo.
+
 <a name="_INconvenience_features"></a>
 
 #### INconvenience features
