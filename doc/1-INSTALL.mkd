@@ -47,6 +47,11 @@ Please make sure you understand the following points first.
     To make matters worse, ssh problems in gitolite don't always look like ssh
     problems.  See [doc/ssh-troubleshooting.mkd][doc6] for help.
 
+  * gitolite **does NOT** like it when people with shell access to the server
+    fiddle with files and directories it controls.
+
+    Apparently this was not obvious to some people.
+
 A gitolite setup has:
 
   * a server
