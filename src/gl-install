@@ -28,7 +28,8 @@ sub wrap_mkdir
 # the common setup module is in the same directory as this running program is
 my $bindir = $0;
 $bindir =~ s/\/[^\/]+$//;
-require "$bindir/gitolite.pm";
+unshift @INC, $bindir;
+require gitolite or die "parse gitolite.pm failed\n";
 
 # ask where the rc file is, get it, and "do" it
 &where_is_rc();

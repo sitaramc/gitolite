@@ -35,7 +35,8 @@ exit 0 if exists $ENV{GL_BYPASS_UPDATE_HOOK};
 # we should already have the GL_RC env var set when we enter this hook
 die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
 
-require "$ENV{GL_BINDIR}/gitolite.pm";
+unshift @INC, $ENV{GL_BINDIR};
+require gitolite or die "parse gitolite.pm failed\n";
 
 my ($perm, $creator, $wild) = &repo_rights($ENV{GL_REPO});
 my $reported_repo = $ENV{GL_REPO} . ( $ENV{GL_REPOPATT} ? " ($ENV{GL_REPOPATT})" : "" );

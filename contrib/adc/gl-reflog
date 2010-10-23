@@ -33,7 +33,9 @@ use warnings;
 my($cmd, $repo, $ref, $limit) = @ARGV;
 $limit ||= 10;
 
-require "$ENV{GL_BINDIR}/gitolite.pm" or die "parse gitolite.pm failed\n";
+unshift @INC, $ENV{GL_BINDIR};
+require gitolite or die "parse gitolite.pm failed\n";
+
 my ($perm, $creator, $wild) = &repo_rights($repo);
 die "you don't have read access to $repo\n" unless $perm =~ /R/;
 

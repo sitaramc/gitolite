@@ -30,7 +30,8 @@ our ($GL_PERFLOGT);
 my $bindir = $0;
 $bindir =~ s/\/[^\/]+$//;
 $bindir = "$ENV{PWD}/$bindir" unless $bindir =~ /^\//;
-require "$bindir/gitolite.pm";
+unshift @INC, $bindir;
+require gitolite or die "parse gitolite.pm failed\n";
 
 # prevent newbie from running it accidentally and clobbering his authkeys
 # file!
