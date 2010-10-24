@@ -1,0 +1,65 @@
+This document attempts to describe one way to integrate
+[Monkeysphere](http://web.monkeysphere.info/) authentication
+with [gitolite](http://github.com/sitaramc/gitolite).
+
+We presuppose that you have a system with a new enough
+version of Monkeysphere to support ssh `authorized_keys`
+options, and that you are not making use of
+monkeysphere-authentication on this system.
+
+As a first step, import the key or keys you wish to
+act as Monkeysphere certifiers into the GnuPG public
+keyring of the gitolite user (for example,
+`gpg --keyserver pool.sks-keyservers.net --recv-keys B0AE9A02`)
+Then edit such keys (`gpg --edit B0AE9A02`) and assign them
+*ultimate* ownertrust.
+
+Next install a script of this nature as `post-update.secondary`
+in the `hooks/` directory of the `gitolite-admin` repository.  You can also
+follow the "using hooks" section in gitolite's "admin" document to let
+gitolite put your new hook in the correct place.
+
+	#!/bin/zsh
+	
+	# this should use locking
+	
+	pushd ${GL_ADMINDIR}
+	
+	if [[ -d monkeydir ]]
+	then
+	    cp ~/.monkeysphere/authorized_user_ids ~/.monkeysphere/old-authorized_user_ids
+	    rm -f ~/.monkeysphere/new-authorized_user_ids
+	    for i in monkeydir/*.pub
+	    do
+	        username=$i:t:r
+		for j in ${(f)"$(<$i)"}
+	        do
+	            cat >> ~/.monkeysphere/new-authorized_user_ids <<EOF
+	$j
+	  command="/usr/share/gitolite/gl-auth-command $username"
+	  no-port-forwarding
+	  no-X11-forwarding
+	  no-agent-forwarding
+	  no-pty
+	EOF
+	
+	        done
+	    done
+	
+	    mv ~/.monkeysphere/new-authorized_user_ids ~/.monkeysphere/authorized_user_ids
+	    monkeysphere update-authorized_keys
+	fi
+	
+	popd
+	
+	ADMIN_POST_UPDATE_CHAINS_TO=hooks/post-update.tertiary
+	
+	if [[ -f $ADMIN_POST_UPDATE_CHAINS_TO || -L $ADMIN_POST_UPDATE_CHAINS_TO ]]; then
+	    exec $ADMIN_POST_UPDATE_CHAINS_TO "$@"
+	fi
+
+Finally, place *username*.pub files containing OpenPGP IDs into
+ a directory called `monkeydir/` in the root of the gitolite-admin
+repository.  If everything has been set up correctly, adding
+and pushing these files should then result in the appropriate
+generation of `~/.ssh/authorized_keys`.
