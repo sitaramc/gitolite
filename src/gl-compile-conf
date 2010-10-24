@@ -126,7 +126,7 @@ sub expand_list
 
     for my $item (@list)
     {
-        if ($item =~ /^@/)      # nested group
+        if ($item =~ /^@/ and $item ne '@all')      # nested group
         {
             die "$ABRT undefined group $item\n" unless $groups{$item};
             # add those names to the list
@@ -183,16 +183,14 @@ sub parse_conf_line
     {
         # grab the list...
         @{ $repos_p } = split ' ', $1;
-        unless (@{ $repos_p } == 1 and $repos_p->[0] eq '@all') {
-            # ...expand groups in the default case
-            @{ $repos_p } = expand_list ( @{ $repos_p } ) unless $GL_BIG_CONFIG;
-            # ...sanity check
-            for (@{ $repos_p }) {
-                die "$ABRT bad reponame $_\n"
-                    if ($GL_WILDREPOS and $_ !~ $REPOPATT_PATT);
-                die "$ABRT bad reponame $_ or you forgot to set \$GL_WILDREPOS\n"
-                    if (not $GL_WILDREPOS and $_ !~ $REPONAME_PATT);
-            }
+        # ...expand groups in the default case
+        @{ $repos_p } = expand_list ( @{ $repos_p } ) unless $GL_BIG_CONFIG;
+        # ...sanity check
+        for (@{ $repos_p }) {
+            die "$ABRT bad reponame $_\n"
+                if ($GL_WILDREPOS and $_ !~ $REPOPATT_PATT);
+            die "$ABRT bad reponame $_ or you forgot to set \$GL_WILDREPOS\n"
+                if (not $GL_WILDREPOS and $_ !~ $REPONAME_PATT);
         }
         s/\bCREAT[EO]R\b/\$creator/g for @{ $repos_p };
     }
@@ -215,8 +213,7 @@ sub parse_conf_line
         @refs = map { s(/USER/)(/\$gl_user/); $_ } @refs;
 
         # expand the user list, unless it is just "@all"
-        @users = expand_list ( @users )
-            unless ($GL_BIG_CONFIG or (@users == 1 and $users[0] eq '@all'));
+        @users = expand_list ( @users ) unless $GL_BIG_CONFIG;
         do  { die "$ABRT bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
 
         s/\bCREAT[EO]R\b/~\$creator/g for @users;
