@@ -31,6 +31,7 @@ In this document:
       * <a href="#_setup_the_mirror_shell_on_each_server">setup the mirror-shell on each server</a>
       * <a href="#_set_slaves_to_slave_mode">set slaves to slave mode</a>
       * <a href="#_set_slave_server_lists">set slave server lists</a>
+  * <a href="#_efficiency_versus_paranoia">efficiency versus paranoia</a>
   * <a href="#_syncing_the_mirrors_the_first_time">syncing the mirrors the first time</a>
   * <a href="#_switching_over">switching over</a>
   * <a href="#_the_return_of_foo">the return of foo</a>
@@ -180,6 +181,25 @@ port number:
     $ENV{GL_SLAVES} = 'bar gitolite@baz';
 
 And that's really all there is, unless...
+
+<a name="_efficiency_versus_paranoia"></a>
+
+### efficiency versus paranoia
+
+If you're paranoid enough to use mirrors, you should be paranoid enough to
+like the `receive.fsckObjects` setting we now default to :-) However, informal
+tests indicate a 40-50% CPU overhead from this.  If you don't like that,
+remove that line from the post-receive code.
+
+Please also note that we only set it on mirrors, and that too at the time the
+mirrored repo is *created*.  This means, when you start using your old "main"
+server as a mirror (see later sections on switching over to a mirror, etc.),
+it's repos do not have this setting.  Repos created by previous versions of
+gitolite also will not have this setting.
+
+Personally, I just set `git config --global receive.fsckObjects true`, since
+those servers aren't doing anything else anyway, and are idle for long
+stretches of time.  It's upto you what you want to do here.
 
 <a name="_syncing_the_mirrors_the_first_time"></a>
 

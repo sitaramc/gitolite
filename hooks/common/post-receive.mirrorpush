@@ -14,6 +14,7 @@ then
         else
             ssh $mirror mkdir -p $GL_REPO.git
             ssh $mirror git init --bare $GL_REPO.git
+            ssh $mirror git config receive.fsckObjects true
             git push --mirror $mirror:$GL_REPO.git ||
                 echo "WARNING: mirror push to $mirror failed"
         fi
