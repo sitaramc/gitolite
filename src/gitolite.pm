@@ -784,7 +784,7 @@ sub setup_authkeys
     print $newkeys_fh "# gitolite start\n";
     wrap_chdir($GL_KEYDIR);
     my @not_in_config;  # pubkeys exist but users don't appear in the config file
-    for my $pubkey (`find . -type f`)
+    for my $pubkey (`find . -type f | sort`)
     {
         chomp($pubkey); $pubkey =~ s(^\./)();
 

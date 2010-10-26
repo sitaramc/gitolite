@@ -5,6 +5,8 @@ In this document:
   * <a href="#_when_why_do_we_need_it_">when/why do we need it?</a>
   * <a href="#_how_do_we_use_it_">how do we use it?</a>
   * <a href="#_other_optimisations">other optimisations</a>
+      * <a href="#_disabling_various_defaults">disabling various defaults</a>
+      * <a href="#_optimising_the_authkeys_file">optimising the authkeys file</a>
   * <a href="#_what_are_the_downsides_">what are the downsides?</a>
   * <a href="#_storing_usergroup_information_outside_gitolite_like_in_LDAP_">storing usergroup information outside gitolite (like in LDAP)</a>
       * <a href="#_why">why</a>
@@ -149,6 +151,10 @@ be supported.
 
 ### other optimisations
 
+<a name="_disabling_various_defaults"></a>
+
+#### disabling various defaults
+
 The default RC file contains the following lines (we've already discussed the
 first one):
 
@@ -177,6 +183,45 @@ Summary: Please **leave those two variables alone** unless you're initials are
 Also note that using all 3 of the `GL_NO_*` variables will result in
 *everything* after the config compile being skipped.  In other words, gitolite
 is being used **only** for its access control language.
+
+<a name="_optimising_the_authkeys_file"></a>
+
+#### optimising the authkeys file
+
+Sshd does a linear scan of the `~/.ssh/authorized_keys` file when an incoming
+connection shows up.  This means that keys found near the top get served
+faster than keys near the bottom.  On my laptop, it takes about 2500 keys
+before I notice the delay; on a typical server it could be double that, so
+don't worry about all this unless your user-count is in that range.
+
+One way to deal with 5000+ keys is to use customised, database-backed ssh
+daemons, but many people are uncomfortable with taking non-standard versions
+of such a critical piece of the security infrastructure.  In addition, most
+distributions do not make it painless to use them.
+
+So what do you do?
+
+The following trick uses the Pareto principle (a.k.a the "80-20 rule")
+to get an immediate boost in response for the most frequent or prolific
+developers.  It can allow you to ignore the problem until the next big
+increase in your user counts!
+
+Here's how:
+
+  * create subdirectories of keydir/ called 0, 1, (maybe 2, 3, etc., also),
+    and 9.
+  * in 0/, put in the pubkeys of the most frequent users
+  * in 1/, add the next most important set of users, and so on for 2, 3, etc.
+  * finally, put all the rest in 9/
+
+Make sure "9" contains at least 70-90% of the total number of pubkeys,
+otherwise this doesn't really help.
+
+You can easily determine who your top users are by runnning something like
+this (note the clever date command that always gets you last months log file!)
+
+    cat .gitolite/logs/gitolite-`date +%Y-%m -d -30days`.log |
+        cut -f2 | sort | uniq -c | sort -n -r
 
 <a name="_what_are_the_downsides_"></a>
 
