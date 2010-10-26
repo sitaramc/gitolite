@@ -77,12 +77,22 @@ review stuff :)
     otherwise public server"; in gitolite you'd better avoid giving `R = @all`
     in the first place :)
 
-  * [Update 2010-04-14: it appears that Gerrit is also in the process of
-    implementing *read* access control at the branch level -- they can afford
-    to even think of that because they have a full jgit stack to play with.
+  * Update 2010-10-24: as per [this][gitlog1] Gerrit now has *read* access
+    control at the branch level -- they can afford to do that because they
+    have a full jgit stack to play with.  Even then it was not easy -- they
+    had to implement a callback from jgit to gerrit for the fetch, *and* deal
+    with evil clients that might try to read an object by *pushing* a supposed
+    change on top of a SHA that they know but don't actually have.  (You'll
+    have to think about this carefully; it may not be immediately obvious to
+    people who do not know the ref-exchange in the git protocol).
+
     Gitolite is dependent on git itself to provide that -- it just cannot be
     done without support from git core.  I can see some corporates drooling at
-    this possibility (makes no sense for open source projects IMO) ;-)]
+    this possibility (makes no sense for open source projects IMO) ;-)
+
+    My normal recommendation is to **use separate repos** if you really need
+    this while continuing to use gitolite.  Much simpler and easier to audit
+    and to convince auditors that "those people can't see that code".
 
 **Categories**:
 
@@ -111,3 +121,5 @@ review stuff :)
 
 The rest of it is in areas that the two tools have no overlap on (again, code
 review being the main thing).
+
+[gitlog1]: http://colabti.org/irclogger/irclogger_log/git?date=2010-09-17#l2710
