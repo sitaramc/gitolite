@@ -1,0 +1,44 @@
+#!/bin/sh
+
+. $(dirname $0)/adc.common-functions
+
+# the local site can have a file called gl-adc-help.txt, which will be used as
+# the *entire* help text for this site...
+
+[ -f $HOME/gl-adc-help.txt ] && {
+    cat $HOME/gl-adc-help.txt
+    exit 0
+}
+
+# or the local site will use the default help text in this file, with an
+# optional pre- and post- text that is site local (like maybe the admin's
+# contact details)
+
+# pre
+[ -f $HOME/gl-adc-pre-help.txt ] && cat $HOME/gl-adc-pre-help.txt
+
+# default help text
+cat <<EOF
+
+The following adc's (admin-defined commands) are available at this site.
+
+creating a "fork" of a repo:
+    the 'fork' adc forks a repo that you have read access to, to a repo that
+    you have create rights to
+
+deleting/trashing repos:
+    You can permanently remove a repo using 'rm'.  By default, repos are
+    protected ('lock'ed) from being 'rm'-ed.  You have to first 'unlock' a
+    repo before you can 'rm' it.
+
+    A different scheme of handling this is to use 'trash' to move the repo to
+    a "trashcan" area.  You can then 'list-trash' to see what you have, and
+    you can then 'restore' whichever repo you need to bring back.
+
+    More details can be found at:
+    http://github.com/sitaramc/gitolite/blob/pu/contrib/adc/repo-deletion.README
+
+EOF
+
+# post
+[ -f $HOME/gl-adc-post-help.txt ] && cat $HOME/gl-adc-post-help.txt

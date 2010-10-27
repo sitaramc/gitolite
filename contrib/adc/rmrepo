@@ -1,4 +1,4 @@
 #!/bin/bash
 
-echo this command has been superceded by the \"rm\" and \"trash\" commands
+echo "this command no longer exists.  Please run the 'help' adc for more info."
 exit 1

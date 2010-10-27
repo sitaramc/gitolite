@@ -9,4 +9,4 @@ valid_owned_repo $1
 
 rm -f $repo.git/gl-rm-ok
 
-echo "$repo has been locked"
+echo "$repo has been locked.  Please run the 'help' adc for more info."

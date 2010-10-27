@@ -7,11 +7,11 @@
 
 . $(dirname $0)/adc.common-functions
 
-repo=$1
 sha=$2
 [ -n "$sha" ] || die Usage: ssh ... who-pushed reponame SHA \# at least first few hex digits
 
-get_rights_and_owner $repo
+# get_rights_and_owner now also sets $repo; see comments in common functions
+get_rights_and_owner $1
 [ -z "$perm_read" ] && die "no read permissions on $repo"
 
 cd $GL_REPO_BASE_ABS/$repo.git

@@ -1,14 +1,12 @@
 #!/bin/sh
 
-from=$1
-to=$2
-
 . $(dirname $0)/adc.common-functions
 
-get_rights_and_owner $from
+# get_rights_and_owner now also sets $repo; see comments in common functions
+get_rights_and_owner $1; from=$repo
 [ -z "$perm_read" ] && die "no read permissions on $from"
 
-get_rights_and_owner $to
+get_rights_and_owner $2; to=$repo
 [ -z "$perm_create" ] && die "no create permissions on $to"
 
 # clone $from to $to

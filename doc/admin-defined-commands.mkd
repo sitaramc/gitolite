@@ -16,7 +16,7 @@ In this document:
   * <a href="#_anatomy_of_a_command">anatomy of a command</a>
   * <a href="#_example_uses_and_sample_commands_in_contrib">example uses and sample commands in contrib</a>
       * <a href="#_fork">fork</a>
-      * <a href="#_rmrepo">rmrepo</a>
+      * <a href="#_deleting_trashing_repos">deleting/trashing repos</a>
       * <a href="#_enable_disable_push_access_temporarily">enable/disable push access temporarily</a>
       * <a href="#_bonus_restricted_admin">(bonus) restricted admin</a>
 
@@ -164,17 +164,13 @@ or some such incantation.
 
 <a name="rmrepo"></a>
 
-<a name="_rmrepo"></a>
+<a name="_deleting_trashing_repos"></a>
 
-#### rmrepo
+#### deleting/trashing repos
 
-This is one thing that you really could not do before this setup was created.
-Use it like this:
+See [contrib/adc/repo-deletion.README][rdR] for details about this.
 
-    ssh git@server rmrepo reponame
-
-The script checks to make sure that the repo being deleted was *created* by
-the user invoking it.
+[rdR]: http://github.com/sitaramc/gitolite/blob/pu/contrib/adc/repo-deletion.README
 
 <a name="_enable_disable_push_access_temporarily"></a>
 

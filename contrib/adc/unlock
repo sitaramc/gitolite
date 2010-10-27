@@ -9,4 +9,4 @@ valid_owned_repo $1
 
 touch $repo.git/gl-rm-ok
 
-echo "$repo has been unlocked and can be 'rm'ed or 'lock'ed once again"
+echo "$repo has been unlocked.  Please run the 'help' command for more info."

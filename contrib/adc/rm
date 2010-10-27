@@ -18,7 +18,7 @@ opt $USE_LOCK_UNLOCK && {
     then
         :
     else
-        die "$repo is locked! To 'rm' this repository, first 'unlock' it."
+        die "$repo is locked! Please run the 'help' adc for more info."
     fi
 }
 

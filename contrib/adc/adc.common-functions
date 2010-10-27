@@ -26,9 +26,8 @@ opt() {
 
 valid_owned_repo() {
     # check that an arg passed is a valid repo and the current user owns it
-    repo=$1
     [ -z "$1" ] && die need a repo name
-    get_rights_and_owner $repo
+    get_rights_and_owner $1
     [ "$owner" = "$GL_USER" ] || die "$repo does not exist or is not yours!"
 
     # and we sneak this in too, quietly :)
@@ -37,9 +36,11 @@ valid_owned_repo() {
 
 die() { echo "$@"; exit 1; }
 
+# NOTE: this also sets $repo to the normalised (without .git suffix) reponame
 get_rights_and_owner() {
     local ans
-    ans=$(perl -I$GL_BINDIR -Mgitolite -e 'cli_repo_rights("'$1'")')
+    repo=${1%.git}
+    ans=$(perl -I$GL_BINDIR -Mgitolite -e 'cli_repo_rights("'$repo'")')
 
     # set shell variables as needed
     owner=${ans#* }

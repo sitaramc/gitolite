@@ -24,7 +24,7 @@ Local settings for these ADCs can be found in the common settings file
 
 2.  'trash' will move the repo to a safe location.  There are settings for
     where this location is and what suffix is added to the repo name.  You can
-    'list-trash' to see what trash you have collected, and you can 'undelete'
+    'list-trash' to see what trash you have collected, and you can 'restore'
     one of the listed repos.
 
     It's easy to automatically clean out the trash occasionally.  By default,
@@ -42,7 +42,7 @@ Local settings for these ADCs can be found in the common settings file
         find $TRASH_CAN -type d -name "20??-??-??_*" | while read r
         do
             d=`basename $r`
-            [[ $d < $cutoff ]] && rm -rf $d
+            [[ $d < $cutoff ]] && rm -rf $r
         done
 
     Put this in cron to run once a day and that should be it.
