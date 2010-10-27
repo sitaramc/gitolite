@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# find the last person to push the given commit
+
+# XXX we assume the logfile names have been left as default, or at least, if
+# changed, in such a way that when sorted by "ls", they come up oldest first
+
+. $(dirname $0)/adc.common-functions
+
+repo=$1
+sha=$2
+[ -n "$sha" ] || die Usage: ssh ... who-pushed reponame SHA \# at least first few hex digits
+
+get_rights_and_owner $repo
+[ -z "$perm_read" ] && die "no read permissions on $repo"
+
+cd $GL_REPO_BASE_ABS/$repo.git
+
+logdir=$(dirname $GL_LOG)      # uncodumented env var ;-)
+
+ls $logdir | tac | while read lf
+do
+    < $logdir/$lf grep receive-pack | egrep "\s$repo\s" | cut -f1,2,3,5- | tac
+done | while read ts who IP perm old new repo ref rule
+do
+    save_old=$old
+    [ "$new" = "00000000000000" ] && continue
+    [ -z "$old" ] && continue
+    [ "$old" = "00000000000000" ] && old=
+    [ -n "$old" ] && old=$old..
+    git rev-list $old$new 2>/dev/null | grep ^$sha >/dev/null &&
+        printf "$ts $who $IP $perm $save_old $new $repo $ref $rule\n"
+done
