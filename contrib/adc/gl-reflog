@@ -13,13 +13,20 @@ use warnings;
 # - heavily dependent on the gitolite log file format (duh!)
 # - cannot recover if some other commits were made after the force push
 
-# USAGE
-#   ssh git@server gl-reflog show r1 refs/heads/b1
-#       # shows last 10 updates to branch b1 in repo r1
-#   ssh git@server gl-reflog show r1 refs/heads/b1 20
-#       # shows last 20 entries...
-#   ssh git@server gl-reflog recover r1 refs/heads/b1
-#       # recovers the last update to b1 in r1 if it was a "+"
+sub usage {
+    print STDERR <<'EOF';
+    USAGE
+        ssh git@server gl-reflog show r1 refs/heads/b1
+            # shows last 10 updates to branch b1 in repo r1
+        ssh git@server gl-reflog show r1 refs/heads/b1 20
+            # shows last 20 entries...
+        ssh git@server gl-reflog recover r1 refs/heads/b1
+            # recovers the last update to b1 in r1 if it was a "+"
+EOF
+    exit 1;
+}
+
+usage unless (@ARGV >= 3);
 
 # NOTES
 # - the verb "recover" is used because this is expected to be used most often

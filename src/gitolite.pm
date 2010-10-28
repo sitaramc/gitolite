@@ -320,6 +320,7 @@ sub new_repo
         # pull in basic group info
         unless ($cache_filled) {
             local(%repos, %groups);
+            local $^W = 0;
             # read group info from compiled config.  At the time we're called
             # this info has not yet been pulled in by the rest of the code, so
             # we need to do this specially here.  However, the info we're
