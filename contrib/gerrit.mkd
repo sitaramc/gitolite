@@ -37,6 +37,11 @@ useful to compare gitolite with just what is in the "access-control.html" in
 the gerrit war file.  Or see [this][gdac].  [...and stop sniggering at the
 "svn" in the link dammit!]
 
+Note that I don't necessarily list something that both tools have.  (For
+example, per-user branches denoted by `/USER/` in gitolite and `$(username)`
+in gerrit, or being able to distinguish between creating a branch and pushing
+to an already created one, etc).
+
 [gdac]: http://gerrit.googlecode.com/svn/documentation/2.1.2/access-control.html
 [jwzq]: http://regex.info/blog/2006-09-15/247
 
@@ -57,14 +62,10 @@ of "Administrators".
 **Project ACLs**: first, let's remember (again) that we don't have any of the code
 review stuff :)
 
-  * **Reference-level access controls** make no mention of regexes.  I'm not
-    [JWZ][jwzq], and I strongly consider regexes a plus point :)
-
-  * They also make no mention of giving permissions to individual users, only
-    groups.  If this is true, it would be a little cumbersome when managing
-    many small projects -- projects where you have only one QA, one
-    integrator, etc., would end up making many 1-man groups.  [If anyone who's
-    used gerrit can correct me on this I'd appreciate it].
+  * This is a subjective point, but gerrit doesn't give permissions to
+    individual users, only groups.  People who have several small projects
+    (only one QA, one integrator, etc.), would have to create lots of 1-man
+    groups, which could be cumbersome.
 
   * **Evaluation** order and priority of access control rules are different.
     Gerrit goes by specificity, gitolite goes by sequence.  It shouldn't
@@ -102,13 +103,8 @@ review stuff :)
 
   * gitolite doesnt do anything special to signed or annotated tags
 
-  * gitolite always allows creating a branch.  The only way to prevent that is
-    to list out allowed branches explicitly (make sure you end the refex with
-    a `$`!).
-
-  * Force push is the same as delete: historically (and by default, even now)
-    gitolite does the same .  However, I've only recently (and somewhat
-    reluctantly) changed gitolite to allow treating these two separately.
+  * Force push is the same as delete by default.  However, gitolite can now
+    allow these two separately if that's how you need it.
 
     Of course, direct pushing clashes with code review, and gerrit recommends
     that if you want code review you should not use this feature.  [Normal
@@ -120,6 +116,7 @@ review stuff :)
     notion of this.  Hmm... I smell another feature in the future :)
 
 The rest of it is in areas that the two tools have no overlap on (again, code
-review being the main thing).
+review being the main thing), or, as I said at the top, features that both
+tools have.
 
 [gitlog1]: http://colabti.org/irclogger/irclogger_log/git?date=2010-09-17#l2710
