@@ -21,6 +21,9 @@ GL_PACKAGE_CONF=/tmp/share/gitolite/conf
 
 die() { echo "$@"; exit 1; }
 
+TEMPDIR=$(mktemp -d)
+export TEMPDIR
+trap "/bin/rm -rf $TEMPDIR" 0
 
 if [ -n "$GITOLITE_HTTP_HOME" ]
 then
@@ -40,10 +43,10 @@ fi
 
 if [ -f $HOME/.gitolite.rc ]
 then
-    perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < $GL_PACKAGE_CONF/example.gitolite.rc | sort > .newvars
-    perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < $HOME/.gitolite.rc                   | sort > .oldvars
-    comm -23 .newvars .oldvars > .diffvars
-    if [ -s .diffvars ]
+    perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < $GL_PACKAGE_CONF/example.gitolite.rc | sort > $TEMPDIR/.newvars
+    perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < $HOME/.gitolite.rc                   | sort > $TEMPDIR/.oldvars
+    comm -23 $TEMPDIR/.newvars $TEMPDIR/.oldvars > $TEMPDIR/.diffvars
+    if [ -s $TEMPDIR/.diffvars ]
     then
         cp $GL_PACKAGE_CONF/example.gitolite.rc $HOME/.gitolite.rc.new
         echo new version of the rc file saved in $HOME/.gitolite.rc.new
@@ -51,10 +54,9 @@ then
         echo please update $HOME/.gitolite.rc manually if you need features
         echo controlled by any of the following variables:
         echo ----
-        sed -e 's/^/    /' < .diffvars
+        sed -e 's/^/    /' < $TEMPDIR/.diffvars
         echo ----
     fi
-    rm -f .newvars .oldvars .diffvars
 else
     [ -n "$GITOLITE_HTTP_HOME" ] || [ -n "$pubkey_file" ] || die "looks like first run -- I need a pubkey file"
     [ -z "$GITOLITE_HTTP_HOME" ] || [ -n "$admin_name"  ] || die "looks like first run -- I need an admin name"
