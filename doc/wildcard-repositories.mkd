@@ -122,6 +122,15 @@ users are "READERS" and which are "WRITERS".  See later for details.
 
 <a name="_side_note_line_anchored_regexes"></a>
 
+### side-note: valid regexes
+
+Due to projects like `gtk+`, the `+` character is now considered a valid
+character for an *ordinary* repo.  Therefore, a pattern like `foo/.+` does not
+look like a regex to gitolite.  Use `foo/..*` if you want that.
+
+Also, `..*` by itself is not considered a valid repo pattern.  Try
+`[a-zA-Z0-9].*`.
+
 ### side-note: line-anchored regexes
 
 A regex like
