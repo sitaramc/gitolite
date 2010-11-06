@@ -217,8 +217,6 @@ sub parse_conf_line
         do  { die "$ABRT bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
 
         s/\bCREAT[EO]R\b/~\$creator/g for @users;
-        s/\bREADERS\b/\$readers/g for @users;
-        s/\bWRITERS\b/\$writers/g for @users;
 
         # ok, we can finally populate the %repos hash
         for my $repo (@{ $repos_p })       # each repo in the current stanza
@@ -266,7 +264,7 @@ sub parse_conf_line
                     # that do *not* use NAME limits.  Setting a flag that
                     # can be checked right away will help us do that
                     $repos{$repo}{NAME_LIMITS} = 1 if $ref =~ /^NAME\//;
-                    my $p_user = $user; $p_user =~ s/(creator|readers|writers)$/$1 - wild/;
+                    my $p_user = $user; $p_user =~ s/creator$/creator - wild/;
                     push @{ $repos{$repo}{$p_user} }, [ $rule_seq++, $ref, $perms ]
                         unless $rurp_seen{$repo}{$p_user}{$ref}{$perms}++;
                 }
@@ -402,15 +400,14 @@ my $data_version = $current_data_version;
 print $compiled_fh Data::Dumper->Dump([$data_version], [qw(*data_version)]);
 my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
 $dumped_data .= Data::Dumper->Dump([\%repo_config], [qw(*repo_config)]) if %repo_config;
-# the dump uses single quotes, but we convert any strings containing $creator,
-# $readers, $writers, to double quoted strings.  A wee bit sneaky, but not too
-# much...
-$dumped_data =~ s/'(?=[^']*\$(?:creator|readers|writers|gl_user))~?(.*?)'/"$1"/g;
+# the dump uses single quotes, but we convert any strings containing $creator
+# and $gl_user to double quoted strings.  A bit sneaky, but not too much...
+$dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
 print $compiled_fh $dumped_data;
 if (%groups) {
     $dumped_data = Data::Dumper->Dump([\%groups], [qw(*groups)]);
     $dumped_data =~ s/\bCREAT[EO]R\b/\$creator/g;
-    $dumped_data =~ s/'(?=[^']*\$(?:creator|readers|writers|gl_user))~?(.*?)'/"$1"/g;
+    $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
     print $compiled_fh $dumped_data;
 }
 close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";

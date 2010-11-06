@@ -44,7 +44,7 @@ do
 
         name "add daemon access to try1"
         echo R daemon | runlocal ssh u1 setperms bar/u1/try1
-        expect "R daemon"
+        expect "READERS daemon"
 
         runremote ls -al repositories/bar/u1/try1.git/git-daemon-export-ok
         expect "gitolite-test gitolite-test .* repositories/bar/u1/try1.git/git-daemon-export-ok"
@@ -56,7 +56,7 @@ do
 
         name "add gitweb access to try2"
         echo R gitweb | runlocal ssh u1 setperms bar/u1/try2
-        expect "R gitweb"
+        expect "READERS gitweb"
 
         runremote ls -al repositories/bar/u1/try2.git/git-daemon-export-ok
         expect "ls: cannot access repositories/bar/u1/try2.git/git-daemon-export-ok: No such file or directory"

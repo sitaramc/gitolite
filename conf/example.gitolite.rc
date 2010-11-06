@@ -240,6 +240,28 @@ $GL_WILDREPOS = 0;
 # $GL_WILDREPOS_DEFPERMS = 'R @all';
 
 # --------------------------------------
+# WILDREPOS PERMS CATEGORIES
+
+# Originally, we only allowed "R" and "RW" in the setperms command.  Now we
+# allow the admin to define other categories as she wishes (example: MANAGERS,
+# TESTERS, etc).
+
+# This variable is a space-sep list of the allowed categories.
+
+# PLEASE, *PLEASE*, read the section in doc/wildcard-repositories.mkd for
+# caveats and warnings.  This is a VERY powerful feature and if you're not
+# careful you could mess up the ACLs nicely.
+
+# this is the internal default if you don't set it (like if you didn't update
+# your ~/.gitolite.rc with new variables when you upgraded gitolite):
+$GL_WILDREPOS_PERM_CATS = "READERS WRITERS";
+
+# you can use your own categories in addition to the standard ones; I suggest
+# you include READERS and WRITERS for backward compat though:
+# $GL_WILDREPOS_PERM_CATS = "READERS WRITERS MANAGERS";
+# $GL_WILDREPOS_PERM_CATS = "READERS WRITERS MANAGERS TESTERS";
+
+# --------------------------------------
 # HOOK CHAINING
 
 # by default, the update hook in every repo chains to "update.secondary".

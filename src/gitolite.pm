@@ -40,12 +40,12 @@ our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 our $ADC_CMD_ARGS_PATT=qr(^[0-9a-zA-Z._\@/+:-]*$);
 
 # these come from the RC file
-our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST, $GL_ALL_INCLUDES_SPECIAL, $GL_SITE_INFO, $GL_GET_MEMBERSHIPS_PGM);
+our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST, $GL_ALL_INCLUDES_SPECIAL, $GL_SITE_INFO, $GL_GET_MEMBERSHIPS_PGM, $GL_WILDREPOS_PERM_CATS);
 our %repos;
 our %groups;
 our %repo_config;
 our $data_version;
-our $current_data_version = '1.5';
+our $current_data_version = '1.6';
 
 # ----------------------------------------------------------------------------
 #       convenience subs
@@ -316,6 +316,8 @@ sub new_repo
     # "who created this repo", "am I on the R list", and "am I on the RW list"?
     sub wild_repo_rights
     {
+        # set default categories
+        $GL_WILDREPOS_PERM_CATS ||= "READERS WRITERS";
         my ($repo, $user) = @_;
         # pull in basic group info
         unless ($cache_filled) {
@@ -337,26 +339,46 @@ sub new_repo
             my $fh = wrap_open("<", "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-creater");
             chomp($c = <$fh>);
         }
-        # $user's R and W rights
-        my ($r, $w); $r = ''; $w = '';
+
+        # now get the permission categories (used to be just R and RW.  Now
+        # there can be any others that the admin defines in the RC file via
+        # $GL_WILDREPOS_PERM_CATS variable (space separated list)
+
+        # For instance, if the user is "foo", and gl-perms has "R bar", "RW
+        # foo baz", and "TESTERS frob @all", this hash will then contain
+        # "WRITERS=>foo" and "TESTERS=>@all"
+        my %perm_cats;
+
         if ($user and            -f "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-perms") {
             my $fh = wrap_open("<", "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-perms");
             my $perms = join ("", <$fh>);
-            # $perms is say "R alice @foo @bar\nRW bob @baz" (the entire gl-perms
+            # discard comments
+            $perms =~ s/#.*//g;
+            # convert R and RW to the actual category names in the config file
+            $perms =~ s/^\s*R /READERS /mg;
+            $perms =~ s/^\s*RW /WRITERS /mg;
+            # $perms is say "READERS alice @foo @bar\nRW bob @baz" (the entire gl-perms
             # file).  We replace each @foo with $user if $cached_groups{'@foo'}{$user}
             # exists (i.e., $user is a member of @foo)
             for my $g ($perms =~ /\s(\@\S+)/g) {
                 $perms =~ s/ $g(?!\S)/ $user/ if $cached_groups{$g}{$user};
             }
+            # now setup the perm_cats hash to be returned
             if ($perms) {
-                $r ='@all' if $perms =~ /^\s*R(?=\s).*\s\@all(\s|$)/m;
-                $r = $user if $perms =~ /^\s*R(?=\s).*\s$user(\s|$)/m;
-                $w ='@all' if $perms =~ /^\s*RW(?=\s).*\s\@all(\s|$)/m;
-                $w = $user if $perms =~ /^\s*RW(?=\s).*\s$user(\s|$)/m;
+                # let's say our user is "foo".  gl-perms has "CAT bar @all",
+                # you add CAT => @all to the hash.  similarly, if gl-perms has
+                # "DOG bar foo baz", you add DOG => foo to the hash.  And
+                # since specific perms must override @all, we do @all first.
+                $perm_cats{$1} = '@all' while ($perms =~ /^\h*(\S+)(?=\h).*\h\@all(\h|$)/mg);
+                $perm_cats{$1} = $user while ($perms =~ /^\h*(\S+)(?=\h).*\h$user(\h|$)/mg);
+                # validate the categories being sent back
+                for (sort keys %perm_cats) {
+                    die "invalid permission category $_\n" unless $GL_WILDREPOS_PERM_CATS =~ /(^|\s)$_(\s|$)/;
+                }
             }
         }
 
-        return ($c, $r, $w);
+        return ($c, %perm_cats);
     }
 }
 
@@ -367,16 +389,30 @@ sub new_repo
 sub get_set_perms
 {
     my($repo, $verb, $user) = @_;
+    # set default categories
+    $GL_WILDREPOS_PERM_CATS ||= "READERS WRITERS";
     my ($creator, $dummy, $dummy2) = &wild_repo_rights($repo, "");
     die "$repo doesnt exist or is not yours\n" unless $user eq $creator;
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
     wrap_chdir("$repo.git");
     if ($verb eq 'getperms') {
-        system("cat", "gl-perms") if -f "gl-perms";
+        return unless -f "gl-perms";
+        my $perms = `cat gl-perms`;
+        # convert R and RW to the actual category names in the config file
+        $perms =~ s/^\s*R /READERS /mg;
+        $perms =~ s/^\s*RW /WRITERS /mg;
+        print $perms;
     } else {
         system("cat > gl-perms");
+        my $perms = `cat gl-perms`;
+        # convert R and RW to the actual category names in the config file
+        $perms =~ s/^\s*R /READERS /mg;
+        $perms =~ s/^\s*RW /WRITERS /mg;
+        for my $g ($perms =~ /^\s*(\S+)/g) {
+            die "invalid permission category $g\n" unless $GL_WILDREPOS_PERM_CATS =~ /(^|\s)$g(\s|$)/;
+        }
         print "New perms are:\n";
-        system("cat", "gl-perms");
+        print $perms;
 
         # gitweb and daemon
         setup_daemon_access($repo);
@@ -492,8 +528,10 @@ sub parse_acl
     # IMPLEMENTATION NOTE: a wee bit of this is duplicated in the update hook;
     # please update that also if the interface or the env vars change
 
-    my ($GL_CONF_COMPILED, $repo, $c, $r, $w) = @_;
-    $c = $r = $w = "NOBODY" unless $GL_WILDREPOS;
+    my ($GL_CONF_COMPILED, $repo, $c, %perm_cats) = @_;
+    my $perm_cats_sig = '';
+    map { $perm_cats_sig .= "$_.$perm_cats{$_}," } sort keys %perm_cats;
+    $c = "NOBODY" unless $GL_WILDREPOS;
 
     # set up the variables for a parse to interpolate stuff from the dumped
     # hash (remember the selective conversion of single to double quotes?).
@@ -504,19 +542,17 @@ sub parse_acl
     # parse without any special code
 
     our $creator = $ENV{GL_CREATOR} = $c || $ENV{GL_CREATOR} || "NOBODY";
-    our $readers = $ENV{GL_READERS} = $r || $ENV{GL_READERS} || "NOBODY";
-    our $writers = $ENV{GL_WRITERS} = $w || $ENV{GL_WRITERS} || "NOBODY";
     our $gl_user = $ENV{GL_USER};
 
     # these need to persist across calls to this function, so "our"
     our $saved_crwu;
     our (%saved_repos, %saved_groups);
 
-    if ($saved_crwu and $saved_crwu eq "$creator,$readers,$writers,$gl_user") {
+    if ($saved_crwu and $saved_crwu eq "$creator,$perm_cats_sig,$gl_user") {
         %repos = %saved_repos; %groups = %saved_groups;
     } else {
         die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
-        $saved_crwu = "$creator,$readers,$writers,$gl_user";
+        $saved_crwu = "$creator,$perm_cats_sig,$gl_user";
         %saved_repos = %repos; %saved_groups = %groups;
     }
     unless (defined($data_version) and $data_version eq $current_data_version) {
@@ -547,8 +583,8 @@ sub parse_acl
         $repos{$dr}{NAME_LIMITS} = 1 if $repos{$r}{NAME_LIMITS};
         $repo_config{$dr} = $repo_config{$r} if $repo_config{$r};
 
-        for my $u ('@all', "$gl_user - wild", @user_plus) {
-            my $du = $gl_user; $du = '@all' if $u eq '@all';
+        for my $u ('@all', "$gl_user - wild", @user_plus, keys %perm_cats) {
+            my $du = $gl_user; $du = '@all' if $u eq '@all' or ($perm_cats{$u} || '') eq '@all';
             $repos{$dr}{C}{$du} = 1 if $repos{$r}{C}{$u};
             $repos{$dr}{R}{$du} = 1 if $repos{$r}{R}{$u};
             $repos{$dr}{W}{$du} = 1 if $repos{$r}{W}{$u};
@@ -599,7 +635,7 @@ sub report_basic
     # rights for some other user this way
     local $ENV{GL_USER} = $user;
 
-    &parse_acl($GL_CONF_COMPILED, "", "CREATOR", "READERS", "WRITERS");
+    &parse_acl($GL_CONF_COMPILED, "", "CREATOR");
 
     # send back some useful info if no command was given
     &report_version($GL_ADMINDIR, $user);
@@ -610,10 +646,10 @@ sub report_basic
         # if $GL_BIG_CONFIG is on, limit the number of output lines to 20
         next if $GL_BIG_CONFIG and $count++ >= 20;
         if ($r =~ $REPONAME_PATT and $r !~ /\bCREAT[EO]R\b/) {
-            &parse_acl($GL_CONF_COMPILED, $r, "NOBODY",      "NOBODY", "NOBODY");
+            &parse_acl($GL_CONF_COMPILED, $r, "NOBODY");
         } else {
             $r =~ s/\bCREAT[EO]R\b/$user/g;
-            &parse_acl($GL_CONF_COMPILED, $r, $ENV{GL_USER}, "NOBODY", "NOBODY");
+            &parse_acl($GL_CONF_COMPILED, $r, $ENV{GL_USER});
         }
         # @all repos; meaning of read/write flags:
         # @R => @all users are allowed access to this repo
@@ -692,13 +728,16 @@ sub expand_wild
         my $wild = '';
         my $exists = -d "$ENV{GL_REPO_BASE_ABS}/$repo.git";
         if ($exists) {
+            # the list of permission categories within gl-perms that this user is a member
+            # of, or that specify @all as a member.  See comments in
+            # "wild_repo_rights" sub for nuances.
+            my (%perm_cats);
             # these will be empty if it's not a wildcard repo anyway
-            my ($read, $write);
-            ($creator, $read, $write) = &wild_repo_rights($repo, $ENV{GL_USER});
+            ($creator, %perm_cats) = &wild_repo_rights($repo, $ENV{GL_USER});
             # get access list with these substitutions
-            $wild = &parse_acl($GL_CONF_COMPILED, $repo, $creator || "NOBODY", $read || "NOBODY", $write || "NOBODY");
+            $wild = &parse_acl($GL_CONF_COMPILED, $repo, $creator || "NOBODY", %perm_cats);
         } else {
-            $wild = &parse_acl($GL_CONF_COMPILED, $repo, $ENV{GL_USER}, "NOBODY", "NOBODY");
+            $wild = &parse_acl($GL_CONF_COMPILED, $repo, $ENV{GL_USER});
         }
 
         if ($exists) {
@@ -840,7 +879,7 @@ sub setup_authkeys
     # lint check 3; a little more severe than the first two I guess...
     {
         my @no_pubkey =
-            grep { $_ !~ /^(gitweb|daemon|\@.*|~\$creator|\$readers|\$writers)$/ }
+            grep { $_ !~ /^(gitweb|daemon|\@.*|~\$creator)$/ }
                 grep { $user_list_p->{$_} ne 'has pubkey' }
                     keys %{$user_list_p};
         if (@no_pubkey > 10) {

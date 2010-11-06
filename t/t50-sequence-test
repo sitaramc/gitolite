@@ -30,7 +30,7 @@ do
     expect "\[new branch\]      master -> master"
     echo RW u2 | runlocal ssh u1 setperms foo/u1/bar
     runlocal ssh u1 getperms foo/u1/bar
-    expect "RW u2"
+    expect "WRITERS u2"
     name "expand"
     runlocal ssh u2 expand
     expect "R   W .(u1).foo/u1/bar"
@@ -77,7 +77,7 @@ do
     expect "\[new branch\]      master -> master"
     echo RW u2 | runlocal ssh u1 setperms foo/u1/bar
     runlocal ssh u1 getperms foo/u1/bar
-    expect "RW u2"
+    expect "WRITERS u2"
     name "expand"
     runlocal ssh u2 expand
     expect "   R   W .(u1).foo/u1/bar"

@@ -34,7 +34,7 @@ do
 
     name "@leads can RW try1"
     echo RW @leads | runlocal ssh u1 setperms bar/u1/try1
-    expect "RW @leads"
+    expect "WRITERS @leads"
     runlocal ssh u1 expand
     expect R.*W.*u1.*bar/u1/try1
     runlocal ssh u2 expand
@@ -44,8 +44,9 @@ do
 
     name "@devs can R try1"
     echo R @devs | runlocal ssh u1 setperms bar/u1/try1
-    expect "R @devs"
+    expect "READERS @devs"
     notexpect "RW @leads"
+    notexpect "WRITERS @leads"
     runlocal ssh u1 expand
     expect R.*W.*u1.*bar/u1/try1
     runlocal ssh u2 expand
@@ -57,8 +58,8 @@ do
 
     name "combo of previous 2"
     printf "R @devs\nRW @leads\n" | runlocal ssh u1 setperms bar/u1/try1
-    expect "R @devs"
-    expect "RW @leads"
+    expect "READERS @devs"
+    expect "WRITERS @leads"
     runlocal ssh u1 expand
     expect R.*W.*u1.*bar/u1/try1
     runlocal ssh u2 expand

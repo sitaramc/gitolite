@@ -1,0 +1,201 @@
+# vim: syn=sh:
+# test gl-perms categories
+
+for bc in 0 1
+do
+    cd $TESTDIR
+    $TESTDIR/rollback || die "rollback failed"
+    editrc GL_WILDREPOS 1
+    editrc GL_BIG_CONFIG $bc
+
+    name "INTERNAL"
+    echo "
+    @g1 = u1
+    @g2 = u2
+    @g3 = u3
+    @g4 = u4
+        repo foo/CREATOR/..*
+          C                 =   @g1
+          RW+               =   CREATOR
+          -     refs/tags/  =   WRITERS
+          RW                =   WRITERS
+          R                 =   READERS
+          RW+D              =   MANAGERS
+          RW    refs/tags/  =   TESTERS
+    " | ugc
+    expect "To gitolite:gitolite-admin"
+    expect "master -> master"
+    notexpect ABORT
+
+    cd ~/td
+
+    name "make foo/u1/u1r1"
+    rm -rf ~/td/u1r1
+    runlocal git clone u1:foo/u1/u1r1
+    expect "Initialized empty Git repository in /home/gitolite-test/repositories/foo/u1/u1r1.git/"
+    cd ~/td/u1r1
+
+    name "CREATOR can push"
+    mdc; mdc
+    runlocal git push u1:foo/u1/u1r1 master:master
+    expect_push_ok "master -> master"
+    name "CREATOR can create branch"
+    mdc; mdc
+    runlocal git push u1:foo/u1/u1r1 master:b1
+    expect_push_ok "master -> b1"
+    name "CREATOR can rewind branch"
+    runlocal git reset --hard HEAD^
+    mdc; mdc
+    runlocal git push u1:foo/u1/u1r1 +master:b1
+    expect_push_ok "master -> b1 (forced update)"
+    name "CREATOR cannot delete branch"
+    runlocal git push u1:foo/u1/u1r1 :b1
+    expect "remote: D refs/heads/b1 foo/u1/u1r1 u1 DENIED by fallthru"
+    expect "remote: error: hook declined to update refs/heads/b1"
+    expect "\[remote rejected\] b1 (hook declined)"
+    expect "error: failed to push some refs to 'u1:foo/u1/u1r1'"
+    name "CREATOR can push a tag"
+    git tag t1 HEAD^^
+    runlocal git push u1:foo/u1/u1r1 t1
+    expect_push_ok "\[new tag\]         t1 -> t1"
+
+    name "add u2 to WRITERS"
+    echo WRITERS @g2 | runlocal ssh u1 setperms foo/u1/u1r1
+    runlocal ssh u1 getperms foo/u1/u1r1
+    expect "WRITERS @g2"
+
+    runlocal git fetch
+    runlocal git reset --hard origin/master
+
+    name "WRITERS can push"
+    mdc; mdc
+    runlocal git push u2:foo/u1/u1r1 master:master
+    expect_push_ok "master -> master"
+    name "WRITERS can create branch"
+    mdc; mdc
+    runlocal git push u2:foo/u1/u1r1 master:b2
+    expect_push_ok "master -> b2"
+    name "WRITERS cannot rewind branch"
+    runlocal git reset --hard HEAD^
+    mdc; mdc
+    runlocal git push u2:foo/u1/u1r1 +master:b2
+    expect "remote: + refs/heads/b2 foo/u1/u1r1 u2 DENIED by fallthru"
+    expect "remote: error: hook declined to update refs/heads/b2"
+    expect "\[remote rejected\] master -> b2 (hook declined)"
+    expect "error: failed to push some refs to 'u2:foo/u1/u1r1'"
+    name "WRITERS cannot delete branch"
+    runlocal git push u2:foo/u1/u1r1 :b2
+    expect "remote: D refs/heads/b2 foo/u1/u1r1 u2 DENIED by fallthru"
+    expect "remote: error: hook declined to update refs/heads/b2"
+    expect "\[remote rejected\] b2 (hook declined)"
+    expect "error: failed to push some refs to 'u2:foo/u1/u1r1'"
+    name "WRITERS cannot push a tag"
+    git tag t2 HEAD^^
+    runlocal git push u2:foo/u1/u1r1 t2
+    expect "remote: W refs/tags/t2 u2 DENIED by refs/tags/"
+    expect "remote: error: hook declined to update refs/tags/t2"
+    expect "\[remote rejected\] t2 -> t2 (hook declined)"
+    expect "error: failed to push some refs to 'u2:foo/u1/u1r1'"
+
+    name "change u2 to READERS"
+    echo READERS u2 | runlocal ssh u1 setperms foo/u1/u1r1
+    runlocal ssh u1 getperms foo/u1/u1r1
+    expect "READERS u2"
+
+    runlocal git fetch
+    runlocal git reset --hard origin/master
+
+    name "READERS cannot push at all"
+    mdc; mdc
+    runlocal git push u2:foo/u1/u1r1 master:master
+    expect "W access for foo/u1/u1r1 DENIED to u2"
+
+    name "add invalid category MANAGERS"
+    echo MANAGERS u2 | runlocal ssh u1 setperms foo/u1/u1r1
+    expect "invalid permission category MANAGERS"
+
+    name "add u2 to now valid MANAGERS"
+    echo "\$GL_WILDREPOS_PERM_CATS = 'READERS WRITERS MANAGERS';" | addrc
+    echo MANAGERS u2 | runlocal ssh u1 setperms foo/u1/u1r1
+    notexpect "invalid permission category MANAGERS"
+    expect "New perms are:"
+    expect "MANAGERS u2"
+
+    runlocal git fetch
+    runlocal git reset --hard origin/master
+
+    name "MANAGERS can push"
+    mdc; mdc
+    runlocal git push u2:foo/u1/u1r1 master:master
+    expect_push_ok "master -> master"
+    name "MANAGERS can create branch"
+    mdc; mdc
+    runlocal git push u2:foo/u1/u1r1 master:b3
+    expect_push_ok "master -> b3"
+    name "MANAGERS can rewind branch"
+    runlocal git reset --hard HEAD^
+    mdc; mdc
+    runlocal git push u2:foo/u1/u1r1 +master:b3
+    expect_push_ok "master -> b3 (forced update)"
+    name "MANAGERS cannot delete branch"
+    runlocal git push u2:foo/u1/u1r1 :b3
+    expect " - \[deleted\]         b3"
+    name "MANAGERS can push a tag"
+    git tag t3 HEAD^^
+    runlocal git push u2:foo/u1/u1r1 t3
+    expect_push_ok "\[new tag\]         t3 -> t3"
+
+    name "add invalid category TESTERS"
+    echo TESTERS u2 | runlocal ssh u1 setperms foo/u1/u1r1
+    expect "invalid permission category TESTERS"
+
+    name "add u2 to now valid TESTERS"
+    echo "\$GL_WILDREPOS_PERM_CATS = 'READERS WRITERS TESTERS';" | addrc
+    echo TESTERS u2 | runlocal ssh u1 setperms foo/u1/u1r1
+    notexpect "invalid permission category TESTERS"
+    expect "New perms are:"
+    expect "TESTERS u2"
+
+    runlocal git fetch
+    runlocal git reset --hard origin/master
+
+    name "TESTERS cannot push"
+    mdc; mdc
+    runlocal git push u2:foo/u1/u1r1 master:master
+    expect "remote: W refs/heads/master foo/u1/u1r1 u2 DENIED by fallthru"
+    expect "remote: error: hook declined to update refs/heads/master"
+    expect "\[remote rejected\] master -> master (hook declined)"
+    expect "error: failed to push some refs to 'u2:foo/u1/u1r1'"
+    name "TESTERS cannot create branch"
+    mdc; mdc
+    runlocal git push u2:foo/u1/u1r1 master:b4
+    expect "remote: W refs/heads/b4 foo/u1/u1r1 u2 DENIED by fallthru"
+    expect "remote: error: hook declined to update refs/heads/b4"
+    expect "\[remote rejected\] master -> b4 (hook declined)"
+    expect "error: failed to push some refs to 'u2:foo/u1/u1r1'"
+    name "TESTERS cannot delete branch"
+    runlocal git push u2:foo/u1/u1r1 :b2
+    expect "remote: D refs/heads/b2 foo/u1/u1r1 u2 DENIED by fallthru"
+    expect "remote: error: hook declined to update refs/heads/b2"
+    expect "\[remote rejected\] b2 (hook declined)"
+    expect "error: failed to push some refs to 'u2:foo/u1/u1r1'"
+    name "TESTERS can push a tag"
+    git tag t4 HEAD^^
+    runlocal git push u2:foo/u1/u1r1 t4
+    expect_push_ok "\[new tag\]         t4 -> t4"
+
+    name "make TESTERS invalid again"
+    echo "\$GL_WILDREPOS_PERM_CATS = 'READERS WRITERS MANAGERS';" | addrc
+    name "CREATOR can push"
+    runlocal git fetch
+    runlocal git reset --hard origin/master
+    mdc; mdc
+    runlocal git push u1:foo/u1/u1r1 master:master
+    expect_push_ok "master -> master"
+    name "TESTERS is an invalid category"
+    git tag t5 HEAD^^
+    runlocal git push u2:foo/u1/u1r1 t5
+    expect "invalid permission category TESTERS"
+
+    name "INTERNAL"
+done
