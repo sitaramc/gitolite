@@ -2,6 +2,13 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v.1.5.7
+
+  - "help" adc can allow site local help text to be shown
+  - "who-pushed" adc to find out who pushed a given commit
+  - rmrepo adc replaced by lock/unlock/rm and trash/list-trash/restore
+    families of commands
+
   - v1.5.6
 
   - new method for passing usergroup info (minor backward compat breakage);
