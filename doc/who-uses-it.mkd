@@ -39,3 +39,14 @@ He explains his use of it [here][hiren].
 
 [wild]: http://github.com/sitaramc/gitolite/blob/pu/doc/wildcard-repositories.mkd
 [hiren]: http://ece.uwaterloo.ca/~hdpatel/uwhtml/?p=470
+
+**Gentoo Linux** has [just moved][gentoo1] their git repositories from gitosis
+to gitolite. There are about 200 repositories, some of them are the so called
+[overlays][gentoo2], official and unofficial/user overlays, plus several
+developer and project repositories, used by more than 1000 people. That number
+will be increased in the near future, as they are going to migrate some of
+their CVS/SVN repositories there, plus they are offering overlays hosting for
+users as well.
+
+[gentoo1]: http://archives.gentoo.org/gentoo-dev/msg_2812c9b9e768f64b46360ab17b9d0024.xml
+[gentoo2]: http://www.gentoo.org/proj/en/overlays/
