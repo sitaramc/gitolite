@@ -169,13 +169,15 @@ sub parse_conf_line
     my ($line, $fragment, $repos_p, $ignored_p) = @_;
 
     # user or repo groups
-    if ($line =~ /^(@\S+) = (.*)/)
+    if ($line =~ /^(@\S+) = ?(.*)/)
     {
         die "$ABRT defining groups is not allowed inside fragments\n"
             if $GL_BIG_CONFIG and $fragment ne 'master';
         # store the members of each group as hash key.  Keep track of when
         # the group was *first* created by using $fragment as the *value*
         do { $groups{$1}{$_} ||= $fragment } for ( expand_list( split(' ', $2) ) );
+        # create the group hash even if empty
+        $groups{$1} = {} unless $groups{$1};
         die "$ABRT bad group $1\n" unless $1 =~ $REPONAME_PATT;
     }
     # repo(s)
