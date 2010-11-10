@@ -189,6 +189,7 @@ sub parse_conf_line
         @{ $repos_p } = expand_list ( @{ $repos_p } ) unless $GL_BIG_CONFIG;
         # ...sanity check
         for (@{ $repos_p }) {
+            warn "$WARN explicit '.git' extension ignored for $_.git\n" if s/\.git$//;
             die "$ABRT bad reponame $_\n"
                 if ($GL_WILDREPOS and $_ !~ $REPOPATT_PATT);
             die "$ABRT bad reponame $_ or you forgot to set \$GL_WILDREPOS\n"
@@ -299,7 +300,7 @@ sub parse_conf_line
     {
         my $file = $1;
         $file = "$GL_ADMINDIR/conf/$file" unless $file =~ /^\//;
-        die "$WARN $fragment attempting to include configuration\n" if $fragment ne 'master';
+        die "$ABRT $fragment attempting to include configuration\n" if $fragment ne 'master';
         die "$ABRT included file not found: '$file'\n" unless -f $file;
 
         parse_conf_file( $file, $fragment );
@@ -311,7 +312,7 @@ sub parse_conf_line
     {
         my ($repo, $owner, $desc) = ($1, $2, $3);
         die "$ABRT bad repo name $repo\n" unless $repo =~ $REPONAME_PATT;
-        die "$WARN $fragment attempting to set description for $repo\n" if check_fragment_repo_disallowed( $fragment, $repo );
+        die "$ABRT $fragment attempting to set description for $repo\n" if check_fragment_repo_disallowed( $fragment, $repo );
         $desc{"$repo.git"} = $desc;
         $owner{"$repo.git"} = $owner || '';
     }
