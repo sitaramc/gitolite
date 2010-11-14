@@ -9,7 +9,6 @@ GL_PACKAGE_CONF=/tmp/share/gitolite/conf
 
 # This program is meant to be completely non-interactive, suitable for running
 # server-side from a "post RPM/DEB install" script, or manually by users.
-# Please see the doc/0-user-setup.mkd for details.
 
 # usage:
 #   $0 [foo.pub]

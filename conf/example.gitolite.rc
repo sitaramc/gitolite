@@ -225,7 +225,7 @@ $SVNSERVE = "";
 
 # This has now been rolled into master, with all the functionality gated by
 # this variable.  Set this to 1 if you want to enable the wildrepos features.
-# Please see doc/4-wildcard-repositories.mkd for details.
+# Please see doc/wildcard-repositories.mkd for details.
 
 $GL_WILDREPOS = 0;
 

@@ -510,7 +510,7 @@ IMPORTANT: once the install completes, *this* key can no longer be used to get
 a command line on the server -- it will be used by gitolite, for git access
 only.  If that is a problem, please ABORT now.
 
-doc/6-ssh-troubleshooting.mkd will explain what is happening here, if you need
+doc/ssh-troubleshooting.mkd will explain what is happening here, if you need
 more info.
 "
 
@@ -578,7 +578,7 @@ install, not this one...
 
 v_at_shell_bwi="
 you are using the @SHELL feature in your gitolite config.  This feature has
-now changed in a backward incompatible way; see doc/6-ssh-troubleshooting.mkd
+now changed in a backward incompatible way; see doc/ssh-troubleshooting.mkd
 for information on migrating this to the new syntax.
 
 DO NOT hit enter unless you have understood that information and properly
@@ -634,7 +634,7 @@ CONFIG FILE FORMAT: see comments in conf/example.conf in the gitolite source.
 
 SSH MAGIC: Remember you (the admin) now have *two* keys to access the server
 hosting your gitolite setup -- one to get you a command line, and one to get
-you gitolite access; see doc/6-ssh-troubleshooting.mkd.  If you're not using
+you gitolite access; see doc/ssh-troubleshooting.mkd.  If you're not using
 keychain or some such software, you may have to run an 'ssh-add' command to
 add that key each time you log in.
 
