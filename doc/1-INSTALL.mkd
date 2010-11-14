@@ -4,13 +4,13 @@ In this document:
 
   * <a href="#_please_read_this_first">please read this first</a>
       * <a href="#_important_notes">important notes</a>
-      * <a href="#_conventions_used">conventions used</a>
       * <a href="#_requirements">requirements</a>
           * <a href="#_client_workstation">client/workstation</a>
           * <a href="#_server">server</a>
           * <a href="#_technical_skills">technical skills</a>
   * <a href="#_installation_and_setup">installation and setup</a>
       * <a href="#_install_methods_and_deciding_which_one_to_use">install methods and deciding which one to use</a>
+      * <a href="#_conventions_used">conventions used</a>
       * <a href="#_package_method_directly_on_the_server_using_RPM_DEB">(package method) directly on the server, using RPM/DEB</a>
       * <a href="#_root_method_directly_on_the_server_manually_with_root_access">(root method) directly on the server, manually, with root access</a>
       * <a href="#_non_root_method_directly_on_the_server_manually_without_root_access">(non-root method) directly on the server, manually, without root access</a>
@@ -56,8 +56,9 @@ A gitolite setup has:
 
   * a server
   * a "hosting user" on the server -- the userid under which gitolite runs.
-    You can have any number of "hosting users" on one server; in fact every
-    user can host their own gitolite instance
+    (Side note: there is *usually* only one hosting user per server (machine),
+    but gitolite makes it trivial to have as many as you want.  Advanced users
+    can look [here][mgs]!)
   * an "admin user" -- the user who sets up gitolite and configures it
   * the admin user's client or workstation, from which he does all his work
 
@@ -69,18 +70,6 @@ that is common with some hosting services).  It's actually fairly easy and
 emergency use.  However, I will not be documenting it because (a) if you know
 ssh you'll know how to extrapolate my instructions to do this and (b) if you
 don't know ssh it'll be a nightmare to support you.
-
-<a name="_conventions_used"></a>
-
-#### conventions used
-
-Throughout the documentation, we use "YourName" as the admin user, and his
-workstation is called "client".  The hosting user is "git", and the server is
-called "server".  **Please substitute your values as needed**.
-
-Also, we often say "the rc file".  This means `~/.gitolite.rc` on the server.
-And when we say the "access control rules", or "conf file", or "config file",
-we mean `conf/gitolite.conf` on your gitolite-admin clone.
 
 <a name="_requirements"></a>
 
@@ -151,6 +140,22 @@ Gitolite has 4 install methods:
 Here's how you install using these 3 methods.  Future upgrades are equally
 easy -- the steps required for upgrading are marked "(U)".
 
+<a name="_conventions_used"></a>
+
+#### conventions used
+
+Throughout the documentation, we use "YourName" as the admin user, and his
+workstation is called "client".  The hosting user is "git", and the server is
+called "server".  **Please substitute your values as needed**.
+
+**If you're using DEB or RPM**, the installer creates a user called
+"gitolite", so substitute that for "git" anywhere in the docs where the
+"hosting user" is mentioned as "git".
+
+Also, we often say "the rc file".  This means `~/.gitolite.rc` on the server.
+And when we say the "access control rules", or "conf file", or "config file",
+we mean `conf/gitolite.conf` on your gitolite-admin clone.
+
 <a name="_package_method_directly_on_the_server_using_RPM_DEB"></a>
 
 #### (package method) directly on the server, using RPM/DEB
@@ -160,10 +165,10 @@ easy -- the steps required for upgrading are marked "(U)".
 
   * (U) on the server, as root, do the install (urpmi, yum, apt-get, etc.).
 
-  * on the server, "su - git", then as "git" user, run `gl-setup
+  * on the server, "su - gitolite", then as "gitolite" user, run `gl-setup
     /tmp/YourName.pub`.
 
-  * on the client, run `cd; git clone git@server:gitolite-admin`
+  * on the client, run `cd; git clone gitolite@server:gitolite-admin`
 
 <a name="_root_method_directly_on_the_server_manually_with_root_access"></a>
 
@@ -182,8 +187,14 @@ easy -- the steps required for upgrading are marked "(U)".
         mkdir -p /usr/local/share/gitolite/conf /usr/local/share/gitolite/hooks
         src/gl-system-install /usr/local/bin /usr/local/share/gitolite/conf /usr/local/share/gitolite/hooks
 
-  * on the server, "su - git", then as "git" user, run `gl-setup
-    /tmp/YourName.pub`.
+  * on the server, "su - git", then as "git" user, run `which gl-setup`.  This
+    should respond with `/usr/local/bin/gl-setup`.  If this is not what you
+    get, you have some `$PATH` issues.  Make sure `/usr/local/bin` is in the
+    `$PATH` for the git user, and that no prior components of the path contain
+    another copy of `gl-setup`.  You *must* run the one in the directory that
+    is the first argument of `gl-system-install` above.
+
+  * now run `gl-setup /tmp/YourName.pub`.
 
   * on the client, run `cd; git clone git@server:gitolite-admin`
 
@@ -257,14 +268,27 @@ repositories.  Check [here][twokeys] for why.
 
 ### special cases -- multiple gitolite servers
 
+(**Advanced users only, please!**)
+
+There is no gitolite "daemon"; it gets invoked via sshd which calls
+"gl-auth-command" via the "command=" option in the authkeys file (see
+[gitolite and ssh][gash] for more).
+
+If you think about it, this means every real (unix) user on the system can
+host her own gitolite server!
+
+Of course, one doesn't normally do that in the interests of sanity, but let's
+say you want to create one gitolite instance for each department on some
+company-wide mega-server.
+
 <a name="_package_method_and_root_method"></a>
 
 #### package method and root method
 
 With the first two methods of installation, it's trivial to create multiple
-gitolite instances (say one for each department, on some mega company-wide
-server).  You can even do this without giving shell access to the admins.
-Here's an example with just two "departments", and their admins Alice and Bob:
+gitolite instances.  You can even do this without giving shell access to the
+admins.  Here's an example with just two "departments", and their admins Alice
+and Bob:
 
   * create userids `webbrowser_repos` and `webserver_repos`
   * ask Alice and Bob for their pubkeys; copy them to the respective home
@@ -284,6 +308,11 @@ domain, and that's quite enough for normal operations.
 <a name="_from_client_method"></a>
 
 #### from-client method
+
+You can do the same thing using this method also, but it's a little more
+cumbersome.  Instead, I'll describe a different scenario -- one "admin"
+installing gitolite on different servers.  You can adapt that to the above
+case quite easily if you wish.
 
 Thanks to Matt Perzel, the easy-install command now takes an optional 4th
 parameter, which is the "nickname" of the gitolite server.  It gets defined in
@@ -352,3 +381,5 @@ uninstalling gitolite is described in great detail in
 [doc9unin]: http://github.com/sitaramc/gitolite/blob/pu/doc/uninstall.mkd
 [twokeys]: http://github.com/sitaramc/gitolite/blob/pu/doc/ssh-troubleshooting.mkd#twokeys
 [transcript]: http://github.com/sitaramc/gitolite/blob/pu/doc/install-transcript.mkd
+[mgs]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd#_special_cases_multiple_gitolite_servers
+[gash]: http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite-and-ssh.mkd
