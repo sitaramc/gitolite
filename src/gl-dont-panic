@@ -70,7 +70,7 @@ export REPO_BASE
 export GL_BINDIR
 export GL_ADMINDIR
 
-TEMPDIR=$(mktemp -d)
+TEMPDIR=$(mktemp -d -t tmp.XXXXXXXXXX)
 export TEMPDIR
 trap "/bin/rm -rf $TEMPDIR" 0
 

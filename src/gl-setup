@@ -20,7 +20,7 @@ GL_PACKAGE_CONF=/tmp/share/gitolite/conf
 
 die() { echo "$@"; exit 1; }
 
-TEMPDIR=$(mktemp -d)
+TEMPDIR=$(mktemp -d -t tmp.XXXXXXXXXX)
 export TEMPDIR
 trap "/bin/rm -rf $TEMPDIR" 0
 
