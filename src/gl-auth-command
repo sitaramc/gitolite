@@ -246,6 +246,9 @@ my $aa = ($verb =~ $R_COMMANDS ? 'R' : 'W');
 die "$aa access for $repo DENIED to $user
 (Or there may be no repository at the given path. Did you spell it correctly?)\n" unless $perm =~ /$aa/;
 
+# check if repo is write-enabled
+&check_repo_write_enabled($repo) if $aa eq 'W';
+
 # ----------------------------------------------------------------------------
 #       over to git now
 # ----------------------------------------------------------------------------

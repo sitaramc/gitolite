@@ -787,6 +787,16 @@ sub can_read {
     );
 }
 
+# helper to manage "disabling" a repo or the whole site for "W" access
+sub check_repo_write_enabled {
+    my ($repo) = shift;
+    for my $d ("$ENV{HOME}/.gitolite.down", "$ENV{GL_REPO_BASE_ABS}/$repo.git/.gitolite.down") {
+        next unless -f $d;
+        die $ABRT . `cat $d` if -s $d;
+        die $ABRT . "writes are currently disabled\n";
+    }
+}
+
 # ----------------------------------------------------------------------------
 #       setup the ~/.ssh/authorized_keys file
 # ----------------------------------------------------------------------------

@@ -28,6 +28,7 @@ In this document:
           * <a href="#_personal_branches">"personal" branches</a>
           * <a href="#_custom_hooks_and_custom_git_config">custom hooks and custom git config</a>
           * <a href="#_bypassing_gitolite">bypassing gitolite</a>
+          * <a href="#_disabling_write_access_to_take_backups">disabling write access to take backups</a>
       * <a href="#_INconvenience_features">INconvenience features</a>
           * <a href="#_deleting_a_repo">deleting a repo</a>
       * <a href="#_helping_with_gitweb">helping with gitweb</a>
@@ -539,6 +540,33 @@ repo also runs a `post-update` hook which needs additional information which
 is NOT available if you bypass gitolite.  Mucking with that repo in this
 manner is strongly discouraged, as in "are you feeling lucky today?".  Use
 `gl-dont-panic` if you need to do some server-side surgery for that repo.
+
+<a name="_disabling_write_access_to_take_backups"></a>
+
+##### disabling write access to take backups
+
+If you want to take normal, OS-level, backups of the system, you might want
+git to be quiescent during that time, so that the backup is clean.  The best
+way to do this is to disable write-access to the server for the duration of
+the backup.
+
+Here's how:
+
+    cd $HOME    # if running as "git" user, else "cd ~git" or whatever
+    echo writes disabled during backup window > .gitolite.down
+
+    # << RUN YOUR BACKUP COMMAND(s) HERE >>
+
+    rm .gitolite.down
+
+I leave it to you to
+
+  * make sure that if the backup script fails, the `.gitolite.down` file is
+    still removed (or not; maybe your policy is that if the backup failed, no
+    further writes are allowed.  Whatever...)
+  * if you're extremely paranoid (even I wouldn't worry about this!) make sure
+    that no push is *in progress* by checking for any `git-receive-pack`
+    processes in a `ps` output.
 
 <a name="_INconvenience_features"></a>
 

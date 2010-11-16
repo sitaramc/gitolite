@@ -1,0 +1,154 @@
+# vim: syn=sh:
+for bc in 0 1
+do
+    cd $TESTDIR
+    $TESTDIR/rollback || die "rollback failed"
+    editrc GL_BIG_CONFIG $bc
+    editrc GL_WILDREPOS 1
+
+    rm -rf /tmp/glt-adc
+    mkdir  /tmp/glt-adc || die "mkdir /tmp/glt-adc failed"
+    cp ../contrib/adc/* /tmp/glt-adc
+    echo "\$GL_ADC_PATH = '/tmp/glt-adc';" | addrc
+    runremote rm -f .gitolite.down
+
+    # ----------
+
+    name "INTERNAL"
+    echo "
+        @leads = u1 u2
+        @devs = u1 u2 u3 u4
+
+        repo foo
+            RW+     =   u1
+
+        @gbar = bar/CREATOR/..*
+        repo    @gbar
+            C               =   @leads
+            RW+             =   @leads
+            RW              =   @devs
+    " | ugc
+    expect_push_ok "master -> master"
+
+    name "u1 push foo"
+    cd ~/td
+    rm -rf foo
+    runlocal git clone u1:foo
+    expect "warning: You appear to have cloned an empty repository."
+    cd foo
+    mdc; mdc
+    runlocal git push origin master
+    expect_push_ok "master -> master"
+
+    name "u2 create and push bar/u2/r1"
+    cd ~/td
+    runlocal git clone u2:bar/u2/r1
+    expect "Initialized empty Git repository in /home/gitolite-test/repositories/bar/u2/r1.git/"
+    expect "warning: You appear to have cloned an empty repository."
+    cd r1
+    mdc; mdc
+    runlocal git push origin master
+    expect_push_ok "master -> master"
+
+    name "disable entire site"
+    runremote ls -al .gitolite.down
+    expect "ls: cannot access .gitolite.down: No such file or directory"
+    (echo first line; echo second line) | runlocal ssh gitolite able dis
+    expect "give me '@all' or some reponame"
+    (echo first line; echo second line) | runlocal ssh gitolite able dis @all
+    expect "disabling following locations with message:"
+    expect "first line second line"
+    expect "/home/gitolite-test"
+    runremote ls -al .gitolite.down
+    expect "^.rw------- 1 gitolite-test gitolite-test .. ... .. ..:.. .gitolite.down"
+
+    name "u1 push foo fail"
+    cd ~/td/foo
+    mdc; mdc
+    runlocal git push origin master
+    expect ABORTING
+    expect "first line second line"
+    expect "fatal: The remote end hung up unexpectedly"
+
+    name "u2 create and push bar/u2/r1 fail"
+    cd ~/td/r1
+    mdc; mdc
+    runlocal git push origin master
+    expect ABORTING
+    expect "first line second line"
+    expect "fatal: The remote end hung up unexpectedly"
+
+    name "enable entire site"
+    runlocal ssh gitolite able en
+    expect "give me '@all' or some reponame"
+    runlocal ssh gitolite able en @all
+    expect "removed ./home/gitolite-test/.gitolite.down."
+    runremote ls -al .gitolite.down
+    expect "ls: cannot access .gitolite.down: No such file or directory"
+
+    name "u1 push foo"
+    cd ~/td/foo
+    mdc; mdc
+    runlocal git push origin master
+    expect_push_ok "master -> master"
+
+    name "u2 create and push bar/u2/r1"
+    cd ~/td/r1
+    mdc; mdc
+    runlocal git push origin master
+    expect_push_ok "master -> master"
+
+    name "disable foo"
+    runlocal ssh u1 able dis foo
+    expect "just .what. are you trying to pull, young man"
+    echo foo down|runlocal ssh gitolite able dis foo
+    expect "disabling following locations with message:"
+    expect "foo down"
+    expect "/home/gitolite-test/repositories/foo.git"
+    runremote ls -al /home/gitolite-test/repositories/foo.git/.gitolite.down
+    expect ".rw------- 1 gitolite-test gitolite-test . ... .. ..:.. /home/gitolite-test/repositories/foo.git/.gitolite.down"
+
+    name "u1 push foo fail"
+    cd ~/td/foo
+    mdc; mdc
+    runlocal git push origin master
+    expect ABORTING
+    expect "foo down"
+    expect "fatal: The remote end hung up unexpectedly"
+
+    name "u2 create and push bar/u2/r1"
+    cd ~/td/r1
+    mdc; mdc
+    runlocal git push origin master
+    expect_push_ok "master -> master"
+
+    name "enable foo, disable bar/u2/r1"
+    runlocal ssh u1 able en foo
+    expect "just .what. are you trying to pull, young man"
+    runlocal ssh gitolite able en foo
+    expect "removed ./home/gitolite-test/repositories/foo.git/.gitolite.down."
+    echo bar/u2/r1 down | runlocal ssh u1 able dis foo
+    expect "just .what. are you trying to pull, young man"
+    echo bar/u2/r1 down | runlocal ssh gitolite able dis bar/u2/r1
+    expect "disabling following locations with message:"
+    expect "bar/u2/r1 down"
+    expect "/home/gitolite-test/repositories/bar/u2/r1.git"
+    runremote ls -al /home/gitolite-test/repositories/bar/u2/r1.git/.gitolite.down
+    expect ".rw------- 1 gitolite-test gitolite-test .. ... .. ..:.. /home/gitolite-test/repositories/bar/u2/r1.git/.gitolite.down"
+
+    name "u1 push foo"
+    cd ~/td/foo
+    mdc; mdc
+    runlocal git push origin master
+    expect_push_ok "master -> master"
+
+    name "u2 create and push bar/u2/r1i fail"
+    cd ~/td/r1
+    mdc; mdc
+    runlocal git push origin master
+    expect ABORTING
+    expect "bar/u2/r1 down"
+    expect "fatal: The remote end hung up unexpectedly"
+
+    name "INTERNAL"
+done

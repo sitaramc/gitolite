@@ -189,26 +189,9 @@ You can also do this for one or more individual repos; in place of `@all`,
 just use a space separated list of reponames (exactly as they would appear in
 the config file).  Wildcards are not supported; patches welcome ;-)
 
-**NOTE: This needs a specific secondary update hook**.  Creating a secondary
-update hook is described in the sections on "custom hooks" and "hook chaining"
-in doc/2.  You need code like this in `update.secondary` (don't forget to
-`chmod +x` the file):
+Note: please see [this][diswr] for more on this.
 
-    #!/bin/bash
-
-    for f in $HOME/.gitolite.down $PWD/.gitolite.down
-    do
-        if [ -f $f ]
-        then
-            echo >&2
-            echo '*** ABORT ***' >&2
-            echo >&2
-            cat $f >&2
-            exit 1
-        fi
-    done
-
-    exit 0
+[diswr]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#_disabling_write_access_to_take_backups
 
 <a name="_bonus_restricted_admin"></a>
 

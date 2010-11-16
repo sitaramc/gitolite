@@ -18,12 +18,15 @@ do
             locs="$locs $HOME"
             ;;
         * )
+            loc="$GL_REPO_BASE_ABS/$1.git"
             [ -d $loc ] && locs="$locs $GL_REPO_BASE_ABS/$1.git"
             [ -d $loc ] || echo "ignoring $1..."
             ;;
     esac
     shift
 done
+
+[[ -z "$locs" ]] && die "give me '@all' or some reponame"
 
 case $op in
     en|enable )
@@ -35,9 +38,13 @@ case $op in
     dis|disable )
         # bashism
         read msg <<<$(cat)
+        echo disabling following locations with message:
+        echo $msg
+        echo
         for l in $locs
         do
             echo $msg > $l/.gitolite.down
+            echo $l
         done
         ;;
     * )
