@@ -49,7 +49,7 @@ fi
 
 # ------------------------------------------------------------------------
 # arg check
-die() { echo "$@"; exit 1; }
+die() { echo "$@"; exit 1; } >&2
 cd $HOME        # if he didn't *start* there, it's his bloody fault
 [ -f "$1" ] || [ "$1" = "rewind" ] || die "need a valid file or 'rewind'"
 if [ "$1" = "rewind" ]

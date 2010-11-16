@@ -26,7 +26,7 @@
 # END USAGE
 
 
-die() { echo "$@"; exit 1; }
+die() { echo "$@"; exit 1; } >&2
 
 if [ -z "$1" ]
 then

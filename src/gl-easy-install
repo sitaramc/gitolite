@@ -73,7 +73,7 @@ cleanup() {
 # service functions
 # ----------------------------------------------------------------------
 
-die() { echo "$@"; echo; echo "run $0 without any arguments for help and tips"; cleanup; exit 1; }
+die() { echo "$@"; echo; echo "run $0 without any arguments for help and tips"; cleanup; exit 1; } >&2
 prompt() {
     # receives two arguments.  A short piece of text to be displayed, without
     # pausing, in "quiet" mode, and a much longer one to be displayed, *with*

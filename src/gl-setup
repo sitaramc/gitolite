@@ -18,7 +18,7 @@ GL_PACKAGE_CONF=/tmp/share/gitolite/conf
 # pubkey file if you happen to have lost all gitolite-access to the repos (but
 # do have shell access via some other means)
 
-die() { echo "$@"; exit 1; }
+die() { echo "$@"; exit 1; } >&2
 
 TEMPDIR=$(mktemp -d -t tmp.XXXXXXXXXX)
 export TEMPDIR
