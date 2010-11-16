@@ -191,65 +191,82 @@ Just copying everything won't work unless everything on the new server is
 exactly the same.  I suggest you don't try it unless you know what you're
 doing.
 
-[If you feel like doing it on your own, just be aware that copying the repos
-as they are *may* give you wrong hooks.  Or worse, since the hooks are
-symlinks, a dangling symlink means it won't get executed.  And an update hook
-that does not get executed is **BAD** :-)]
+**Assumptions**
 
-The following should work for all cases.  Note that this is a somewhat
-pessimal series of instructions -- if you know how it all hangs together you
-can probably think of easier ways.
+  * you have not changed `$REPO_BASE` on either of the servers; if you did,
+    substitute accordingly
+  * the admin's name is "YourName" -- again, substitute accordingly!
+  * the "hosting user" on both servers is "git".  Substitute whatever you're
+    actually using (for example, if you're installing using RPM/DEB, this
+    would be "gitolite")
 
-  * (workstation) reclone your current admin repo (from the old server) to a
-    backup location for safety
+There are many ways of doing this, but the most *generic* set of steps are
+given below.  Please follow all the steps; do not skip or improvise!  Ask me
+if things are not clear -- you can help me fine tune this document :-)
 
-        cd $HOME; mkdir admin-bkp; cd admin-bkp
-        git clone git@oldserver:gitolite-admin
-            # git clone gitolite:gitolite-admin if you used the "from-client"
-            # method to install
-
-  * (workstation) if your old server was installed using the "from-client"
-    method, edit `~/.ssh/config` and change the line that says `host gitolite`
-    to `host old-gitolite`.  Don't change it to "host gitolite-old" or
-    anything that matches the string "host gitolite" :-)
-
-  * (old server) disable the old server so your users will not push any
+  * (old server) **disable** the old server so your users will not push any
     changes to it.  There are several ways to do this, but the simplest is to
     insert this line at the top of `~/.gitolite.rc` on the old server:
 
         exit 1;
 
-  * (new server) copy the entire repositories directory (or wherever you have
-    `$REPO_BASE` pointing to) from the old server to the new server.
+  * (new server) **copy** the repos to the new server, **except** the
+    `gitolite-admin` repo and files called `gitolite-hooked` in the `hooks`
+    directory of each repo.
 
-        # (on new server, assuming default $REPO_BASE on both machines)
+    That sounds complicated but it's not.  It's just:
+
         cd $HOME
-        rsync -avP git@oldserver:repositories .
+        rsync -a olduser@oldhost:repositories .
+        mv repositories/gitolite-admin.git $HOME/old-gitolite-admin.git
+        find repositories -name gitolite-hooked | xargs rm
 
-    Note the syntax of that rsync command carefully; one extra "/" somewhere
-    and it will do something else :-)  Or use some other method to copy the
-    whole thing.
+  * (workstation) if your old server was installed using the "from-client"
+    method, and you intend to use the same method to install the new server,
+    then
 
-  * (workstation, new server) make a brand new installation on the new server.
-    You must use the same keypair for the admin, with the same name.  However,
-    it is not necessary to use the same *install method*; if one of the other
-    install methods is better for you on the new server, go for it.
+      * edit `~/.ssh/config` and change the line that says `host gitolite` to
+        `host old-gitolite`, or in fact anything that does not match the
+        string "host gitolite" :-)
 
-    This will end up overwriting the rsync-copied gitolite-admin repo with a
-    brand new "factory default" one.
+  * (workstation, new server) **install** gitolite normally on your new
+    server.  Use whatever install method suits you, but you must use the
+    **same** name for the admin ("YourName" in the install instructions).  You
+    may use a different keypair if you need to, or use the same one that
+    currently gets access to the old server.
 
-  * (new server) manually adjust the `~/.gitolite.rc` file to match the
-    settings on the old server.  Do not copy the entire file outright -- some
+  * (new server) **edit** the `~/.gitolite.rc` file to match the settings on
+    the old server, if needed.  Do not copy the entire file outright -- some
     of the variables (notably `GL_PACKAGE_CONF` and `GL_PACKAGE_HOOKS`) are
-    installation dependent and should not be touched!
+    installation dependent and should not be touched!  Do a diff or a vimdiff
+    and copy across only what you know *you* changed on the old server.
 
-  * (workstation) go to your backup repo and force push it up to the new
-    server:
+  * (workstation) **push** the config to the new server.  To do this, go to
+    your admin clone, and:
 
-        cd ~/admin-bkp/gitolite-admin
-        git push -f git@newserver:gitolite-admin
-            # git push -f gitolite:gitolite-admin if you used the
-            # "from-client" method to install
+      * if you used a different keypair when installing to the new server,
+        copy that pubkey to this clone into `keydir/Yourname.pub`, then add
+        and commit the change to the pubkey
+
+            cd gitolite-admin
+            cp path/to/new/YourName.pub keydir/YourName.pub
+            git add keydir
+            git commit -m "new server, new key"
+
+      * if you did *not* use a different keypair, just make a dummy commit
+
+            git commit -m "new server" --allow-empty
+
+      * set the URL for the new server
+
+            git remote --set-url origin git@newserver:gitolite-admin
+                # if you used easy install this will be "gitolite:gitolite-admin"
+
+      * push the config, including past history
+
+            git push -f
+
+And that should be that!
 
 <a name="gwd"></a>
 
