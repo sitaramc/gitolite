@@ -1,0 +1,85 @@
+#!/bin/sh
+
+. $(dirname $0)/adc.common-functions
+
+# Copyright 2010 Massachusetts Institute of Technology
+#
+# Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+
+# This "watch" ADC can be used to maintain a list of watchers to a
+# repository. You can then perform actions on the watchlist from a
+# hook or ADC.
+#
+# An obvious function of this would be to maintain a list of email
+# addresses that are sent commit notifications. There are however
+# unlimited uses, such as:
+#
+# * Specifying Twitter accounts that should receive notifications
+#   of new clones created via the "fork" ADC
+# * Specifying hostnames of machines that should be poked to update
+#   their repository web views
+# * Etc...
+#
+# The parameters are the repository path, "add"/"remove", and the
+# identifier. These are added along with your system identifier to a 
+# gl-watchers file. However, there is an optional argument that allows you
+# specify what the identifier is used for. This allows you to perform
+# a default action if there is no optional argument, or a specific action
+# depending on what the optional argument. For instance, the gl-watchers
+# file on the server might look like this (note the actions described would
+# only occur if you actually code it in!):
+# 
+# mitchell  mitchell@kde.org [no optional argument; would default to email]
+# mitchell  mitchell@kde.org email [will send email on pushes]
+# mitchell  projects.kde.org httppost [will send commit details in an
+#                                      HTTP POST to proejcts.kde.org]
+#
+#
+# Note that there is no authentication here; any user is allowed to
+# set any identifier, although users can only modify their own
+# identifiers. (This applies of course only to repositories a user can read
+# in the first place!) This script can easily be modified to only allow only
+# administrators (those with write access to the gitolite
+# administration repository) to add or remove watchers. See the
+# commented code below; uncomment it to enable this functionality.
+
+# Adminstrators can use the "sudo" ADC to add entries for specific
+# users.
+
+# Uncomment this and comment the corresponding block below to 
+# restrict this functionality to administrators only
+#get_rights_and_owner gitolite-admin
+#[ -z "$perm_write" ] && die "just *what* are you trying to pull, young man?"
+#get_rights_and_owner $1;
+
+# Comment this block if uncommenting the above block
+get_rights_and_owner $1;
+[ -z "$perm_read" ] && die "no read permissions on $repo"
+
+cmd=$2
+identifier=$3
+arg=$4
+[ -z "$cmd" -o -z "$identifier" -o "$cmd" != "add" -a "$cmd" != "remove" ] && die "paramters must be <repopath> <add|remove> <identifier> <optional argument>"
+
+if [ ! -z "$arg" ]
+  then
+    identarg="$identifier $arg"
+  else
+    identarg="$identifier"
+fi
+
+cd $GL_REPO_BASE_ABS/$repo.git
+[ ! -e gl-watchers ] && { touch gl-watchers || die "cannot create blank watchers file"; }
+[ ! -r gl-watchers ] && die "cannot read watchers file"
+
+grep "^$GL_USER $identarg$" gl-watchers > /dev/null
+found=$?
+
+[ $found -eq 0 -a $cmd == "add" ] && die "There is already a watch \"$identarg\" for user $GL_USER"
+[ $found -ne 0 -a $cmd == "remove" ] && die "No watch \"$identarg\" found for user $GL_USER"
+
+[ $cmd == "add" ] && echo "$GL_USER $identarg" >> gl-watchers && { echo "Added a watch \"$identarg\" for user $GL_USER"; exit 0; }
+
+[ $cmd == "remove" ] && sed -i -e "/^$GL_USER $identarg$/d" gl-watchers && { echo "Removed a watch \"$identarg\" for user $GL_USER"; exit 0; }
+
+die "16 cores, 320GB of RAM, 4TB of disk, and you give me a command I am not programmed to do. Humans..."
