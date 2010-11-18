@@ -99,11 +99,12 @@ touch $HOME/.ssh/authorized_keys
 gl-compile-conf -q
 
 # setup push-to-admin
-od=$PWD
-cd; cd $REPO_BASE/gitolite-admin.git
-GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
-GIT_WORK_TREE=$GL_ADMINDIR git diff --cached --quiet 2>/dev/null || GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
-cd $od
+(
+    cd $HOME; cd $REPO_BASE/gitolite-admin.git
+    GIT_WORK_TREE=$GL_ADMINDIR; export GIT_WORK_TREE
+    git add conf/gitolite.conf keydir
+    git diff --cached --quiet 2>/dev/null || git commit -am start
+)
 
 # now that the admin repo is created, you have to set the hooks properly; best
 # do it by running install again
