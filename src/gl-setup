@@ -42,8 +42,11 @@ fi
 
 if [ -f $HOME/.gitolite.rc ]
 then
-    perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < $GL_PACKAGE_CONF/example.gitolite.rc | sort > $TEMPDIR/.newvars
-    perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < $HOME/.gitolite.rc                   | sort > $TEMPDIR/.oldvars
+    print_rc_vars() {
+        perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < $1 | sort
+    }
+    print_rc_vars $GL_PACKAGE_CONF/example.gitolite.rc > $TEMPDIR/.newvars
+    print_rc_vars $HOME/.gitolite.rc                   > $TEMPDIR/.oldvars
     comm -23 $TEMPDIR/.newvars $TEMPDIR/.oldvars > $TEMPDIR/.diffvars
     if [ -s $TEMPDIR/.diffvars ]
     then
@@ -81,8 +84,11 @@ fi
 
 gl-install -q
 
-GL_ADMINDIR=` cd $HOME;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR'`
-REPO_BASE=`   cd $HOME;perl -e 'do ".gitolite.rc"; print $REPO_BASE'  `
+get_rc_val() {
+    perl -e "do '$HOME/.gitolite.rc'; print $1"
+}
+GL_ADMINDIR=$(get_rc_val '$GL_ADMINDIR')
+REPO_BASE=$(  get_rc_val '$REPO_BASE'  )
 
 [ -f $GL_ADMINDIR/conf/gitolite.conf ] || {
     cat <<EOF > $GL_ADMINDIR/conf/gitolite.conf
