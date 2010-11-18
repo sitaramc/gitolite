@@ -369,8 +369,8 @@ sub new_repo
                 # you add CAT => @all to the hash.  similarly, if gl-perms has
                 # "DOG bar foo baz", you add DOG => foo to the hash.  And
                 # since specific perms must override @all, we do @all first.
-                $perm_cats{$1} = '@all' while ($perms =~ /^\h*(\S+)(?=\h).*\h\@all(\h|$)/mg);
-                $perm_cats{$1} = $user while ($perms =~ /^\h*(\S+)(?=\h).*\h$user(\h|$)/mg);
+                $perm_cats{$1} = '@all' while ($perms =~ /^[ \t]*(\S+)(?=[ \t]).*[ \t]\@all([ \t]|$)/mg);
+                $perm_cats{$1} = $user while ($perms =~ /^[ \t]*(\S+)(?=[ \t]).*[ \t]$user([ \t]|$)/mg);
                 # validate the categories being sent back
                 for (sort keys %perm_cats) {
                     die "invalid permission category $_\n" unless $GL_WILDREPOS_PERM_CATS =~ /(^|\s)$_(\s|$)/;
