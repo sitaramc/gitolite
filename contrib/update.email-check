@@ -1,0 +1,71 @@
+#!/usr/bin/perl
+
+# Technical notes:
+
+    # Gitolite specific script to check "author email" field of every commit
+    # pushed and to disallow if this email does not match the email that the
+    # user pushing is expected to have.  Needs to be renamed to
+    # "update.secondary"; see gitolite docs for how to propagate this to all
+    # repos.
+
+    # Use without gitolite is also possible; just substitute your access
+    # control system's notion of "user" for the env var GL_USER in the code
+    # below and probably call it "update" if you dont already have an update
+    # hook.
+
+    # Mapping between "username" and "email address" is encapsulated in a
+    # subroutine for ease of changing; see code below.
+
+# Philosophical notes:
+
+    # Doing this breaks the "D" in "DVCS", forcing all your developers to work
+    # to a centralised model as far as pushes are concerned.  It prevents
+    # amending someone else's commit and pushing (this includes rebasing,
+    # cherry-picking, and so on, which are all impossible now).  It also makes
+    # *any* off-line collabaration between two developers useless, because
+    # neither of them can push the result to the server.
+
+    # PHBs should note that validating the committer ID is NOT the same as
+    # reviewing the code and running QA/tests on it.  If you're not
+    # reviewing/QA-ing the code, it's probably worthless anyway.  Conversely,
+    # if you *are* going to review the code and run QA/tests anyway, then you
+    # don't really need to validate the author email!
+
+    # In a DVCS, if you *pushed* a series of commits, you have -- in some
+    # sense -- signed off on them.  The most formal way to "sign" a series is
+    # to tack on and push a gpg-signed tag, although most people don't go that
+    # far.  Gitolite's log files are designed to preserve that accountability
+    # to *some* extent, though; see contrib/adc/who-pushed for an admin
+    # defined command that quickly and easily tells you who *pushed* a
+    # particular commit.
+
+    # Anyway, the point is that the only purpose of this script is to
+    #     - pander to someone who still has not grokked *D*VCS
+    #           OR
+    #     - tick off an item in some stupid PHB's checklist
+
+use strict;
+use warnings;
+
+# mapping between gitolite userid and correct email address is encapsulated in
+# this subroutine; change as you like
+sub email_ok
+{
+    my ($author_email) = shift;
+    my $expected_email = "$ENV{GL_USER}\@atc.tcs.com";
+    return $author_email eq $expected_email;
+}
+
+# print STDERR "SECONDARY HOOK:\n" . join(",", @ARGV, "\n");
+
+my ($ref, $old, $new) = @ARGV;
+for my $rev ( `git log --format="%ae\t%h\t%s" $new --not --all` ) {
+    chomp($rev);
+    my ($author_email, $hash, $subject) = split /\t/, $rev;
+
+    die "$ENV{GL_USER}, you can't push $hash authored by $author_email\n" .
+        "\t(subject of commit was $subject)\n"
+    unless email_ok($author_email);
+}
+
+exit 0;
