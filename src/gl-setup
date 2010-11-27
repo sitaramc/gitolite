@@ -91,7 +91,7 @@ GL_ADMINDIR=$(get_rc_val '$GL_ADMINDIR')
 REPO_BASE=$(  get_rc_val '$REPO_BASE'  )
 
 [ -f $GL_ADMINDIR/conf/gitolite.conf ] || {
-    cat <<EOF > $GL_ADMINDIR/conf/gitolite.conf
+    cat <<EOF | cut -c9- > $GL_ADMINDIR/conf/gitolite.conf
         repo    gitolite-admin
                 RW+     =   $admin_name
 

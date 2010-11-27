@@ -403,11 +403,11 @@ initial_conf_key() {
     echo "#gitolite conf
 # please see conf/example.conf for details on syntax and features
 
-repo gitolite-admin
-    RW+                 = $admin_name
+repo    gitolite-admin
+        RW+     =   $admin_name
 
-repo testing
-    RW+                 = @all
+repo    testing
+        RW+     =   @all
 
 " > $tmpgli/gitolite.conf
 
