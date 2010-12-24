@@ -101,7 +101,6 @@ There *is* a way to use the `@all` syntax for repos also, as described in
   * don't use `NAME/` or such restrictions on the special `@all` repo.  Due to
     the potential for defeating a crucial optimisation and slowing down *all*
     access, we do not support this.
-  * don't try giving `@all` users some permission for `@all` repos
 
 <a name="_umask_setting"></a>
 

@@ -264,6 +264,15 @@ commands, thanks to Teemu.
 In order to see what repositories were created from a wildcard, use the
 "expand" command, described briefly in [doc/report-output.mkd][repout].
 
+### deleting a wild repo
+
+See [repo deletion][rmr] for more on this.  Note that this requires you to
+install/setup "adc"s (admin defined commands).  See
+[doc/admin-defined-commands.mkd][adc] for how to do that.
+
+[adc]: http://github.com/sitaramc/gitolite/blob/pu/doc/admin-defined-commands.mkd
+[rmr]: http://github.com/sitaramc/gitolite/blob/pu/contrib/adc/repo-deletion.README
+
 <a name="_how_it_actually_works"></a>
 
 ### how it actually works

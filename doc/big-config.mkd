@@ -11,6 +11,7 @@ In this document:
   * <a href="#_storing_usergroup_information_outside_gitolite_like_in_LDAP_">storing usergroup information outside gitolite (like in LDAP)</a>
       * <a href="#_why">why</a>
       * <a href="#_how">how</a>
+  * <a href="#_implementation_notes">implementation notes</a>
 
 <a name="_when_why_do_we_need_it_"></a>
 
@@ -292,3 +293,45 @@ Then set the `$GL_GET_MEMBERSHIPS_PGM` variable in the rc file to the full
 path to this program, set `$GL_BIG_CONFIG` to 1, and that will be that.
 
 [gwd]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#gwd
+
+<a name="_implementation_notes"></a>
+
+### implementation notes
+
+To understand how big-config works, we'll first look at how it works without
+this setting.  Think back to the example at the top, and assume 'alice' is
+accessing the 'lynx' repo.  The various rights are governed by the following
+hash elements:
+
+    # for the first level checks
+    $repos{'lynx'}{'R'}{'alice'} = 1
+    $repos{'lynx'}{'W'}{'alice'} = 1
+
+    # for the second level checks
+    $repos{'lynx'}{'alice'}{'refs/heads/master'} = 'RW';
+    $repos{'lynx'}{'alice'}{'refs/heads/next'} = 'RW+';
+
+Those elements are explicitly specified in the compiled hash, as you can see
+(you don't need to know perl too much to read a hash; just make some educated
+guesses if needed!)
+
+Now look at the compiled hash produced when `GL_BIG_CONFIG` is set.  In place
+of both 'firefox' and 'lynx' you have '@wbr', and similarly '@devs' for both
+'alice' and 'bob'.  In addition, there is a group hash at the bottom that
+lists each group and its members.
+
+When 'alice' tries to access the 'lynx' repo, gitolite collects all the group
+names that these names belong to, so '@devs' is added to the list of 'user'
+names that 'alice' inherits permissions from, and '@wbr' is added to the list
+of 'repo' names that 'lynx' inherits from.  This means that the final access
+inherits all permissions pertaining to the following combinations:
+
+    alice, lynx
+    alice, @wbr
+    @devs, lynx
+    @devs, @wbr
+
+(Actually there are 3 more... try and guess what they may be!)
+
+Anyway, all ACL rules for these combinations are clubbed together to make the
+composite set of rules that 'alice' accessing 'lynx' is subject to.

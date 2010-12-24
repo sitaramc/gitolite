@@ -143,7 +143,7 @@ detail somewhere in gitolite's [doc/][docs] subdirectory.
 
 Most installation problems are caused by not knowing ssh.  Take a look at this
 [transcript][] to see how simple it actually is, if your server's ssh daemon
-is behaving itself.
+is behaving itself.  Someone also wrote a tutorial, see [here][tut].
 
 If I suspect your problem is an ssh issue, I will probably ignore it.  Please
 learn how [gitolite uses ssh][doc9gas] and then methodically go through the
@@ -194,4 +194,4 @@ Gitolite is released under GPL v2.  See COPYING for details.
 [doc9gas]: http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite-and-ssh.mkd
 [doc6sts]: http://github.com/sitaramc/gitolite/blob/pu/doc/ssh-troubleshooting.mkd
 [who]: http://github.com/sitaramc/gitolite/blob/pu/doc/who-uses-it.mkd
-
+[tut]: http://sites.google.com/site/senawario/home/gitolite-tutorial

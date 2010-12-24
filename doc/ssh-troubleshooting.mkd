@@ -39,6 +39,8 @@ Other resources:
   * people who think this is too hard should take a look at this
     [transcript][] to **see how simple it *actually* is**.
 
+  * someone also wrote a tutorial, see [here][tut].
+
   * I **strongly** recommend reading [doc/gitolite-and-ssh.mkd][doc9gas],
     which is a very detailed look at how gitolite uses ssh's features on the
     server side.  Most people don't know ssh as well as they *think* they do;
@@ -421,9 +423,9 @@ or
 
     gl-tool shell-add ~/foo.pub
 
-The first method is to be used if you used the **user-install** mode, while
-the second method is for the **system-install followed by user-setup** mode
-(see doc/1-INSTALL.mkd, section on "install methods", for more on this)
+The first method is applicable if you installed using the **from-client**
+method, while the second method is for any of the other three (see
+doc/1-INSTALL.mkd, section on "install methods", for more on this)
 
 **IMPORTANT UPGRADE NOTE**: previous implementations of this feature were
 crap.  There was no easy/elegant way to ensure that someone who had repo admin
@@ -474,3 +476,4 @@ bigger problems than gitolite install not working!)]
 [repout]: http://github.com/sitaramc/gitolite/blob/pu/doc/report-output.mkd
 [transcript]: http://github.com/sitaramc/gitolite/blob/pu/doc/install-transcript.mkd
 [openssh56]: http://www.openssh.org/txt/release-5.6
+[tut]: http://sites.google.com/site/senawario/home/gitolite-tutorial
