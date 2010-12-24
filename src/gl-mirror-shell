@@ -16,7 +16,7 @@ then
     GL_ADMINDIR=` cd $HOME;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR'`
     GL_BINDIR=`echo $0 | perl -lpe 's/^/$ENV{PWD}\// unless /^\//; s/\/[^\/]+$//;'`
 
-    SSH_ORIGINAL_COMMAND=`echo $SSH_ORIGINAL_COMMAND | sed -e "s/'/'$REPO_BASE\//"`
+    SSH_ORIGINAL_COMMAND=`echo $SSH_ORIGINAL_COMMAND | sed -e "s:':'$REPO_BASE/:"`
     exec git shell -c "$SSH_ORIGINAL_COMMAND"
 else
     bash -c "cd $REPO_BASE; $SSH_ORIGINAL_COMMAND"
