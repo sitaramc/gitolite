@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+unshift @INC, $ENV{GL_BINDIR};
+require gitolite or die "parse gitolite.pm failed\n";
+
+# get the repo name
+my $repo = shift;
+$repo =~ s/\.git$//;
+# IMPORTANT NOTE: to do any of this inside a hook, you should just use
+# $ENV{GL_REPO}, since it's guaranteed to be set to the right value
+
+
+
+# to do a "level 1" check (repo level -- not branch level), do this:
+my ($perm, $creator) = &check_access($repo);
+# you can pass in any repo name you wish instead of the active repo
+
+# the first return value looks like one of these, so you can just check for
+# the presence of "R" or "W" and be done:
+#   _____R___W_
+#   _____R_____
+#   ___________
+
+# The second value is "<gitolite>" for a normal repo,  an actual username for
+# a wildrepo, or "<notfound>" for a non-existent repo.
+
+
+
+# to do a "level 2" check (branches), do something like this
+my $ret = &check_access($repo, 'refs/heads/foo', 'W', 1);
+# the 2nd argument must be a *full* refname (i.e., not "master", but
+# "refs/heads/master").  The 3rd argument is one of W, +, C, or D.  The 4th
+# argument should be any non-false perl value, like 1.
+
+# the return value may look like this:
+#   refs/.*
+# or perhaps this, if you were denied
+#   DENIED by fallthru

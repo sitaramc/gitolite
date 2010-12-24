@@ -151,21 +151,21 @@ sub check_ref {
     # permission must also match the action (W or +) being attempted.  If none
     # of them match, the access is denied.
 
-    # Notice that the function DIES!!!  Any future changes that require more
-    # work to be done *after* this, even on failure, can start using return
-    # codes etc., but for now we're happy to just die.
+    # Notice that the function DIES unless a non-false 5th argument is present
 
-    my ($allowed_refs, $repo, $ref, $perm) = @_;
+    my ($allowed_refs, $repo, $ref, $perm, $dry_run) = @_;
     my @allowed_refs = sort { $a->[0] <=> $b->[0] } @{$allowed_refs};
     for my $ar (@allowed_refs) {
         my $refex = $ar->[1];
         # refex?  sure -- a regex to match a ref against :)
         next unless $ref =~ /^$refex/;
+        return "DENIED by $refex" if $ar->[2] eq '-' and $dry_run;
         die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->[2] eq '-';
 
         # as far as *this* ref is concerned we're ok
         return $refex if ($ar->[2] =~ /\Q$perm/);
     }
+    return "DENIED by fallthru" if $dry_run;
     die "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n";
 }
 
@@ -770,10 +770,9 @@ sub expand_wild
 
 # helper/convenience routine to get rights and ownership from a shell command
 sub cli_repo_rights {
-    my ($perm, $creator, $wild) = &repo_rights($_[0]);
-    $perm =~ s/ /_/g;
-    $creator =~ s/^\(|\)$//g;
-    print "$perm $creator\n";
+    # check_access does a lot more, so just call it.  Since it returns perms
+    # and creator separately, just space-join them and print it.
+    print join(" ", &check_access($_[0])), "\n";
 }
 
 sub can_read {
@@ -1046,10 +1045,13 @@ sub get_memberships {
 
 sub check_access
 {
-    my ($GL_CONF_COMPILED, $repo, $path, $perm) = @_;
-    my $ref = "NAME/$path";
+    my ($repo, $ref, $aa, $dry_run) = @_;
+    # aa = attempted access
 
-    &parse_acl($GL_CONF_COMPILED);
+    my ($perm, $creator, $wild) = &repo_rights($repo);
+    $perm =~ s/ /_/g;
+    $creator =~ s/^\(|\)$//g;
+    return ($perm, $creator) unless $ref;
 
     # until I do some major refactoring (which will bloat the update hook a
     # bit, sadly), this code duplicates stuff in the current update hook.
@@ -1062,7 +1064,11 @@ sub check_access
     push @allowed_refs, @ { $repos{'@all'}{$ENV{GL_USER}} || [] };
     push @allowed_refs, @ { $repos{$repo}{'@all'} || [] };
 
-    &check_ref(\@allowed_refs, $repo, $ref, $perm);
+    if ($dry_run) {
+        return &check_ref(\@allowed_refs, $repo, $ref, $aa, $dry_run);
+    } else {
+        &check_ref(\@allowed_refs, $repo, $ref, $aa);
+    }
 }
 
 # ----------------------------------------------------------------------------
@@ -1092,7 +1098,7 @@ sub ext_cmd_rsync
     # ok now check if we're permitted to execute a $perm action on $path
     # (taken as a refex) using rsync.
 
-    &check_access($GL_CONF_COMPILED, 'EXTCMD/rsync', $path, $perm);
+    &check_access('EXTCMD/rsync', "NAME/$path", $perm);
         # that should "die" if there's a problem
 
     wrap_chdir($RSYNC_BASE);
