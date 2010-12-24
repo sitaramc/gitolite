@@ -891,7 +891,8 @@ sub setup_authkeys
         my @no_pubkey =
             grep { $_ !~ /^(gitweb|daemon|\@.*|~\$creator)$/ }
                 grep { $user_list_p->{$_} ne 'has pubkey' }
-                    keys %{$user_list_p};
+                    grep { $GL_WILDREPOS_PERM_CATS !~ /(^|\s)$_(\s|$)/ }
+                        keys %{$user_list_p};
         if (@no_pubkey > 10) {
             print STDERR "$WARN You have " . scalar(@no_pubkey) . " users WITHOUT pubkeys...!\n";
         } elsif (@no_pubkey) {
