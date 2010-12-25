@@ -2,7 +2,19 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
-  - v.1.5.7
+  - allow full access checks from perl (shell can only do level 1 checks);
+    useful in hooks or ADCs
+
+  - v1.5.8
+
+  - Jeff from KDE contributed the watch ADC
+  - allow disabling gitolite (write access only) to take backups
+  - document how to move gitolite from one server to another
+
+  - custom permissions categories (default being READERS and WRITERS) for
+    setperms (thanks to Jeff from KDE for the idea/need)
+
+  - v1.5.7
 
   - "help" adc can allow site local help text to be shown
   - "who-pushed" adc to find out who pushed a given commit
