@@ -23,13 +23,9 @@ repos, you can use plain Unix permissions to get a lot of this done:
         git init --bare --shared reponame.git
 
   * For each user who needs access to the repos, add them as members to the
-    "git" group also.  On Mandriva this is:
+    "git" group also.  On Fedora this is:
 
-        usermod -G git username
-
-    Don't forget that `-G` *replaces* the list of supplementary groups for the
-    user, so be sure to first check if he is already member of some groups and
-    keep those in the command (comma-separated).
+        usermod -a -G git username
 
 And that's basically it.  The "init --shared" will create the repos with
 "chmod -R g+s".  If you have existing repos where you forgot (or didn't know)
