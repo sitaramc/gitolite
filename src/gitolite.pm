@@ -265,8 +265,15 @@ sub where_is_rc
 
     return if $ENV{GL_RC};
 
-    my $glrc = $ENV{HOME} . "/.gitolite.rc";
-    $ENV{GL_RC} = $glrc if (-f $glrc);
+    # Fedora doesn't actually have a "hosting user" at all (yeah -- bet you
+    # didn't know gitolite was *that* flexible!), so there's no fixed $HOME,
+    # and they prefer to keep their RC file in /etc/gitolite.
+    for my $glrc ( $ENV{HOME} . "/.gitolite.rc", "/etc/gitolite/gitolite.rc" ) {
+        if (-f $glrc) {
+            $ENV{GL_RC} = $glrc;
+            last;
+        }
+    }
 }
 
 # ----------------------------------------------------------------------------
