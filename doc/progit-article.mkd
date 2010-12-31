@@ -24,7 +24,7 @@ We will describe this last method in this article; for the other methods please 
 
 You start by obtaining public key based access to your server, so that you can log in from your workstation to the server without getting a password prompt.  The following method works on Linux; for other workstation OSs you may have to do this manually.  We assume you already had a key pair generated using `ssh-keygen`.
 
-	$ ssh-copy-id -i ~/.ssh/id_rsa gitolite@gitserver
+	$ ssh-copy-id -i ~/.ssh/id_rsa.pub gitolite@gitserver
 
 This will ask you for the password to the gitolite account, and then set up public key access.  This is **essential** for the install script, so check to make sure you can run a command without getting a password prompt:
 

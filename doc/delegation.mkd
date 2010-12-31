@@ -71,7 +71,7 @@ in charge of malware ;-)
 
 [abe]: http://en.wikipedia.org/wiki/Alice_and_Bob#List_of_characters
 
-You do this by adding branches to the `gitolite-admin` repo:
+You do this by adding files with specific names to the `gitolite-admin` repo:
 
     # the admin repo access was probably like this to start with:
     repo gitolite-admin

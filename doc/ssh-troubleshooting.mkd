@@ -307,7 +307,7 @@ from scratch:
     `sitaram`, along with corresponding `.pub` files).  Create them if needed.
     Also make sure they are *different* and not a copy of each other :-)
   * install gitolite normally:
-      * run `ssh-copy-id -i ~/.ssh/id_rsa git@server` to get passwordless
+      * run `ssh-copy-id -i ~/.ssh/id_rsa.pub git@server` to get passwordless
         access to the server.  (Mac users may have to do this step manually)
       * make sure `ssh git@server pwd` prints the `$HOME` of `git@server`
         **without** asking for a password.  Do not proceed till this works.

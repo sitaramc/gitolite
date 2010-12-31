@@ -1,6 +1,7 @@
 # configuration variables for gitolite
 
 # PLEASE READ THE DOCUMENTATION BEFORE EDITING OR ASKING QUESTIONS
+# ( http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite.rc.mkd )
 
 # this file is meant to be pulled into a perl program using "do" or "require".
 # You do NOT need to know perl to edit the paths; it should be fairly

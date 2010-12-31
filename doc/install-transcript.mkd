@@ -127,7 +127,7 @@ described in the `ssh-copy-id` section in `doc/3-faq-tips-etc.mkd`).
     |  ..             |
     +-----------------+
 
-    sita@sita-lt:~ $ ssh-copy-id -i ~/.ssh/id_rsa git@server
+    sita@sita-lt:~ $ ssh-copy-id -i ~/.ssh/id_rsa.pub git@server
     git@server's password:
     /usr/bin/xauth:  creating new authority file /home/git/.Xauthority
     Now try logging into the machine, with "ssh 'git@server'", and check in:
