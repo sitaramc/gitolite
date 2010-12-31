@@ -1,0 +1,325 @@
+# configuration variables for gitolite
+
+This is the documentation for the contents of the "rc" file
+(`$HOME/.gitolite.rc`) on the server.  Until now this documentation was
+inline, within the rc file itself, but it has grown too large, too unwieldy,
+and too difficult to grok for people new to gitolite.
+
+The documentation follows approximately the same order as the sample variables
+in the (now reorganised) example "rc" file.
+
+In this document:
+
+  * <a href="#_variables_that_should_not_be_touched_at_all">variables that should not be touched at all</a>
+  * <a href="#_most_often_used_changed_variables">most often used/changed variables</a>
+  * <a href="#_variables_with_an_efficiency_impact">variables with an efficiency impact</a>
+  * <a href="#_variables_with_a_security_impact">variables with a security impact</a>
+  * <a href="#_less_used_changed_variables">less used/changed variables</a>
+  * <a href="#_rarely_changed_variables">rarely changed variables</a>
+
+[Note: in perl, there is no actual boolean.  The undefined value, the number
+'0', and the empty string, are all 'false'.  Everything else is 'true'.  It is
+thus common to use just 0/1 for false/true].
+
+<a name="_variables_that_should_not_be_touched_at_all"></a>
+
+### variables that should not be touched at all
+
+The first section does not need too much elaboration.  Let's just say bad
+things happen if you change them.
+
+<a name="_most_often_used_changed_variables"></a>
+
+### most often used/changed variables
+
+  * `$GL_WILDREPOS`, boolean, default 0
+
+    Setting this variable lets your users create repositories based on wild
+    cards, hand out R and RW permissions to other users to collaborate, etc.
+
+    See [doc/wildcard-repositories.mkd][wild] for lots of info on this.
+
+  * `$PROJECTS_LIST`, filename, default `~/projects.list`
+
+    This is for gitweb users only.  Gitweb setup has a variable called
+    `$projects_list` (please see gitweb docs for more on this).  Set this to
+    the same value as that one.
+
+  * `$REPO_UMASK`, octal, default `0077`
+
+    The default UMASK that gitolite uses makes all the repos and their
+    contents have `rwx------` permissions.  People who want to run gitweb
+    realise that this will not do.  The correct way to deal with this is to
+    change this variable to `0027` (which gets you `rwxr-x---`), then add the
+    apache or httpd user running the webserver as a member of the 'gitolite'
+    group.
+
+    Please note the syntax; the leading 0 is required.  If you change it
+    *after* the install is complete, you'll have to do some chmod's also to
+    adjust permissions of files and directories that have already been
+    created.
+
+<a name="_variables_with_an_efficiency_impact"></a>
+
+### variables with an efficiency impact
+
+  * `$GL_BIG_CONFIG`, boolean, default 0
+
+    This is the most common setting for efficiency in handling large repo/user
+    groups.  This is a very powerful setting; please read
+    [doc/big-config.mkd][bc] for all the details you might need.
+
+    There are 3 other settings related to big configs.  They are changed only
+    in rare cases, however, so are described later.
+
+  * `$GL_NO_DAEMON_NO_GITWEB`, boolean, default 0
+
+    If you have *lots* of repos, and you're *not* using gitweb or daemon, you
+    should probably set this on for efficiency.  Despite the name, it also
+    blocks repo config settings.  Please read [doc/big-config.mkd][bc] for
+    more details.
+
+<a name="_variables_with_a_security_impact"></a>
+
+### variables with a security impact
+
+**IMPORTANT NOTE**
+
+This section describes variables that, if not carefully used, can cause
+security issues.  It also includes variables which I personally do not use and
+do not have the ability to test thoroughly
+
+Using non-default value for these variables voids the security reward in the
+README.  This does *not* mean they are less important or that I will ignore
+problems; it just means *my* ability to catch problems may be limited by my
+test suite, my actual production use, my time, and sometimes (LDAP comes to
+mind) even my skill or resources available to me, and that therefore I depend
+on feedback from my users to find or fix issues.
+
+  * `$GIT_PATH`, string, default empty
+
+    If git on your server is on a standard path (that is `ssh git@server git
+    --version` works), leave this setting as is.  Otherwise, find out where it
+    is and use that value here, for example `GIT_PATH="/opt/bin/";`
+
+  * `$GL_GITCONFIG_KEYS`, string, default empty
+
+    This setting allows the repo admin to define acceptable gitconfig keys.
+
+    Gitolite allows you to set git repo options using the "config" keyword;
+    see conf/example.conf for details and syntax.
+
+    However, if you are in an installation where the repo admin does not (and
+    should not) have shell access to the server, then allowing him to set
+    arbitrary repo config options *may* be a security risk -- some config
+    settings allow executing arbitrary commands!
+
+    You have 3 choices.  By default `$GL_GITCONFIG_KEYS` is left empty, which
+    completely disables this feature (meaning you cannot set git configs via
+    the repo config).
+
+    The second choice is to give it a space separated list of settings you
+    consider safe.  (These are actually treated as a set of perl regular
+    expression patterns, and any one of them must match).  For example:
+    `$GL_GITCONFIG_KEYS = "core\\.logAllRefUpdates core\\..*compression";`
+    allows repo admins to set one of those 3 config keys (yes, that second
+    pattern matches two settings from "man git-config", if you look).
+
+    The third choice (which you may have guessed already if you're familiar
+    with regular expressions) is to allow anything and everything:
+    `$GL_GITCONFIG_KEYS = ".*";`
+
+    NOTE that due to some quoting and interpolation issues I have not been
+    able to look at, a literal "." needs to be specified in this string as
+    `\\.` (two backslashes and a dot).  So this is how you'd allow any keys in
+    the "foo" category: `$GL_GITCONFIG_KEYS = "foo\\..*";`
+
+  * `$GL_GITCONFIG_WILD`, boolean, default 0
+
+    This setting allows gitconfig keys even for wild repos.  This is an
+    efficiency issue more than a security issue, since this requires trawling
+    through all of `$REPO_BASE` looking for stuff :)
+
+  * `$GL_NO_CREATE_REPOS`, boolean, default 0
+
+    DO NOT CHANGE THIS unless you have other means to create repos and
+    correctly populate them with the required hooks.  No hooks, no access
+    control; you have been warned!
+
+  * `$GL_NO_SETUP_AUTHKEYS`, boolean, default 0
+
+    DO NOT CHANGE THIS unless you have other means to setup the authkeys file
+    (`~/.ssh/authorized_keys`).  In an extreme case, if you switch this on
+    without also fixing up the authkeys file, users who you think you deleted
+    may still have access.  All in all, please be careful, as with any change
+    that affects ssh.
+
+  * `$GL_WILDREPOS_DEFPERMS`, string, default undef
+
+    This sets default wildcard permissions for newly created wildcard repos.
+
+    If set, this value will be used as the default user-level permission rule
+    of new wildcard repositories. The user can change this value with the
+    setperms command as desired after repository creation; it is only a
+    default.
+
+    Example: `$GL_WILDREPOS_DEFPERMS = 'R @all';`
+
+  * `$HTPASSWD_FILE`, string, default empty
+
+    Gitolite can help users run the htpasswd command in a secure manner (since
+    gitolite has already identified them by an ssh key).  If you want to
+    enable this, give the variable the absolute path to whatever file apache
+    (etc) expect to find the passwords in.
+
+    Look in [doc/3-faq-tips-etc.mkd][faq] ("easier to link gitweb
+    authorisation with gitolite" section) for more details on using this
+    feature.
+
+  * `$RSYNC_BASE`, string, default empty
+
+    Gitolite can be used to allow fine grained control of the rsync command.
+
+    This setting enables the rsync external command helper, by specifying the
+    base path of all the files that are accessible via rsync.  It must be an
+    absolute path, like `$RSYNC_BASE = "/home/git/up-down";`.  Leave it
+    undefined or set to the empty string to disable the rsync helper.
+
+    When enabled, it runs rsync with specific arguments, all presumably filled
+    in correctly by the client-side rsync. However, I am not an expert on how
+    rsync may be abused, so if it breaks, you get to keep both pieces!
+
+  * `$SVNSERVE`, string, default empty
+
+    Gitolite can also be used to gate access (though not at a fine grained
+    level) to SVN if needed, passing authentication information on to
+    `svnserve`.  This setting allows launching svnserve when requested by the
+    ssh client.  This allows using the same SSH setup for both SVN and git
+    access. Leave it undefined or set to the empty string to disable svnserve
+    access.
+
+    The setting will look something like (where the %u is substituted with the
+    username):
+
+        $SVNSERVE = "/usr/bin/svnserve -r /var/svn/ -t --tunnel-user=%u";
+
+  * hook chaining
+
+      * `$UPDATE_CHAINS_TO`, string, default "hooks/update.secondary"
+      * `$ADMIN_POST_UPDATE_CHAINS_TO`, string, default
+        "hooks/post-update.secondary"
+
+    By default, the update hook in every repo chains to "update.secondary".
+    Similarly, the post-update hook in the admin repo chains to
+    "post-update.secondary".  If you're fine with the defaults, there's no
+    need to do anything here.  However, if you want to use different names or
+    paths, change these variables.
+
+  * `$GL_ADC_PATH`, string, default undef
+
+    This setting enables admin defined commands.
+
+    **WARNING**: Use this feature only if (a) you really know what you're
+    doing and (b) you really, **really**, know what you're doing!  Please read
+    [doc/admin-defined-commands.mkd][adc] for details.  This is an extremely
+    powerful and flexible feature, and naturally anything that flexible can be
+    a security risk!
+
+  * `$GL_GET_MEMBERSHIPS_PGM`, string, default undef
+
+    Some sites would like to store group membership outside gitolite, because
+    they already have it in (usually) their LDAP server, and it doesn't make
+    sense to be forced to duplicate this information.
+
+    Set the following variable to the name of a script that, given a username
+    as argument, will return a list of groups that she is a member of.  See
+    [doc/big-config.mkd][bc] for more details.
+
+    Example: `$GL_GET_MEMBERSHIPS_PGM = "/usr/local/bin/expand-ldap-user-to-groups"`
+
+<a name="_less_used_changed_variables"></a>
+
+### less used/changed variables
+
+  * `$GL_ALL_INCLUDES_SPECIAL`, boolean, default undef
+
+    Giving access to @all users (as in `R  =  @all`) in the config normally
+    does *not* include the special users "gitweb" and "daemon".  If you want
+    @all to include these two users, set this variable.
+
+  * mirroring setup
+
+    These two variables enable mirroring support; see
+    [doc/mirroring.mkd][mirr] for details.  The two variables are
+    `$GL_SLAVE_MODE`, (boolean, default undef), and `$ENV{GL_SLAVES}`,
+    (environment variable, string, default undef)
+
+    Note on the second variable above: you must use single quotes to give it
+    its value, not double quotes, (like `$ENV{GL_SLAVES} = 'gitolite@server2
+    gitolite@server3';`).  Also note that this is an environment variable, not
+    a regular perl variable, so mind the syntax if you're not a perl guy :-)
+
+  * `$GL_WILDREPOS_PERM_CATS`, string, default "READERS WRITERS"
+
+    Originally, we only allowed "R" and "RW" in the setperms command.  Now we
+    allow the admin to define other categories as she wishes (example:
+    MANAGERS, TESTERS, etc).
+
+    This variable is a space-separated list of the allowed categories.
+
+    PLEASE, *PLEASE*, read the section in
+    [doc/wildcard-repositories.mkd][wild] for caveats and warnings.  This is a
+    VERY powerful feature and if you're not careful you could mess up the ACLs
+    nicely.
+
+    This is the internal default if you don't set it (like if you didn't
+    update your ~/.gitolite.rc with new variables when you upgraded gitolite):
+
+        $GL_WILDREPOS_PERM_CATS = "READERS WRITERS";
+
+    You can use your own categories in addition to the standard ones; I
+    suggest you include READERS and WRITERS for backward compatbility though:
+
+        $GL_WILDREPOS_PERM_CATS = "READERS WRITERS MANAGERS TESTERS";
+
+<a name="_rarely_changed_variables"></a>
+
+### rarely changed variables
+
+  * `$GL_LOGT`, string, default `$GL_ADMINDIR/logs/gitolite-%y-%m.log`
+
+    This is the template for location of the log files and format of their
+    names.
+
+    The default produces files like `~/.gitolite/logs/gitolite-2009-09.log`.
+    If you make up your own templates, **PLEASE MAKE SURE** the directory
+    exists and is writable; gitolite won't do that for you unless it is the
+    default, ("$GL_ADMINDIR/logs")
+
+  * `$GL_PERFLOGT`, string, default undef
+
+    This gives the location of the performance log files.  Uncomment and set
+    this variable if you want performance logging.  Performance log files are
+    kept separate from access log files because they store different, usually
+    much shorter term, information.
+
+  * `$GL_SITE_INFO`, string, default undef
+
+    Some installations would like to give their users customised information
+    (like a link to their own websites, for example) so that users have a
+    quick way to find some links or information.
+
+    If this variable is defined, the "info" command will print it at the end
+    of the listing.
+
+  * `$REPO_BASE`, string, default "repositories"
+
+    This is where all the repos go.  If it's not an absolute path, it is
+    considered to be relative to $HOME.  Changing it after the install has
+    completed is doable, but tricky if you don't know how gitolite works.
+
+[wild]: http://github.com/sitaramc/gitolite/blob/pu/doc/wildcard-repositories.mkd
+[bc]: http://github.com/sitaramc/gitolite/blob/pu/doc/big-config.mkd
+[faq]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd
+[adc]: http://github.com/sitaramc/gitolite/blob/pu/doc/admin-defined-commands.mkd
+[mirr]: http://github.com/sitaramc/gitolite/blob/pu/doc/mirroring.mkd

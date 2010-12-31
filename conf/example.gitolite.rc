@@ -1,313 +1,75 @@
-# paths and configuration variables for gitolite
+# configuration variables for gitolite
 
-# please read comments before editing
+# PLEASE READ THE DOCUMENTATION BEFORE EDITING OR ASKING QUESTIONS
 
 # this file is meant to be pulled into a perl program using "do" or "require".
-
 # You do NOT need to know perl to edit the paths; it should be fairly
 # self-explanatory and easy to maintain perl syntax :-)
 
-# --------------------------------------
-# Do not change the next two lines unless you know what you're doing
-# $GL_PACKAGE_CONF = "";
-# $GL_PACKAGE_HOOKS = "";
-
-# --------------------------------------
-# MIRRORING SUPPORT
-
-# $GL_SLAVE_MODE = 0;
-# $ENV{GL_SLAVES} = 'gitolite@server2 gitolite@server3';
-#       PLEASE USE SINGLE QUOTES ABOVE, NOT DOUBLE QUOTES
-
-# see doc/mirroring.mkd for details
-
-# --------------------------------------
-
-# this is where the repos go.  If you provide a relative path (not starting
-# with "/"), it's relative to your $HOME.  You may want to put in something
-# like "/bigdisk" or whatever if your $HOME is too small for the repos, for
-# example
-
-$REPO_BASE="repositories";
-
-# the default umask for repositories is 0077; change this if you run stuff
-# like gitweb and find it can't read the repos.  Please note the syntax;  the
-# leading 0 is required
-
-$REPO_UMASK = 0077;         # gets you 'rwx------'
-# $REPO_UMASK = 0027;       # gets you 'rwxr-x---'
-# $REPO_UMASK = 0022;       # gets you 'rwxr-xr-x'
-
-# part of the setup of gitweb is a variable called $projects_list (please see
-# gitweb documentation for more on this).  Set this to the same value:
-
-$PROJECTS_LIST = $ENV{HOME} . "/projects.list";
-
-# giving access to @all users (as in "R  =  @all") in the config normally does
-# *not* include the special users "gitweb" and "daemon".  If you want @all to
-# include these two users, set this variable:
-
-# $GL_ALL_INCLUDES_SPECIAL = 0;
-
-# --------------------------------------
-
-# I see no reason anyone may want to change the gitolite admin directory, but
-# feel free to do so.  However, please note that it *must* be an *absolute*
-# path (i.e., starting with a "/" character)
-
-# gitolite admin directory, files, etc
-
+# ------------------------------------------------------------------------------
+# VARIABLES THAT SHOULD NOT BE TOUCHED AT ALL.  EVER.
+# ------------------------------------------------------------------------------
 $GL_ADMINDIR=$ENV{HOME} . "/.gitolite";
-
-# --------------------------------------
-
-# templates for location of the log files and format of their names
-
-# I prefer this template (note the %y and %m placeholders)
-# it produces files like `~/.gitolite/logs/gitolite-2009-09.log`
-
-$GL_LOGT="$GL_ADMINDIR/logs/gitolite-%y-%m.log";
-
-# other choices are below, or you can make your own -- but PLEASE MAKE SURE
-# the directory exists and is writable; gitolite won't do that for you (unless
-# it is the default, which is "$GL_ADMINDIR/logs")
-
-# $GL_LOGT="$GL_ADMINDIR/logs/gitolite-%y-%m-%d.log";
-# $GL_LOGT="$GL_ADMINDIR/logs/gitolite-%y.log";
-
-# --------------------------------------
-
-# location of the performance log files
-
-# uncomment and set this variable if you want performance logging
-#
-# perf log files are different from access log files; they store different
-# information, are not meant to be as long-lived, and so on
-
-# $GL_PERFLOGT="$GL_ADMINDIR/logs/perf-gitolite-%y-%m.log";
-
-# --------------------------------------
-
-# Please DO NOT change these three paths
-
 $GL_CONF="$GL_ADMINDIR/conf/gitolite.conf";
 $GL_KEYDIR="$GL_ADMINDIR/keydir";
 $GL_CONF_COMPILED="$GL_ADMINDIR/conf/gitolite.conf-compiled.pm";
+# DO NOT CHANGE THE NEXT TWO LINES UNLESS YOU REALLY KNOW WHAT YOU'RE DOING.
+# These variables are set automatically by the install method you choose.
+# $GL_PACKAGE_CONF = "";
+# $GL_PACKAGE_HOOKS = "";
 
-# --------------------------------------
+# ------------------------------------------------------------------------------
+# most often used/changed variables
+# ------------------------------------------------------------------------------
+$GL_WILDREPOS = 0;
+$PROJECTS_LIST = $ENV{HOME} . "/projects.list";
+$REPO_UMASK = 0077;
 
-# if git on your server is on a standard path (that is
-#       ssh git@server git --version
-# works), leave this setting as is.  Otherwise, choose one of the
-# alternatives, or write your own
-
-$GIT_PATH="";
-# $GIT_PATH="/opt/bin/";
-
-# --------------------------------------
-
-# ----------------------------------------------------------------------
-#                   BIG CONFIG SETTINGS
-
-# Please read doc/big-config.mkd for details
-
+# ------------------------------------------------------------------------------
+# variables with an efficiency impact
+# ------------------------------------------------------------------------------
 $GL_BIG_CONFIG = 0;
 $GL_NO_DAEMON_NO_GITWEB = 0;
+
+# ------------------------------------------------------------------------------
+# VARIABLES WITH A SECURITY IMPACT
+# ------------------------------------------------------------------------------
+$GIT_PATH="";
+$GL_GITCONFIG_KEYS = "";
+# $GL_GITCONFIG_WILD = 0;
 $GL_NO_CREATE_REPOS = 0;
 $GL_NO_SETUP_AUTHKEYS = 0;
-
-# ----------------------------------------------------------------------
-#                   SECURITY SENSITIVE SETTINGS
-#
-#       Settings below this point may have security implications.  That
-#       usually means that I have not thought hard enough about all the
-#       possible ways to crack security if these settings are enabled.
-
-#       Please see details on each setting for specifics, if any.
-# ----------------------------------------------------------------------
-
-
-
-# --------------------------------------
-# ALLOW REPO ADMIN TO SET GITCONFIG KEYS
-#
-# Gitolite allows you to set git repo options using the "config" keyword; see
-# conf/example.conf for details and syntax.
-#
-# However, if you are in an installation where the repo admin does not (and
-# should not) have shell access to the server, then allowing him to set
-# arbitrary repo config options *may* be a security risk -- some config
-# settings may allow executing arbitrary commands.
-#
-# You have 3 choices.  By default $GL_GITCONFIG_KEYS is left empty, which
-# completely disables this feature (meaning you cannot set git configs from
-# the repo config).
-
-$GL_GITCONFIG_KEYS = "";
-
-# The second choice is to give it a space separated list of settings you
-# consider safe.  (These are actually treated as a set of regular expression
-# patterns, and any one of them must match).  For example:
-# $GL_GITCONFIG_KEYS = "core\.logAllRefUpdates core\..*compression";
-# allows repo admins to set one of those 3 config keys (yes, that second
-# pattern matches two settings from "man git-config", if you look)
-#
-# The third choice (which you may have guessed already if you're familiar with
-# regular expressions) is to allow anything and everything:
-# $GL_GITCONFIG_KEYS = ".*";
-
-# NOTE that due to some quoting and interpolation issues I have not been able
-# to look at, a literal "." needs to be specified in this string as \\.  (two
-# backslashes and a dot).  So this is how you'd allow any keys in the "foo"
-# category:
-#       $GL_GITCONFIG_KEYS = "foo\\..*";
-
-# --------------------------------------
-# ALLOW GITCONFIG KEYS EVEN FOR WILD REPOS
-#
-# This is an efficiency issue more than a security issue, since this requires
-# trawling through all of $REPO_BASE looking for stuff :)
-
-# $GL_GITCONFIG_WILD = 0;
-
-# --------------------------------------
-# EXTERNAL COMMAND HELPER -- HTPASSWD
-
-# security note: runs an external command (htpasswd) with specific arguments,
-# including a user-chosen "password".
-
-# if you want to enable the "htpasswd" command, give this the absolute path to
-# whatever file apache (etc) expect to find the passwords in.
-
-$HTPASSWD_FILE = "";
-
-# Look in doc/3 ("easier to link gitweb authorisation with gitolite" section)
-# for more details on using this feature.
-
-# --------------------------------------
-# EXTERNAL COMMAND HELPER -- RSYNC
-
-# security note: runs an external command (rsync) with specific arguments, all
-# presumably filled in correctly by the client-side rsync.
-
-# base path of all the files that are accessible via rsync.  Must be an
-# absolute path.  Leave it undefined or set to the empty string to disable the
-# rsync helper.
-
-$RSYNC_BASE = "";
-
-# $RSYNC_BASE = "/home/git/up-down";
-# $RSYNC_BASE = "/tmp/up-down";
-
-# --------------------------------------
-# EXTERNAL COMMAND HELPER -- SVNSERVE
-
-# security note: runs an external command (svnserve) with specific arguments,
-# as specified below. %u is substituted with the username.
-
-# This setting allows launching svnserve when requested by the ssh client.
-# This allows using the same SSH setup (hostname/username/public key) for both
-# SVN and git access. Leave it undefined or set to the empty string to disable
-# svnserve access.
-
-$SVNSERVE = "";
-# $SVNSERVE = "/usr/bin/svnserve -r /var/svn/ -t --tunnel-user=%u";
-
-# --------------------------------------
-# ALLOW REPO CONFIG TO USE WILDCARDS
-
-# security note: this used to in a separate "wildrepos" branch.  You can
-# create repositories based on wild cards, give "ownership" to the specific
-# user who created it, allow him/her to hand out R and RW permissions to other
-# users to collaborate, etc.  This is powerful stuff, and I've made it as
-# secure as I can, but it hasn't had the kind of rigorous line-by-line
-# analysis that the old "master" branch had.
-
-# This has now been rolled into master, with all the functionality gated by
-# this variable.  Set this to 1 if you want to enable the wildrepos features.
-# Please see doc/wildcard-repositories.mkd for details.
-
-$GL_WILDREPOS = 0;
-
-# --------------------------------------
-# DEFAULT WILDCARD PERMISSIONS
-
-# If set, this value will be used as the default user-level permission rule of
-# new wildcard repositories. The user can change this value with the setperms command
-# as desired after repository creation; it is only a default. Note that @all can be
-# used here but is special; no other groups can be used in user-level permissions.
-
 # $GL_WILDREPOS_DEFPERMS = 'R @all';
-
-# --------------------------------------
-# WILDREPOS PERMS CATEGORIES
-
-# Originally, we only allowed "R" and "RW" in the setperms command.  Now we
-# allow the admin to define other categories as she wishes (example: MANAGERS,
-# TESTERS, etc).
-
-# This variable is a space-sep list of the allowed categories.
-
-# PLEASE, *PLEASE*, read the section in doc/wildcard-repositories.mkd for
-# caveats and warnings.  This is a VERY powerful feature and if you're not
-# careful you could mess up the ACLs nicely.
-
-# this is the internal default if you don't set it (like if you didn't update
-# your ~/.gitolite.rc with new variables when you upgraded gitolite):
-$GL_WILDREPOS_PERM_CATS = "READERS WRITERS";
-
-# you can use your own categories in addition to the standard ones; I suggest
-# you include READERS and WRITERS for backward compat though:
-# $GL_WILDREPOS_PERM_CATS = "READERS WRITERS MANAGERS";
-# $GL_WILDREPOS_PERM_CATS = "READERS WRITERS MANAGERS TESTERS";
-
-# --------------------------------------
-# HOOK CHAINING
-
-# by default, the update hook in every repo chains to "update.secondary".
-# Similarly, the post-update hook in the admin repo chains to
-# "post-update.secondary".  If you're fine with the defaults, there's no need
-# to do anything here.  However, if you want to use different names or paths,
-# change these variables
-
+$HTPASSWD_FILE = "";
+$RSYNC_BASE = "";
+$SVNSERVE = "";
 # $UPDATE_CHAINS_TO = "hooks/update.secondary";
 # $ADMIN_POST_UPDATE_CHAINS_TO = "hooks/post-update.secondary";
-
-# --------------------------------------
-# ADMIN DEFINED COMMANDS
-
-# WARNING: Use this feature only if (a) you really really know what you're
-# doing or (b) you really don't care too much about security.  Please read
-# doc/admin-defined-commands.mkd for details.
-
 # $GL_ADC_PATH = "";
-
-# --------------------------------------
-# SITE-SPECIFIC INFORMATION
-
-# Some installations would like to give their users customised information
-# (like a link to their own websites, for example) so that each end user does
-# not have to grok all the gitolite documentation.
-
-# If this variable is defined, the "info" command will print it at the end of
-# the listing.
-
-# $GL_SITE_INFO = "";
-# $GL_SITE_INFO = "XYZ.COM DEVELOPERS: PLEASE SEE http://xyz.com/gitolite/help first";
-
-# --------------------------------------
-# USERGROUP HANDLING
-
-# Some sites would like to store group membership outside gitolite, because
-# they already have it in (usually) their LDAP server, and it doesn't make
-# sense to be forced to duplicate this information.
-
-# Set the following variable to the name of a script that, given a username as
-# argument, will return a list of groups that she is a member of.
-
 # $GL_GET_MEMBERSHIPS_PGM = "/usr/local/bin/expand-ldap-user-to-groups"
 
-# --------------------------------------
+# ------------------------------------------------------------------------------
+# less used/changed variables
+# ------------------------------------------------------------------------------
+# $GL_ALL_INCLUDES_SPECIAL = 0;
+# $GL_SLAVE_MODE = 0;
+# $ENV{GL_SLAVES} = 'gitolite@server2 gitolite@server3';
+# PLEASE USE SINGLE QUOTES ABOVE, NOT DOUBLE QUOTES
+$GL_WILDREPOS_PERM_CATS = "READERS WRITERS";
+
+# ------------------------------------------------------------------------------
+# rarely changed variables
+# ------------------------------------------------------------------------------
+$GL_LOGT="$GL_ADMINDIR/logs/gitolite-%y-%m.log";
+# $GL_PERFLOGT="$GL_ADMINDIR/logs/perf-gitolite-%y-%m.log";
+# $GL_SITE_INFO = "XYZ.COM DEVELOPERS: PLEASE SEE http://xyz.com/gitolite/help first";
+
+# ------------------------------------------------------------------------------
+# variables that should NOT be changed after the install step completes
+# ------------------------------------------------------------------------------
+$REPO_BASE="repositories";
+
+# ------------------------------------------------------------------------------
 # per perl rules, this should be the last line in such a file:
 1;
 
