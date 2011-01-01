@@ -96,6 +96,13 @@ test suite, my actual production use, my time, and sometimes (LDAP comes to
 mind) even my skill or resources available to me, and that therefore I depend
 on feedback from my users to find or fix issues.
 
+  * `$GL_ALL_READ_ALL`, boolean, default undef
+
+    Eliminates the access control check for read access.  Makes things much
+    (**much**!) faster when you have 10,000 projects and the compiled conf
+    file is more than 20MB in size!  **Double check with your boss or have a
+    new job lined up before setting this on!**
+
   * `$GIT_PATH`, string, default empty
 
     If git on your server is on a standard path (that is `ssh git@server git
