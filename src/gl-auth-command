@@ -37,7 +37,7 @@ our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMIND
 our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT, $ADC_CMD_ARGS_PATT);
 our %repos;
 our %groups;
-our %repo_config;
+our %git_configs;
 
 # the common setup module is in the same directory as this running program is
 my $bindir = $0;
@@ -239,7 +239,7 @@ if ($perm =~ /C/) {
     new_repo($repo, "$GL_ADMINDIR/hooks/common", $user);
         # note pwd is now the bare "repo.git"; new_repo does that...
     wrap_print("gl-perms", "$GL_WILDREPOS_DEFPERMS\n") if $GL_WILDREPOS_DEFPERMS;
-    &setup_repo_configs($repo, \%repo_config);
+    &setup_git_configs($repo, \%git_configs);
     &setup_daemon_access($repo);
     &add_del_line ("$repo.git", $PROJECTS_LIST, &setup_gitweb_access($repo, '', ''));
     wrap_chdir($ENV{HOME});

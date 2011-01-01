@@ -43,9 +43,9 @@ our $ADC_CMD_ARGS_PATT=qr(^[0-9a-zA-Z._\@/+:-]*$);
 our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST, $GL_ALL_INCLUDES_SPECIAL, $GL_SITE_INFO, $GL_GET_MEMBERSHIPS_PGM, $GL_WILDREPOS_PERM_CATS);
 our %repos;
 our %groups;
-our %repo_config;
+our %git_configs;
 our $data_version;
-our $current_data_version = '1.6';
+our $current_data_version = '1.7';
 
 # ----------------------------------------------------------------------------
 #       convenience subs
@@ -453,14 +453,14 @@ sub get_set_desc
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
-#       set/unset repo configs
+#       set/unset git configs
 # ----------------------------------------------------------------------------
 
-sub setup_repo_configs
+sub setup_git_configs
 {
-    my ($repo, $repo_config_p) = @_;
+    my ($repo, $git_configs_p) = @_;
 
-    while ( my ($key, $value) = each(%{ $repo_config_p->{$repo} }) ) {
+    while ( my ($key, $value) = each(%{ $git_configs_p->{$repo} }) ) {
         if ($value) {
             $value =~ s/^"(.*)"$/$1/;
             system("git", "config", $key, $value);
@@ -588,7 +588,7 @@ sub parse_acl
         $repos{$dr}{DELETE_IS_D} = 1 if $repos{$r}{DELETE_IS_D};
         $repos{$dr}{CREATE_IS_C} = 1 if $repos{$r}{CREATE_IS_C};
         $repos{$dr}{NAME_LIMITS} = 1 if $repos{$r}{NAME_LIMITS};
-        $repo_config{$dr} = $repo_config{$r} if $repo_config{$r};
+        $git_configs{$dr} = $git_configs{$r} if $git_configs{$r};
 
         for my $u ('@all', "$gl_user - wild", @user_plus, keys %perm_cats) {
             my $du = $gl_user; $du = '@all' if $u eq '@all' or ($perm_cats{$u} || '') eq '@all';

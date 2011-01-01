@@ -105,8 +105,8 @@ our $current_data_version;      # this comes from gitolite.pm
 # catch usernames<->pubkeys mismatches; search for "lint" below
 my %user_list = ();
 
-# repo configurations
-our %repo_config = ();
+# repo specific 'git config' stuff
+our %git_configs = ();
 
 # gitweb descriptions and owners; plain text, keyed by "$repo.git"
 my %desc = ();
@@ -274,7 +274,7 @@ sub parse_conf_line
             }
         }
     }
-    # configuration
+    # repo specific 'git config' stuff
     elsif ($line =~ /^config (.+) = ?(.*)/)
     {
         my ($key, $value) = ($1, $2);
@@ -283,7 +283,7 @@ sub parse_conf_line
         die "$ABRT git config $key not allowed\ncheck GL_GITCONFIG_KEYS in the rc file for how to allow it\n" if (@matched < 1);
         for my $repo (@{ $repos_p })       # each repo in the current stanza
         {
-            $repo_config{$repo}{$key} = $value;
+            $git_configs{$repo}{$key} = $value;
             # no problem if it's a plain repo (non-pattern, non-groupname)
             # OR wild configs are allowed
             unless ( ($repo =~ $REPONAME_PATT and $repo !~ /^@/) or $GL_GITCONFIG_WILD) {
@@ -402,7 +402,7 @@ my $compiled_fh = wrap_open( ">", "$GL_CONF_COMPILED.new" );
 my $data_version = $current_data_version;
 print $compiled_fh Data::Dumper->Dump([$data_version], [qw(*data_version)]);
 my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
-$dumped_data .= Data::Dumper->Dump([\%repo_config], [qw(*repo_config)]) if %repo_config;
+$dumped_data .= Data::Dumper->Dump([\%git_configs], [qw(*git_configs)]) if %git_configs;
 # the dump uses single quotes, but we convert any strings containing $creator
 # and $gl_user to double quoted strings.  A bit sneaky, but not too much...
 $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
@@ -555,9 +555,9 @@ for my $repo (keys %repo_patts) {
     # calls (setup daemon or gitweb).  The reason is that they call
     # "can_read", which eventually calls parse_acl with the right "creator"
     # set for the *current* repo, which in turn stores translated values for
-    # $creator in the repo_config hash, which, (phew!) is needed for a match
-    # that eventually gets you a valid $repo_config{} below
-    &setup_repo_configs($repo, \%repo_config) if $repo_config{$repo};
+    # $creator in the git_configs hash, which, (phew!) is needed for a match
+    # that eventually gets you a valid $git_configs{} below
+    &setup_git_configs($repo, \%git_configs) if $git_configs{$repo};
 }
 
 # write out the project list
