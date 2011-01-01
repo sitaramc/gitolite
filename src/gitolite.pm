@@ -44,8 +44,13 @@ our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE
 our %repos;
 our %groups;
 our %git_configs;
+our %split_conf;;
 our $data_version;
 our $current_data_version = '1.7';
+
+# the following are read in from individual repo's gl-conf files, if present
+our %one_repo;
+our %one_git_config;
 
 # ----------------------------------------------------------------------------
 #       convenience subs
@@ -180,33 +185,19 @@ sub ln_sf
     }
 }
 
-# collect repo patterns for all %repos
-
-# for each repo passed (actual repos only please!), use either its own name if
-# it exists as is in the repos hash, or find and use the pattern that matches
-
-sub collect_repo_patts
+# list physical repos
+sub list_phy_repos
 {
-    my $repos_p = shift;
-    my %repo_patts = ();
+    my @phy_repos;
 
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
     for my $repo (`find . -type d -name "*.git"`) {
         chomp ($repo);
         $repo =~ s(\./(.*)\.git$)($1);
-        # the key has to be in the list, since the repo physically exists
-        # -- my($perm, $creator, $wild) = &repo_rights($repo);
-        # -- $repo_patts{$repo} = $wild || $repo;
-        # turns out we're not using the value anywhere, so no point wasting
-        # all those cycles getting all repos' rights, at least until a real
-        # use for it comes along.  But when it does come along, remember that
-        # $wild is now a space separated list of matching patterns (or empty
-        # if no wild patterns matched $repo).  It is NOT a single value
-        # anymore!
-        $repo_patts{$repo} = 1;
+        push @phy_repos, $repo;
     }
 
-    return %repo_patts;
+    return @phy_repos;
 }
 
 
@@ -337,6 +328,7 @@ sub new_repo
             # really care; we just pull it in once and save it for the rest of
             # the run
             do $GL_CONF_COMPILED;
+            add_repo_conf($repo) if $repo;
             %cached_groups = %groups;
             $cache_filled++;
         }
@@ -559,8 +551,6 @@ sub parse_acl
         %repos = %saved_repos; %groups = %saved_groups;
     } else {
         die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
-        $saved_crwu = "$creator,$perm_cats_sig,$gl_user";
-        %saved_repos = %repos; %saved_groups = %groups;
     }
     unless (defined($data_version) and $data_version eq $current_data_version) {
         # this cannot happen for 'easy-install' cases, by the way...
@@ -569,6 +559,9 @@ sub parse_acl
 
         die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
     }
+    $saved_crwu = "$creator,$perm_cats_sig,$gl_user";
+    %saved_repos = %repos; %saved_groups = %groups;
+    add_repo_conf($repo) if $repo;
 
     # basic access reporting doesn't send $repo, and doesn't need to; you just
     # want the config dumped as is, really
@@ -607,6 +600,17 @@ sub parse_acl
     return ($wild);
 }
 
+# add repo conf from repo.git/gl-conf
+sub add_repo_conf
+{
+    my ($repo) = shift;
+    return unless $split_conf{$repo};
+    do "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-conf" or return;
+    $repos{$repo} = $one_repo{$repo};
+    $git_configs{$repo} = $one_git_config{$repo};
+}
+
+
 # ----------------------------------------------------------------------------
 #       print a report of $user's basic permissions
 # ----------------------------------------------------------------------------
@@ -643,6 +647,8 @@ sub report_basic
     local $ENV{GL_USER} = $user;
 
     &parse_acl($GL_CONF_COMPILED, "", "CREATOR");
+    # all we need is for 'keys %repos' to come up with all the names, so:
+    @repos{ keys %split_conf } = values %split_conf if %split_conf;
 
     # send back some useful info if no command was given
     &report_version($GL_ADMINDIR, $user);

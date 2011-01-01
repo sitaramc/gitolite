@@ -92,6 +92,9 @@ our %groups = ();
 # in between :)
 my %repos = ();
 
+# repos whose ACLs don't make it into the main compiled config file
+my %split_conf = ();
+
 # rule sequence number
 my $rule_seq = 0;
 
@@ -398,26 +401,31 @@ for my $fragment_file (glob("conf/fragments/*.conf"))
     parse_conf_file($fragment_file, $fragment);
 }
 
-my $compiled_fh = wrap_open( ">", "$GL_CONF_COMPILED.new" );
-my $data_version = $current_data_version;
-print $compiled_fh Data::Dumper->Dump([$data_version], [qw(*data_version)]);
-my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
-$dumped_data .= Data::Dumper->Dump([\%git_configs], [qw(*git_configs)]) if %git_configs;
-# the dump uses single quotes, but we convert any strings containing $creator
-# and $gl_user to double quoted strings.  A bit sneaky, but not too much...
-$dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
-print $compiled_fh $dumped_data;
-if (%groups) {
-    $dumped_data = Data::Dumper->Dump([\%groups], [qw(*groups)]);
-    $dumped_data =~ s/\bCREAT[EO]R\b/\$creator/g;
+sub write_compiled_conf
+{
+    my $compiled_fh = wrap_open( ">", "$GL_CONF_COMPILED.new" );
+    my $data_version = $current_data_version;
+    print $compiled_fh Data::Dumper->Dump([$data_version], [qw(*data_version)]);
+    my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
+    $dumped_data .= Data::Dumper->Dump([\%git_configs], [qw(*git_configs)]) if %git_configs;
+    # the dump uses single quotes, but we convert any strings containing $creator
+    # and $gl_user to double quoted strings.  A bit sneaky, but not too much...
     $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
     print $compiled_fh $dumped_data;
+    if (%groups) {
+        $dumped_data = Data::Dumper->Dump([\%groups], [qw(*groups)]);
+        $dumped_data =~ s/\bCREAT[EO]R\b/\$creator/g;
+        $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
+        print $compiled_fh $dumped_data;
+    }
+    print $compiled_fh Data::Dumper->Dump([\%split_conf], [qw(*split_conf)]) if %split_conf;
+    close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
+    rename "$GL_CONF_COMPILED.new", "$GL_CONF_COMPILED";
 }
-close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
-rename "$GL_CONF_COMPILED.new", "$GL_CONF_COMPILED";
 
 # ----------------------------------------------------------------------------
-#       (that ends the config file compiler and write)
+#       (that ends the config file compiler, though we postpone the writing
+#       for now to deal with the latest GL_BIG_CONFIG innovation!)
 # ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
@@ -443,25 +451,31 @@ die "\n\t\t***** AAARGH! *****\n" .
     "\tthe newer features, please upgrade.\n"
     if $git_version < 10602;     # that's 1.6.2 to you
 
-
-
 # ----------------------------------------------------------------------------
-# the rest of this program can be "switched off"; see doc/big-config.mkd for
-# details.
+# most of the rest of this program can be "switched off"; see
+# doc/big-config.mkd for details.
 # ----------------------------------------------------------------------------
 
-# ----------------------------------------------------------------------------
-#       any new repos to be created?
-# ----------------------------------------------------------------------------
-
-# repo-base needs to be an absolute path for this loop to work right
+# repo-base needs to be an absolute path due to all the jumping around we do,
 # so if it was not already absolute, prefix $HOME.
 $ENV{GL_REPO_BASE_ABS} = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
 
-unless ($GL_NO_CREATE_REPOS) {
+# process the normal repos in %repos.  This includes creating them if needed
+# (and GL_NO_CREATE_REPOS is not set), checking hooks, and finally, if
+# GL_BIG_CONFIG is set, writing out the one-repo config file for directly
+# specified repos (i.e., "repo foo", not "@grp = foo" + "repo @grp")
+do_normal_repos();
+write_compiled_conf();    # write out the final compiled config
+
+# ----------------------------------------------------------------------------
+#       process the normal repos in %repos (create, hook, one_repo config...)
+# ----------------------------------------------------------------------------
+
+sub do_normal_repos
+{
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
 
-    # autocreate repos.  Start with the ones that are normal repos in %repos
+    # start with the ones that are normal repos in %repos
     my @repos = grep { $_ =~ $REPONAME_PATT and not /^@/ } sort keys %repos;
     # then, for each repogroup, find the members of the group and add them in
     map { push @repos, keys %{ $groups{$_} } } grep { /^@/ } keys %repos;
@@ -470,39 +484,67 @@ unless ($GL_NO_CREATE_REPOS) {
     @repos = sort keys %seen;
 
     for my $repo (sort @repos) {
-        next unless $repo =~ $REPONAME_PATT;
-        next if $repo =~ m(^\@|EXTCMD/);    # these are not real repos
-        unless (-d "$repo.git") {
-            print STDERR "creating $repo...\n";
-            new_repo($repo, "$GL_ADMINDIR/hooks/common");
-            # new_repo would have chdir'd us away; come back
-            wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+        next unless $repo =~ $REPONAME_PATT;    # skip repo patterns
+        next if $repo =~ m(^\@|EXTCMD/);        # skip groups and fake repos
+
+        unless ($GL_NO_CREATE_REPOS) {
+            unless (-d "$repo.git") {
+                print STDERR "creating $repo...\n";
+                new_repo($repo, "$GL_ADMINDIR/hooks/common");
+                # new_repo would have chdir'd us away; come back
+                wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+            }
+
+            # when repos are copied over from elsewhere, one had to run easy install
+            # once again to make the new (OS-copied) repo contain the proper update
+            # hook.  Perhaps we can make this easier now, and eliminate the easy
+            # install, with a quick check (and a new, empty, "hook" as a sentinel)
+            unless (-l "$repo.git/hooks/gitolite-hooked") {
+                ln_sf("$GL_ADMINDIR/hooks/common", "*", "$repo.git/hooks");
+                # in case of package install, GL_ADMINDIR is no longer the top cop;
+                # override with the package hooks
+                ln_sf("$GL_PACKAGE_HOOKS/common", "*", "$repo.git/hooks") if $GL_PACKAGE_HOOKS;
+            }
         }
 
-        # when repos are copied over from elsewhere, one had to run easy install
-        # once again to make the new (OS-copied) repo contain the proper update
-        # hook.  Perhaps we can make this easier now, and eliminate the easy
-        # install, with a quick check (and a new, empty, "hook" as a sentinel)
-        unless (-l "$repo.git/hooks/gitolite-hooked") {
-            ln_sf("$GL_ADMINDIR/hooks/common", "*", "$repo.git/hooks");
-            # in case of package install, GL_ADMINDIR is no longer the top cop;
-            # override with the package hooks
-            ln_sf("$GL_PACKAGE_HOOKS/common", "*", "$repo.git/hooks") if $GL_PACKAGE_HOOKS;
-        }
+        # write a one_repo config for normal repos declared directly (not just via a group)
+        write_1_compiled_conf($repo) if $GL_BIG_CONFIG and $repos{$repo} and -d "$repo.git";
     }
 }
 
+sub write_1_compiled_conf
+{
+    # warning: writes and *deletes* it from %repos and %git_configs
+    my ($repo) = shift;
+    my (%one_repo, %one_git_config);
+
+    open(my $compiled_fh, ">", "$repo.git/gl-conf") or return;
+
+    $one_repo{$repo} = $repos{$repo};
+    delete $repos{$repo};
+    my $dumped_data = Data::Dumper->Dump([\%one_repo], [qw(*one_repo)]);
+
+    if ($git_configs{$repo}) {
+        $one_git_config{$repo} = $git_configs{$repo};
+        delete $git_configs{$repo};
+        $dumped_data .= Data::Dumper->Dump([\%one_git_config], [qw(*one_git_config)]);
+    }
+
+    # the dump uses single quotes, but we convert any strings containing $creator
+    # and $gl_user to double quoted strings.  A bit sneaky, but not too much...
+    $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
+    print $compiled_fh $dumped_data;
+    close $compiled_fh;
+
+    $split_conf{$repo} = 1;
+}
+
 # ----------------------------------------------------------------------------
-#       collect repo_patt for each actual repo
+#       get a list of physical repos for later
 # ----------------------------------------------------------------------------
 
-# go through each actual repo on disk, and match it to either its own name in
-# the config (non-wild) or a wild pattern that matches it.  Lots of things
-# later will need this correspondence so we may as well snarf it in one shot
-
-
-my %repo_patts = ();
-%repo_patts = &collect_repo_patts(\%repos) unless $GL_NO_DAEMON_NO_GITWEB;
+my @phy_repos = ();
+@phy_repos = &list_phy_repos() unless $GL_NO_DAEMON_NO_GITWEB;
 
 # NOTE: we're overloading GL_NO_DAEMON_NO_GITWEB to mean "no git config" also.
 # In fact anything that requires trawling through the existing repos doing
@@ -520,8 +562,6 @@ my %repo_patts = ();
 #       update repo configurations, gitweb description, daemon export-ok, etc
 # ----------------------------------------------------------------------------
 
-# all these require a "chdir" to the repo, so we club them for efficiency
-
 my %projlist = ();
 
 # for each real repo (and remember this will be empty, thus skipping all this,
@@ -530,13 +570,13 @@ my %projlist = ();
 # note: we do them in 2 separate loops to avoid breaking the optimisation in
 # sub parse_acl (look for variable $saved_crwu)
 
-for my $repo (keys %repo_patts) {
+for my $repo (@phy_repos) {
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
     # daemon is easy
     &setup_daemon_access($repo);
 }
 
-for my $repo (keys %repo_patts) {
+for my $repo (@phy_repos) {
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
     # gitweb is a little more complicated.  Here're some notes:
     # - "setup_gitweb_access" also sets "owner", despite the name

@@ -14,6 +14,13 @@ runremote() { ssh gitolite-test@localhost "$@" > ~/1 2> ~/2; }
 listrepos() { ssh gitolite-test@localhost find repositories -type d -name "*.git" | sort > ~/1 2> ~/2; }
 # remote cat compiled pm
 catconf() { ssh gitolite-test@localhost cat .gitolite/conf/gitolite.conf-compiled.pm > ~/1 2> ~/2; }
+catconfs() {
+    (
+        ssh gitolite-test@localhost cat .gitolite/conf/gitolite.conf-compiled.pm
+        ssh gitolite-test@localhost find repositories -name gl-conf \| sort
+        ssh gitolite-test@localhost find repositories -name gl-conf \| sort \| xargs cat
+    ) > ~/1 2> ~/2
+}
 # remote cat ~/.gitolite.rc
 catrc() { ssh gitolite-test@localhost cat .gitolite.rc > ~/1 2> ~/2; }
 # tail gitolite logfile

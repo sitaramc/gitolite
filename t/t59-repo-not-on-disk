@@ -76,15 +76,21 @@ do
     cd ~/td
     name "repo on disk missing: u1"
     runlocal git clone u1:aa
-    expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+    [ "$bc" = "0" ] && expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+    [ "$bc" = "1" ] && expect "R access for aa DENIED to u1"
+    [ "$bc" = "1" ] && expect "Or there may be no repository at the given path. Did you spell it correctly?"
 
     name "repo on disk missing: tester"
     runlocal git clone gitolite:aa
-    expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+    [ "$bc" = "0" ] && expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+    [ "$bc" = "1" ] && expect "R access for aa DENIED to tester"
+    [ "$bc" = "1" ] && expect "Or there may be no repository at the given path. Did you spell it correctly?"
 
     name "repo on disk missing: u4"
     runlocal git clone u4:aa
-    expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+    [ "$bc" = "0" ] && expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+    [ "$bc" = "1" ] && expect "R access for aa DENIED to u4"
+    [ "$bc" = "1" ] && expect "Or there may be no repository at the given path. Did you spell it correctly?"
 
     name "repo on disk missing: u6"
     runlocal git clone u6:aa

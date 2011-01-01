@@ -23,7 +23,21 @@ $data_version = '1.7';
       '@g1' => 1,
       '@g2' => 1
     }
-  },
+  }
+);
+%groups = (
+  '@g1' => {
+    'aa' => 'master',
+    'bb' => 'master'
+  }
+);
+%split_conf = (
+  'gitolite-admin' => 1,
+  'testing' => 1
+);
+repositories/gitolite-admin.git/gl-conf
+repositories/testing.git/gl-conf
+%one_repo = (
   'gitolite-admin' => {
     'R' => {
       'tester' => 1
@@ -38,7 +52,9 @@ $data_version = '1.7';
         'RW+'
       ]
     ]
-  },
+  }
+);
+%one_repo = (
   'testing' => {
     '@all' => [
       [
@@ -53,11 +69,5 @@ $data_version = '1.7';
     'W' => {
       '@all' => 1
     }
-  }
-);
-%groups = (
-  '@g1' => {
-    'aa' => 'master',
-    'bb' => 'master'
   }
 );

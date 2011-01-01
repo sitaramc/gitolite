@@ -4,6 +4,8 @@ In this document:
 
   * <a href="#_when_why_do_we_need_it_">when/why do we need it?</a>
   * <a href="#_how_do_we_use_it_">how do we use it?</a>
+      * <a href="#_access_rules_for_groups">access rules for groups</a>
+      * <a href="#_access_rules_for_individual_repos_split_config_">access rules for individual repos (split config)</a>
   * <a href="#_other_optimisations">other optimisations</a>
       * <a href="#_disabling_various_defaults">disabling various defaults</a>
       * <a href="#_optimising_the_authkeys_file">optimising the authkeys file</a>
@@ -18,10 +20,10 @@ In this document:
 ### when/why do we need it?
 
 A "big config" is anything that has a few thousand users and a few thousand
-repos, organised into groups that are much smaller in number (like maybe a few
-hundreds of repogroups and a few dozens of usergroups).
+repos, resulting in a very large 'compiled' config file.
 
-So let's say you have
+To understand the problem, consider what happens if you have something like
+this in your gitolite conf file:
 
     @wbr    =   lynx firefox
     @devs   =   alice bob
@@ -30,15 +32,15 @@ So let's say you have
         RW+     next    =   @devs
         RW    master    =   @devs
 
-Gitolite internally translates this to
+Without the 'big config' setting, gitolite internally translates this to:
 
     repo lynx firefox
         RW+     next    =   alice bob
         RW    master    =   alice bob
 
-Not just that -- it now generates the actual config rules once for each
-user-repo-ref combination (there are 8 combinations above; the compiled config
-file looks partly like this:
+and then generates the actual config rules once for each user-repo-ref
+combination (there are 8 combinations above); the compiled config file looks
+somewhat like this:
 
     %repos = (
       'firefox' => {
@@ -51,20 +53,28 @@ file looks partly like this:
           'bob' => 1
         },
         'alice' => [
-          {
-            'refs/heads/next' => 'RW+'
-          },
-          {
-            'refs/heads/master' => 'RW'
-          }
+          [
+            0,
+            'refs/heads/next',
+            'RW+'
+          ],
+          [
+            4,
+            'refs/heads/master',
+            'RW'
+          ]
         ],
         'bob' => [
-          {
-            'refs/heads/next' => 'RW+'
-          },
-          {
-            'refs/heads/master' => 'RW'
-          }
+          [
+            1,
+            'refs/heads/next',
+            'RW+'
+          ],
+          [
+            5,
+            'refs/heads/master',
+            'RW'
+          ]
         ]
       },
       'lynx' => {
@@ -77,54 +87,73 @@ file looks partly like this:
           'bob' => 1
         },
         'alice' => [
-          {
-            'refs/heads/next' => 'RW+'
-          },
-          {
-            'refs/heads/master' => 'RW'
-          }
+          [
+            2,
+            'refs/heads/next',
+            'RW+'
+          ],
+          [
+            6,
+            'refs/heads/master',
+            'RW'
+          ]
         ],
         'bob' => [
-          {
-            'refs/heads/next' => 'RW+'
-          },
-          {
-            'refs/heads/master' => 'RW'
-          }
+          [
+            3,
+            'refs/heads/next',
+            'RW+'
+          ],
+          [
+            7,
+            'refs/heads/master',
+            'RW'
+          ]
         ]
       }
     );
 
 Phew!
 
-You can imagine what that does when you have 10,000 users and 10,000 repos.
-Let's just say it's not pretty :)
+Of course, the output is the same whether you used groups (like `@wbr` and
+`@devs` in the example above) or listed the repos directly on the 'repo'
+lines.
+
+Anyway, you can imagine what that does when you have 10,000 users and 10,000
+repos.  Let's just say it's not pretty :)
 
 <a name="_how_do_we_use_it_"></a>
 
 ### how do we use it?
-
-Now, if you had all those 10,000 users and repos explicitly listed (no
-groups), then there is no help.  But if, like the above example, you had
-groups like we used above, there is hope.
 
 Just set
 
     $GL_BIG_CONFIG = 1;
 
 in the `~/.gitolite.rc` file on the server (see next section for more
-variables).  When you do that, and push this configuration, the compiled file
-looks like this:
+variables).  When you do that, and push this configuration, one of two things
+happens.
+
+<a name="_access_rules_for_groups"></a>
+
+#### access rules for groups
+
+If you used group names in the 'repo' lines (as in `repo @wbr`), then the
+compiled config looks like this:
 
     %repos = (
       '@wbr' => {
         '@devs' => [
-          {
-            'refs/heads/next' => 'RW+'
-          },
-          {
-            'refs/heads/master' => 'RW'
-          }
+          [
+            0,
+            'refs/heads/next',
+            'RW+'
+          ],
+          [
+            1,
+            'refs/heads/master',
+            'RW'
+          ]
         ],
         'R' => {
           '@devs' => 1
@@ -132,7 +161,7 @@ looks like this:
         'W' => {
           '@devs' => 1
         }
-      },
+      }
     );
     %groups = (
       '@devs' => {
@@ -147,6 +176,62 @@ looks like this:
 
 That's a lot smaller, and allows orders of magintude more repos and groups to
 be supported.
+
+<a name="_access_rules_for_individual_repos_split_config_"></a>
+
+#### access rules for individual repos (split config)
+
+If, on the other hand, you had the repos listed individually, (as in `repo
+lynx firefox`), then the main config file would now look like this:
+
+    %repos = ();
+    %split_conf = (
+      'firefox' => 1,
+      'lynx' => 1
+    );
+
+And each individual repo's configuration would go its own directory.  For
+instance, `~/repositories/lynx.git/gl-conf` would look like this:
+
+    %one_repo = (
+      'lynx' => {
+        'R' => {
+          'alice' => 1,
+          'bob' => 1
+        },
+        'W' => {
+          'alice' => 1,
+          'bob' => 1
+        },
+        'alice' => [
+          [
+            0,
+            'refs/heads/next',
+            'RW+'
+          ],
+          [
+            4,
+            'refs/heads/master',
+            'RW'
+          ]
+        ],
+        'bob' => [
+          [
+            1,
+            'refs/heads/next',
+            'RW+'
+          ],
+          [
+            5,
+            'refs/heads/master',
+            'RW'
+          ]
+        ]
+      }
+    );
+
+That does not reduce the overall size of the repo config (because you did not
+group the repos), but the main repo config is now even smaller!
 
 <a name="_other_optimisations"></a>
 
@@ -169,21 +254,17 @@ if you *do* have a large number of repositories, and do *not* use gitolite's
 support for gitweb or git-daemon access (see "[easier to specify gitweb
 description and gitweb/daemon access][gwd]" for details).  This will save a
 lot of time when you push the gitolite-admin repo with changes.  This variable
-also control whether "git config" lines (such as `config hooks.emailprefix =
+also controls whether "git config" lines (such as `config hooks.emailprefix =
 "[gitolite]"`) will be processed or not.
 
-Setting this is relatively harmless to a normal installation, unlike the next
-two variables :-)  `GL_NO_CREATE_REPOS` and `GL_NO_SETUP_AUTHKEYS` are meant
-for installations where some backend system already exists that does all the
-actual repo creation, and all the authentication setup (ssh auth keys),
-respectively.
+You should be a lot more careful with `GL_NO_CREATE_REPOS` and
+`GL_NO_SETUP_AUTHKEYS`.  These are meant for installations where some backend
+system already exists that does all the actual repo creation, (including
+setting up the proper hooks -- very important for access control), and all the
+authentication setup (ssh auth keys), respectively.
 
 Summary: Please **leave those two variables alone** unless you're initials are
 "JK" ;-)
-
-Also note that using all 3 of the `GL_NO_*` variables will result in
-*everything* after the config compile being skipped.  In other words, gitolite
-is being used **only** for its access control language.
 
 <a name="_optimising_the_authkeys_file"></a>
 
@@ -228,15 +309,29 @@ this (note the clever date command that always gets you last months log file!)
 
 ### what are the downsides?
 
-There is one minor issue.
+There are some downsides.  The first one applies in all cases:
 
-If you use the delegation feature, you can no longer define or extend
-@groups in a fragment, for security reasons.  It will also not let you use any
-group other than the @fragname itself (specifically, groups which contained a
-subset of the allowed @fragname, which would work normally, do not work now).
+  * If you use the delegation feature, you can no longer define or extend
+    @groups in a fragment, for security reasons.  It will also not let you use
+    any group other than the @fragname itself (specifically, groups which
+    contained a subset of the allowed @fragname, which would work normally, do
+    not work now).
 
-(If you didn't understand all that, you're probably not using delegation, so
-feel free to ignore it!)
+    (If you didn't understand all that, you're probably not using delegation,
+    so feel free to ignore it!)
+
+The following apply if individual ("split") conf files are written, which in
+turn only happens if you used repo names instead of group names on the `repo`
+lines:
+
+  * the compile (gitolite-admin push) is now slower, because it potentially
+    has to write a few thousand small files instead of one large one.  Since
+    the compile should be relatively infrequent compared to developer access,
+    this is ok -- the main config file is parsed much faster now, so every hit
+    to the server will benefit.
+
+  * we can no longer distinguish 'repo not found on disk' from 'you dont have
+    access'.  They both now look like 'you dont have access'.
 
 <a name="_storing_usergroup_information_outside_gitolite_like_in_LDAP_"></a>
 
@@ -298,10 +393,10 @@ path to this program, set `$GL_BIG_CONFIG` to 1, and that will be that.
 
 ### implementation notes
 
-To understand how big-config works, we'll first look at how it works without
-this setting.  Think back to the example at the top, and assume 'alice' is
-accessing the 'lynx' repo.  The various rights are governed by the following
-hash elements:
+To understand how big-config works (at least when you're using grouped repos),
+we'll first look at how it works without this setting.  Think back to the
+example at the top, and assume 'alice' is accessing the 'lynx' repo.  The
+various rights are governed by the following hash elements:
 
     # for the first level checks
     $repos{'lynx'}{'R'}{'alice'} = 1

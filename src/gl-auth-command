@@ -38,6 +38,7 @@ our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT, $ADC_CMD_ARGS_PAT
 our %repos;
 our %groups;
 our %git_configs;
+our %split_conf;;
 
 # the common setup module is in the same directory as this running program is
 my $bindir = $0;

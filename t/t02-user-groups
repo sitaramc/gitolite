@@ -42,8 +42,8 @@ echo "
         RW      =   u2 u3
 " | ugc
 
-catconf
-expect_filesame $TESTDIR/out/t02-user-groups.1
+catconfs
+expect_filesame $TESTDIR/out/t02-user-groups.1bs
 
 # ----------
 $TESTDIR/rollback || die "rollback failed"
@@ -60,7 +60,7 @@ echo "
         RW      =   @g2
 " | ugc
 
-catconf
-expect_filesame $TESTDIR/out/t02-user-groups.2
+catconfs
+expect_filesame $TESTDIR/out/t02-user-groups.2bs
 
 name INTERNAL
