@@ -1,0 +1,84 @@
+$data_version = '1.7';
+%repos = ();
+%groups = (
+  '@g1' => {
+    'u1' => 'master'
+  },
+  '@g2' => {
+    'u2' => 'master',
+    'u3' => 'master'
+  },
+  '@g3' => {
+    'u4' => 'master',
+    'u5' => 'master',
+    'u6' => 'master'
+  }
+);
+%split_conf = (
+  'aa' => 1,
+  'gitolite-admin' => 1,
+  'testing' => 1
+);
+repositories/aa.git/gl-conf
+repositories/gitolite-admin.git/gl-conf
+repositories/testing.git/gl-conf
+%one_repo = (
+  'aa' => {
+    '@g1' => [
+      [
+        2,
+        'refs/.*',
+        'RW+'
+      ]
+    ],
+    '@g2' => [
+      [
+        3,
+        'refs/.*',
+        'RW'
+      ]
+    ],
+    'R' => {
+      '@g1' => 1,
+      '@g2' => 1
+    },
+    'W' => {
+      '@g1' => 1,
+      '@g2' => 1
+    }
+  }
+);
+%one_repo = (
+  'gitolite-admin' => {
+    'R' => {
+      'tester' => 1
+    },
+    'W' => {
+      'tester' => 1
+    },
+    'tester' => [
+      [
+        0,
+        'refs/.*',
+        'RW+'
+      ]
+    ]
+  }
+);
+%one_repo = (
+  'testing' => {
+    '@all' => [
+      [
+        1,
+        'refs/.*',
+        'RW+'
+      ]
+    ],
+    'R' => {
+      '@all' => 1
+    },
+    'W' => {
+      '@all' => 1
+    }
+  }
+);
