@@ -48,6 +48,22 @@ do
         [ "$wr" = "1" ] && expect " R   W .(u1).foo/u1/bar"
         [ "$wr" = "1" ] && expect "@R_ @W_..gitolite..testing"
 
+        name "gitolite info u1"
+        runlocal ssh gitolite info . u1
+        expect "hello u1, the gitolite version here is"
+        expect " @R_ @W_.testing"
+        [ "$wr" = "1" ] && [ "$bc" = "0" ] && expect    " C  R   W .foo/u1/\\.\\+"
+        [ "$wr" = "1" ] && [ "$bc" = "1" ] && notexpect " C  R   W .foo/u1/\\.\\+"
+        [ "$wr" = "1" ] && [ "$bc" = "1" ] &&    expect " C        .@gfoo"
+
+        name "gitolite expand u1"
+        runlocal ssh gitolite expand . u1
+        [ "$wr" = "0" ] && expect "wildrepos disabled, sorry"
+        # XXX TODO -- expand currently does not allow superuser to query for others
+        # [ "$wr" = "1" ] && expect "hello u1, the gitolite version here is"
+        # [ "$wr" = "1" ] && expect " R   W .(u1).foo/u1/bar"
+        # [ "$wr" = "1" ] && expect "@R_ @W_..gitolite..testing"
+
         name INTERNAL
     done
 done

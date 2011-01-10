@@ -1,0 +1,83 @@
+# vim: syn=sh:
+cd $TESTDIR
+$TESTDIR/rollback || die "rollback failed"
+
+runremote rm -rf /tmp/rsyncbase
+runremote mkdir  /tmp/rsyncbase
+editrc REPO_UMASK 0022
+echo "\$RSYNC_BASE = '/tmp/rsyncbase';" | addrc
+
+# ----------
+
+name "INTERNAL"
+echo "
+    @leads = u1 u2
+    @devs = u1 u2 u3 u4
+
+    repo EXTCMD/rsync
+        RW  NAME/           =   u1
+        -   NAME/spl        =   @all
+        RW  NAME/           =   u2
+        RW  NAME/foo/       =   u3
+" | ugc
+expect_push_ok "master -> master"
+
+name "u1 rsync to frob"
+cd ~/gitolite-admin
+runlocal rsync -avP conf u1:frob
+expect conf/gitolite.conf
+expect 386.*100%
+expect "total size is 386"
+runlocal find /tmp/rsyncbase -type f
+expect /tmp/rsyncbase/frob/conf/gitolite.conf
+
+name "u1 rsync from frob to local"
+cd ~/td
+rm -rf frobhere
+runlocal rsync -avP u1:frob frobhere
+runlocal find frobhere -type f
+expect frobhere/frob/conf/gitolite.conf
+
+name "u2 rsync to nitz"
+cd ~/gitolite-admin
+runlocal rsync -avP conf u2:nitz
+expect conf/gitolite.conf
+expect 386.*100%
+expect "total size is 386"
+runlocal find /tmp/rsyncbase -type f
+expect /tmp/rsyncbase/nitz/conf/gitolite.conf
+
+name "u2 rsync to spl"
+cd ~/gitolite-admin
+runlocal rsync -avP conf u2:spl
+expect "W NAME/spl u2 DENIED by NAME/spl"
+
+name "u1 rsync to spl"
+cd ~/gitolite-admin
+runlocal rsync -avP conf u1:spl
+expect 386.*100%
+expect "total size is 386"
+
+name "u2 rsync from spl"
+cd ~/td
+runlocal rsync -avP u2:spl splhere
+expect "R NAME/spl u2 DENIED by NAME/spl"
+
+name "u1 rsync from spl"
+cd ~/td
+runlocal rsync -avP u1:spl splhere
+expect 386.*100%
+expect "total size is 386"
+
+name "u3 rsync to foo"
+cd ~/gitolite-admin
+runlocal rsync -avP conf u3:foo/
+expect 386.*100%
+expect "total size is 386"
+
+name "u3 rsync to bar"
+cd ~/gitolite-admin
+runlocal rsync -avP conf u3:bar
+expect "W NAME/bar EXTCMD/rsync u3 DENIED by fallthru"
+
+name "INTERNAL"
