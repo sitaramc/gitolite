@@ -307,16 +307,10 @@ sub new_repo
 # ----------------------------------------------------------------------------
 
 {
-    # the following sub needs some persistent data, so we make a closure
+    # the following subs need some persistent data, so we make a closure
     my $cache_filled = 0;
     my %cached_groups;
-
-    # "who created this repo", "am I on the R list", and "am I on the RW list"?
-    sub wild_repo_rights
-    {
-        # set default categories
-        $GL_WILDREPOS_PERM_CATS ||= "READERS WRITERS";
-        my ($repo, $user) = @_;
+    sub fill_cache {
         # pull in basic group info
         unless ($cache_filled) {
             local(%repos, %groups);
@@ -328,10 +322,18 @@ sub new_repo
             # really care; we just pull it in once and save it for the rest of
             # the run
             do $GL_CONF_COMPILED;
-            add_repo_conf($repo) if $repo;
             %cached_groups = %groups;
             $cache_filled++;
         }
+    }
+
+    # "who created this repo", "am I on the R list", and "am I on the RW list"?
+    sub wild_repo_rights
+    {
+        # set default categories
+        $GL_WILDREPOS_PERM_CATS ||= "READERS WRITERS";
+        my ($repo, $user) = @_;
+
         # creator
         my $c = '';
         if (                     -f "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-creater") {
@@ -360,6 +362,7 @@ sub new_repo
             # file).  We replace each @foo with $user if $cached_groups{'@foo'}{$user}
             # exists (i.e., $user is a member of @foo)
             for my $g ($perms =~ /\s(\@\S+)/g) {
+                fill_cache();   # get %cached_groups
                 $perms =~ s/ $g(?!\S)/ $user/ if $cached_groups{$g}{$user};
             }
             # now setup the perm_cats hash to be returned
