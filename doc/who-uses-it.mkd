@@ -50,3 +50,8 @@ users as well.
 
 [gentoo1]: http://archives.gentoo.org/gentoo-dev/msg_2812c9b9e768f64b46360ab17b9d0024.xml
 [gentoo2]: http://www.gentoo.org/proj/en/overlays/
+
+**Nokia MeeGo** uses Gitolite internally, and has also contributed LDAP
+specific code (see [contrib/ldap][ldap] directory for details).
+
+[ldap]: http://github.com/sitaramc/gitolite/blob/pu/contrib/ldap

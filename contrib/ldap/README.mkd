@@ -1,0 +1,18 @@
+These programs were contributed by the Nokia MeeGo folks.
+
+The first 2 are perl and shell verisions of programs meant to be used as
+`$GL_GET_MEMBERSHIPS_PGM` (see [this][ldap] for more).
+
+
+  * ldap-query-example.pl
+  * ldap-query-example.sh
+
+The third program is meant to be installed as an adc (admin-defined command,
+see [here][adc]), and helps users change their LDAP passwords.
+
+  * passwd
+
+Enjoy!
+
+[ldap]: http://github.com/sitaramc/gitolite/blob/pu/doc/big-config.mkd#_storing_usergroup_information_outside_gitolite_like_in_LDAP_
+[adc]: http://github.com/sitaramc/gitolite/blob/pu/doc/admin-defined-commands.mkd
