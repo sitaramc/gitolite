@@ -48,7 +48,7 @@ main() {
     [[ $upgrade == 0 ]] && initial_conf_key
 
     # MANUAL: cd to $GL_ADMINDIR and run "src/gl-compile-conf"
-    ssh $p_port $user@$host "cd $GL_ADMINDIR; \$PWD/src/gl-compile-conf $quiet"
+    ssh $p_port $user@$host "cd $GL_ADMINDIR; src/gl-auth-command -e src/gl-compile-conf $quiet"
 
     setup_pta
 
@@ -361,9 +361,9 @@ run_install() {
     prompt "installing/upgrading..." "$v_ignore_stuff"
 
     # extract the GL_ADMINDIR, REPO_BASE and GIT_PATH locations
-    GL_ADMINDIR=$(ssh $p_port $user@$host "perl -e 'do \".gitolite.rc\"; print \$GL_ADMINDIR'")
-    REPO_BASE=$(  ssh $p_port $user@$host "perl -e 'do \".gitolite.rc\"; print \$REPO_BASE'")
-    GIT_PATH=$(   ssh $p_port $user@$host "perl -e 'do \".gitolite.rc\"; print \$GIT_PATH'")
+    GL_ADMINDIR=$(ssh $p_port $user@$host gitolite-install/src/gl-query-rc GL_ADMINDIR)
+    REPO_BASE=$(  ssh $p_port $user@$host gitolite-install/src/gl-query-rc REPO_BASE)
+    GIT_PATH=$(   ssh $p_port $user@$host gitolite-install/src/gl-query-rc GIT_PATH)
 
     # determine if this is an upgrade; we decide based on whether a file
     # called $GL_ADMINDIR/conf/gitolite.conf exists on the remote side.  We
@@ -382,7 +382,7 @@ run_install() {
     # MANUAL: still in the "gitolite-install" directory?  Good.  Run
     # "src/gl-install"
 
-    ssh $p_port $user@$host "cd gitolite-install; src/gl-install $quiet"
+    ssh $p_port $user@$host "cd gitolite-install; src/gl-auth-command -e src/gl-install $quiet"
 
     # MANUAL: if you're upgrading, run "src/gl-compile-conf" and you're done!
     # -- ignore the rest of this file for the purposes of an upgrade
@@ -443,7 +443,7 @@ GIT_WORK_TREE=$GL_ADMINDIR git diff --cached --quiet 2>/dev/null || GIT_WORK_TRE
     # properly.  The install program does this.  So cd back to the
     # "gitolite-install" directory and run "src/gl-install"
 
-    ssh $p_port $user@$host "cd gitolite-install; src/gl-install $quiet"
+    ssh $p_port $user@$host "cd gitolite-install; src/gl-auth-command -e src/gl-install $quiet"
 
     # MANUAL: you're done!  Log out of the server, come back to your
     # workstation, and clone the admin repo using "git clone

@@ -20,6 +20,10 @@ GL_PACKAGE_CONF=/tmp/share/gitolite/conf
 
 die() { echo "$@"; exit 1; } >&2
 
+get_rc_val() {
+    ${0%/*}/gl-query-rc $1
+}
+
 TEMPDIR=$(mktemp -d -t tmp.XXXXXXXXXX)
 export TEMPDIR
 trap "/bin/rm -rf $TEMPDIR" 0
@@ -40,20 +44,24 @@ else
     fi
 fi
 
-if [ -f $HOME/.gitolite.rc ]
+export GL_RC
+GL_RC=$(get_rc_val GL_RC 2>/dev/null)
+[ -z "$GL_RC" ] && GL_RC=$HOME/.gitolite.rc
+
+if [ -f $GL_RC ]
 then
     print_rc_vars() {
         perl -ne 's/^\s+//; s/[\s=].*//; print if /^\$/;' < $1 | sort
     }
     print_rc_vars $GL_PACKAGE_CONF/example.gitolite.rc > $TEMPDIR/.newvars
-    print_rc_vars $HOME/.gitolite.rc                   > $TEMPDIR/.oldvars
+    print_rc_vars $GL_RC                               > $TEMPDIR/.oldvars
     comm -23 $TEMPDIR/.newvars $TEMPDIR/.oldvars > $TEMPDIR/.diffvars
     if [ -s $TEMPDIR/.diffvars ]
     then
         cp $GL_PACKAGE_CONF/example.gitolite.rc $HOME/.gitolite.rc.new
         echo new version of the rc file saved in $HOME/.gitolite.rc.new
         echo
-        echo please update $HOME/.gitolite.rc manually if you need features
+        echo please update $GL_RC manually if you need features
         echo controlled by any of the following variables:
         echo ----
         sed -e 's/^/    /' < $TEMPDIR/.diffvars
@@ -63,11 +71,11 @@ else
     [ -n "$GITOLITE_HTTP_HOME" ] || [ -n "$pubkey_file" ] || die "looks like first run -- I need a pubkey file"
     [ -z "$GITOLITE_HTTP_HOME" ] || [ -n "$admin_name"  ] || die "looks like first run -- I need an admin name"
 
-    cp $GL_PACKAGE_CONF/example.gitolite.rc $HOME/.gitolite.rc
-    printf "The default settings in the "rc" file ($HOME/.gitolite.rc) are fine for most\n"
+    cp $GL_PACKAGE_CONF/example.gitolite.rc $GL_RC
+    printf "The default settings in the "rc" file ($GL_RC) are fine for most\n"
     printf "people but if you wish to make any changes, you can do so now.\n\nhit enter..."
     read i
-    ${EDITOR:-vi} $HOME/.gitolite.rc
+    ${EDITOR:-vi} $GL_RC
 fi
 
 # setup ssh stuff.  We break our normal rule that we will not fiddle with
@@ -80,15 +88,16 @@ fi
     chmod go-w . .ssh .ssh/authorized_keys
 )
 
+export GL_BINDIR
+export REPO_BASE
+export GL_ADMINDIR
+GL_BINDIR=$(  get_rc_val GL_BINDIR  )
+REPO_BASE=$(  get_rc_val REPO_BASE  )
+GL_ADMINDIR=$(get_rc_val GL_ADMINDIR)
+
 # now we get to gitolite itself
 
 gl-install -q
-
-get_rc_val() {
-    perl -e "do '$HOME/.gitolite.rc'; print $1"
-}
-GL_ADMINDIR=$(get_rc_val '$GL_ADMINDIR')
-REPO_BASE=$(  get_rc_val '$REPO_BASE'  )
 
 [ -f $GL_ADMINDIR/conf/gitolite.conf ] || {
     cat <<EOF | cut -c9- > $GL_ADMINDIR/conf/gitolite.conf

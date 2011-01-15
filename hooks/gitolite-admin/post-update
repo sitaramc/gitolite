@@ -1,5 +1,9 @@
 #!/bin/sh
 
+[ -z "$GL_RC" ] && die "ENV GL_RC not set"
+[ -z "$GL_BINDIR" ] && die "ENV GL_BINDIR not set"
+[ -z "$GL_ADMINDIR" ] && die "ENV GL_ADMINDIR not set"
+
 # ensure that the admin is not sneaking in src/ and hooks/ :)
 GIT_WORK_TREE=$GL_ADMINDIR git ls-tree --name-only master |
     perl -lne 'exit 1 if /^(src|hooks)$/' || {
@@ -19,7 +23,7 @@ $GL_BINDIR/gl-compile-conf
 
 cd $od
 
-ADMIN_POST_UPDATE_CHAINS_TO=` cd $HOME;perl -e 'do ".gitolite.rc"; print $ADMIN_POST_UPDATE_CHAINS_TO'`
+ADMIN_POST_UPDATE_CHAINS_TO=`$GL_BINDIR/gl-query-rc ADMIN_POST_UPDATE_CHAINS_TO`
 [ -n "$ADMIN_POST_UPDATE_CHAINS_TO" ] || ADMIN_POST_UPDATE_CHAINS_TO=hooks/post-update.secondary
 
 if [ -f $ADMIN_POST_UPDATE_CHAINS_TO ] || [ -L $ADMIN_POST_UPDATE_CHAINS_TO ]

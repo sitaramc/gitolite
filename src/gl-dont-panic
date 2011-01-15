@@ -62,10 +62,19 @@ else
 fi
 
 # ------------------------------------------------------------------------
-# setup stuff
-REPO_BASE=$(  cd $HOME; perl -e 'do ".gitolite.rc"; print $REPO_BASE'  )
-GL_BINDIR=$(  cd $HOME; perl -ne 'print($1), exit if /^command="(.*?)\/gl-auth-command /' < $HOME/.ssh/authorized_keys)
-GL_ADMINDIR=$(cd $HOME; perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR')
+# setup stuff.  Note that for *this* program, we don't want to rely on $0
+# telling us bindir; the user should be allowed to run it from anywhere and
+# still have it work.  Luckily, by the time you feel the need to run this
+# program, authkeys is already populated, and anyway that's the only
+# *reliable* place to get this info.  However, when running in HTTP mode or
+# Fedora mode, you have *no* keys in the authkeys file.  In those cases you
+# have to manually set GL_BINDIR externally before running this program
+[ -z "$GL_BINDIR" ] &&
+    GL_BINDIR=$(  perl -ne 'print($1), exit if /^command="(.+?)\/gl-(time|auth-command) /' < $HOME/.ssh/authorized_keys)
+GL_RC=$(      $GL_BINDIR/gl-query-rc GL_RC)
+REPO_BASE=$(  $GL_BINDIR/gl-query-rc REPO_BASE)
+GL_ADMINDIR=$($GL_BINDIR/gl-query-rc GL_ADMINDIR)
+export GL_RC
 export REPO_BASE
 export GL_BINDIR
 export GL_ADMINDIR

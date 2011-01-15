@@ -14,8 +14,9 @@
 # current sub-commands:
 
 # (1) REPLACE THE OLD $SHELL_USERS MECHANISM
-
-#   $0 shell-add foo.pub
+#
+#       $0 shell-add foo.pub
+#
 # adds the pubkey in foo.pub into the authkeys file with "-s" argument (shell
 # access) and user "foo".  The line will be added *before* the "# gitolite
 # start" section, so that a gitolite-admin push will not affect it.
@@ -45,12 +46,12 @@ then
     # side, it's not likely to change anytime soon!
     AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding"
 
-    bindir=`echo $0 | perl -lpe 's/^/$ENV{PWD}\// unless /^\//; s/\/[^\/]+$//;'`
+    GL_BINDIR=`${0%/*}/gl-query-rc GL_BINDIR`
 
     pubkey_file=$2
     user=`basename $pubkey_file .pub`
 
-    authline="command=\"$bindir/gl-auth-command -s $user\",$AUTH_OPTIONS `cat $pubkey_file`";
+    authline="command=\"$GL_BINDIR/gl-auth-command -s $user\",$AUTH_OPTIONS `cat $pubkey_file`";
 
     authkeys=$HOME/.ssh/authorized_keys
 

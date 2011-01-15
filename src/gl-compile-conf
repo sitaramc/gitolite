@@ -6,69 +6,23 @@ use Data::Dumper;
 $Data::Dumper::Indent = 1;
 $Data::Dumper::Sortkeys = 1;
 
+# ----------------------------------------------------------------------------
+#       find the rc file, then pull the libraries
+# ----------------------------------------------------------------------------
+
+BEGIN {
+    die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+    die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+}
+
+use lib $ENV{GL_BINDIR};
+use gitolite_rc;
+use gitolite qw(:DEFAULT %repos %groups %git_configs %split_conf);
+
 # === add-auth-keys ===
-
-# part of the gitolite (GL) suite
-
-# (1) - "compiles" ~/.ssh/authorized_keys from the list of pub-keys
-# (2) - also "compiles" the user-friendly GL conf file into something easier
-#       to parse.  We're doing this because both the gl-auth-command and the
-#       (gl-)update hook need this, and it seems easier to do this than
-#       replicate the parsing code in both those places.  As a bonus, it's
-#       probably more efficient.
-# (3) - finally does what I have resisted doing all along -- handle gitweb and
-#       git-daemon access.  It won't *setup* gitweb/daemon for you -- you have
-#       to that yourself.  What this does is make sure that "repo.git"
-#       contains the file "git-daemon-export-ok" (for daemon case) and the
-#       line "repo.git" exists in the "projects.list" file (for gitweb case).
-
-# how run:      manual, by GL admin
-# when:
-#     - anytime a pubkey is added/deleted
-#     - anytime gitolite.conf is changed
-# input:
-#     - GL_CONF (default: ~/.gitolite/conf/gitolite.conf)
-#     - GL_KEYDIR (default: ~/.gitolite/keydir)
-# output:
-#     - ~/.ssh/authorized_keys (dictated by sshd)
-#     - GL_CONF_COMPILED (default: ~/.gitolite/conf/gitolite.conf-compiled.pm)
-# security:
-#     - touches a very critical system file that manages the restrictions on
-#       incoming users.  Be sure to audit AUTH_COMMAND and AUTH_OPTIONS (see
-#       below) on any change to this script
-#     - no security checks within program.  The GL admin runs this manually
-
-# warnings:
-#     - if the "start" line exists, but the "end" line does not, you lose the
-#       rest of the existing authkey file.  In general, "don't do that (TM)",
-#       but we do have a "vim -d" popping up so you can see the changes being
-#       made, just in case...
-
-# ----------------------------------------------------------------------------
-#       common definitions
-# ----------------------------------------------------------------------------
 
 # setup quiet mode if asked; please do not use this when running manually
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
-
-# these are set by the "rc" file
-our ($GL_ADMINDIR, $GL_CONF, $GL_KEYDIR, $GL_CONF_COMPILED, $REPO_BASE, $REPO_UMASK, $PROJECTS_LIST, $GIT_PATH, $GL_WILDREPOS, $GL_GITCONFIG_KEYS, $GL_GITCONFIG_WILD, $GL_PACKAGE_HOOKS, $GL_BIG_CONFIG, $GL_NO_DAEMON_NO_GITWEB, $GL_NO_CREATE_REPOS, $GL_NO_SETUP_AUTHKEYS, $GL_PERFLOGT);
-# and these are set by gitolite.pm
-our ($REPONAME_PATT, $REPOPATT_PATT, $USERNAME_PATT, $ABRT, $WARN);
-
-# the common setup module is in the same directory as this running program is
-my $bindir = $0;
-$bindir =~ s/\/[^\/]+$//;
-$bindir = "$ENV{PWD}/$bindir" unless $bindir =~ /^\//;
-unshift @INC, $bindir;
-require gitolite or die "parse gitolite.pm failed\n";
-
-# ask where the rc file is, get it, and "do" it
-&where_is_rc();
-die "$ABRT parse $ENV{GL_RC} failed: " . ($! or $@) unless do $ENV{GL_RC};
-
-# add a custom path for git binaries, if specified
-$ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 
 # ----------------------------------------------------------------------------
 #       definitions specific to this program
@@ -78,7 +32,7 @@ $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 
 # $groups{group}{member} = "master" (or name of fragment file in which the
 # group is defined).
-our %groups = ();
+# our %groups = ();     # moved to gitolite.pm now
 
 # %repos has two functions.
 
@@ -90,10 +44,10 @@ our %groups = ();
 # level 2 check.  In order to allow "exclude" rules, the order of rules now
 # matters, so what used to be entirely "hash of hash of hash" now has a list
 # in between :)
-my %repos = ();
+# copy above desc to lite.pm -- my %repos = ();
 
-# repos whose ACLs don't make it into the main compiled config file
-my %split_conf = ();
+# names of repos whose ACLs don't make it into the main compiled config file
+# copy above desc to lite.pm -- my %split_conf = ();
 
 # rule sequence number
 my $rule_seq = 0;
@@ -103,20 +57,15 @@ my $rule_seq = 0;
 # multiple times for the same repo+user.  So...
 my %rurp_seen = ();
 
-our $current_data_version;      # this comes from gitolite.pm
-
 # catch usernames<->pubkeys mismatches; search for "lint" below
 my %user_list = ();
 
 # repo specific 'git config' stuff
-our %git_configs = ();
+# our %git_configs = ();    # moved to gitolite.pm now
 
 # gitweb descriptions and owners; plain text, keyed by "$repo.git"
 my %desc = ();
 my %owner = ();
-
-# set the umask before creating any files
-umask($REPO_UMASK);
 
 # ----------------------------------------------------------------------------
 #       subroutines
@@ -401,28 +350,6 @@ for my $fragment_file (glob("conf/fragments/*.conf"))
     parse_conf_file($fragment_file, $fragment);
 }
 
-sub write_compiled_conf
-{
-    my $compiled_fh = wrap_open( ">", "$GL_CONF_COMPILED.new" );
-    my $data_version = $current_data_version;
-    print $compiled_fh Data::Dumper->Dump([$data_version], [qw(*data_version)]);
-    my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
-    $dumped_data .= Data::Dumper->Dump([\%git_configs], [qw(*git_configs)]) if %git_configs;
-    # the dump uses single quotes, but we convert any strings containing $creator
-    # and $gl_user to double quoted strings.  A bit sneaky, but not too much...
-    $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
-    print $compiled_fh $dumped_data;
-    if (%groups) {
-        $dumped_data = Data::Dumper->Dump([\%groups], [qw(*groups)]);
-        $dumped_data =~ s/\bCREAT[EO]R\b/\$creator/g;
-        $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
-        print $compiled_fh $dumped_data;
-    }
-    print $compiled_fh Data::Dumper->Dump([\%split_conf], [qw(*split_conf)]) if %split_conf;
-    close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
-    rename "$GL_CONF_COMPILED.new", "$GL_CONF_COMPILED";
-}
-
 # ----------------------------------------------------------------------------
 #       (that ends the config file compiler, though we postpone the writing
 #       for now to deal with the latest GL_BIG_CONFIG innovation!)
@@ -539,12 +466,34 @@ sub write_1_compiled_conf
     $split_conf{$repo} = 1;
 }
 
+sub write_compiled_conf
+{
+    my $compiled_fh = wrap_open( ">", "$GL_CONF_COMPILED.new" );
+    my $data_version = $current_data_version;
+    print $compiled_fh Data::Dumper->Dump([$data_version], [qw(*data_version)]);
+    my $dumped_data = Data::Dumper->Dump([\%repos], [qw(*repos)]);
+    $dumped_data .= Data::Dumper->Dump([\%git_configs], [qw(*git_configs)]) if %git_configs;
+    # the dump uses single quotes, but we convert any strings containing $creator
+    # and $gl_user to double quoted strings.  A bit sneaky, but not too much...
+    $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
+    print $compiled_fh $dumped_data;
+    if (%groups) {
+        $dumped_data = Data::Dumper->Dump([\%groups], [qw(*groups)]);
+        $dumped_data =~ s/\bCREAT[EO]R\b/\$creator/g;
+        $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
+        print $compiled_fh $dumped_data;
+    }
+    print $compiled_fh Data::Dumper->Dump([\%split_conf], [qw(*split_conf)]) if %split_conf;
+    close $compiled_fh or die "$ABRT close compiled-conf failed: $!\n";
+    rename "$GL_CONF_COMPILED.new", "$GL_CONF_COMPILED";
+}
+
 # ----------------------------------------------------------------------------
 #       get a list of physical repos for later
 # ----------------------------------------------------------------------------
 
 my @phy_repos = ();
-@phy_repos = &list_phy_repos() unless $GL_NO_DAEMON_NO_GITWEB;
+@phy_repos = list_phy_repos() unless $GL_NO_DAEMON_NO_GITWEB;
 
 # NOTE: we're overloading GL_NO_DAEMON_NO_GITWEB to mean "no git config" also.
 # In fact anything that requires trawling through the existing repos doing
@@ -573,7 +522,7 @@ my %projlist = ();
 for my $repo (@phy_repos) {
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
     # daemon is easy
-    &setup_daemon_access($repo);
+    setup_daemon_access($repo);
 }
 
 for my $repo (@phy_repos) {
@@ -588,7 +537,7 @@ for my $repo (@phy_repos) {
     #   into the "repo foo" section; they're essentialy independent.
     #   Anyway, I believe it doesn't make sense to have all wild repos
     #   (for some pattern) to have the same description and owner.
-    $projlist{"$repo.git"} = 1 if &setup_gitweb_access($repo, $desc{"$repo.git"} || '', $owner{"$repo.git"} || '');
+    $projlist{"$repo.git"} = 1 if setup_gitweb_access($repo, $desc{"$repo.git"} || '', $owner{"$repo.git"} || '');
 
     # git config
     # implementation note: this must happen *after* one of the previous 2
@@ -597,7 +546,7 @@ for my $repo (@phy_repos) {
     # set for the *current* repo, which in turn stores translated values for
     # $creator in the git_configs hash, which, (phew!) is needed for a match
     # that eventually gets you a valid $git_configs{} below
-    &setup_git_configs($repo, \%git_configs) if $git_configs{$repo};
+    setup_git_configs($repo, \%git_configs) if $git_configs{$repo};
 }
 
 # write out the project list
@@ -612,5 +561,5 @@ close $projlist_fh;
 # ----------------------------------------------------------------------------
 
 unless ($GL_NO_SETUP_AUTHKEYS) {
-    &setup_authkeys($bindir, $GL_KEYDIR, \%user_list);
+    setup_authkeys($GL_KEYDIR, \%user_list);
 }

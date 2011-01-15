@@ -3,19 +3,21 @@
 # PLEASE READ THE DOCUMENTATION BEFORE EDITING OR ASKING QUESTIONS
 # ( http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite.rc.mkd )
 
-# this file is meant to be pulled into a perl program using "do" or "require".
-# You do NOT need to know perl to edit the paths; it should be fairly
-# self-explanatory and easy to maintain perl syntax :-)
+# this file is in perl syntax.  However, you do NOT need to know perl to edit
+# it; it should be fairly self-explanatory and easy to maintain
 
 # ------------------------------------------------------------------------------
-# VARIABLES THAT SHOULD NOT BE TOUCHED AT ALL.  EVER.
+# DO NOT TOUCH THIS SECTION!
 # ------------------------------------------------------------------------------
+
 $GL_ADMINDIR=$ENV{HOME} . "/.gitolite";
 $GL_CONF="$GL_ADMINDIR/conf/gitolite.conf";
 $GL_KEYDIR="$GL_ADMINDIR/keydir";
 $GL_CONF_COMPILED="$GL_ADMINDIR/conf/gitolite.conf-compiled.pm";
-# DO NOT CHANGE THE NEXT TWO LINES UNLESS YOU REALLY KNOW WHAT YOU'RE DOING.
+
+# DO NOT CHANGE THE NEXT FOUR LINES UNLESS YOU REALLY KNOW WHAT YOU'RE DOING.
 # These variables are set automatically by the install method you choose.
+#            (PACKAGE MAINTAINERS: PLEASE READ doc/packaging.mkd)
 # $GL_PACKAGE_CONF = "";
 # $GL_PACKAGE_HOOKS = "";
 
@@ -27,13 +29,14 @@ $PROJECTS_LIST = $ENV{HOME} . "/projects.list";
 $REPO_UMASK = 0077;
 
 # ------------------------------------------------------------------------------
-# variables with an efficiency impact
+# variables with an efficiency/performance impact
 # ------------------------------------------------------------------------------
 $GL_BIG_CONFIG = 0;
 $GL_NO_DAEMON_NO_GITWEB = 0;
+# $GL_NICE_VALUE = 0;
 
 # ------------------------------------------------------------------------------
-# VARIABLES WITH A SECURITY IMPACT.  READ DOC WELL BEFORE CHANGING THESE.
+# VARIABLES WITH A SECURITY IMPACT.  READ DOCS BEFORE CHANGING THESE!
 # http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite.rc.mkd#_variables_with_a_security_impact
 # ------------------------------------------------------------------------------
 # $GL_ALL_READ_ALL = 0;
@@ -59,18 +62,22 @@ $SVNSERVE = "";
 # $ENV{GL_SLAVES} = 'gitolite@server2 gitolite@server3';
 # PLEASE USE SINGLE QUOTES ABOVE, NOT DOUBLE QUOTES
 $GL_WILDREPOS_PERM_CATS = "READERS WRITERS";
+# $GL_SITE_INFO = "XYZ.COM DEVELOPERS: PLEASE SEE http://xyz.com/gitolite/help first";
 
 # ------------------------------------------------------------------------------
 # rarely changed variables
 # ------------------------------------------------------------------------------
 $GL_LOGT="$GL_ADMINDIR/logs/gitolite-%y-%m.log";
 # $GL_PERFLOGT="$GL_ADMINDIR/logs/perf-gitolite-%y-%m.log";
-# $GL_SITE_INFO = "XYZ.COM DEVELOPERS: PLEASE SEE http://xyz.com/gitolite/help first";
 
 # ------------------------------------------------------------------------------
 # variables that should NOT be changed after the install step completes
 # ------------------------------------------------------------------------------
 $REPO_BASE="repositories";
+
+# ------------------------------------------------------------------------------
+# DO NOT TOUCH ANY THING AFTER THIS LINE
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 # per perl rules, this should be the last line in such a file:

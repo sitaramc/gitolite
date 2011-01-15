@@ -1,43 +1,51 @@
 #!/usr/bin/perl -w
 
-# shim program
+# documentation for this program is right here, please read
 
-# arg-1: keydir
+# IMPORTANT NOTES:
+
+# - this program MUST be placed in the same directory as the rest of the
+#   programs that come with gitolite
+
+# - this program MUST be run by supplying its full path!
+
+# BACKGROUND/PURPOSE:
 
 # - an external program populates "keydir" with *all* keys and then
-#   calls us, giving "keydir" as arg-1
+#   calls this program, giving "keydir" as arg-1
 # - we then call gitolite.pm's "setup_authkeys" function to do its thing
 
-# IMPLEMENTATION NOTE: make sure this is in the same directory as
-# "gitolite.pm" and all the rest of "src/".
+# arg-1: keydir
 
 # DISCUSSION:
 #
 # For now, we will assume *all* the keys are in the keydir passed.  The
-# setup_authkeys routine factored out from the old gl-compile-conf is
-# not setup to take a partial set of keys and create the
-# ~/.ssh/authorized_keys file.
+# setup_authkeys routine factored out from the old gl-compile-conf is not
+# setup to take a partial set of keys and create the ~/.ssh/authorized_keys
+# file.
 #
-# Also, there are issues to do with *deleted* keys that need to be taken
-# care of.
+# Also, there are issues to do with *deleted* keys that need to be taken care
+# of.
 #
-# All in all, unless it is shown to be quite inefficient, I'd much
-# prefer processing *all* keys each time there is a change.
+# All in all, unless it is shown to be quite inefficient, I'd much prefer
+# processing *all* keys each time there is a change.
 
-our ($GL_PERFLOGT);
+use strict;
+use warnings;
 
-# setup
-my $bindir = $0;
-$bindir =~ s/\/[^\/]+$//;
-$bindir = "$ENV{PWD}/$bindir" unless $bindir =~ /^\//;
-unshift @INC, $bindir;
-require gitolite or die "parse gitolite.pm failed\n";
+use FindBin;
+BEGIN { $ENV{GL_BINDIR} = $FindBin::Bin; }
 
-# prevent newbie from running it accidentally and clobbering his authkeys
-# file!
-if (@ARGV and $ARGV[0] eq '-batch') {
-    shift;
-} else {
+use lib $ENV{GL_BINDIR};
+use gitolite_rc;
+use gitolite;
+
+use Getopt::Long;
+my $batch = 0;
+GetOptions('batch' => \$batch);
+
+# prevent newbie from running it accidentally and clobbering his authkeys file!
+unless ($batch) {
     print STDERR "
     This is a cronnable, batchable, program to rewrite ~/.ssh/authorized_keys
     using public keys in a given directory.
@@ -54,4 +62,4 @@ if (@ARGV and $ARGV[0] eq '-batch') {
 my $keydir = shift or die "I need a directory name\n";
 -d $keydir or die "$keydir should be a directory\n";
 
-&setup_authkeys($bindir, $keydir);
+setup_authkeys($keydir);

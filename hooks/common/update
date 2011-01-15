@@ -6,50 +6,32 @@ use warnings;
 # === update ===
 # this is gitolite's update hook
 
-# part of the gitolite (GL) suite
-
-# how run:      via git, being copied as .git/hooks/update in every repo
-# when:         every push
-# input:
-#     - see man githooks for STDIN
-#     - uses the compiled config file to get permissions info
-# output:       based on permissions etc., exit 0 or 1
-# security:
-#     - none
-
-# robustness:
-
-# other notes:
-
 # ----------------------------------------------------------------------------
-#       common definitions
+#       find the rc file, then pull the libraries
 # ----------------------------------------------------------------------------
 
-our ($GL_CONF_COMPILED, $UPDATE_CHAINS_TO, $GL_PERFLOGT);
-our %repos;
+BEGIN {
+    die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+    die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+}
 
-# people with shell access should be allowed to bypass the update hook, simply
-# by setting an env var that the ssh "front door" will never set
-exit 0 if exists $ENV{GL_BYPASS_UPDATE_HOOK};
-
-# we should already have the GL_RC env var set when we enter this hook
-die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
-
-unshift @INC, $ENV{GL_BINDIR};
-require gitolite or die "parse gitolite.pm failed\n";
-
-my ($perm, $creator, $wild) = &repo_rights($ENV{GL_REPO});
-my $reported_repo = $ENV{GL_REPO} . ( $ENV{GL_REPOPATT} ? " ($ENV{GL_REPOPATT})" : "" );
+use lib $ENV{GL_BINDIR};
+use gitolite_rc;
+use gitolite qw(:DEFAULT %repos);
 
 # ----------------------------------------------------------------------------
 #       start...
 # ----------------------------------------------------------------------------
 
-my @saved_ARGV = @ARGV;     # for chaining to another update hook at the end
+# people with shell access should be allowed to bypass the update hook, simply
+# by setting an env var that the ssh "front door" will never set
+exit 0 if exists $ENV{GL_BYPASS_UPDATE_HOOK};
 
-my $ref = shift;
-my $oldsha = shift;
-my $newsha = shift;
+my ($perm, $creator, $wild) = repo_rights($ENV{GL_REPO});
+my $reported_repo = $ENV{GL_REPO} . ( $wild ? " ($wild)" : "" );
+
+# arguments are as supplied to an update hook by git; man githooks
+my ($ref, $oldsha, $newsha) = @ARGV;
 my $merge_base = '0' x 40;
 # compute a merge-base if both SHAs are non-0, else leave it as '0'x40
 # (i.e., for branch create or delete, merge_base == '0'x40)
@@ -97,21 +79,21 @@ if (exists $repos{$ENV{GL_REPO}}{NAME_LIMITS}) {
     push @refs, map { chomp; s/^/NAME\//; $_; } `git diff --name-only $oldtree $newtree`;
 }
 
-# and in this version, we have many "refs" to check.  The one we print in the
-# log is the *first* one (which is a *real* ref, like refs/heads/master),
-# while all the rest (if they exist) are like NAME/something.  So we do the
-# first one separately to capture it, then run the rest (if any)
+# we potentially have many "refs" to check.  The one we print in the log is
+# the *first* one (which is a *real* ref, like refs/heads/master), while all
+# the rest (if they exist) are like NAME/something.  So we do the first one
+# separately to capture it, then run the rest (if any)
 my $log_refex = check_ref(\@allowed_refs, $ENV{GL_REPO}, (shift @refs), $att_acc);
-&check_ref               (\@allowed_refs, $ENV{GL_REPO}, $_           , $att_acc) for @refs;
+check_ref                (\@allowed_refs, $ENV{GL_REPO}, $_           , $att_acc) for @refs;
 
 # if we returned at all, all the checks succeeded, so we log the action and exit 0
 
-&log_it("", "$att_acc\t" .  substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
+log_it("", "$att_acc\t" .  substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
     "\t$reported_repo\t$ref\t$log_refex");
 
 # now chain to the local admin defined update hook, if present
 $UPDATE_CHAINS_TO ||= 'hooks/update.secondary';
-exec $UPDATE_CHAINS_TO, @saved_ARGV
+exec $UPDATE_CHAINS_TO, @ARGV
     if -f $UPDATE_CHAINS_TO or -l $UPDATE_CHAINS_TO;
 
 exit 0;

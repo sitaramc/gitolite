@@ -36,7 +36,9 @@ clone's `hooks/common` directory, containing the following code:
 
     #!/bin/bash
 
-    GL_ADMINDIR=` cd;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR'`
+    [ -z "$GL_RC" ] && { echo "ENV GL_RC not set"; exit 1; }
+
+    GL_ADMINDIR=`$GL_BINDIR/gl-query-rc GL_ADMINDIR`
 
     cp    $GL_ADMINDIR/local/gitolite.rc    $HOME/.gitolite.rc
     cp -a $GL_ADMINDIR/local/hooks/*        $GL_ADMINDIR/hooks/common

@@ -4,7 +4,6 @@
 # documentation
 
 testnum=0
-subtests=0
 
 # remote local command
 runlocal() { "$@" > ~/1 2> ~/2; }
@@ -28,22 +27,22 @@ taillog() { ssh gitolite-test@localhost tail $1 .gitolite/logs/gitolite-????-??.
 hl() {  # highlight function
     normal=`tput sgr0`
     red=`tput sgr0; tput setaf 1; tput bold`
+    echo >&2
     if [[ -n $1 ]]
     then
-        echo $red"$@"$normal
+        echo $red"$@"$normal >&2
     else
-        echo $red
+        echo $red >&2
         cat
-        echo $normal
+        echo $normal >&2
     fi
 }
-pause() { echo pausing, "$@"\; hit enter or ctrl-c...; read; }
 
 capture() { cf=$1; shift; "$@" >& $TESTDIR/$cf; }
 
 editrc() {
     scp gitolite-test@localhost:.gitolite.rc ~/junk >/dev/null
-    perl -pi -e "print STDERR if not /^#/ and /$1\b/ and s/=.*/= $2;/" ~/junk
+    perl -pi -e "print STDERR if not /^#/ and /$1\b/ and s/=.*/= $2;/" ~/junk 2> >(sed -e 's/^/# /')
     scp ~/junk gitolite-test@localhost:.gitolite.rc >/dev/null
 }
 
@@ -80,80 +79,64 @@ mdc()
     ) >~/1 2>~/2
 }
 
-# flush result of last test when next one comes along
-testdone() {
-    [[ $subtests > 1 ]] && TESTNAME="($subtests) $TESTNAME"
-    echo -e $testnum\\t$TESTNAME
-}
-
 # set test name/desc
 name() {
-    if [[ -n $TESTNAME ]]
-    then
-        if [[ $TESTNAME != INTERNAL ]]
-        then
-            (( testnum++ ))
-            testdone
-        fi
-        subtests=0
-    fi
     export TESTNAME="$*"
+    if [[ $TESTNAME != INTERNAL ]]
+    then
+        echo '#' "$*"
+    fi
 }
 
+ok() {
+    (( testnum++ ))
+    echo 'ok' "($testnum) $*"
+}
+
+
 notok() {
-    echo ----------
-    head -999 ~/1 ~/2 | sed -e 's/^/    /'
+    (( testnum++ ))
+    echo 'not ok' "($testnum) $*"
 }
 
 expect_filesame() {
     if cmp ~/1 "$1"
     then
-        (( subtests++ ))
+        ok
     else
-        echo files ~/1 and "$1" are different
-        echo '*** ABORTING ***'
-        exit 1
+        notok files ~/1 and "$1" are different
     fi
 }
 
 die() {
-    echo '***** AAAAARRRGGH! *****'
-    echo ${BASH_LINENO[1]} ${BASH_SOURCE[2]}
-    read
-    cd $TESTDIR
-    vim +${BASH_LINENO[1]} '+r !head ~/1 ~/2 /dev/null' ${BASH_SOURCE[2]}
+    echo '***** AAAAARRRGGH! *****' >&2
+    echo ${BASH_LINENO[1]} ${BASH_SOURCE[2]} >&2
+    echo "vim +${BASH_LINENO[1]} \'+r !head ~/1 ~/2 /dev/null\' ${BASH_SOURCE[2]}" >&2
     exit 1
 }
 
 expect() {
     if cat ~/1 ~/2 | grep "$1" >/dev/null
     then
-        (( subtests++ ))
+        ok
     else
-        notok
-        echo ----------
-        echo "    expecting: $1"
-        echo ----------
-        die $TESTNAME
-        exit 1
+        notok "expecting: $1, got:"
+        cat ~/1 ~/2|sed -e 's/^/# /'
     fi
 }
 
 notexpect() {
     if cat ~/1 ~/2 | grep "$1" >/dev/null
     then
-        notok
-        echo "NOT expecting: $1"
-        echo ----------
-        die $TESTNAME
-        exit 1
+        notok "NOT expecting: $1, got:"
+        cat ~/1 ~/2|sed -e 's/^/# /'
     else
-        (( subtests++ ))
+        ok
     fi
 }
 
 print_summary() {
-    echo -e "==========\n$testnum tests succeeded"
+    echo 1..$testnum
 }
 
 expect_push_ok() {

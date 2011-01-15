@@ -2,6 +2,8 @@
 
 . $(dirname $0)/adc.common-functions
 
+[ -z "$GL_RC" ] && die "ENV GL_RC not set"
+
 # options settable in adc.common-functions are
 #   ARE_YOU_SURE -- prompts "are you sure?"
 #   USE_LOCK_UNLOCK -- allows delete only if repo is "unlock"ed
@@ -32,6 +34,6 @@ rm -rf $repo.git
 echo "$repo is now GONE!"
 
 cd $HOME
-PROJECTS_LIST=$(perl -e 'do ".gitolite.rc"; print $PROJECTS_LIST')
+PROJECTS_LIST=$($GL_BINDIR/gl-query-rc PROJECTS_LIST)
 export repo
 perl -ni -e 'print unless /^\Q$ENV{repo}.git\E$/' $PROJECTS_LIST

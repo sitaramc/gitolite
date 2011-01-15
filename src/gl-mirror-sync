@@ -6,7 +6,7 @@ ssh -o PasswordAuthentication=no $mirror echo hello-there | grep hello-there >/d
     { echo I cant ssh to $mirror; exit 1; }
 
 cd $HOME
-REPO_BASE=` cd $HOME;perl -e 'do ".gitolite.rc"; print $REPO_BASE'`
+REPO_BASE=`${0%/*}/gl-query-rc REPO_BASE`
 cd $REPO_BASE
 
 ssh $mirror cat \$HOME/.gitolite.rc | expand | egrep '^ *\$GL_SLAVE_MODE *= *1; *$' >/dev/null || {

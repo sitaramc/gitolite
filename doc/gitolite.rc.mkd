@@ -61,7 +61,7 @@ things happen if you change them.
 
 <a name="_variables_with_an_efficiency_impact"></a>
 
-### variables with an efficiency impact
+### variables with an efficiency/performance impact
 
   * `$GL_BIG_CONFIG`, boolean, default 0
 
@@ -78,6 +78,12 @@ things happen if you change them.
     should probably set this on for efficiency.  Despite the name, it also
     blocks repo config settings.  Please read [doc/big-config.mkd][bc] for
     more details.
+
+  * `$GL_NICE_VALUE`, boolean, default undef
+
+    The nice value to run under.  Applicable only if it is greater than 0.
+    Please do NOT set it if your bits/resource.h does not define PRIO_PROCESS
+    is 0.  For Linux this is true...
 
 <a name="_variables_with_a_security_impact"></a>
 

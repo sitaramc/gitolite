@@ -113,17 +113,21 @@ bar.pub and baz.pub, etc.
 
 #### setup the mirror-shell on each server
 
+XXX review this document after testing mirroring...
+
 If you installed gitolite using the from client method, run the following:
 
     # on foo
-    export GL_ADMINDIR=` cd $HOME;perl -e 'do ".gitolite.rc"; print $GL_ADMINDIR'`
+    export GL_BINDIR=$HOME/.gitolite/src
     cat bar.pub baz.pub |
-        sed -e 's,^,command="'$GL_ADMINDIR'/src/gl-mirror-shell" ,' >> ~/.ssh/authorized_keys
+        sed -e 's,^,command="'$GL_BINDIR'/gl-mirror-shell" ,' >> ~/.ssh/authorized_keys
 
 If you installed using any of the other 3 methods do this:
 
+    # on foo
+    export GL_BINDIR=`gl-query-rc GL_BINDIR`
     cat bar.pub baz.pub |
-        sed -e 's,^,command="'$(which gl-mirror-shell)'" ,' >> ~/.ssh/authorized_keys
+        sed -e 's,^,command="'$GL_BINDIR'/gl-mirror-shell" ,' >> ~/.ssh/authorized_keys
 
 Also do the same thing on the other machines.
 

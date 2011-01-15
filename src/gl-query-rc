@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+
+# let shell scripts query rc values
+# prints out a tab delimited list of all queried values
+# just run "gl-query-rc REPO_BASE GL_ADMINDIR" (for example)
+
+use strict;
+no strict 'refs';
+use warnings;
+
+# find the rc file, then pull the libraries
+BEGIN {
+    # find and set bin dir; same code as in gl-auth-command
+    $0 =~ m|^(/)?(.*)/| and $ENV{GL_BINDIR} = ($1 || "$ENV{PWD}/") . $2;
+}
+use lib $ENV{GL_BINDIR};
+require gitolite_rc;
+gitolite_rc->import;
+
+our $GL_RC=$ENV{GL_RC};
+our $GL_BINDIR=$ENV{GL_BINDIR};
+
+print join("\t", map { $$_ } grep { $$_ } @ARGV) . "\n" if @ARGV;

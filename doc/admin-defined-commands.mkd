@@ -119,7 +119,7 @@ Finally, you can call gitolite to query ownership and permissions for the
 current user (which may not necessarily be the owner).  This is done loosely
 as follows (don't use this exact code yet though):
 
-    perl -I$HOME/.gitolite/src -Mgitolite -e "cli_repo_rights('reponame')"
+    perl -I$GL_BINDIR -Mgitolite -e "cli_repo_rights('reponame')"
 
 which will print two space-separated words, something like `_____R__W u1` or
 maybe `____@R_@W <gitolite>`.  (The former is the response for a wildcard repo

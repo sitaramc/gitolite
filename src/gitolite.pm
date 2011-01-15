@@ -1,56 +1,71 @@
+# lots of common routines
+
+package gitolite;
+use Exporter 'import';
+@EXPORT = qw(
+    can_read
+    check_access
+    check_ref
+    check_repo_write_enabled
+    cli_repo_rights
+    dbg
+    list_phy_repos
+    ln_sf
+    log_it
+    new_repo
+    new_wild_repo
+    repo_rights
+    run_custom_command
+    setup_authkeys
+    setup_daemon_access
+    setup_git_configs
+    setup_gitweb_access
+    shell_out
+    special_cmd
+    try_adc
+    wrap_chdir
+    wrap_open
+    wrap_print
+);
+@EXPORT_OK = qw(
+    %repos
+    %groups
+    %git_configs
+    %split_conf
+);
+
 use strict;
+use warnings;
+
 use Data::Dumper;
 $Data::Dumper::Deepcopy = 1;
 $|++;
 
-# this file is commonly used using "require".  It is not required to use "use"
-# (because it doesn't live in a different package)
-
-# warning: preceding para requires 4th attribute of a programmer after
-# laziness, impatience, and hubris: sense of humour :-)
-
-# WARNING
-# -------
-# the name of this file will change as soon as its function/feature set
-# stabilises enough ;-)
-
-# right now all it does is
-# - define a function that tells you where to find the rc file
-# - define a function that creates a new repo and give it our update hook
-
 # ----------------------------------------------------------------------------
-#       common definitions
+#       find the rc file, then pull the libraries
 # ----------------------------------------------------------------------------
 
-our $ABRT = "\n\t\t***** ABORTING *****\n       ";
-our $WARN = "\n\t\t***** WARNING *****\n       ";
+BEGIN {
+    die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+    die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+}
 
-# commands we're expecting
-our $R_COMMANDS=qr/^(git[ -]upload-pack|git[ -]upload-archive)$/;
-our $W_COMMANDS=qr/^git[ -]receive-pack$/;
+use lib $ENV{GL_BINDIR};
+use gitolite_rc;
 
-# note that REPONAME_PATT allows "/", while USERNAME_PATT does not
-# also, the reason REPONAME_PATT is a superset of USERNAME_PATT is (duh!)
-# because in this version, a repo can have "CREATOR" in the name (see docs)
-our $REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@/+-]*$); # very simple pattern
-our $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);  # very simple pattern
-# same as REPONAME, but used for wildcard repos, allows some common regex metas
-our $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
-# ADC commands and arguments must match this pattern
-our $ADC_CMD_ARGS_PATT=qr(^[0-9a-zA-Z._\@/+:-]*$);
+# ----------------------------------------------------------------------------
+#       the big data structures we care about
+# ----------------------------------------------------------------------------
 
-# these come from the RC file
-our ($REPO_UMASK, $GL_WILDREPOS, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $REPO_BASE, $GL_CONF_COMPILED, $GL_BIG_CONFIG, $GL_PERFLOGT, $PROJECTS_LIST, $GL_ALL_INCLUDES_SPECIAL, $GL_SITE_INFO, $GL_GET_MEMBERSHIPS_PGM, $GL_WILDREPOS_PERM_CATS);
 our %repos;
 our %groups;
 our %git_configs;
-our %split_conf;;
+our %split_conf;
 our $data_version;
-our $current_data_version = '1.7';
 
 # the following are read in from individual repo's gl-conf files, if present
-our %one_repo;
-our %one_git_config;
+our %one_repo;          # corresponds to what goes into %repos
+our %one_git_config;    # ditto for %git_configs
 
 # ----------------------------------------------------------------------------
 #       convenience subs
@@ -94,43 +109,10 @@ sub add_del_line {
 }
 
 sub dbg {
+    use Data::Dumper;
     for my $i (@_) {
-        print STDERR "DBG: $i\n";
+        print STDERR "DBG: " .  Dumper($i);
     }
-}
-
-my $http_headers_printed = 0;
-sub print_http_headers {
-    my($code, $text) = @_;
-
-    return if $http_headers_printed++;
-    $code ||= 200;
-    $text ||= "OK - gitolite";
-
-    $|++;
-    print "Status: $code $text\r\n";
-    print "Expires: Fri, 01 Jan 1980 00:00:00 GMT\r\n";
-    print "Pragma: no-cache\r\n";
-    print "Cache-Control: no-cache, max-age=0, must-revalidate\r\n";
-    print "\r\n";
-}
-
-sub get_logfilename {
-    # this sub has a wee little side-effect; it sets $ENV{GL_TS}
-    my($template) = shift;
-
-    my ($s, $min, $h, $d, $m, $y) = (localtime)[0..5];
-    $y += 1900; $m++;               # usual adjustments
-    for ($s, $min, $h, $d, $m) {
-        $_ = "0$_" if $_ < 10;
-    }
-    $ENV{GL_TS} = "$y-$m-$d.$h:$min:$s";
-
-    # substitute template parameters and set the logfile name
-    $template =~ s/%y/$y/g;
-    $template =~ s/%m/$m/g;
-    $template =~ s/%d/$d/g;
-    return ($template);
 }
 
 sub log_it {
@@ -145,33 +127,6 @@ sub log_it {
     $logmsg .= "\t@_" if @_;
     print $log_fh "$ENV{GL_TS}\t$ENV{GL_USER}\t$ip\t$logmsg\n";
     close $log_fh or die "close log failed: $!\n";
-}
-
-# check one ref
-sub check_ref {
-
-    # normally, the $ref will be whatever ref the commit is trying to update
-    # (like refs/heads/master or whatever).  At least one of the refexes that
-    # pertain to this user must match this ref **and** the corresponding
-    # permission must also match the action (W or +) being attempted.  If none
-    # of them match, the access is denied.
-
-    # Notice that the function DIES unless a non-false 5th argument is present
-
-    my ($allowed_refs, $repo, $ref, $perm, $dry_run) = @_;
-    my @allowed_refs = sort { $a->[0] <=> $b->[0] } @{$allowed_refs};
-    for my $ar (@allowed_refs) {
-        my $refex = $ar->[1];
-        # refex?  sure -- a regex to match a ref against :)
-        next unless $ref =~ /^$refex/;
-        return "DENIED by $refex" if $ar->[2] eq '-' and $dry_run;
-        die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->[2] eq '-';
-
-        # as far as *this* ref is concerned we're ok
-        return $refex if ($ar->[2] =~ /\Q$perm/);
-    }
-    return "DENIED by fallthru" if $dry_run;
-    die "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n";
 }
 
 # ln -sf :-)
@@ -200,71 +155,35 @@ sub list_phy_repos
     return @phy_repos;
 }
 
-
 # ----------------------------------------------------------------------------
-#       birth and death registration ;-)
+#       serious logic subs (as opposed to just "convenience" subs)
 # ----------------------------------------------------------------------------
 
-# background
+# check one ref
+sub check_ref {
 
-# till now, the rc file was in one fixed place: .gitolite.rc in $HOME of the
-# user hosting the gitolite repos.  This was fine, because gitolite is all
-# about empowering non-root users :-)
+    # normally, the $ref will be whatever ref the commit is trying to update
+    # (like refs/heads/master or whatever).  At least one of the refexes that
+    # pertain to this user must match this ref **and** the corresponding
+    # permission must also match the action (W/+, or C/D if used) being
+    # attempted.  If none of them match, the access is denied.
 
-# but in smart http mode, running under "apache", you should actually use
-# $GITOLITE_HTTP_HOME instead of $HOME (in fact $HOME may not even be
-# defined).  However, the dependency on $HOME is so pervasive that we'd best
-# just set it here and be done.  We also set $ENV{GL_RC} to point to the rc
-# file
+    # NOTE: the function DIES when access is denied, unless arg 5 is true
 
-# every gitolite program ends up calling this anyway, so that's birth
+    my ($allowed_refs, $repo, $ref, $perm, $dry_run) = @_;
+    my @allowed_refs = sort { $a->[0] <=> $b->[0] } @{$allowed_refs};
+    for my $ar (@allowed_refs) {
+        my $refex = $ar->[1];
+        # refex?  sure -- a regex to match a ref against :)
+        next unless $ref =~ /^$refex/;
+        return "DENIED by $refex" if $ar->[2] eq '-' and $dry_run;
+        die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->[2] eq '-';
 
-# the second thing we need to do is handle death a little better.  A plain
-# "die" was fine for ssh but http has all that extra gunk it needs.  So we
-# need to, in effect, create a "death handler".
-
-# the name of the sub, however, is a holdover from when that was the sole
-# purpose.  I suck at function names anyway...
-
-sub where_is_rc
-{
-    die "I need either HOME or GITOLITE_HTTP_HOME env vars set\n" unless $ENV{GITOLITE_HTTP_HOME} or $ENV{HOME};
-    if ($ENV{GITOLITE_HTTP_HOME}) {
-        # smart http mode; GITOLITE_HTTP_HOME becomes our HOME
-        $ENV{HOME} = $ENV{GITOLITE_HTTP_HOME};
-
-        $SIG{__DIE__} = sub {
-            my $service = ($ENV{SSH_ORIGINAL_COMMAND} =~ /git-receive-pack/ ?  'git-receive-pack' : 'git-upload-pack');
-            my $message = shift; chomp($message);
-            print STDERR "$message\n";
-
-            # format the service response, then the message.  With initial
-            # help from Ilari and then a more detailed email from Shawn...
-            $service = "# service=$service\n"; $message = "ERR $message\n";
-            $service = sprintf("%04X", length($service)+4) . "$service";        # no CRLF on this one
-            $message = sprintf("%04X", length($message)+4) . "$message";
-
-            &print_http_headers();
-            print $service;
-            print "0000";       # flush-pkt, apparently
-            print $message;
-            print STDERR $service;
-            print STDERR $message;
-            exit 0;     # if it's ok for die_webcgi in git.git/http-backend.c, it's ok for me ;-)
-        }
+        # as far as *this* ref is concerned we're ok
+        return $refex if ($ar->[2] =~ /\Q$perm/);
     }
-
-    return if $ENV{GL_RC};
-
-    # Fedora doesn't actually have a "hosting user" at all (yeah -- bet you
-    # didn't know gitolite was *that* flexible!), so there's no fixed $HOME,
-    # and they prefer to keep their RC file in /etc/gitolite.
-    for my $glrc ( $ENV{HOME} . "/.gitolite.rc", "/etc/gitolite/gitolite.rc" ) {
-        if (-f $glrc) {
-            $ENV{GL_RC} = $glrc;
-            last;
-        }
-    }
+    return "DENIED by fallthru" if $dry_run;
+    die "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n";
 }
 
 # ----------------------------------------------------------------------------
@@ -302,8 +221,21 @@ sub new_repo
     system("env GL_REPO='$repo' hooks/gl-post-init") if -x "hooks/gl-post-init";
 }
 
+sub new_wild_repo {
+    my ($repo, $user) = @_;
+
+    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+    new_repo($repo, "$GL_ADMINDIR/hooks/common", $user);
+        # note pwd is now the bare "repo.git"; new_repo does that...
+    wrap_print("gl-perms", "$GL_WILDREPOS_DEFPERMS\n") if $GL_WILDREPOS_DEFPERMS;
+    setup_git_configs($repo, \%git_configs);
+    setup_daemon_access($repo);
+    add_del_line ("$repo.git", $PROJECTS_LIST, setup_gitweb_access($repo, '', ''));
+    wrap_chdir($ENV{HOME});
+}
+
 # ----------------------------------------------------------------------------
-#       metaphysics (like, "is there a god?", "who created me?", etc)
+#       wild_repo_rights
 # ----------------------------------------------------------------------------
 
 {
@@ -372,7 +304,7 @@ sub new_repo
                 # "DOG bar foo baz", you add DOG => foo to the hash.  And
                 # since specific perms must override @all, we do @all first.
                 $perm_cats{$1} = '@all' while ($perms =~ /^[ \t]*(\S+)(?=[ \t]).*[ \t]\@all([ \t]|$)/mg);
-                $perm_cats{$1} = $user while ($perms =~ /^[ \t]*(\S+)(?=[ \t]).*[ \t]$user([ \t]|$)/mg);
+                $perm_cats{$1} = $user  while ($perms =~ /^[ \t]*(\S+)(?=[ \t]).*[ \t]$user([ \t]|$)/mg);
                 # validate the categories being sent back
                 for (sort keys %perm_cats) {
                     die "invalid permission category $_\n" unless $GL_WILDREPOS_PERM_CATS =~ /(^|\s)$_(\s|$)/;
@@ -393,7 +325,7 @@ sub get_set_perms
     my($repo, $verb, $user) = @_;
     # set default categories
     $GL_WILDREPOS_PERM_CATS ||= "READERS WRITERS";
-    my ($creator, $dummy, $dummy2) = &wild_repo_rights($repo, "");
+    my ($creator, $dummy, $dummy2) = wild_repo_rights($repo, "");
     die "$repo doesnt exist or is not yours\n" unless $user eq $creator;
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
     wrap_chdir("$repo.git");
@@ -419,7 +351,7 @@ sub get_set_perms
         # gitweb and daemon
         setup_daemon_access($repo);
         # add or delete line (arg1) from file (arg2) depending on arg3
-        &add_del_line ("$repo.git", $PROJECTS_LIST, &setup_gitweb_access($repo, '', ''));
+        add_del_line ("$repo.git", $PROJECTS_LIST, setup_gitweb_access($repo, '', ''));
     }
 }
 
@@ -430,7 +362,7 @@ sub get_set_perms
 sub get_set_desc
 {
     my($repo, $verb, $user) = @_;
-    my ($creator, $dummy, $dummy2) = &wild_repo_rights($repo, "");
+    my ($creator, $dummy, $dummy2) = wild_repo_rights($repo, "");
     die "$repo doesnt exist or is not yours\n" unless $user eq $creator;
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
     wrap_chdir("$repo.git");
@@ -475,7 +407,7 @@ sub setup_daemon_access
 {
     my $repo = shift;
 
-    if (&can_read($repo, 'daemon')) {
+    if (can_read($repo, 'daemon')) {
         system("touch $export_ok");
     } else {
         unlink($export_ok);
@@ -517,8 +449,109 @@ sub setup_gitweb_access
         system("git config --remove-section gitweb 2>/dev/null");
     }
 
-    return ($desc or &can_read($repo, 'gitweb'));
+    return ($desc or can_read($repo, 'gitweb'));
         # this return value is used by the caller to write to projects.list
+}
+
+# ----------------------------------------------------------------------------
+#       print a report of $user's basic permissions
+# ----------------------------------------------------------------------------
+
+sub report_version {
+    my($user) = @_;
+    print "hello $user, the gitolite version here is ";
+    system("cat", ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION");
+}
+
+sub perm_code {
+    # print the permission code
+    my($all, $super, $user, $x) = @_;
+    return "    " unless $all or $super or $user;
+    return "  $x " unless $all or $super;   # only $user (explicit access) was given
+    my $ret;
+    $ret = " \@$x" if $all;                 # prefix @ if repo allows access for @all users
+    $ret = " \#$x" if $super;               # prefix # if user has access to @all repos (sort of like a super user)
+    $ret = " \&$x" if $all and $super;      # prefix & if both the above
+    $ret .= ($user ? " " : "_" );           # suffix _ if no explicit access else <space>
+    return $ret;
+}
+
+# basic means wildcards will be shown as wildcards; this is pretty much what
+# got parsed by the compile script
+sub report_basic
+{
+    my($repo, $user) = @_;
+
+    # XXX The correct way is actually to give parse_acl another argument
+    # (defaulting to $ENV{GL_USER}, the value being used now).  But for now
+    # this will do, even though it's a bit of a kludge to get the basic access
+    # rights for some other user this way
+    local $ENV{GL_USER} = $user;
+
+    parse_acl("", "CREATOR");
+    # all we need is for 'keys %repos' to come up with all the names, so:
+    @repos{ keys %split_conf } = values %split_conf if %split_conf;
+
+    # send back some useful info if no command was given
+    report_version($user);
+    print "\rthe gitolite config gives you the following access:\r\n";
+    my $count = 0;
+    for my $r (sort keys %repos) {
+        next unless $r =~ /$repo/i;
+        # if $GL_BIG_CONFIG is on, limit the number of output lines to 20
+        next if $GL_BIG_CONFIG and $count++ >= 20;
+        if ($r =~ $REPONAME_PATT and $r !~ /\bCREAT[EO]R\b/) {
+            parse_acl($r, "NOBODY");
+        } else {
+            $r =~ s/\bCREAT[EO]R\b/$user/g;
+            parse_acl($r, $ENV{GL_USER});
+        }
+        # @all repos; meaning of read/write flags:
+        # @R => @all users are allowed access to this repo
+        # #R => you're a super user and can see @all repos
+        #  R => normal access
+        my $perm .= ( $repos{$r}{C}{'@all'} ? ' @C' :                                      ( $repos{$r}{C}{$user} ? '  C' : '   ' ) );
+        $perm .= perm_code( $repos{$r}{R}{'@all'}, $repos{'@all'}{R}{$user}, $repos{$r}{R}{$user}, 'R');
+        $perm .= perm_code( $repos{$r}{W}{'@all'}, $repos{'@all'}{W}{$user}, $repos{$r}{W}{$user}, 'W');
+        print "$perm\t$r\r\n" if $perm =~ /\S/;
+    }
+    print "only 20 out of $count candidate repos examined\r\nplease use a partial reponame or regex pattern to limit output\r\n" if $GL_BIG_CONFIG and $count > 20;
+    print "$GL_SITE_INFO\n" if $GL_SITE_INFO;
+}
+
+# ----------------------------------------------------------------------------
+#       print a report of $user's expanded permissions
+# ----------------------------------------------------------------------------
+
+sub expand_wild
+{
+    my($repo, $user) = @_;
+
+    report_version($user);
+    print "\ryou have access to the following repos on the server:\r\n";
+    # this is for convenience; he can copy-paste the output of the basic
+    # access report instead of having to manually change CREATOR to his name
+    $repo =~ s/\bCREAT[EO]R\b/$user/g;
+
+    # display matching repos (from *all* the repos in the system) that $user
+    # has at least "R" access to
+
+    chdir("$ENV{GL_REPO_BASE_ABS}") or die "chdir $ENV{GL_REPO_BASE_ABS} failed: $!\n";
+    my $count = 0;
+    for my $actual_repo (`find . -type d -name "*.git"|sort`) {
+        chomp ($actual_repo);
+        $actual_repo =~ s/^\.\///;
+        $actual_repo =~ s/\.git$//;
+        # actual_repo has to match the pattern being expanded
+        next unless $actual_repo =~ /$repo/i;
+        next if $GL_BIG_CONFIG and $count++ >= 20;
+
+        my($perm, $creator, $wild) = repo_rights($actual_repo);
+        next unless $perm =~ /\S/;
+        print "$perm\t$creator\t$actual_repo\n";
+    }
+    print "only 20 out of $count candidate repos examined\nplease use a partial reponame or regex pattern to limit output\n" if $GL_BIG_CONFIG and $count > 20;
+    print "$GL_SITE_INFO\n" if $GL_SITE_INFO;
 }
 
 # ----------------------------------------------------------------------------
@@ -530,8 +563,8 @@ sub parse_acl
     # IMPLEMENTATION NOTE: a wee bit of this is duplicated in the update hook;
     # please update that also if the interface or the env vars change
 
-    my ($GL_CONF_COMPILED, $repo, $c, %perm_cats) = @_;
-    my $perm_cats_sig = '';
+    my ($repo, $c, %perm_cats) = @_;
+    my $perm_cats_sig = '';     # a "signature" of the perm_cats hash
     map { $perm_cats_sig .= "$_.$perm_cats{$_}," } sort keys %perm_cats;
     $c = "NOBODY" unless $GL_WILDREPOS;
 
@@ -572,8 +605,8 @@ sub parse_acl
 
     my ($wild, @repo_plus, @user_plus);
     # expand $repo and $gl_user into all possible matching values
-    ($wild, @repo_plus) = &get_memberships($repo,    1);
-    (       @user_plus) = &get_memberships($gl_user, 0);
+    ($wild, @repo_plus) = get_memberships($repo,    1);
+    (       @user_plus) = get_memberships($gl_user, 0);
 
     # the old "convenience copy" thing.  Now on steroids :)
 
@@ -598,8 +631,6 @@ sub parse_acl
         }
     }
 
-    $ENV{GL_REPOPATT} = "";
-    $ENV{GL_REPOPATT} = $wild if $wild and $GL_WILDREPOS;
     return ($wild);
 }
 
@@ -613,107 +644,9 @@ sub add_repo_conf
     $git_configs{$repo} = $one_git_config{$repo};
 }
 
-
 # ----------------------------------------------------------------------------
-#       print a report of $user's basic permissions
+#       repo_rights
 # ----------------------------------------------------------------------------
-
-sub report_version {
-    my($GL_ADMINDIR, $user) = @_;
-    print "hello $user, the gitolite version here is ";
-    system("cat", ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION");
-}
-
-sub perm_code {
-    # print the permission code
-    my($all, $super, $user, $x) = @_;
-    return "    " unless $all or $super or $user;
-    return "  $x " unless $all or $super;   # only $user (explicit access) was given
-    my $ret;
-    $ret = " \@$x" if $all;                 # prefix @ if repo allows access for @all users
-    $ret = " \#$x" if $super;               # prefix # if user has access to @all repos (sort of like a super user)
-    $ret = " \&$x" if $all and $super;      # prefix & if both the above
-    $ret .= ($user ? " " : "_" );           # suffix _ if no explicit access else <space>
-    return $ret;
-}
-
-# basic means wildcards will be shown as wildcards; this is pretty much what
-# got parsed by the compile script
-sub report_basic
-{
-    my($GL_ADMINDIR, $GL_CONF_COMPILED, $repo, $user) = @_;
-
-    # XXX The correct way is actually to give parse_acl another argument
-    # (defaulting to $ENV{GL_USER}, the value being used now).  But for now
-    # this will do, even though it's a bit of a kludge to get the basic access
-    # rights for some other user this way
-    local $ENV{GL_USER} = $user;
-
-    &parse_acl($GL_CONF_COMPILED, "", "CREATOR");
-    # all we need is for 'keys %repos' to come up with all the names, so:
-    @repos{ keys %split_conf } = values %split_conf if %split_conf;
-
-    # send back some useful info if no command was given
-    &report_version($GL_ADMINDIR, $user);
-    print "\rthe gitolite config gives you the following access:\r\n";
-    my $count = 0;
-    for my $r (sort keys %repos) {
-        next unless $r =~ /$repo/i;
-        # if $GL_BIG_CONFIG is on, limit the number of output lines to 20
-        next if $GL_BIG_CONFIG and $count++ >= 20;
-        if ($r =~ $REPONAME_PATT and $r !~ /\bCREAT[EO]R\b/) {
-            &parse_acl($GL_CONF_COMPILED, $r, "NOBODY");
-        } else {
-            $r =~ s/\bCREAT[EO]R\b/$user/g;
-            &parse_acl($GL_CONF_COMPILED, $r, $ENV{GL_USER});
-        }
-        # @all repos; meaning of read/write flags:
-        # @R => @all users are allowed access to this repo
-        # #R => you're a super user and can see @all repos
-        #  R => normal access
-        my $perm .= ( $repos{$r}{C}{'@all'} ? ' @C' :                                      ( $repos{$r}{C}{$user} ? '  C' : '   ' ) );
-        $perm .= &perm_code( $repos{$r}{R}{'@all'}, $repos{'@all'}{R}{$user}, $repos{$r}{R}{$user}, 'R');
-        $perm .= &perm_code( $repos{$r}{W}{'@all'}, $repos{'@all'}{W}{$user}, $repos{$r}{W}{$user}, 'W');
-        print "$perm\t$r\r\n" if $perm =~ /\S/;
-    }
-    print "only 20 out of $count candidate repos examined\r\nplease use a partial reponame or regex pattern to limit output\r\n" if $GL_BIG_CONFIG and $count > 20;
-    print "$GL_SITE_INFO\n" if $GL_SITE_INFO;
-}
-
-# ----------------------------------------------------------------------------
-#       print a report of $user's basic permissions
-# ----------------------------------------------------------------------------
-
-sub expand_wild
-{
-    my($GL_ADMINDIR, $GL_CONF_COMPILED, $repo, $user) = @_;
-
-    &report_version($GL_ADMINDIR, $user);
-    print "\ryou have access to the following repos on the server:\r\n";
-    # this is for convenience; he can copy-paste the output of the basic
-    # access report instead of having to manually change CREATOR to his name
-    $repo =~ s/\bCREAT[EO]R\b/$user/g;
-
-    # display matching repos (from *all* the repos in the system) that $user
-    # has at least "R" access to
-
-    chdir("$ENV{GL_REPO_BASE_ABS}") or die "chdir $ENV{GL_REPO_BASE_ABS} failed: $!\n";
-    my $count = 0;
-    for my $actual_repo (`find . -type d -name "*.git"|sort`) {
-        chomp ($actual_repo);
-        $actual_repo =~ s/^\.\///;
-        $actual_repo =~ s/\.git$//;
-        # actual_repo has to match the pattern being expanded
-        next unless $actual_repo =~ /$repo/i;
-        next if $GL_BIG_CONFIG and $count++ >= 20;
-
-        my($perm, $creator, $wild) = &repo_rights($actual_repo);
-        next unless $perm =~ /\S/;
-        print "$perm\t$creator\t$actual_repo\n";
-    }
-    print "only 20 out of $count candidate repos examined\nplease use a partial reponame or regex pattern to limit output\n" if $GL_BIG_CONFIG and $count > 20;
-    print "$GL_SITE_INFO\n" if $GL_SITE_INFO;
-}
 
 # there will be multiple calls to repo_rights; better to use a closure.  We
 # might even be called from outside (see the admin-defined-commands docs for
@@ -733,7 +666,7 @@ sub expand_wild
 
         unless ($REPO_BASE) {
             # means we've been called from outside; see doc/admin-defined-commands.mkd
-            &where_is_rc();
+            where_is_rc();
             die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
         }
 
@@ -749,11 +682,11 @@ sub expand_wild
             # "wild_repo_rights" sub for nuances.
             my (%perm_cats);
             # these will be empty if it's not a wildcard repo anyway
-            ($creator, %perm_cats) = &wild_repo_rights($repo, $ENV{GL_USER});
+            ($creator, %perm_cats) = wild_repo_rights($repo, $ENV{GL_USER});
             # get access list with these substitutions
-            $wild = &parse_acl($GL_CONF_COMPILED, $repo, $creator || "NOBODY", %perm_cats);
+            $wild = parse_acl($repo, $creator || "NOBODY", %perm_cats);
         } else {
-            $wild = &parse_acl($GL_CONF_COMPILED, $repo, $ENV{GL_USER});
+            $wild = parse_acl($repo, $ENV{GL_USER});
         }
 
         if ($exists) {
@@ -774,8 +707,8 @@ sub expand_wild
             delete $repos{$repo} if $perm !~ /C/ and $wild;
             $creator = "<notfound>";
         }
-        $perm .= &perm_code( $repos{$repo}{R}{'@all'}, $repos{'@all'}{R}{$ENV{GL_USER}}, $repos{$repo}{R}{$ENV{GL_USER}}, 'R' );
-        $perm .= &perm_code( $repos{$repo}{W}{'@all'}, $repos{'@all'}{W}{$ENV{GL_USER}}, $repos{$repo}{W}{$ENV{GL_USER}}, 'W' );
+        $perm .= perm_code( $repos{$repo}{R}{'@all'}, $repos{'@all'}{R}{$ENV{GL_USER}}, $repos{$repo}{R}{$ENV{GL_USER}}, 'R' );
+        $perm .= perm_code( $repos{$repo}{W}{'@all'}, $repos{'@all'}{W}{$ENV{GL_USER}}, $repos{$repo}{W}{$ENV{GL_USER}}, 'W' );
 
         # set up for caching %repos
         $last_repo = $repo;
@@ -784,18 +717,22 @@ sub expand_wild
     }
 }
 
+# ----------------------------------------------------------------------------
+#       helpers...
+# ----------------------------------------------------------------------------
+
 # helper/convenience routine to get rights and ownership from a shell command
 sub cli_repo_rights {
     # check_access does a lot more, so just call it.  Since it returns perms
     # and creator separately, just space-join them and print it.
-    print join(" ", &check_access($_[0])), "\n";
+    print join(" ", check_access($_[0])), "\n";
 }
 
 sub can_read {
     my $repo = shift;
     my $user = shift || $ENV{GL_USER};
     local $ENV{GL_USER} = $user;
-    my ($perm, $creator, $wild) = &repo_rights($repo);
+    my ($perm, $creator, $wild) = repo_rights($repo);
     return ( ($GL_ALL_INCLUDES_SPECIAL || $user !~ /^(gitweb|daemon)$/)
         ? $perm =~ /R/
         : $perm =~ /R /
@@ -813,6 +750,117 @@ sub check_repo_write_enabled {
 }
 
 # ----------------------------------------------------------------------------
+#       get memberships
+# ----------------------------------------------------------------------------
+
+# given a plain reponame or username, return:
+# - the name itself if it's a user
+# - the name itself if it's a repo and the repo exists in the config
+# plus, if $GL_BIG_CONFIG is set:
+# - all the groups the name belongs to
+# plus, for repos:
+# - all the wildcards matching it
+# plus, if $GL_BIG_CONFIG is set:
+# - all the groups those wildcards belong to
+
+# A name can normally appear (repo example) (user example)
+# - directly (repo foo) (RW = bob)
+# - (only for repos) as a direct wildcard (repo foo/.*)
+# but if $GL_BIG_CONFIG is set, it can also appear:
+# - indirectly (@g = foo; repo @g) (@ug = bob; RW = @ug))
+# - (only for repos) as an indirect wildcard (@g = foo/.*; repo @g).
+# note: the wildcard stuff does not apply to username memberships
+
+our %extgroups_cache;
+sub get_memberships {
+    my $base = shift;   # reponame or username
+    my $is_repo = shift;    # some true value means a repo name has been passed
+
+    my $wild = '';      # will be a space-sep list of matching patterns
+    my @ret;            # list of matching groups/patterns
+
+    # direct
+    push @ret, $base if not $is_repo or exists $repos{$base};
+    if ($is_repo and $GL_WILDREPOS) {
+        for my $i (sort keys %repos) {
+            next if $i eq $base;    # "direct" name already done; skip
+            # direct wildcard
+            if ($base =~ /^$i$/) {
+                push @ret, $i;
+                $wild = ($wild ? "$wild $i" : $i);
+            }
+        }
+    }
+
+    if ($GL_BIG_CONFIG) {
+        for my $g (sort keys %groups) {
+            for my $i (sort keys %{ $groups{$g} }) {
+                if ($base eq $i) {
+                    # indirect
+                    push @ret, $g;
+                } elsif ($is_repo and $GL_WILDREPOS and $base =~ /^$i$/) {
+                    # indirect wildcard
+                    push @ret, $g;
+                    $wild = ($wild ? "$wild $i" : $i);
+                }
+            }
+        }
+    }
+
+    # deal with returning user info first
+    unless ($is_repo) {
+        # bring in group membership info stored externally, by running
+        # $GL_GET_MEMBERSHIPS_PGM if it is defined
+
+        if ($extgroups_cache{$base}) {
+            push @ret, @{ $extgroups_cache{$base} };
+        } elsif ($GL_GET_MEMBERSHIPS_PGM) {
+            my @extgroups = map { s/^/@/; $_; } split ' ', `$GL_GET_MEMBERSHIPS_PGM $base`;
+            $extgroups_cache{$base} = \@extgroups;
+            push @ret, @extgroups;
+        }
+
+        return (@ret);
+    }
+
+    # note that there is an extra return value when called for repos (as
+    # opposed to being called for usernames)
+    return ($wild, @ret);
+}
+
+# ----------------------------------------------------------------------------
+#       generic check access routine
+# ----------------------------------------------------------------------------
+
+sub check_access
+{
+    my ($repo, $ref, $aa, $dry_run) = @_;
+    # aa = attempted access
+
+    my ($perm, $creator, $wild) = repo_rights($repo);
+    $perm =~ s/ /_/g;
+    $creator =~ s/^\(|\)$//g;
+    return ($perm, $creator) unless $ref;
+
+    # until I do some major refactoring (which will bloat the update hook a
+    # bit, sadly), this code duplicates stuff in the current update hook.
+
+    my @allowed_refs;
+    # user+repo specific perms override everything else, so they come first.
+    # Then perms given to specific user for @all repos, and finally perms
+    # given to @all users for specific repo
+    push @allowed_refs, @ { $repos{$repo}{$ENV{GL_USER}} || [] };
+    push @allowed_refs, @ { $repos{'@all'}{$ENV{GL_USER}} || [] };
+    push @allowed_refs, @ { $repos{$repo}{'@all'} || [] };
+
+    if ($dry_run) {
+        return check_ref(\@allowed_refs, $repo, $ref, $aa, $dry_run);
+    } else {
+        check_ref(\@allowed_refs, $repo, $ref, $aa);
+    }
+}
+
+# ----------------------------------------------------------------------------
 #       setup the ~/.ssh/authorized_keys file
 # ----------------------------------------------------------------------------
 
@@ -820,16 +868,16 @@ sub setup_authkeys
 {
     # ARGUMENTS
 
-    my($bindir, $GL_KEYDIR, $user_list_p) = @_;
+    my($GL_KEYDIR, $user_list_p) = @_;
     # calling from outside the normal compile script may mean that argument 2
     # may not be passed; so make sure it's a valid hashref, even if empty
     $user_list_p = {} unless $user_list_p;
 
-    # CONSTANTS
+    # LOCAL CONSTANTS
 
     # command and options for authorized_keys
-    my $AUTH_COMMAND="$bindir/gl-auth-command";
-    $AUTH_COMMAND="$bindir/gl-time $bindir/gl-auth-command" if $GL_PERFLOGT;
+    my $AUTH_COMMAND="$ENV{GL_BINDIR}/gl-auth-command";
+    $AUTH_COMMAND="$ENV{GL_BINDIR}/gl-time $ENV{GL_BINDIR}/gl-auth-command" if $GL_PERFLOGT;
     my $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
 
     # START
@@ -931,14 +979,14 @@ sub setup_authkeys
 
 sub special_cmd
 {
-    my ($GL_ADMINDIR, $GL_CONF_COMPILED, $shell_allowed, $RSYNC_BASE, $HTPASSWD_FILE, $SVNSERVE) = @_;
+    my ($shell_allowed) = @_;
 
     my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
     my $user = $ENV{GL_USER};
 
     # check each special command we know about and call it if enabled
     if ($cmd eq 'info') {
-        &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, '^', $user);
+        report_basic('^', $user);
         print "you also have shell access\r\n" if $shell_allowed;
     } elsif ($cmd =~ /^info\s+(.+)$/) {
         my @otherusers = split ' ', $1;
@@ -951,139 +999,69 @@ sub special_cmd
         # set up the list of users being queried; it's either a list passed in
         # (allowed only for admin pushers) or just $user
         if (@otherusers) {
-            my($perm, $creator, $wild) = &repo_rights('gitolite-admin');
+            my($perm, $creator, $wild) = repo_rights('gitolite-admin');
             die "you can't ask for others' permissions\n" unless $perm =~ /W/;
         }
         push @otherusers, $user unless @otherusers;
 
-        &parse_acl($GL_CONF_COMPILED);
+        parse_acl();
         for my $otheruser (@otherusers) {
             warn("ignoring illegal username $otheruser\n"), next unless $otheruser =~ $USERNAME_PATT;
-            &report_basic($GL_ADMINDIR, $GL_CONF_COMPILED, $repo, $otheruser);
+            report_basic($repo, $otheruser);
         }
     } elsif ($HTPASSWD_FILE and $cmd eq 'htpasswd') {
-        &ext_cmd_htpasswd($HTPASSWD_FILE);
+        ext_cmd_htpasswd($HTPASSWD_FILE);
     } elsif ($RSYNC_BASE and $cmd =~ /^rsync /) {
-        &ext_cmd_rsync($GL_CONF_COMPILED, $RSYNC_BASE, $cmd);
+        ext_cmd_rsync($GL_CONF_COMPILED, $RSYNC_BASE, $cmd);
     } elsif ($SVNSERVE and $cmd eq 'svnserve -t') {
-        &ext_cmd_svnserve($SVNSERVE);
+        ext_cmd_svnserve($SVNSERVE);
     } else {
         # if the user is allowed a shell, just run the command
-        &log_it();
+        log_it();
         exec $ENV{SHELL}, "-c", $cmd if $shell_allowed;
 
         die "bad command: $cmd\n";
     }
 }
 
-# ----------------------------------------------------------------------------
-#       get memberships
-# ----------------------------------------------------------------------------
+sub run_custom_command {
+    my $user = shift;
 
-# given a plain reponame or username, return:
-# - the name itself if it's a user
-# - the name itself if it's a repo and the repo exists in the config
-# plus, if $GL_BIG_CONFIG is set:
-# - all the groups the name belongs to
-# plus, for repos:
-# - all the wildcards matching it
-# plus, if $GL_BIG_CONFIG is set:
-# - all the groups those wildcards belong to
-
-# A name can normally appear (repo example) (user example)
-# - directly (repo foo) (RW = bob)
-# - (only for repos) as a direct wildcard (repo foo/.*)
-# but if $GL_BIG_CONFIG is set, it can also appear:
-# - indirectly (@g = foo; repo @g) (@ug = bob; RW = @ug))
-# - (only for repos) as an indirect wildcard (@g = foo/.*; repo @g).
-# note: the wildcard stuff does not apply to username memberships
-
-our %extgroups_cache;
-sub get_memberships {
-    my $base = shift;   # reponame or username
-    my $is_repo = shift;    # some true value means a repo name has been passed
-
-    my $wild = '';      # will be a space-sep list of matching patterns
-    my @ret;            # list of matching groups/patterns
-
-    # direct
-    push @ret, $base if not $is_repo or exists $repos{$base};
-    if ($is_repo and $GL_WILDREPOS) {
-        for my $i (sort keys %repos) {
-            next if $i eq $base;    # "direct" name already done; skip
-            # direct wildcard
-            if ($base =~ /^$i$/) {
-                push @ret, $i;
-                $wild = ($wild ? "$wild $i" : $i);
-            }
-        }
+    my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
+    my ($verb, $repo) = ($cmd =~ /^\s*(\S+)(?:\s+'?\/?(.*?)(?:\.git)?'?)?$/);
+    # deal with "no argument" cases
+    $verb eq 'expand' ? $repo = '^' : die "$verb needs an argument\n" unless $repo;
+    if ($repo =~ $REPONAME_PATT and $verb =~ /getperms|setperms/) {
+        # with an actual reponame, you can "getperms" or "setperms"
+        get_set_perms($repo, $verb, $user);
     }
-
-    if ($GL_BIG_CONFIG) {
-        for my $g (sort keys %groups) {
-            for my $i (sort keys %{ $groups{$g} }) {
-                if ($base eq $i) {
-                    # indirect
-                    push @ret, $g;
-                } elsif ($is_repo and $GL_WILDREPOS and $base =~ /^$i$/) {
-                    # indirect wildcard
-                    push @ret, $g;
-                    $wild = ($wild ? "$wild $i" : $i);
-                }
-            }
-        }
+    elsif ($repo =~ $REPONAME_PATT and $verb =~ /(get|set)desc/) {
+        # with an actual reponame, you can "getdesc" or "setdesc"
+        get_set_desc($repo, $verb, $user);
     }
-
-    # deal with returning user info first
-    unless ($is_repo) {
-        # bring in group membership info stored externally, by running
-        # $GL_GET_MEMBERSHIPS_PGM if it is defined
-
-        if ($extgroups_cache{$base}) {
-            push @ret, @{ $extgroups_cache{$base} };
-        } elsif ($GL_GET_MEMBERSHIPS_PGM) {
-            my @extgroups = map { s/^/@/; $_; } split ' ', `$GL_GET_MEMBERSHIPS_PGM $base`;
-            $extgroups_cache{$base} = \@extgroups;
-            push @ret, @extgroups;
-        }
-
-        return (@ret);
+    elsif ($verb eq 'expand') {
+        # with a wildcard, you can "expand" it to see what repos actually match
+        die "$repo has invalid characters" unless "x$repo" =~ $REPOPATT_PATT;
+        expand_wild($repo, $user);
+    } else {
+        die "$cmd doesn't make sense to me\n";
     }
-
-    # note that there is an extra return value when called for repos (as
-    # opposed to being called for usernames)
-    return ($wild, @ret);
 }
 
-# ----------------------------------------------------------------------------
-#       generic check access routine
-# ----------------------------------------------------------------------------
+sub shell_out {
+    my $shell = $ENV{SHELL};
+    $shell =~ s/.*\//-/;    # change "/bin/bash" to "-bash"
+    log_it($shell);
+    exec { $ENV{SHELL} } $shell;
+}
 
-sub check_access
-{
-    my ($repo, $ref, $aa, $dry_run) = @_;
-    # aa = attempted access
-
-    my ($perm, $creator, $wild) = &repo_rights($repo);
-    $perm =~ s/ /_/g;
-    $creator =~ s/^\(|\)$//g;
-    return ($perm, $creator) unless $ref;
-
-    # until I do some major refactoring (which will bloat the update hook a
-    # bit, sadly), this code duplicates stuff in the current update hook.
-
-    my @allowed_refs;
-    # user+repo specific perms override everything else, so they come first.
-    # Then perms given to specific user for @all repos, and finally perms
-    # given to @all users for specific repo
-    push @allowed_refs, @ { $repos{$repo}{$ENV{GL_USER}} || [] };
-    push @allowed_refs, @ { $repos{'@all'}{$ENV{GL_USER}} || [] };
-    push @allowed_refs, @ { $repos{$repo}{'@all'} || [] };
-
-    if ($dry_run) {
-        return &check_ref(\@allowed_refs, $repo, $ref, $aa, $dry_run);
-    } else {
-        &check_ref(\@allowed_refs, $repo, $ref, $aa);
+sub try_adc {
+    my ($cmd, @args) = split ' ', $ENV{SSH_ORIGINAL_COMMAND};
+    if (-x "$GL_ADC_PATH/$cmd") {
+        # yes this is rather strict, sorry.
+        do { die "I don't like $_\n" unless $_ =~ $ADC_CMD_ARGS_PATT } for ($cmd, @args);
+        log_it("$GL_ADC_PATH/$ENV{SSH_ORIGINAL_COMMAND}");
+        exec("$GL_ADC_PATH/$cmd", @args);
     }
 }
 
@@ -1114,11 +1092,11 @@ sub ext_cmd_rsync
     # ok now check if we're permitted to execute a $perm action on $path
     # (taken as a refex) using rsync.
 
-    &check_access('EXTCMD/rsync', "NAME/$path", $perm);
+    check_access('EXTCMD/rsync', "NAME/$path", $perm);
         # that should "die" if there's a problem
 
     wrap_chdir($RSYNC_BASE);
-    &log_it();
+    log_it();
     exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND};
 }
 
@@ -1162,4 +1140,6 @@ sub ext_cmd_svnserve
     die "svnserve exec failed\n";
 }
 
+# ------------------------------------------------------------------------------
+# per perl rules, this should be the last line in such a file:
 1;

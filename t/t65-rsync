@@ -26,8 +26,8 @@ name "u1 rsync to frob"
 cd ~/gitolite-admin
 runlocal rsync -avP conf u1:frob
 expect conf/gitolite.conf
-expect 386.*100%
-expect "total size is 386"
+expect 100%
+expect "total size is"
 runlocal find /tmp/rsyncbase -type f
 expect /tmp/rsyncbase/frob/conf/gitolite.conf
 
@@ -42,8 +42,8 @@ name "u2 rsync to nitz"
 cd ~/gitolite-admin
 runlocal rsync -avP conf u2:nitz
 expect conf/gitolite.conf
-expect 386.*100%
-expect "total size is 386"
+expect 100%
+expect "total size is"
 runlocal find /tmp/rsyncbase -type f
 expect /tmp/rsyncbase/nitz/conf/gitolite.conf
 
@@ -55,8 +55,8 @@ expect "W NAME/spl u2 DENIED by NAME/spl"
 name "u1 rsync to spl"
 cd ~/gitolite-admin
 runlocal rsync -avP conf u1:spl
-expect 386.*100%
-expect "total size is 386"
+expect 100%
+expect "total size is"
 
 name "u2 rsync from spl"
 cd ~/td
@@ -66,14 +66,14 @@ expect "R NAME/spl u2 DENIED by NAME/spl"
 name "u1 rsync from spl"
 cd ~/td
 runlocal rsync -avP u1:spl splhere
-expect 386.*100%
-expect "total size is 386"
+expect 100%
+expect "total size is"
 
 name "u3 rsync to foo"
 cd ~/gitolite-admin
 runlocal rsync -avP conf u3:foo/
-expect 386.*100%
-expect "total size is 386"
+expect 100%
+expect "total size is"
 
 name "u3 rsync to bar"
 cd ~/gitolite-admin

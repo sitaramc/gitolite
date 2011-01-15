@@ -71,6 +71,15 @@ In this document:
         # or
         ./test-driver.sh t51
 
+  * you can also run them through "prove", although to make it work easier
+    with prove, I ended up making the "subtest" numbers be the actual test
+    numbers, making it look like I have over 2000 tests, when in reality I
+    have about 600:
+
+        prove ./test-driver.sh
+        # or
+        prove ./test-driver.sh :: t51
+
 <a name="instructions_for_adding_new_tests"></a>
 
 ### instructions for adding new tests

@@ -5,7 +5,22 @@
 use strict;
 use warnings;
 
-our ($REPO_BASE, $GL_ADMINDIR, $GL_CONF, $GIT_PATH, $GL_PACKAGE_CONF, $GL_PACKAGE_HOOKS, $GL_PERFLOGT, $REPO_UMASK);
+# ----------------------------------------------------------------------------
+#       find the rc file, then pull the libraries
+# ----------------------------------------------------------------------------
+
+BEGIN {
+    die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+    die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+}
+
+use lib $ENV{GL_BINDIR};
+use gitolite_rc;
+use gitolite;
+
+# ----------------------------------------------------------------------------
+#       start...
+# ----------------------------------------------------------------------------
 
 # setup quiet mode if asked; please do not use this when running manually
 open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
@@ -25,21 +40,13 @@ sub wrap_mkdir
     print "created $dir\n";
 }
 
-# the common setup module is in the same directory as this running program is
-my $bindir = $0;
-$bindir =~ s/\/[^\/]+$//;
-unshift @INC, $bindir;
-require gitolite or die "parse gitolite.pm failed\n";
-
-# ask where the rc file is, get it, and "do" it
-&where_is_rc();
 unless ($ENV{GL_RC}) {
     # doesn't exist.  Copy it across, tell user to edit it and come back
     my $glrc = $ENV{HOME} . "/.gitolite.rc";
     if ($GL_PACKAGE_CONF) {
         system("cp $GL_PACKAGE_CONF/example.gitolite.rc $glrc");
     } else {
-        system("cp $bindir/../conf/example.gitolite.rc $glrc");
+        system("cp $ENV{GL_BINDIR}/../conf/example.gitolite.rc $glrc");
     }
     print "created $glrc\n";
     print "please edit it, change the paths if you wish to, and RERUN THIS SCRIPT\n";
@@ -69,8 +76,8 @@ for my $dir qw(conf doc keydir logs src hooks hooks/common hooks/gitolite-admin)
 if ($GL_PACKAGE_HOOKS) {
     system("cp -R -p $GL_PACKAGE_HOOKS $GL_ADMINDIR");
 } else {
-    system("cp -R -p $bindir/../src $bindir/../doc $bindir/../hooks $GL_ADMINDIR");
-    system("cp       $bindir/../conf/VERSION                        $GL_ADMINDIR/conf");
+    system("cp -R -p $ENV{GL_BINDIR}/../src $ENV{GL_BINDIR}/../doc $ENV{GL_BINDIR}/../hooks $GL_ADMINDIR");
+    system("cp       $ENV{GL_BINDIR}/../conf/VERSION                        $GL_ADMINDIR/conf");
 }
 
 unless (-f $GL_CONF or $GL_PACKAGE_CONF) {

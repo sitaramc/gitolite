@@ -2,6 +2,8 @@
 
 . $(dirname $0)/adc.common-functions
 
+[ -z "$GL_RC" ] && die "ENV GL_RC not set"
+
 # get_rights_and_owner now also sets $repo; see comments in common functions
 get_rights_and_owner $1; from=$repo
 [ -z "$perm_read" ] && die "no read permissions on $from"
@@ -17,7 +19,7 @@ git clone --bare -l $GL_REPO_BASE_ABS/$from.git $GL_REPO_BASE_ABS/$to.git
 cd $GL_REPO_BASE_ABS/$to.git
 echo $GL_USER > gl-creater
 git config gitweb.owner "$GL_USER"
-( cd $HOME;perl -le 'do ".gitolite.rc"; print $GL_WILDREPOS_DEFPERMS' ) |
+( $GL_BINDIR/gl-query-rc GL_WILDREPOS_DEFPERMS ) |
     SSH_ORIGINAL_COMMAND="setperms $to" $GL_BINDIR/gl-auth-command $GL_USER
 cp -R $GL_REPO_BASE_ABS/$from.git/hooks/* $GL_REPO_BASE_ABS/$to.git/hooks
 

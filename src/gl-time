@@ -9,21 +9,31 @@
 use strict;
 use warnings;
 
+# ----------------------------------------------------------------------------
+#       find the rc file, then pull the libraries
+# ----------------------------------------------------------------------------
+
+# see notes on this code in gl-auth-command
+BEGIN {
+    # find and set bin dir
+    $0 =~ m|^(/)?(.*)/| and $ENV{GL_BINDIR} = ($1 || "$ENV{PWD}/") . $2;
+}
+
+use lib $ENV{GL_BINDIR};
+use gitolite_rc;
+use gitolite_env;
+use gitolite qw(log_it);
+
 use Time::HiRes qw(gettimeofday tv_interval);
 
-our ($GL_PERFLOGT);
+# ----------------------------------------------------------------------------
+#       start...
+# ----------------------------------------------------------------------------
 
 # rc file
 do "$ENV{HOME}/.gitolite.rc";
     # this file is always in a fixed place; code in the main gitolite that
     # seems to indicate it is not, is obsolete and needs to be fixed.
-
-# the common setup module is in the same directory as this running program is
-my $bindir = $0;
-$bindir =~ s/\/[^\/]+$//;
-$bindir = "$ENV{PWD}/$bindir" unless $bindir =~ /^\//;
-unshift @INC, $bindir;
-require gitolite or die "parse gitolite.pm failed\n";
 
 # ---------------------------------------------------------------
 
@@ -36,6 +46,6 @@ $ENV{GL_USER} = shift;
 
 my $elapsedtime = tv_interval($starttime);
 
-$ENV{GL_LOG} = &get_logfilename($GL_PERFLOGT);
+$ENV{GL_LOG} = get_logfilename($GL_PERFLOGT);
 # log_it logs to $ENV{GL_LOG}
-&log_it("", "$elapsedtime\trc=$returncode");
+log_it("", "$elapsedtime\trc=$returncode");

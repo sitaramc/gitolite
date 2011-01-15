@@ -6,8 +6,8 @@ our (%users, %linenos);
 my $thisbin = $0;
 $thisbin = "$ENV{PWD}/$thisbin" unless $thisbin =~ /^\//;
 
-&usage unless $ARGV[0] and -f $ARGV[0];
-my @authlines = &filelines($ARGV[0]);
+usage() unless $ARGV[0] and -f $ARGV[0];
+my @authlines = filelines($ARGV[0]);
 my $lineno = 0;
 for (@authlines)
 {
@@ -36,7 +36,7 @@ print "\n";
 my @pubkeys = glob("*.pub");
 die "no *.pub files here\n" unless @pubkeys;
 for my $pub (@pubkeys) {
-    my @lines = &filelines($pub);
+    my @lines = filelines($pub);
     die "$pub has more than one line\n" if @lines > 1;
     die "$pub does not start with ssh-rsa or ssh-dss\n" unless $lines[0] =~ /^(?:ssh-rsa|ssh-dss) (\S+)/;
     my $key = $1;

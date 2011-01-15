@@ -1,17 +1,9 @@
 #!/usr/bin/perl
 
-use strict;
-use warnings;
-
 # ----------------------------------------------------------------------------
-# you:  what's the invocation?
-# me:   Hail, O Lord Ganesha, destroyer of obsta...
-# you:  err hmm not *that* sort of invocation... I meant how does this program
-#       get invoked?
-# me:   oh hehe <hides sheepish grin>, ok here we go...
-#
 # ssh mode
 # - started by sshd
+# - one optional flag, "-s", for "shell allowed" people
 # - one argument, the "user" name
 # - one env var, SSH_ORIGINAL_COMMAND, containing the command
 # - command typically: git-(receive|upload)-pack 'reponame(.git)?'
@@ -27,180 +19,101 @@ use warnings;
 # - no special processing commands currently handled
 # ----------------------------------------------------------------------------
 
+use strict;
+use warnings;
+
 # ----------------------------------------------------------------------------
-#       common definitions
+#       find the rc file, then pull the libraries in
 # ----------------------------------------------------------------------------
 
-# these are set by the "rc" file
-our ($GL_LOGT, $GL_CONF_COMPILED, $REPO_BASE, $GIT_PATH, $REPO_UMASK, $GL_ADMINDIR, $RSYNC_BASE, $HTPASSWD_FILE, $GL_WILDREPOS, $GL_WILDREPOS_DEFPERMS, $GL_ADC_PATH, $SVNSERVE, $PROJECTS_LIST, $GL_SLAVE_MODE, $GL_PERFLOGT, $GL_ALL_READ_ALL);
-# and these are set by gitolite.pm
-our ($R_COMMANDS, $W_COMMANDS, $REPONAME_PATT, $REPOPATT_PATT, $ADC_CMD_ARGS_PATT);
-our %repos;
-our %groups;
-our %git_configs;
-our %split_conf;;
+# this (gl-auth-command) is one of the two valid starting points for all of
+# gitolite for normal operations (the other being gl-time).  All other
+# programs are invoked either from this, or from something else (typically
+# git-*-pack) in between).  They thus get the benefit of the environment
+# variables that this code sets up.
+BEGIN {
+    # find and set bin dir
+    $0 =~ m|^(/)?(.*)/| and $ENV{GL_BINDIR} = ($1 || "$ENV{PWD}/") . $2;
+}
 
-# the common setup module is in the same directory as this running program is
-my $bindir = $0;
-$bindir =~ s/\/[^\/]+$//;
-$bindir = "$ENV{PWD}/$bindir" unless $bindir =~ /^\//;
-unshift @INC, $bindir;
-require gitolite or die "parse gitolite.pm failed\n";
+# our libraries are either in the same place the scripts are, or, as with
+# RPM/DEB install, in some 'system' location that is already in perl's @INC
+# anyway
+use lib $ENV{GL_BINDIR};
 
-# ask where the rc file is, get it, and "do" it
-&where_is_rc();
-die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
-
-# we need to pass GL_ADMINDIR and the bindir to the child hooks
-$ENV{GL_ADMINDIR} = $GL_ADMINDIR;
-$ENV{GL_BINDIR} = $bindir;
-
-# add a custom path for git binaries, if specified
-$ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
-
-# set default permission of wildcard repositories
-$ENV{GL_WILDREPOS_DEFPERMS} = $GL_WILDREPOS_DEFPERMS if $GL_WILDREPOS_DEFPERMS;
-
-# set the umask before creating any files
-umask($REPO_UMASK);
-
-$ENV{GL_REPO_BASE_ABS} = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
+use gitolite_rc;    # this does a "do" of the rc file
+use gitolite_env;
+use gitolite;
 
 # ----------------------------------------------------------------------------
 #       start...
 # ----------------------------------------------------------------------------
 
-# if the first argument is a "-s", this user is allowed to get a shell using
-# this key
-my $shell_allowed = 0;
-if (@ARGV and $ARGV[0] eq '-s') {
-    $shell_allowed = 1;
-    shift;
-}
+# these two options are mutually exclusive.  And this program is not supposed
+# to be called manually anyway
+my $shell_allowed = (@ARGV and $ARGV[0] eq '-s' and shift);
+my $program       = (@ARGV and $ARGV[0] eq '-e' and shift);
+
+# setup the environment for the kids so they don't need to embark on the
+# voyage of self-discovery above ;-)  [environment also means things like
+# nice, umask, etc., not just the environment *variables*]
+setup_environment();
+
+# if one of the other programs is being invoked (see doc/hacking.mkd), exec it
+exec(@ARGV) if $program;
 
 # ----------------------------------------------------------------------------
-#       set up SSH_ORIGINAL_COMMAND and SSH_CONNECTION in http mode
+#       set up GL_USER and (if reqd) SSH_ORIGINAL_COMMAND and SSH_CONNECTION
 # ----------------------------------------------------------------------------
-
-# fake out SSH_ORIGINAL_COMMAND and SSH_CONNECTION so the rest of the code
-# stays the same (except the exec at the end).
 
 my $user;
 if ($ENV{REQUEST_URI}) {
     die "fallback to DAV not supported\n" if $ENV{REQUEST_METHOD} eq 'PROPFIND';
 
-    # these patterns indicate normal git usage; see "services[]" in
-    # http-backend.c for how I got that.  Also note that "info" is overloaded;
-    # git uses "info/refs...", while gitolite uses "info" or "info?...".  So
-    # there's a "/" after info in the list below
-    if ($ENV{PATH_INFO} =~ m(^/(.*)/(HEAD$|info/refs$|objects/|git-(?:upload|receive)-pack$))) {
-        my $repo = $1;
-        my $verb = ($ENV{REQUEST_URI} =~ /git-receive-pack/) ?  'git-receive-pack' : 'git-upload-pack';
-        $ENV{SSH_ORIGINAL_COMMAND} = "$verb '$repo'";
-    } else {
-        # this is one of our custom commands; could be anything really,
-        # because of the adc feature
-        my ($verb) = ($ENV{PATH_INFO} =~ m(^/(\S+)));
-        my $args = $ENV{QUERY_STRING};
-        $args =~ s/\+/ /g;
-        $ENV{SSH_ORIGINAL_COMMAND} = $verb;
-        $ENV{SSH_ORIGINAL_COMMAND} .= " $args" if $args;
-        &print_http_headers();  # in preparation for the eventual output!
-    }
-    $ENV{SSH_CONNECTION} = "$ENV{REMOTE_ADDR} $ENV{REMOTE_PORT} $ENV{SERVER_ADDR} $ENV{SERVER_PORT}";
+    # fake out SSH_ORIGINAL_COMMAND and SSH_CONNECTION when called via http,
+    # so the rest of the code stays the same (except the exec at the end).
+    simulate_ssh_connection();
+
     $user = $ENV{GL_USER} = $ENV{REMOTE_USER};
 } else {
     # no (more) arguments given in ssh mode?  default user is $USER
     # (fedorahosted works like this, and it is harmless for others)
     @ARGV = ($ENV{USER}) unless @ARGV;
-    $user=$ENV{GL_USER}=shift;
+    $user = $ENV{GL_USER} = shift;
 }
 
 # ----------------------------------------------------------------------------
-#       logging, timestamp env vars
+#       SSH_ORIGINAL_COMMAND
 # ----------------------------------------------------------------------------
 
-$ENV{GL_LOG} = &get_logfilename($GL_LOGT);
-
-# ----------------------------------------------------------------------------
-#       sanity checks on SSH_ORIGINAL_COMMAND
-# ----------------------------------------------------------------------------
-
-# no SSH_ORIGINAL_COMMAND given...
+# no SSH_ORIGINAL_COMMAND given: shell out or default to 'info'
 unless ($ENV{SSH_ORIGINAL_COMMAND}) {
-    # if the user is allowed to use a shell, give him one
-    if ($shell_allowed) {
-        my $shell = $ENV{SHELL};
-        $shell =~ s/.*\//-/;    # change "/bin/bash" to "-bash"
-        &log_it($shell);
-        exec { $ENV{SHELL} } $shell;
-    }
-    # otherwise, pretend he typed in "info" and carry on...
+    shell_out() if $shell_allowed;  # doesn't return ('exec's out)
     $ENV{SSH_ORIGINAL_COMMAND} = 'info';
 }
 
-# ----------------------------------------------------------------------------
-#       slave mode should not do much
-# ----------------------------------------------------------------------------
-
+# slave mode should not do much
 die "server is in slave mode; you can only fetch\n"
     if ($GL_SLAVE_MODE and $ENV{SSH_ORIGINAL_COMMAND} !~ /^(info|expand|get|git-upload-)/);
 
-# ----------------------------------------------------------------------------
-#       admin defined commands
-# ----------------------------------------------------------------------------
-
-# please see doc/admin-defined-commands.mkd for details
+# admin defined commands; please see doc/admin-defined-commands.mkd
 if ($GL_ADC_PATH and -d $GL_ADC_PATH) {
-    my ($cmd, @args) = split ' ', $ENV{SSH_ORIGINAL_COMMAND};
-    if (-x "$GL_ADC_PATH/$cmd") {
-        # yes this is rather strict, sorry.
-        do { die "I don't like $_\n" unless $_ =~ $ADC_CMD_ARGS_PATT } for ($cmd, @args);
-        &log_it("$GL_ADC_PATH/$ENV{SSH_ORIGINAL_COMMAND}");
-        exec("$GL_ADC_PATH/$cmd", @args);
-    }
+    try_adc();  # if it succeeds, this also 'exec's out
 }
 
-# ----------------------------------------------------------------------------
-#       get and set perms for actual repo created by wildcard-autoviv
-# ----------------------------------------------------------------------------
-
+# get/set perms/desc for wild repos; also the 'expand' command
 my $CUSTOM_COMMANDS=qr/^\s*(expand|(get|set)(perms|desc))\b/;
-
 # note that all the subs called here chdir somewhere else and do not come
 # back; they all blithely take advantage of the fact that processing custom
 # commands is sort of a dead end for normal (git) processing
-
 if ($ENV{SSH_ORIGINAL_COMMAND} =~ $CUSTOM_COMMANDS) {
     die "wildrepos disabled, sorry\n" unless $GL_WILDREPOS;
-    my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
-    my ($verb, $repo) = ($cmd =~ /^\s*(\S+)(?:\s+'?\/?(.*?)(?:\.git)?'?)?$/);
-    # deal with "no argument" cases
-    $verb eq 'expand' ? $repo = '^' : die "$verb needs an argument\n" unless $repo;
-    if ($repo =~ $REPONAME_PATT and $verb =~ /getperms|setperms/) {
-        # with an actual reponame, you can "getperms" or "setperms"
-        get_set_perms($repo, $verb, $user);
-    }
-    elsif ($repo =~ $REPONAME_PATT and $verb =~ /(get|set)desc/) {
-        # with an actual reponame, you can "getdesc" or "setdesc"
-        get_set_desc($repo, $verb, $user);
-    }
-    elsif ($verb eq 'expand') {
-        # with a wildcard, you can "expand" it to see what repos actually match
-        die "$repo has invalid characters" unless "x$repo" =~ $REPOPATT_PATT;
-        expand_wild($GL_ADMINDIR, $GL_CONF_COMPILED, $repo, $user);
-    } else {
-        die "$cmd doesn't make sense to me\n";
-    }
+    run_custom_command($user);
     exit 0;
 }
 
-# ----------------------------------------------------------------------------
-#       non-git commands
-# ----------------------------------------------------------------------------
-
-# if the command does NOT fit the pattern of a normal git command, send it off
-# somewhere else...
+# non-git commands: if the command does NOT fit the pattern of a normal git
+# command, send it off somewhere else...
 
 # side notes on detecting a normal git command: the pattern we check allows
 # old style as well as new style ("git-subcommand arg" or "git subcommand
@@ -210,63 +123,53 @@ if ($ENV{SSH_ORIGINAL_COMMAND} =~ $CUSTOM_COMMANDS) {
 
 my ($verb, $repo) = ($ENV{SSH_ORIGINAL_COMMAND} =~ /^\s*(git\s+\S+|\S+)\s+'\/?(.*?)(?:\.git)?'/);
 unless ( $verb and ( $verb eq 'git-init' or $verb =~ $R_COMMANDS or $verb =~ $W_COMMANDS ) and $repo and $repo =~ $REPONAME_PATT ) {
-    # ok, it's not a normal git command; call the special command helper
-    &special_cmd ($GL_ADMINDIR, $GL_CONF_COMPILED, $shell_allowed, $RSYNC_BASE, $HTPASSWD_FILE, $SVNSERVE);
-    exit;
+    special_cmd ($shell_allowed);
+    exit 0;
 }
+
+# some final sanity checks
 die "$repo ends with a slash; I don't like that\n" if $repo =~ /\/$/;
 die "$repo has two consecutive periods; I don't like that\n" if $repo =~ /\.\./;
 
-# reponame
+# save the reponame; too many things need this
 $ENV{GL_REPO}=$repo;
 
 # ----------------------------------------------------------------------------
 #       the real git commands (git-receive-pack, etc...)
 # ----------------------------------------------------------------------------
 
-# ----------------------------------------------------------------------------
-#       first level permissions check
-# ----------------------------------------------------------------------------
+# first level permissions check
 
 my ($perm, $creator, $wild);
 if ( $GL_ALL_READ_ALL and $verb =~ $R_COMMANDS and -d "$ENV{GL_REPO_BASE_ABS}/$repo.git") {
     $perm = 'R';
 } else {
-    ($perm, $creator, $wild) = &repo_rights($repo);
+    ($perm, $creator, $wild) = repo_rights($repo);
 }
-if ($perm =~ /C/) {
-    # it was missing, and you have create perms
-    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
-    new_repo($repo, "$GL_ADMINDIR/hooks/common", $user);
-        # note pwd is now the bare "repo.git"; new_repo does that...
-    wrap_print("gl-perms", "$GL_WILDREPOS_DEFPERMS\n") if $GL_WILDREPOS_DEFPERMS;
-    &setup_git_configs($repo, \%git_configs);
-    &setup_daemon_access($repo);
-    &add_del_line ("$repo.git", $PROJECTS_LIST, &setup_gitweb_access($repo, '', ''));
-    wrap_chdir($ENV{HOME});
-}
+# it was missing, and you have create perms, so create it
+new_wild_repo($repo, $user) if ($perm =~ /C/);
 
-# we know the user and repo; we just need to know what perm he's trying
-# aa == attempted access
+# we know the user and repo; we just need to know what perm he's trying for
+# (aa == attempted access)
 my $aa = ($verb =~ $R_COMMANDS ? 'R' : 'W');
 die "$aa access for $repo DENIED to $user
 (Or there may be no repository at the given path. Did you spell it correctly?)\n" unless $perm =~ /$aa/;
 
 # check if repo is write-enabled
-&check_repo_write_enabled($repo) if $aa eq 'W';
+check_repo_write_enabled($repo) if $aa eq 'W';
 
 # ----------------------------------------------------------------------------
 #       over to git now
 # ----------------------------------------------------------------------------
 
 if ($ENV{REQUEST_URI}) {
-    &log_it($ENV{REQUEST_URI});
+    log_it($ENV{REQUEST_URI});
     exec $ENV{GIT_HTTP_BACKEND};
     # the GIT_HTTP_BACKEND env var should be set either by the rc file, or as
     # a SetEnv in the apache config somewhere
 }
 
-&log_it();
+log_it();
 
 $repo = "'$REPO_BASE/$repo.git'";
 exec("git", "shell", "-c", "$verb $repo") unless $verb eq 'git-init';

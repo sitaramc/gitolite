@@ -3,6 +3,9 @@
 use strict;
 use warnings;
 
+die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+
 # - show fake "reflog" from gitolite server
 # - recover deleted branches
 # - recover from bad force pushes
@@ -42,8 +45,9 @@ $limit ||= 10;
 
 unshift @INC, $ENV{GL_BINDIR};
 require gitolite or die "parse gitolite.pm failed\n";
+gitolite->import;
 
-my ($perm, $creator, $wild) = &repo_rights($repo);
+my ($perm, $creator, $wild) = repo_rights($repo);
 die "you don't have read access to $repo\n" unless $perm =~ /R/;
 
 my @logfiles = sort glob("$ENV{GL_ADMINDIR}/logs/*");
@@ -93,5 +97,5 @@ if ( $cmd eq 'recover' ) {
     $newsha2 = '' if $newsha =~ /^0+$/;
     system("git", "update-ref", $ref, $oldsha, $newsha2) and
         die "repo $repo, update-ref $ref $oldsha $newsha failed...\n";
-    &log_it("", "+\t$newsha\t$oldsha\t$repo\t$ref");
+    log_it("", "+\t$newsha\t$oldsha\t$repo\t$ref");
 }

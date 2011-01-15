@@ -1,0 +1,213 @@
+# developer/patch maintainer notes
+
+In this document:
+
+  * <a href="#_current_development_version">current development version</a>
+      * <a href="#_testing_status_of_gitolite_v2_0rc1">testing status of gitolite v2.0rc1</a>
+  * <a href="#_migration_to_gitolite_v2_x">migration to gitolite v2.x</a>
+  * <a href="#_general_stuff">general stuff</a>
+  * <a href="#_the_rc_file">the rc file</a>
+  * <a href="#_modules">modules</a>
+  * <a href="#_that_bindir_thing">that 'bindir' thing</a>
+      * <a href="#_from_perl">from perl</a>
+      * <a href="#_from_shell">from shell</a>
+      * <a href="#_OUTLIER_">OUTLIER!</a>
+  * <a href="#_special_types_of_setups">special types of setups</a>
+      * <a href="#_Fedora">Fedora</a>
+
+----
+
+<a name="_current_development_version"></a>
+
+### current development version
+
+The current gitolite development version is v2.0rc1.  Unless there is a
+serious security problem, *or* one of my large users [i.e., anyone whose name
+is in doc/who-uses-it.mkd (grin!)] needs it, all future changes will now
+happen here.
+
+The commit looks *huge*, but it's mostly just large chunks of code moving
+around; there's not a whole lot of new code.  However, I do apologise if
+anyone has their local changes conflicted when merging or rebasing against
+this version, and I promise to help as much as I can.
+
+<a name="_testing_status_of_gitolite_v2_0rc1"></a>
+
+#### testing status of gitolite v2.0rc1
+
+Pretty much all the major features have been properly tested using the test
+suite.  The following exceptions exist:
+
+  * basic, manual, testing only
+      * most admin defined commands
+  * not yet tested
+      * smart http
+      * mirroring
+      * mob branches
+  * things which I have no easy way to test
+      * controlling gitweb authentication using gitolite (as described [here][gw])
+      * SVN passthru
+
+<a name="_migration_to_gitolite_v2_x"></a>
+
+### migration to gitolite v2.x
+
+In general, the procedure for migrating described in the install document
+should suffice.  Even the rc file hasn't really changed much from the latest
+versions in v1.x, except that if you add a new variable to it you must also
+add it to the @EXPORT list in `src/gitolite_rc.pm`.
+
+<a name="_general_stuff"></a>
+
+### general stuff
+
+  * all scripts and libraries must be in the same directory.  However, RPM/DEB
+    packagers can put the libraries where they want, as long as they can be
+    found in perl's default `@INC`.
+
+  * gl-auth-command **requires** an actual `~/.gitolite.rc` (except if your
+    initials are "JK" or "DG", in which case `/etc/gitolite/gitolite.rc` also
+    works!)  It knows how to look around and set env vars etc correctly
+
+  * all programs except gl-auth-command **require** the environment variables
+    `GL_RC` and `GL_BINDIR` set properly.  Your best bet is to run them *via*
+    gl-auth-command, like so:
+
+        path/to/gl-auth-command -e other_program other_program_arguments
+
+    In any case none of these programs are meant to be run manually -- pretty
+    much all of them are run via gl-auth-command or from something that was
+    forked from it so the variables *will* exist during normal operation.
+
+<a name="_the_rc_file"></a>
+
+### the rc file
+
+The 'rc' file has one major change from v1: any new values in the rc file need
+to be added to the @EXPORT list in `src/gitolite_rc.pm`.
+
+<a name="_modules"></a>
+
+### modules
+
+There are 3 "modules" (`gitolite_rc`, `gitolite_env`, and `gitolite` itself).
+Their purposes should be fairly obvious.
+
+<a name="_that_bindir_thing"></a>
+
+### that 'bindir' thing
+
+The importance of `GL_BINDIR` is that the command= argument in
+`~/.ssh/authorized_keys` must be a full path, ideally, and the compile script
+gets this from `GL_BINDIR`.
+
+<a name="_from_perl"></a>
+
+#### from perl
+
+  * for frequently run perl programs, I prefer my method
+
+      * gl-auth-command -- this is invoked with a full path
+      * gl-time -- same as above
+
+  * "their" ideal is "FindBin".  I will use it only on manually or
+    infrequently run programs
+
+      * gl-setup-authkeys (external shim to compile keys separately from PTA)
+
+<a name="_from_shell"></a>
+
+#### from shell
+
+  * a perl program called gl-query-rc finds its own BINDIR (using my perl
+    method, not FindBin).  This is suitable for calling from shell scripts
+    as `${0%/*}/gl-query-rc GL_BINDIR`
+
+      * gl-mirror-shell (frequent use)
+      * gl-setup
+      * gl-tool
+
+<a name="_OUTLIER_"></a>
+
+#### OUTLIER!
+
+  * gl-dont-panic is an outlier.  For some silly reason I have the notion that
+    even if it runs from /tmp it should get the right values, so it is the
+    only one that interrogates `~/.ssh/authorized_keys` to get the actual
+    BINDIR in use!
+
+<a name="_special_types_of_setups"></a>
+
+### special types of setups
+
+<a name="_Fedora"></a>
+
+#### Fedora
+
+Fedora has a very special setup, as follows:
+
+  * each user has his own userid and login
+  * his/her ~/.ssh/authkeys file (containing only his/her key) has a
+    "command=" clause invoking gl-auth-command
+  * trusted users have "gl-auth-command -s" meaning they can get a shell if
+    they want to
+
+  * actual git repos are under "git" (or some such), and include the chmod g+s
+    (git init --shared) unix perms tricks for shared access
+
+  * but since they're coming through gl-auth, branch-level acls are in effect
+
+  * the gitolite config file is generated from some database and compiled (all
+    via cron)
+
+  * the keydir/ is empty; in fact they probably don't use the admin repo at
+    all, AFAIK
+
+The most important implication of this setup is that **the RC file is no
+longer is `$HOME` of the 'git' user**.  They keep it in
+`/etc/gitolite/gitolite.rc`.  This means that a properly setup rc file must
+already be present in `/etc/gitolite/gitolite.rc` before doing any such
+installs.
+
+----
+
+# **Why v2?**
+
+I went onto `#perl` to ask some question about setpriority() and got yelled at
+for writing "horrible code".  And that was one of the kinder comments; my
+rather fragile ego is trying to forget the rest ;-)
+
+They also gave me a link to a PDF book, "Modern Perl" by 'chromatic'.  Nice
+book; one of the first things you learn from it is that you should not go to
+`#perl` for general help.
+
+Anyway, the summary of the collective angst of `#perl` (well 2 people anyway)
+was: use Getopt::Long, FindBin, 'use lib', a library for HTTP stuff, stop
+prefixing subs with '&', and get rid of the huge number of 'our' declarations.
+
+That last item is the only one I totally agree with, because it was on my long
+term todo list anyway.  And 'use lib' sorta goes with it, so that's fine too.
+And as soon as I found that vim colors the sub names differently if you take
+out the '&' I decided I'd do that too :-) [But honestly, if `&sub` is so bad
+shouldn't "man perlsub" at least say something negative about it, other than
+"disables prototype checking", which doesn't matter here since I'm not using
+prototypes?]
+
+As for the rest, FindBin brings in a good 1000+ lines for something that I do
+in a line or two (since I don't care about all the pathological edge cases).
+Getopt::Long is 2649 lines to replace the code below  [note that there *is*
+only one possible option to this command, and it is *never* run manually
+either, so I don't need any fancy features]:
+
+    my $shell_allowed = 0;
+    if (@ARGV and $ARGV[0] eq '-s') {
+        $shell_allowed = 1;
+        shift;
+    }
+
+Apparently TMTOWTDI has given way to TOOWTDI.
+
+Anyway, I spent a few hours refactoring it.  And I do thank them for pushing
+me to stop being lazy on the "our" business.
+
+[gw]: https://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#_easier_to_link_gitweb_authorisation_with_gitolite
