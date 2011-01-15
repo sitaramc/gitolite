@@ -2,6 +2,28 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v1.5.9
+
+  - Nokia MeeGo team contributed ldap scripts
+
+  - large configs should now be twice as fast (except when gl-perms exists)
+    due to my finding and eliminating a wasted parse_acl
+
+  - major change: split the config file when in big-config mode
+    (includes a data format change)
+
+  - GL_ALL_READ_ALL to make things much, (MUCH!) faster for sites where all
+    can read all repos (like Fedora)
+
+  - rc file revamp -- was getting too big and unwieldy; now the documentation
+    is in a new file instead of inline
+
+  - allow gitolite to be used even when users have real IDs (thus $HOME is not
+    valid to find the rc file); allow /etc/gitolite/gitolite.rc then
+
+  - BIG one for adc writers -- full blown access checks (ref level) can be
+    done from an ADC now (though it has to be in perl, not shell)!
+
   - allow full access checks from perl (shell can only do level 1 checks);
     useful in hooks or ADCs
 
