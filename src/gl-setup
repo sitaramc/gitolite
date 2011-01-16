@@ -28,6 +28,13 @@ TEMPDIR=$(mktemp -d -t tmp.XXXXXXXXXX)
 export TEMPDIR
 trap "/bin/rm -rf $TEMPDIR" 0
 
+# quiet mode; only used to suppress popping up an editor on a new rc file
+if [ "$1" = "-q" ]
+then
+    shift
+    quiet=1
+fi
+
 if [ -n "$GITOLITE_HTTP_HOME" ]
 then
     HOME=$GITOLITE_HTTP_HOME
@@ -72,10 +79,13 @@ else
     [ -z "$GITOLITE_HTTP_HOME" ] || [ -n "$admin_name"  ] || die "looks like first run -- I need an admin name"
 
     cp $GL_PACKAGE_CONF/example.gitolite.rc $GL_RC
-    printf "The default settings in the "rc" file ($GL_RC) are fine for most\n"
-    printf "people but if you wish to make any changes, you can do so now.\n\nhit enter..."
-    read i
-    ${EDITOR:-vi} $GL_RC
+    if [ -z "$quiet" ]
+    then
+        printf "The default settings in the "rc" file ($GL_RC) are fine for most\n"
+        printf "people but if you wish to make any changes, you can do so now.\n\nhit enter..."
+        read i
+        ${EDITOR:-vi} $GL_RC
+    fi
 fi
 
 # setup ssh stuff.  We break our normal rule that we will not fiddle with
