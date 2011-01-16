@@ -8,6 +8,7 @@ In this document:
       * <a href="#_sidebar_why_two_keys_on_client_for_the_admin">(sidebar) why two keys on client for the admin</a>
       * <a href="#_bypassing_gitolite_without_intending_to">bypassing gitolite without intending to</a>
       * <a href="#_basic_ssh_troubleshooting_for_the_admin">basic ssh troubleshooting for the admin</a>
+  * <a href="#_problems_with_using_non_openssh_public_keys">problems with using non-openssh public keys</a>
   * <a href="#_windows_issues">windows issues</a>
   * <a href="#_details">details</a>
       * <a href="#_files_on_the_server">files on the server</a>
@@ -319,6 +320,21 @@ from scratch:
   * now `git add keydir; git commit; git push -f`
 
 That's a long sequence but it should work.
+
+<a name="_problems_with_using_non_openssh_public_keys"></a>
+
+### problems with using non-openssh public keys
+
+Gitolite accepts public keys only in openssh format.  Trying to use an "ssh2"
+key (used by proprietary SSH software) results in:
+
+    WARNING: a pubkey file can only have one line (key); ignoring YourName.pub
+
+To convert ssh2-compatible keys to openssh run:
+
+    ssh-keygen -i -f /tmp/ssh2/YourName.pub > /tmp/openssh/YourName.pub
+
+then use the resulting pubkey as you normally would in gitolite.
 
 <a name="_windows_issues"></a>
 
