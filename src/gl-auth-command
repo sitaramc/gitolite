@@ -74,6 +74,7 @@ if ($ENV{REQUEST_URI}) {
     # so the rest of the code stays the same (except the exec at the end).
     simulate_ssh_connection();
 
+    $ENV{REMOTE_USER} ||= $GL_HTTP_ANON_USER;   # see doc/http-backend.mkd
     $user = $ENV{GL_USER} = $ENV{REMOTE_USER};
 } else {
     # no (more) arguments given in ssh mode?  default user is $USER

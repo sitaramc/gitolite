@@ -250,6 +250,14 @@ on feedback from my users to find or fix issues.
 
     Example: `$GL_GET_MEMBERSHIPS_PGM = "/usr/local/bin/expand-ldap-user-to-groups"`
 
+  * `$GL_HTTP_ANON_USER`, string, default undef
+
+    Analogous to running mob branches over ssh (as described in
+    [doc/mob-branches.mkd][mob], this variable -- combined with appropriate
+    setup described in [doc/http-backend.mkd][smart] -- lets you pretend to
+    gitolite that unauthenticated HTTP users are actually authenticated as
+    this user.
+
 <a name="_less_used_changed_variables"></a>
 
 ### less used/changed variables
@@ -336,3 +344,5 @@ on feedback from my users to find or fix issues.
 [faq]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd
 [adc]: http://github.com/sitaramc/gitolite/blob/pu/doc/admin-defined-commands.mkd
 [mirr]: http://github.com/sitaramc/gitolite/blob/pu/doc/mirroring.mkd
+[mob]: http://github.com/sitaramc/gitolite/blob/pu/doc/mob-branches.mkd
+[smart]: http://github.com/sitaramc/gitolite/blob/pu/doc/http-backend.mkd

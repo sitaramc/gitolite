@@ -22,6 +22,8 @@ use Exporter 'import';
     $GL_SLAVE_MODE $GL_WILDREPOS $GL_WILDREPOS_DEFPERMS
     $GL_WILDREPOS_PERM_CATS $HTPASSWD_FILE $PROJECTS_LIST $REPO_BASE
     $REPO_UMASK $RSYNC_BASE $SVNSERVE $UPDATE_CHAINS_TO
+
+    $GL_HTTP_ANON_USER
 );
 
 # ------------------------------------------------------------------------------

@@ -40,8 +40,8 @@ suite.  The following exceptions exist:
 
   * basic, manual, testing only
       * most admin defined commands
-  * not yet tested
       * smart http
+  * not yet tested
       * mirroring
       * mob branches
   * things which I have no easy way to test

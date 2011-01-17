@@ -53,6 +53,7 @@ $SVNSERVE = "";
 # $ADMIN_POST_UPDATE_CHAINS_TO = "hooks/post-update.secondary";
 # $GL_ADC_PATH = "";
 # $GL_GET_MEMBERSHIPS_PGM = "/usr/local/bin/expand-ldap-user-to-groups"
+# $GL_HTTP_ANON_USER = "mob";
 
 # ------------------------------------------------------------------------------
 # less used/changed variables

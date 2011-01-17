@@ -12,8 +12,9 @@ In this document:
   * <a href="#_additional_requirements">additional requirements</a>
   * <a href="#_detailed_instructions">detailed instructions</a>
       * <a href="#_install_gitolite_under_apache_">install gitolite under "apache"</a>
-      * <a href="#_setup_the_http_backend">setup the http-backend</a>
+      * <a href="#_setup_apache">setup apache</a>
   * <a href="#_usage">usage</a>
+  * <a href="#_allowing_anonymous_access">allowing anonymous access</a>
 
 ----
 
@@ -34,7 +35,7 @@ In this document:
     `HOME=$GITOLITE_HTTP_HOME` and hope for the best.  Luckily most of them
     have to do with sshkeys so this may not matter.  YMMV.
 
-  * tested on stock Fedora 13; if you test on other environments please let me
+  * tested on stock Fedora 14; if you test on other environments please let me
     know how it worked out and if we need to adjust this document
 
   * tested https with dummy certs and `GIT_SSL_NO_VERIFY`; no reason why it
@@ -66,56 +67,74 @@ if it does not.  Similarly for "/var/www" and other file names/locations.
 
 #### install gitolite under "apache"
 
-  * follow the "non-root" method, but since you can't even "su - apache", make
-    the following variations when doing this as root:
+Follow the "non-root" method, but since you can't even "su - apache", make the
+following variations when doing this as root:
 
-      * `cd ~apache` first; this is `/var/www` on Fedora 13
+  * `cd ~apache` first; this is `/var/www` on Fedora 14
 
-      * do this in the shell
+  * do this in the shell
 
-            mkdir gitolite-home
-            export GITOLITE_HTTP_HOME
-            GITOLITE_HTTP_HOME=/var/www/gitolite-home
-            PATH=$PATH:$GITOLITE_HTTP_HOME/bin
+        mkdir gitolite-home
+        export GITOLITE_HTTP_HOME
+        GITOLITE_HTTP_HOME=/var/www/gitolite-home
+        PATH=$PATH:$GITOLITE_HTTP_HOME/bin
 
-      * now run the first 3 install steps for "non-root" method (clone, mkdir,
-        and gl-system-install), but **substitute `GITOLITE_HTTP_HOME` in place of
-        `HOME`** in the mkdir and gl-system-install steps.
+  * now run the first 3 install steps for "non-root" method (clone, mkdir, and
+    gl-system-install), but **substitute** `GITOLITE_HTTP_HOME` in place of
+    `HOME` in the mkdir and gl-system-install steps.
 
-        **Do NOT run the gl-setup step yet**.
+    **Do NOT run the gl-setup step yet**.
 
-      * after the gl-system-install step, add these to the **top** of
-        /var/www/gitolite-home/share/gitolite/conf/example.gitolite.rc
+        cd gitolite-home
+        git clone /tmp/gitolite.git gitolite-source
 
-            $ENV{GIT_HTTP_BACKEND} = "/usr/libexec/git-core/git-http-backend";
-                # or wherever you have that file; not NO trailing slash
-            $ENV{PATH} .= ":$ENV{GITOLITE_HTTP_HOME}/bin";
-                # note the ".=" here, not "="
+        cd gitolite-source
+        GHH=$GITOLITE_HTTP_HOME     # just for convenience in next 2 commands
+        mkdir -p              $GHH/bin $GHH/share/gitolite/conf $GHH/share/gitolite/hooks
+        src/gl-system-install $GHH/bin $GHH/share/gitolite/conf $GHH/share/gitolite/hooks
 
-      * run gl-setup with the name of your admin user
+  * after the gl-system-install step, add these to the **top** of
+    /var/www/gitolite-home/share/gitolite/conf/example.gitolite.rc
 
-            gl-setup sitaram
+        $ENV{GIT_HTTP_BACKEND} = "/usr/libexec/git-core/git-http-backend";
+            # or wherever you have that file; not NO trailing slash
+        $ENV{PATH} .= ":$ENV{GITOLITE_HTTP_HOME}/bin";
+            # note the ".=" here, not "="
 
-      * IMPORTANT: fix up ownerships
+  * run gl-setup with the name of your admin user
 
-            chown -R apache.apache $GITOLITE_HTTP_HOME
+        gl-setup sitaram
 
-<a name="_setup_the_http_backend"></a>
+  * IMPORTANT: fix up ownerships
 
-#### setup the http-backend
+        chown -R apache.apache $GITOLITE_HTTP_HOME
 
-  * when you setup the apache config according to "man git-http-backend",
-    change these two as below (please note the trailing slash on the
-    ScriptAlias line):
+<a name="_setup_apache"></a>
 
-        SetEnv GIT_PROJECT_ROOT /var/www/gitolite-home/repositories
-        ScriptAlias /git/ /var/www/gitolite-home/bin/gl-auth-command/
+#### setup apache
 
-    You also need this new variable:
+You will need to setup certain values in the httpd conf, as given in `man
+git-http-backend`.  You can put all them into, for instance,
+`/etc/httpd/conf.d/gitolite.conf` and apache [at least on Fedora 14] will pick
+it up.  These are the values to use; note that these are somewhat different
+from those in the manpage cited above, plus we have one extra variable:
 
-        SetEnv GITOLITE_HTTP_HOME /var/www/gitolite-home
+    SetEnv GIT_PROJECT_ROOT /var/www/gitolite-home/repositories
+    SetEnv GIT_HTTP_EXPORT_ALL
+    ScriptAlias /git/ /var/www/gitolite-home/bin/gl-auth-command/
+        # note trailing slash
 
-And that's it... you're done for the setup!
+    SetEnv GITOLITE_HTTP_HOME /var/www/gitolite-home
+
+    <Location /git>
+        AuthType Basic
+        AuthName "Private Git Access"
+        Require valid-user
+        AuthUserFile /path/to/some/passwdfile
+    </Location>
+
+Now create/update the password file in `/path/to/some/passwdfile` using the
+`htpasswd` command, and you're all done for the setup!
 
 <a name="_usage"></a>
 
@@ -144,4 +163,28 @@ following works and I'm leaving it at that:
 With a few nice shell aliases, you won't even notice the horrible convolutions
 here ;-)
 
+<a name="_allowing_anonymous_access"></a>
+
+### allowing anonymous access
+
+Like [mob branches][mob] with ssh, you can allow completely
+**un**-authenticated users to still have some rights specified in gitolite.
+Briefly, here's how:
+
+  * specify a ScriptAlias in apache config for unauthenticated access also.  I
+    prefer something like
+
+        ScriptAlias /gitmob/ /var/www/gitolite-home/bin/gl-auth-command/
+
+  * set `$GL_HTTP_ANON_USER` to some name, like 'mob' or 'anon' in the rc file
+
+  * give rights to this user ('mob' or 'anon' or whatever you used) in the
+    gitolite config file and push the change
+
+URLs (in this example) will then look like `http://server/gitmob/reponame.git`
+-- we lose the userid:passwd part and change 'git' to 'gitmob'.
+
 Enjoy!
+
+[mob]: http://github.com/sitaramc/gitolite/blob/pu/doc/mob-branches.mkd
+
