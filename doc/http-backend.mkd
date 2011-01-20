@@ -15,6 +15,7 @@ In this document:
       * <a href="#_setup_apache">setup apache</a>
   * <a href="#_usage">usage</a>
   * <a href="#_allowing_anonymous_access">allowing anonymous access</a>
+  * <a href="#_ssh_http_access_and_the_GIT_HTTP_EXPORT_ALL_variable">ssh + http access and the `GIT_HTTP_EXPORT_ALL` variable</a>
 
 ----
 
@@ -121,6 +122,7 @@ from those in the manpage cited above, plus we have one extra variable:
 
     SetEnv GIT_PROJECT_ROOT /var/www/gitolite-home/repositories
     SetEnv GIT_HTTP_EXPORT_ALL
+        # please see notes below on ssh+http access
     ScriptAlias /git/ /var/www/gitolite-home/bin/gl-auth-command/
         # note trailing slash
 
@@ -183,6 +185,35 @@ Briefly, here's how:
 
 URLs (in this example) will then look like `http://server/gitmob/reponame.git`
 -- we lose the userid:passwd part and change 'git' to 'gitmob'.
+
+<a name="_ssh_http_access_and_the_GIT_HTTP_EXPORT_ALL_variable"></a>
+
+### ssh + http access and the `GIT_HTTP_EXPORT_ALL` variable
+
+This document only talks about setting up access to a set of git repositories
+purely via smart http.  The `GIT_HTTP_EXPORT_ALL` variable must be set for
+such environments.
+
+However, it is possible to allow both ssh as well as http access, perhaps
+using suexec to make the CGI run under the 'git' user [detailed documentation
+patches welcome!]  For those environments, this variable is not mandatory.
+
+If you omit that variable, you can decide which repo is accessible via http by
+setting `R = daemon` just for those repos.
+
+Please note that there is no way to use "deny" rules for *read* access.  Do
+not try:
+
+        repo gitolite-admin
+            -   =   daemon
+
+        repo @all
+            R   =   daemon
+
+to achieve the (possibly common) need for disallowing http access to the admin
+repo.
+
+----
 
 Enjoy!
 
