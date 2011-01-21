@@ -1,0 +1,115 @@
+#!/usr/bin/env python
+#
+# Original author: Richard Bateman <taxilian@gmail.com>
+#
+# Any questions or concerns about how this works should be addressed to
+# me, not to sitaram. Please note that neither I nor sitaram make any
+# guarantees about the security or usefulness of this script. It may
+# be used without warantee or any guarantee of any kind.
+#
+# That said, it works fine for me.
+#
+# This script is licensed under the New BSD license 
+# Copyright 2011 Richard Bateman
+#
+
+import sys, os
+from pygitolite import *
+
+def list(gl, user, repo, filter_var = ""):
+    perms = gl.get_perms(repo, user)
+    for var, ppl in perms.iteritems():
+        if filter_var == "" or filter_var == var:
+            print "%s:" % var
+            for item in ppl:
+                print "    %s" % item
+
+def clear(gl, user, repo, filter_var = ""):
+    try:
+        os.system(r"echo Are you sure? Type YES \(all caps\) to continue: ")
+        bval = raw_input()
+        if bval != "YES":
+            print "Canceling..."
+
+        if filter_var == "":
+            gl.set_perms(repo, user, {})
+        else:
+            perms = gl.get_perms(repo, user)
+            if filter_var in perms:
+                del perms[filter_var]
+                gl.set_perms(repo, user, perms)
+        print "Perms after clear:"
+        list(gl, user, repo)
+    except:
+        print "An error occured"
+
+def add(gl, user, repo, var, *users):
+    perms = gl.get_perms(repo, user)
+    if var not in perms:
+        perms[var] = []
+    if len(users) == 0:
+        print "Usage: perms add %s %s <username>" % (repo, var)
+        return
+    for cur in users:
+        if cur not in perms[var]:
+            perms[var].append(cur)
+    gl.set_perms(repo, user, perms)
+    list(gl, user, repo, var)
+
+def set(gl, user, repo, var, *users):
+    perms = gl.get_perms(repo, user)
+    perms[var] = []
+    if len(users) == 0:
+        print "Usage: perms set %s %s <username>" % (repo, var)
+        return
+    for cur in users:
+        if cur not in perms[var]:
+            perms[var].append(cur)
+    gl.set_perms(repo, user, perms)
+    list(gl, user, repo, var)
+
+def remove(gl, user, repo, var, *users):
+    perms = gl.get_perms(repo, user)
+    if var not in perms:
+        print "%s isn't a valid type" % var
+        return
+    if len(users) == 0:
+        print "No users specified to remove; perhaps you want clear?"
+        return
+    for cur in users:
+        if cur in perms[var]:
+            perms[var].remove(cur)
+    gl.set_perms(repo, user, perms)
+    list(gl, user, repo, var)
+
+commands = {
+        "list": list,
+        "clear": clear,
+        "add": add,
+        "set": set,
+        "remove": remove,
+        }
+
+if __name__ == "__main__":
+    if "GL_USER" not in os.environ:
+        raise "No user!"
+    user = os.environ["GL_USER"]
+    command = sys.argv[1] if len(sys.argv) > 2 else ""
+    if len(sys.argv) < 3 or command not in commands:
+        print "Usage: perms <command> <repository> <args>"
+        print "             list <repository> [TYPE]"
+        print "             clear <repository>"
+        print "             add <repository> <TYPE> [user and group list]"
+        print "             set <repository> <TYPE> [user and group list]"
+        print "             remove <repository> <TYPE> [user and group list]"
+        sys.exit(1)
+    repo = sys.argv[2]
+
+    gl = gitolite()
+    rights, owner = gl.get_rights_and_owner(repo, user)
+
+    if owner != user:
+        print "Either %s does not exist or you are not the owner." % repo
+        sys.exit(1)
+
+    commands[command](gl, user, repo, *sys.argv[3:])
