@@ -1,0 +1,17 @@
+#!/bin/sh
+
+. $(dirname $0)/adc.common-functions
+
+[ -z "$GL_RC" ] && die "ENV GL_RC not set"
+
+[ -z "$2" ] && die "usage: set-head /path/to/repo.git refs/heads/branchname"
+
+get_rights_and_owner $1; to=$repo
+[ -z "$perm_write" ] && die "no write permissions on $to"
+
+# change head
+cd $GL_REPO_BASE_ABS/$to.git
+
+git symbolic-ref HEAD $2
+echo HEAD on $to is `git symbolic-ref HEAD`
+cd - > /dev/null
