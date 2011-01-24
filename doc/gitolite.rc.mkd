@@ -1,4 +1,4 @@
-# configuration variables for gitolite
+# configuring gitolite's advanced features -- the `.gitolite.rc` file
 
 This is the documentation for the contents of the "rc" file
 (`$HOME/.gitolite.rc`) on the server.  Until now this documentation was
@@ -12,7 +12,7 @@ In this document:
 
   * <a href="#_variables_that_should_not_be_touched_at_all">variables that should not be touched at all</a>
   * <a href="#_most_often_used_changed_variables">most often used/changed variables</a>
-  * <a href="#_variables_with_an_efficiency_impact">variables with an efficiency impact</a>
+  * <a href="#_variables_with_an_efficiency_performance_impact">variables with an efficiency/performance impact</a>
   * <a href="#_variables_with_a_security_impact">variables with a security impact</a>
   * <a href="#_less_used_changed_variables">less used/changed variables</a>
   * <a href="#_rarely_changed_variables">rarely changed variables</a>
@@ -59,7 +59,7 @@ things happen if you change them.
     adjust permissions of files and directories that have already been
     created.
 
-<a name="_variables_with_an_efficiency_impact"></a>
+<a name="_variables_with_an_efficiency_performance_impact"></a>
 
 ### variables with an efficiency/performance impact
 

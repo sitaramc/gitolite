@@ -9,6 +9,7 @@ In this document:
   * <a href="#_lots_of_repos_lots_of_users">lots of repos, lots of users</a>
   * <a href="#_splitting_up_the_set_of_repos_into_groups">splitting up the set of repos into groups</a>
   * <a href="#_delegating_ownership_of_groups_of_repos">delegating ownership of groups of repos</a>
+  * <a href="#_other_notes">other notes</a>
   * <a href="#_security_philosophy_note">security/philosophy note</a>
 
 ----
@@ -111,6 +112,13 @@ Naturally, a successful push invokes the post-update hook that the admin repo
 has, which eventually runs the compile script.  The **net effect** is as if
 you appended the contents of all the "fragment" files, in alphabetical order,
 to the bottom of the main file.
+
+<a name="_other_notes"></a>
+
+### other notes
+
+The "include" statement cannot be used in fragment files, for security
+reasons.
 
 ----
 

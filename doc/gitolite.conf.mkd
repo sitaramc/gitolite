@@ -1,0 +1,467 @@
+# the access control file `gitolite.conf`
+
+In this document:
+
+  * <a href="#_syntax">syntax</a>
+      * <a href="#_continuation_lines">continuation lines</a>
+      * <a href="#_include_files">include files</a>
+  * <a href="#_basic_access_control">basic access control</a>
+      * <a href="#_how_rules_are_matched">how rules are matched</a>
+      * <a href="#_branches_tags_and_specifying_refex_es">branches, tags, and specifying "refex"es</a>
+      * <a href="#_groups">groups</a>
+          * <a href="#_the_special_all_group">the special `@all` group</a>
+  * <a href="#_advanced_access_control">advanced access control</a>
+      * <a href="#_creating_and_deleting_branches">creating and deleting branches</a>
+      * <a href="#_deny_rules">"deny" rules</a>
+          * <a href="#_IMPORTANT_NOTES_ABOUT_DENY_RULES_">***IMPORTANT NOTES ABOUT "DENY" RULES***:</a>
+  * <a href="#_summary_permissions">summary: permissions</a>
+  * <a href="#_virtual_ref_types">virtual "ref"-types</a>
+  * <a href="#_other_tips">other tips</a>
+      * <a href="#_splitting_up_rules_into_rulesets">splitting up rules into rulesets</a>
+      * <a href="#_gitweb_and_daemon">gitweb and daemon</a>
+      * <a href="#_repo_specific_git_config_commands">repo specific `git config` commands</a>
+      * <a href="#_repo_owner_description_line_for_gitweb">repo owner/description line for gitweb</a>
+
+Gitolite has an advanced access control language that is designed to be
+powerful but easy to use.  Other objectives were that it should be even easier
+to read, review and audit the rules, and it should scale to thousands of repos
+and users.  There was also, in the author's mind, a desperate need to create
+something as different as possible from the brain-dead, nausea-inducing
+"Windows INI" style syntax that some other popular tools seem to favour.
+
+This document describes the syntax and semantics of the access control rules
+and other configuration directives in the `gitolite.conf` file.
+
+<a name="_syntax"></a>
+
+### syntax
+
+In general, everything is **space separated**; there are no commas,
+semicolons, etc., in the syntax.
+
+**Comments** are in the usual shell-ish style.
+
+**User names** and **repo names** are as simple as possible; they must start
+with an alphanumeric, but after that they can also contain `.`, `_`, or `-`.
+
+Usernames can optionally be followed by an `@` and a domainname containing at
+least one `.` (this allows you to use an email address as someone's username).
+Reponames can contain `/` characters (this allows you to put your repos in a
+tree-structure for convenience)
+
+<a name="_continuation_lines"></a>
+
+#### continuation lines
+
+There are no continuation lines -- gitolite does not process C-style
+backslash-escaped newlines as anything special.  However, the section on
+"groups" will tell you how you can break up large lists of names in a group
+definition into multiple lines.
+
+<a name="_include_files"></a>
+
+#### include files
+
+Gitolite allows you to break up the configuration into multiple files and
+include them in the main file for convenience.
+
+    include     "foo.conf"
+
+will include the contents of the file "foo.conf" from the same directory as
+the main config file.  You can also use an absolute path if you like, although
+in the interests of cloning the admin-repo sanely you should avoid doing this!
+
+[Advanced users: the include statement cannot be used inside a delegated
+config file, for security reasons].
+
+<a name="_basic_access_control"></a>
+
+### basic access control
+
+Here's a very basic set of rules:
+
+    repo    gitolite-admin
+            RW+     =   sitaram
+
+    repo    testing
+            RW+     =   @all
+
+    repo    gitolite simplicity
+            RW+     =   sitaram dilbert
+            RW      =   alice ashok
+            R       =   wally
+
+It should be easy to guess what most of this means:
+
+  * `R` means "read" permission
+  * `RW` means "read and write", but no rewind
+  * `RW+` means "read and write", with rewind allowed
+
+A "rewind" is more often called a "non-fast forward push"; see git docs for
+what that is.  The `+` was chosen because it is part of the "git push" syntax
+for non-ff pushes.
+
+In a later section you'll see some more advanced permissions.
+
+<a name="_how_rules_are_matched"></a>
+
+#### how rules are matched
+
+It's important to understand that there're two levels at which access control
+happens.  Please see [this][l2] for details, especially about the first level
+check.  Much of the complexity applies only to the second level check, so that
+is all we will be discussing here.  This check is done by the update hook, and
+determines whether the push succeeds or fails.
+
+For basic permissions like this, matching is simple.  Gitolite already knows:
+
+  * the user
+  * the repo
+  * the branch or tag ("ref") being pushed
+  * whether it is a notmal (ff) push or a rewind (non-ff) push.
+
+Gitolite goes down the list of rules matching the user, repo, and the ref.
+The first matching rule that has the permission you're looking for (`W` or
+`+`), results in success.  A fallthrough results in failure.
+
+<a name="_branches_tags_and_specifying_refex_es"></a>
+
+#### branches, tags, and specifying "refex"es
+
+One of the original goals of gitolite was to allow access control at the
+branch/tag (aka "ref") level.  The git source code contains a sample update
+hook that has the following in it:
+
+    # from Documentation/howto/update-hook-example.txt:
+
+    refs/heads/master	    junio
+    +refs/heads/pu          junio
+    refs/heads/cogito$      pasky
+    refs/heads/bw/.*        linus
+    refs/heads/tmp/.*       .*
+    refs/tags/v[0-9].*      junio
+
+If you did this in gitolite, this is what the equivalents would be:
+
+    repo    git
+            RW      master$             =   junio   # line 1
+            RW+     pu$                 =   junio   # line 2
+            RW      cogito$             =   pasky   # line 3
+            RW      bw/                 =   linus   # line 4
+            RW      tmp/                =   @all    # line 5
+            RW      refs/tags/v[0-9]    =   junio   # line 6
+
+The following points will help you understand these rules.  (Git recap:
+branches and tags together are called "ref"s in git.  A branch ref usually
+looks like "refs/heads/foo", while a tag ref looks like "refs/tags/bar")
+
+  * the general syntax of a paragraph of rules is:
+
+        # start line:
+        repo [one or more repos and/or repo groups]
+        # followed by one or more permissions lines:
+        [permission] [zero or more refexes] = [one or more users]
+
+  * a **refex** is a *perl regex* that matches a ref.  When you try to push a
+    commit to a branch or a tag, that "ref" is matched against the refex part
+    of each rule
+
+  * if the refex does not start with `refs/`, gitolite assumes a prefix of
+    `refs/heads/`.  This is useful because *branch* matching is the most
+    common case, as you can see this applies to lines 1 through 5 here.
+
+  * if no refex appears, the rule applies to all refs in that repo
+
+  * refexes are prefix-matched (they are internally anchored with `^` before
+    being used).  This means only the beginning of the actual ref needs to
+    match the refex, unless the refex has an explicit `$` meta-character at
+    the end (like the first 3 lines in our example do).
+
+    Line 5, for instance, allows anyone to push a branch inside the "tmp/"
+    namespace, while line 6 provides the ability to push version tags; "v1",
+    "v1.0", "v2.0rc1", all match the criterion specified by `v[0-9]` because
+    this is a prefix match only.
+
+<a name="_groups"></a>
+
+#### groups
+
+Gitolite allows you to define **groups** of repos. users, or even refexes.  A
+group is semantically (but *not* syntactically) like a `#define` in C.  Here
+is an example of each kind:
+
+    @oss_repos  =   gitolite linux git perl rakudo entrans vkc
+    @staff      =   sitaram some_dev another-dev
+    @important  =   master$ QA_done refs/tags/v[0-9]
+
+The syntax of a group definition is simply:
+
+    @groupname = [one or more names]
+
+A group can *accumulate* values.  For example:
+
+    @staff      =   sitaram some_dev another-dev
+    @staff      =   au.thor
+
+is the same as
+
+    @staff      =   sitaram some_dev another-dev au.thor
+
+This is more convenient than continuation lines, because it allows you to add
+to a group anywhere.  Many people generate their gitolite.conf itself from
+some *other* database, and it is very useful to be able to do this sort of
+thing.
+
+Groups can include other groups, and the included group will be expanded to
+whatever value it *currently* has:
+
+    @staff      =   sitaram some_dev another-dev    # line 1
+    @staff      =   au.thor                         # line 2
+    @interns    =   indy james                      # line 3
+    @alldevs    =   bob @interns                    # line 4
+
+"@alldevs" expands to 7 names now.  However, remember that the config file is
+parsed in a single-pass, so later *additions* to a group name cannot affect
+earlier *uses* of it.  If you moved line 2 to the end, "@alldevs" would only
+have 6 names in it.
+
+<a name="_the_special_all_group"></a>
+
+##### the special `@all` group
+
+There's a special group called `@all` that includes all authenticated users;
+you've seen examples of it earlier.
+
+[Advanced users: also see the entry for `GL_ALL_INCLUDES_SPECIAL` in
+[doc/gitolite.rc.mkd][rcdoc].]
+
+<a name="_advanced_access_control"></a>
+
+### advanced access control
+
+The previous section is sufficient for most common needs, but gitolite can go
+a lot further than that.
+
+<a name="_creating_and_deleting_branches"></a>
+
+#### creating and deleting branches
+
+Since the beginning of gitolite, `RW` gave the ability, not only to update,
+but to *create* a branch (that matched the refex).  Similarly, `RW+` meant
+being able to not only rewind, but also delete a ref.  Conceptually, a rewind
+is almost the same as a delete+push (the only difference I can see is if you
+had core.logAllRefUpdates set, which is *not* a default setting).
+
+However, there seem to be cases where it is useful to distinguish these cases.
+Arguments can be made on all sides if you're dealing with new users, so
+gitolite supports that.
+
+We'll look at the delete/rewind case in detail first:
+
+  * if the rules for a repo do not contain a `D` anywhere, then `RW+` will
+    allow both rewind and delete operations.  Apart from being more convenient
+    if you don't need this separation, this also ensures backward
+    compatibility for setups created before this separation feature was added
+    to gitolite).
+
+  * if, however, *any* of the rules for a repo contains a `D` (example: `RWD`,
+    `RW+D`, etc) then `RW+` by itself will permit only a rewind, not a delete
+
+The same thing applies to create/push, where if you have a permissions like
+`RWC` or `RW+C` anywhere, a simple `RW` or `RW+` can no longer *create* a new
+ref.
+
+You can combine the `C` and `D` also.  Thus, the set of permissions you now
+know about are, in regex syntax: `R|RW+?C?D?`.  See a later section for the
+full set of permissions possible.
+
+Some usage hints:
+
+  * if you find that `RW+` no longer allows creation/deletion but you can't
+    see a `C`/`D` permission in the rules, remember that gitolite allows a
+    repo config to be specified in multiple places for convenience, included
+    delegated or included files.  Be sure to search everywhere :)
+
+  * a quick way to make this the default for *all* your repos is:
+
+        repo @all
+            RWCD    dummy-branch    =   foo
+
+    where foo can be either the administrator, or if you can ignore the
+    warning message when you push, a non-existant user.
+
+<a name="_deny_rules"></a>
+
+#### "deny" rules
+
+Take a look at the following snippet, which *seems* to say that "bruce" can
+write versioned tags (anything containing `refs/tags/v[0-9]`), but the other
+staffers can't:
+
+        @staff = bruce whitfield martin
+                [... and later ...]
+        RW refs/tags/v[0-9]     = bruce
+        RW refs/tags            = @staff
+
+But that's not how the matching works.  As long as any refex matches the
+refname being updated, it's a "yes".  Since the second refex (which says
+"anything containing `refs/tags`") is a superset of the first one, it lets
+anyone on `@staff` create versioned tags, not just Bruce.
+
+So how do we say "these people can create any tags except tags that look like
+this pattern"?
+
+One way to fix this is to allow "deny" rules.  We make a small addition to the
+permissions syntax, and define a more rigorous, ordered, interpretation.
+
+Let's recap the **existing semantics**:
+
+>   The first matching refex that has the permission you're looking for (`W`
+>   or `+`), results in success.  A fallthrough results in failure.
+
+Here are the **new semantics**, with changes from the "main" one in bold:
+
+>   The first matching refex that has the permission you're looking for (`W`
+>   or `+`) **or a minus (`-`)**, results in success **or failure,
+>   respectively**.  A fallthrough **also** results in failure.
+
+So the example we started with becomes, if you use "deny" rules:
+
+        RW refs/tags/v[0-9]     = bruce
+        -  refs/tags/v[0-9]     = @staff
+        RW refs/tags            = @staff
+
+And here's how it works:
+
+  * for non-version tags, only the 3rd rule matches, so anyone on staff can
+    push them
+  * for version tags by bruce, the first rule matches so he can push them
+  * for version tags by staffers *other than bruce*, the second rule matches
+    before the third one, and it has a `-` as the permission, so the push
+    fails
+
+<a name="_IMPORTANT_NOTES_ABOUT_DENY_RULES_"></a>
+
+##### ***IMPORTANT NOTES ABOUT "DENY" RULES***:
+
+  * deny rules do NOT affect read access.  They only apply to write access.
+
+  * when using deny rules, the order of your rules starts to matter, where
+    earlier it did not.  If you're just starting to add a deny rule to an
+    existing ruleset, it's a good idea to review the entire ruleset once, to
+    make sure you're doing it right.
+
+<a name="_summary_permissions"></a>
+
+### summary: permissions
+
+The full set of permissions, in regex syntax: `-|R|RW+?C?D?`.  This expands to
+one of `-`, `R`, `RW`, `RW+`, `RWC`, `RW+C`, `RWD`, `RW+D`, `RWCD`, or
+`RW+CD`.  and by now you know what they all mean.
+
+[Side note: There is one more very important permissions to be dealt with --
+the standalone `C`, which is not really a "ref" level permission and can be
+found in doc/wildcard-repositories.mkd.]
+
+<a name="_virtual_ref_types"></a>
+
+### virtual "ref"-types
+
+This is a highly advanced topic; see [doc/virtualrefs-and-scoring.mkd][vs] for
+details.
+
+<a name="_other_tips"></a>
+
+### other tips
+
+<a name="_splitting_up_rules_into_rulesets"></a>
+
+#### splitting up rules into rulesets
+
+Gitolite lets you specify access rules for a repo in bits and pieces.  This
+can be very convenient sometimes.  Let's say you have a mix of open source and
+closed source projects, and "bosses" should have read access to all projects,
+and everyone should have read access to open source projects.  Assuming the
+appropriate group definitions, this would work:
+
+    # all bosses have read access to all projects
+    repo @open @closed @topsecret
+        R   =   @bosses
+
+    # everyone has read access to "open" projects
+    repo @open
+        R   =   @bosses @devs @interns
+
+If you notice that `@bosses` are given read access to `@open` via both rules,
+don't worry that this causes some duplication or inefficiency.  It doesn't :-)
+
+Elsewhere in the file, you would specify access for individual repos (like RW,
+RW+, etc).  Gitolite combines all of these access rules, maintaining the
+textual order in which they occur, when authorising a push.
+
+This feature also helps people who generate their gitolite.conf itself from
+some *other* database -- it allows them much more flexibility in how they
+generate rules.
+
+<a name="_gitweb_and_daemon"></a>
+
+#### gitweb and daemon
+
+Gitolite allows you to specify access for git-daemon and gitweb.  See
+[this][gwd] for more on this.
+
+[gwd]: http://github.com/sitaramc/gitolite/blob/pu/doc/2-admin.mkd#gwd
+
+<a name="_repo_specific_git_config_commands"></a>
+
+#### repo specific `git config` commands
+
+(Thanks to teemu dot matilainen at iki dot fi)
+
+Sometimes you want to specify `git config` settings for some of your repos.
+For example, you may have a custom post-receive hook that sends an email when
+a push happens, and this hook needs to know whom to send the email to, etc.
+
+You can set git config values by specifying something like this within a
+"repo" paragraph:
+
+example usage: if you placed a hook in hooks/common that requires
+configuration information that is specific to each repo, you could do this:
+
+    repo gitolite
+        config hooks.mailinglist = gitolite-commits@example.tld
+        config hooks.emailprefix = "[gitolite] "
+        config foo.bar = ""
+        config foo.baz =
+
+The syntax is simple:
+
+    config sectionname.keyname = [optional value_string]
+
+This does either a plain "git config section.key value" (for the first 3
+examples above) or "git config --unset-all section.key" (for the last
+example).  Other forms (--add, the `value_regex`, etc) are not supported.
+
+**Note**: this won't work unless the rc file has the right settings; please
+see comments around the variable `$GL_GITCONFIG_KEYS` in doc/gitolite.rc.mkd
+for details and security information.
+
+[rcdoc]: http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite.rc.mkd
+
+<a name="_repo_owner_description_line_for_gitweb"></a>
+
+#### repo owner/description line for gitweb
+
+Including a line like this:
+
+    gitolite "Sitaram Chamarty" = "fast, secure, access control for git in a corporate environment"
+
+sets the owner name and description for gitweb.  The general syntax is very
+simple, just use one of:
+
+    reponame = "some description string in double quotes"
+    reponame "owner name" = "some description string in double quotes"
+
+Note: setting a description also gives gitweb access; you do not have to give
+gitweb access explicitly (as described or linked above) if you're specifying a
+description.
