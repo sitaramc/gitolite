@@ -12,7 +12,7 @@ for them (their config file was so big that without the big-config changes
 gitolite would just run out of memory and die!).
 
 [fedora]: http://lists.fedoraproject.org/pipermail/devel-announce/2010-July/000647.html
-[bc]: http://github.com/sitaramc/gitolite/blob/pu/doc/big-config.mkd
+[bc]: http://sitaramc.github.com/gitolite/doc/big-config.html
 
 The **KDE project** is currently [testing][kdet] gitolite to see if it will
 suit their needs (in combination with redmine for issue tracking and
@@ -37,7 +37,7 @@ little one-man show!
 
 He explains his use of it [here][hiren].
 
-[wild]: http://github.com/sitaramc/gitolite/blob/pu/doc/wildcard-repositories.mkd
+[wild]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html
 [hiren]: http://ece.uwaterloo.ca/~hdpatel/uwhtml/?p=470
 
 **Gentoo Linux** has [just moved][gentoo1] their git repositories from gitosis

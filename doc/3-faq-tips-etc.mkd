@@ -390,7 +390,7 @@ complete, you can do it all from within the gitolite config file!
 If you just want gitweb to show some repositories, see [gwd] for how to
 specify which repos to show.  Other advanced uses are described here.
 
-[gwd]: http://github.com/sitaramc/gitolite/blob/pu/doc/2-admin.mkd#gwd
+[gwd]: http://sitaramc.github.com/gitolite/doc/2-admin.html#gwd
 
 <a name="_easier_to_link_gitweb_authorisation_with_gitolite"></a>
 
@@ -514,6 +514,6 @@ If you choose the "easy install" method, all this is quite transparent to you
 anyway.  If you cannot use the easy install and must install manually, I have
 clear instructions on how to set it up.
 
-[repout]: http://github.com/sitaramc/gitolite/blob/pu/doc/report-output.mkd
-[delegation]: http://github.com/sitaramc/gitolite/blob/pu/doc/delegation.mkd
-[rmrepo]: http://github.com/sitaramc/gitolite/blob/pu/doc/admin-defined-commands.mkd#rmrepo
+[repout]: http://sitaramc.github.com/gitolite/doc/report-output.html
+[delegation]: http://sitaramc.github.com/gitolite/doc/delegation.html
+[rmrepo]: http://sitaramc.github.com/gitolite/doc/admin-defined-commands.html#rmrepo

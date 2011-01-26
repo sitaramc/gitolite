@@ -101,5 +101,5 @@ Now, log off the server and get back to the client:
 
 6.  Check all your changes to your gitolite-admin clone, commit, and push
 
-[mk]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#multikeys
-[inst]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd
+[mk]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#multikeys
+[inst]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html

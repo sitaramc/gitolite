@@ -217,5 +217,5 @@ repo.
 
 Enjoy!
 
-[mob]: http://github.com/sitaramc/gitolite/blob/pu/doc/mob-branches.mkd
+[mob]: http://sitaramc.github.com/gitolite/doc/mob-branches.html
 

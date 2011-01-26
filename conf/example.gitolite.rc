@@ -2,6 +2,7 @@
 
 # PLEASE READ THE DOCUMENTATION BEFORE EDITING OR ASKING QUESTIONS
 # ( http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite.rc.mkd )
+#   ( or http://sitaramc.github.com/gitolite/doc/gitolite.rc.html )
 
 # this file is in perl syntax.  However, you do NOT need to know perl to edit
 # it; it should be fairly self-explanatory and easy to maintain
@@ -38,6 +39,7 @@ $GL_NO_DAEMON_NO_GITWEB = 0;
 # ------------------------------------------------------------------------------
 # VARIABLES WITH A SECURITY IMPACT.  READ DOCS BEFORE CHANGING THESE!
 # http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite.rc.mkd#_variables_with_a_security_impact
+# (or http://sitaramc.github.com/gitolite/doc/gitolite.rc.html#_variables_with_a_security_impact)
 # ------------------------------------------------------------------------------
 # $GL_ALL_READ_ALL = 0;
 $GIT_PATH="";

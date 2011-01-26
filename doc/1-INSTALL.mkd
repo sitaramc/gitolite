@@ -409,9 +409,9 @@ uninstalling gitolite is described in great detail in
 
 ----
 
-[doc6]: http://github.com/sitaramc/gitolite/blob/pu/doc/ssh-troubleshooting.mkd
-[doc9unin]: http://github.com/sitaramc/gitolite/blob/pu/doc/uninstall.mkd
-[twokeys]: http://github.com/sitaramc/gitolite/blob/pu/doc/ssh-troubleshooting.mkd#twokeys
-[transcript]: http://github.com/sitaramc/gitolite/blob/pu/doc/install-transcript.mkd
-[mgs]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd#_special_cases_multiple_gitolite_servers
-[gash]: http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite-and-ssh.mkd
+[doc6]: http://sitaramc.github.com/gitolite/doc/ssh-troubleshooting.html
+[doc9unin]: http://sitaramc.github.com/gitolite/doc/uninstall.html
+[twokeys]: http://sitaramc.github.com/gitolite/doc/ssh-troubleshooting.html#twokeys
+[transcript]: http://sitaramc.github.com/gitolite/doc/install-transcript.html
+[mgs]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html#_special_cases_multiple_gitolite_servers
+[gash]: http://sitaramc.github.com/gitolite/doc/gitolite-and-ssh.html

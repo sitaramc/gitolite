@@ -191,7 +191,7 @@ the config file).  Wildcards are not supported; patches welcome ;-)
 
 Note: please see [this][diswr] for more on this.
 
-[diswr]: http://github.com/sitaramc/gitolite/blob/pu/doc/3-faq-tips-etc.mkd#_disabling_write_access_to_take_backups
+[diswr]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_disabling_write_access_to_take_backups
 
 <a name="_bonus_restricted_admin"></a>
 
@@ -218,4 +218,4 @@ because it's not using any wildcard repos].
 
 [xkcd224]: http://xkcd.com/224/
 [lazy]: http://c2.com/cgi/wiki?LazinessImpatienceHubris
-[wild]: http://github.com/sitaramc/gitolite/blob/pu/doc/wildcard-repositories.mkd
+[wild]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html

@@ -270,7 +270,7 @@ See [repo deletion][rmr] for more on this.  Note that this requires you to
 install/setup "adc"s (admin defined commands).  See
 [doc/admin-defined-commands.mkd][adc] for how to do that.
 
-[adc]: http://github.com/sitaramc/gitolite/blob/pu/doc/admin-defined-commands.mkd
+[adc]: http://sitaramc.github.com/gitolite/doc/admin-defined-commands.html
 [rmr]: http://github.com/sitaramc/gitolite/blob/pu/contrib/adc/repo-deletion.README
 
 <a name="_how_it_actually_works"></a>
@@ -344,4 +344,4 @@ I hope that helps.
 Enjoy, and please use with care.  This is pretty powerful stuff.  As they say:
 if you break it, you get to keep both pieces :)
 
-[repout]: http://github.com/sitaramc/gitolite/blob/pu/doc/report-output.mkd
+[repout]: http://sitaramc.github.com/gitolite/doc/report-output.html

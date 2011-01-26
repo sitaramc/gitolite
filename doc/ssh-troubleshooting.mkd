@@ -484,12 +484,12 @@ typically) also must be `go-w`, but that needs root.  And typically
 they're already set that way anyway.  (Or if they're not, you've got
 bigger problems than gitolite install not working!)]
 
-[doc9gas]: http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite-and-ssh.mkd
-[install]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd
-[o3]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd#methods
-[fc]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd#fc
-[urls]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd#URLs_for_gitolite_managed_repos
-[repout]: http://github.com/sitaramc/gitolite/blob/pu/doc/report-output.mkd
-[transcript]: http://github.com/sitaramc/gitolite/blob/pu/doc/install-transcript.mkd
+[doc9gas]: http://sitaramc.github.com/gitolite/doc/gitolite-and-ssh.html
+[install]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html
+[o3]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html#methods
+[fc]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html#fc
+[urls]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html#URLs_for_gitolite_managed_repos
+[repout]: http://sitaramc.github.com/gitolite/doc/report-output.html
+[transcript]: http://sitaramc.github.com/gitolite/doc/install-transcript.html
 [openssh56]: http://www.openssh.org/txt/release-5.6
 [tut]: http://sites.google.com/site/senawario/home/gitolite-tutorial

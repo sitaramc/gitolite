@@ -385,7 +385,7 @@ example scripts that were contributed by the Nokia MeeGo team.)
 Then set the `$GL_GET_MEMBERSHIPS_PGM` variable in the rc file to the full
 path of this program, set `$GL_BIG_CONFIG` to 1, and that will be that.
 
-[gwd]: http://github.com/sitaramc/gitolite/blob/pu/doc/2-admin.mkd#gwd
+[gwd]: http://sitaramc.github.com/gitolite/doc/2-admin.html#gwd
 
 <a name="_implementation_notes"></a>
 

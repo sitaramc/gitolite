@@ -410,7 +410,7 @@ generate rules.
 Gitolite allows you to specify access for git-daemon and gitweb.  See
 [this][gwd] for more on this.
 
-[gwd]: http://github.com/sitaramc/gitolite/blob/pu/doc/2-admin.mkd#gwd
+[gwd]: http://sitaramc.github.com/gitolite/doc/2-admin.html#gwd
 
 <a name="_repo_specific_git_config_commands"></a>
 
@@ -446,7 +446,7 @@ example).  Other forms (--add, the `value_regex`, etc) are not supported.
 see comments around the variable `$GL_GITCONFIG_KEYS` in doc/gitolite.rc.mkd
 for details and security information.
 
-[rcdoc]: http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite.rc.mkd
+[rcdoc]: http://sitaramc.github.com/gitolite/doc/gitolite.rc.html
 
 <a name="_repo_owner_description_line_for_gitweb"></a>
 

@@ -191,12 +191,12 @@ Gitolite is released under GPL v2.  See COPYING for details.
   * mailing list: gitolite@googlegroups.com
   * list subscribe address : gitolite+subscribe@googlegroups.com
 
-[transcript]: http://github.com/sitaramc/gitolite/blob/pu/doc/install-transcript.mkd
-[install]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd
-[admin]: http://github.com/sitaramc/gitolite/blob/pu/doc/2-admin.mkd
-[migr]: http://github.com/sitaramc/gitolite/blob/pu/doc/migrate.mkd
-[docs]: http://github.com/sitaramc/gitolite/blob/pu/doc
-[doc9gas]: http://github.com/sitaramc/gitolite/blob/pu/doc/gitolite-and-ssh.mkd
-[doc6sts]: http://github.com/sitaramc/gitolite/blob/pu/doc/ssh-troubleshooting.mkd
-[who]: http://github.com/sitaramc/gitolite/blob/pu/doc/who-uses-it.mkd
+[transcript]: http://sitaramc.github.com/gitolite/doc/install-transcript.html
+[install]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html
+[admin]: http://sitaramc.github.com/gitolite/doc/2-admin.html
+[migr]: http://sitaramc.github.com/gitolite/doc/migrate.html
+[docs]: http://sitaramc.github.com/gitolite
+[doc9gas]: http://sitaramc.github.com/gitolite/doc/gitolite-and-ssh.html
+[doc6sts]: http://sitaramc.github.com/gitolite/doc/ssh-troubleshooting.html
+[who]: http://sitaramc.github.com/gitolite/doc/who-uses-it.html
 [tut]: http://sites.google.com/site/senawario/home/gitolite-tutorial

@@ -171,5 +171,5 @@ For people who do not want certain hooks to run for certain repos, one simple
 solution that will work right now is to check the value of `$GL_REPO` at the
 start of the hook, and `exit 0` based on what it contains/matches.
 
-[0inst]: http://github.com/sitaramc/gitolite/blob/pu/doc/1-INSTALL.mkd
+[0inst]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html
 
