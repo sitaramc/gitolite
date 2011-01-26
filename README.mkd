@@ -1,9 +1,11 @@
+# main README file for gitolite -- start here!
+
 <a name="start"></a>
 
 ***IMPORTANT NOTE: v2.0rc1 is out; all development will be on that now.
 Please see new doc/developer-notes.mkd***
 
-# gitolite
+----
 
 Gitolite is an access control layer on top of git, which allows access control
 down to the branch level, including specifying who can and cannot *rewind* a

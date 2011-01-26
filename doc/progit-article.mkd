@@ -1,3 +1,5 @@
+(master copy of progit chapter on gitolite)
+
 ## Gitolite ##
 
 Note: the latest copy of this section of the ProGit book is always available within the [gitolite documentation][gldpg].  The author would also like to humbly state that, while this section is accurate, and *can* (and often *has*) been used to install gitolite without reading any other documentation, it is of necessity not complete, and cannot completely replace the enormous amount of documentation that gitolite comes with.

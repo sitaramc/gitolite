@@ -1,3 +1,5 @@
+(contributed doc: integrating gitolite with monkeysphere)
+
 This document attempts to describe one way to integrate
 [Monkeysphere](http://web.monkeysphere.info/) authentication
 with [gitolite](http://github.com/sitaramc/gitolite).

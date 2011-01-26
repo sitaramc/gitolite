@@ -1,3 +1,5 @@
+# ldap helper programs
+
 These programs were contributed by the Nokia MeeGo folks.
 
 The first 2 are perl and shell verisions of programs meant to be used as
