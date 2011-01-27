@@ -14,7 +14,7 @@ ssh $mirror cat \$HOME/.gitolite.rc | expand | egrep '^ *\$GL_SLAVE_MODE *= *1; 
     exit 1;
 }
 
-find . -type d -name "*.git" | cut -c3- | sort | while read r
+find . -type d -name "*.git" -prune | cut -c3- | sort | while read r
 do
     cd $HOME; cd $REPO_BASE; cd $r
     printf "$r "

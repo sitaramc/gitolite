@@ -146,7 +146,7 @@ sub list_phy_repos
     my @phy_repos;
 
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
-    for my $repo (`find . -type d -name "*.git"`) {
+    for my $repo (`find . -type d -name "*.git" -prune`) {
         chomp ($repo);
         $repo =~ s(\./(.*)\.git$)($1);
         push @phy_repos, $repo;
@@ -538,7 +538,7 @@ sub expand_wild
 
     chdir("$ENV{GL_REPO_BASE_ABS}") or die "chdir $ENV{GL_REPO_BASE_ABS} failed: $!\n";
     my $count = 0;
-    for my $actual_repo (`find . -type d -name "*.git"|sort`) {
+    for my $actual_repo (`find . -type d -name "*.git" -prune|sort`) {
         chomp ($actual_repo);
         $actual_repo =~ s/^\.\///;
         $actual_repo =~ s/\.git$//;

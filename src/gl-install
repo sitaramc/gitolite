@@ -94,7 +94,7 @@ EOF
 
 # finally, hooks must be propagated to all the repos in case they changed
 chdir("$ENV{GL_REPO_BASE_ABS}") or die "chdir $ENV{GL_REPO_BASE_ABS} failed: $!\n";
-for my $repo (`find . -type d -name "*.git"`) {
+for my $repo (`find . -type d -name "*.git" -prune`) {
     chomp ($repo);
     # propagate our own, plus any local admin-defined, hooks
     ln_sf("$GL_ADMINDIR/hooks/common", "*", "$repo/hooks");
