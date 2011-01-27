@@ -81,7 +81,7 @@ seem to hurt anything.  [Update 2009-09-14; this has been fixed in git
 #### `@all` syntax for repos
 
 There *is* a way to use the `@all` syntax for repos also, as described in
-`conf/example.conf`.  However, there are a couple of minor cautions:
+`doc/gitolite.conf.mkd`.  However, there are a couple of minor cautions:
 
   * don't use `NAME/` or such restrictions on the special `@all` repo.  Due to
     the potential for defeating a crucial optimisation and slowing down *all*
@@ -300,7 +300,7 @@ is still determined by the right hand side of course.
 
 You can specify hooks that you want to propagate to all repos, as well as
 per-repo "gitconfig" settings.  Please see `doc/2-admin.mkd` and
-`conf/example.conf` for details.
+`doc/gitolite.conf.mkd` for details.
 
 <a name="_bypassing_gitolite"></a>
 

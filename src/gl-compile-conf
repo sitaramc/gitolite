@@ -532,8 +532,8 @@ for my $repo (@phy_repos) {
     # - specifying a description also counts as enabling gitweb
     # - description and owner are not specified for wildrepos; they're
     #   specified for *actual* repos, even if the repo was created by a
-    #   wild card spec and "C" permissions.  If you see the
-    #   conf/example.conf file, you will see that repo owner/desc don't go
+    #   wild card spec and "C" permissions.  If you see the docs for the
+    #   gitolite.conf file, you will see that repo owner/desc don't go
     #   into the "repo foo" section; they're essentialy independent.
     #   Anyway, I believe it doesn't make sense to have all wild repos
     #   (for some pattern) to have the same description and owner.

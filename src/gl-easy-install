@@ -401,7 +401,7 @@ run_install() {
 
 initial_conf_key() {
     echo "#gitolite conf
-# please see conf/example.conf for details on syntax and features
+# please see doc/gitolite.conf.mkd for details on syntax and features
 
 repo    gitolite-admin
         RW+     =   $admin_name
@@ -630,7 +630,7 @@ created on the server.
 ADDING USERS: copy their pubkey as keydir/<username>.pub, add it, commit and
 push.
 
-CONFIG FILE FORMAT: see comments in conf/example.conf in the gitolite source.
+CONFIG FILE FORMAT: see doc/gitolite.conf.mkd
 
 SSH MAGIC: Remember you (the admin) now have *two* keys to access the server
 hosting your gitolite setup -- one to get you a command line, and one to get

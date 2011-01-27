@@ -47,7 +47,7 @@ That last command does produce a fair amount of output, which might be interesti
 
 ### Customising the Install ###
 
-While the default, quick, install works for most people, there are some ways to customise the install if you need to.  If you omit the `-q` argument, you get a "verbose" mode install -- detailed information on what the install is doing at each step.  The verbose mode also allows you to change certain server-side parameters, such as the location of the actual repositories, by editing an "rc" file that the server uses.  This "rc" file is liberally commented so you should be able to make any changes you need quite easily, save it, and continue.  This file also contains various settings that you can change to enable or disable some of gitolite's advanced features.
+While the default, quick, install works for most people, there are some ways to customise the install if you need to.  If you omit the `-q` argument, you get a "verbose" mode install -- detailed information on what the install is doing at each step.  The verbose mode also allows you to change certain server-side parameters, such as the location of the actual repositories, by editing an "rc" file that the server uses.  This "rc" file is documented in [doc/gitolite.rc.mkd][rcdoc] so you should be able to make any changes you need quite easily, save it, and continue.  This file also contains various settings that you can change to enable or disable some of gitolite's advanced features.
 
 <a name="_Config_File_and_Access_Control_Rules_"></a>
 
@@ -63,7 +63,8 @@ Once the install is done, you switch to the `gitolite-admin` repository (placed 
 	keydir/sitaram.pub
 	$ cat conf/gitolite.conf
 	#gitolite conf
-	# please see conf/example.conf for details on syntax and features
+	# please see doc/gitolite.conf.mkd for details on syntax and features
+
 
 	repo gitolite-admin
 	    RW+                 = sitaram
@@ -73,7 +74,7 @@ Once the install is done, you switch to the `gitolite-admin` repository (placed 
 
 Notice that "sitaram" (the last argument in the `gl-easy-install` command you gave earlier) has read-write permissions on the `gitolite-admin` repository as well as a public key file of the same name.
 
-The config file syntax for gitolite is liberally documented in `conf/example.conf`, so we'll only mention some highlights here.
+The config file syntax for gitolite is documented in [doc/gitolite.conf.mkd][confdoc] so we'll only mention some highlights here.
 
 You can group users or repos for convenience.  The group names are just like macros; when defining them, it doesn't even matter whether they are projects or users; that distinction is only made when you *use* the "macro".
 
@@ -184,3 +185,6 @@ We'll round off this discussion with a sampling of other features, all of which,
 **Gitweb support**: Gitolite supports gitweb in several ways.  You can specify which repos are visible via gitweb.  You can set the "owner" and "description" for gitweb from the gitolite config file.  Gitweb has a mechanism for you to implement access control based on HTTP authentication, so you can make it use the "compiled" config file that gitolite produces, which means the same access control rules (for read access) apply for gitweb and gitolite.
 
 **Mirroring**: Gitolite can help you maintain multiple mirrors, and switch between them easily if the primary server goes down.
+
+[rcdoc]:http://sitaramc.github.com/gitolite/doc/gitolite.rc.html
+[confdoc]:http://sitaramc.github.com/gitolite/doc/gitolite.conf.html

@@ -59,7 +59,7 @@ Once you've cloned it, you're ready to add users and repos.
     if you wish, since the entire tree is searched.
 
   * edit the config file (`conf/gitolite.conf` in your admin repo clone).  See
-    `conf/example.conf` in the gitolite source for details on what goes in
+    `doc/gitolite.conf.mkd` in the gitolite source for details on what goes in
     that file, syntax, etc.  Just add new repos as needed, and add new users
     and give them permissions as required.  The users names should be exactly
     the same as their keyfile names, but without the `.pub` extension
@@ -336,7 +336,7 @@ very easily.  For security reasons, this can only be done from the master
 config file (i.e., if you're using delegation, the delegated admins cannot
 specify git config settings).
 
-Please see `conf/example.conf` for syntax.  Note that this only supports the
+Please see `doc/gitolite.conf.mkd` for syntax.  Note that this only supports the
 basic forms of the "git config" command:
 
     git config              section.key value   # value may be an empty string
