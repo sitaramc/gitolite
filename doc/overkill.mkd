@@ -1,4 +1,4 @@
-# when gitolite is overkill
+## when gitolite is overkill
 
 Note: I wrote this to help people for whom gitolite is genuinely overkill.  I
 believe it will all work, but YMMV.

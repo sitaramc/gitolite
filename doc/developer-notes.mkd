@@ -1,4 +1,4 @@
-# developer/patch maintainer notes
+## developer/patch maintainer notes
 
 In this document:
 

@@ -1,4 +1,4 @@
-# mirroring a gitolite setup
+## mirroring a gitolite setup
 
 Mirroring git repos is essentially a one-liner.  For each mirror you want to
 update, you just add a post-receive hook that says

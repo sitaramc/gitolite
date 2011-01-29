@@ -1,4 +1,4 @@
-# Vim Syntax Highlight
+## Vim Syntax Highlight
 
 [Vim][] Syntax highlight for `gitolite.conf` can be found from:
 

@@ -1,4 +1,4 @@
-(master copy of progit chapter on gitolite)
+# (master copy of progit chapter on gitolite)
 
 ## Gitolite ##
 

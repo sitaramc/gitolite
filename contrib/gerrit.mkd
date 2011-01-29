@@ -1,4 +1,4 @@
-# comparing gerrit and gitolite
+## comparing gerrit and gitolite
 
 Gerrit and gitolite have too many high level differences.  Size is most
 visible of course: 56000 lines of Java versus 1300 lines of perl+shell,

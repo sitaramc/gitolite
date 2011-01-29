@@ -1,4 +1,4 @@
-# admin defined commands
+## admin defined commands
 
 **WARNING:  Use this feature only if you really really know what you're doing.
 If you come back to me saying this feature caused a problem, I will only

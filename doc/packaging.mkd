@@ -1,4 +1,4 @@
-# packaging gitolite
+## packaging gitolite
 
 Here's how you'd package gitolite.  In the following description, location "X"
 can be, say, `/usr/share/gitolite/conf` or some such, and similarly location

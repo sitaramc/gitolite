@@ -1,4 +1,4 @@
-# hook propagation in gitolite
+## hook propagation in gitolite
 
 Advanced users need to know how hooks propagate, and when.  They also need to
 know where to place their hooks, and since there appear to be two places to

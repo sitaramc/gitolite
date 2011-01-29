@@ -1,4 +1,4 @@
-# notes on the testing setup
+## notes on the testing setup
 
 In this document:
 

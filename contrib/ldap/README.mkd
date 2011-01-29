@@ -1,4 +1,4 @@
-# ldap helper programs
+## ldap helper programs
 
 These programs were contributed by the Nokia MeeGo folks.
 

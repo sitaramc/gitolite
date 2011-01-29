@@ -1,4 +1,4 @@
-# what is a "big-config"
+## what is a "big-config"
 
 In this document:
 

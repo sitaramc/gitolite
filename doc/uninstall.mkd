@@ -1,4 +1,4 @@
-# uninstalling gitolite
+## uninstalling gitolite
 
 Sometimes you might find gitolite is overkill -- you have only one user
 (yourself) pushing maybe.  Or maybe gitolite is just not enough -- you want a

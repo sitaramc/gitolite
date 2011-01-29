@@ -1,4 +1,4 @@
-# avoiding the shell on the server
+## avoiding the shell on the server
 
 Gitolite now tries to prevent gitolite-admin push privileges from being used
 to obtain a shell on the server.  This was not always the case (older gitolite

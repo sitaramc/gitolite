@@ -25,9 +25,10 @@ And [here][who]'s some information on some of the projects and people using
 gitolite (and who, in turn, have helped shape its features).
 
 Once you've installed it and started using it, you'll want to explore some of
-the more powerful features.  All the documentation is available in the source
-repo as well as [online][docs].  All the longer documents have tables of
-contents, so you can quickly get a feel for what is covered right at the top.
+the more powerful features.  **The documentation is best read [online
+here][docs] or you can read it in your clone's `doc/` directory**.  All the
+longer documents have tables of contents, so you can quickly get a feel for
+what is covered right at the top.
 
 ----
 
