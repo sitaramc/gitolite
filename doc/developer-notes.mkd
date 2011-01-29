@@ -41,9 +41,9 @@ suite.  The following exceptions exist:
   * basic, manual, testing only
       * most admin defined commands
       * smart http
+      * mob branches
   * not yet tested
       * mirroring
-      * mob branches
   * things which I have no easy way to test
       * controlling gitweb authentication using gitolite (as described [here][gw])
       * SVN passthru
