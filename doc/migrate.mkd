@@ -32,7 +32,11 @@ Here's how we migrated my work repos:
     If you do not do this, an accidental push to the gitosis-admin repo will
     mess up your `~/.ssh/authorized_keys` file
 
-5.  take a **backup** of the `~/repositories` directory
+5.  If you already use the `update` hook for some reason, **rename** it (on
+    each individual repository) to `update.secondary`.  This is because
+    gitolite uses the update hook for checking write access.
+
+6.  take a **backup** of the `~/repositories` directory
 
 Now, log off the server and get back to the client:
 
