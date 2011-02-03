@@ -234,10 +234,11 @@ we mean `conf/gitolite.conf` on your gitolite-admin clone.
 
 #### (non-root method) directly on the server, manually, without root access
 
-WARNING: if you use this method you'd better know enough about ssh to be able
-to keep your keys straight, and you'd also better have password access to the
-server so that if you screw up the keys you can still get on, or be able to
-"su - git" from some other user on the server.
+**WARNING: if you want to use this method your shell access to the git account
+on the server should be via `su - git` from some other userid.  If that is not
+possible, you should (a) know the password in case you screw up the keys AND
+(b) know how to force ssh to ask for a password if required, AND (c) know how
+to handle multiple keys in ssh.**
 
   * from your workstation, copy your `~/.ssh/id_rsa.pub` file to the server.
     Put it in `/tmp/YourName.pub`.

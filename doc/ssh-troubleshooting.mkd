@@ -38,18 +38,20 @@ code, and documentation.**
 Other resources:
 
   * people who think this is too hard should take a look at this
-    [transcript][] to **see how simple it *actually* is**.
+    [transcript][] to **see how simple it *actually* is**.  This transcript
+    uses the 'from-client' method of install.
 
-  * someone also wrote a tutorial, see [here][tut].
+  * someone also wrote a tutorial, see [here][tut].  This uses the 'non-root'
+    method of install, to provide a different perspective.
 
   * I **strongly** recommend reading [doc/gitolite-and-ssh.mkd][doc9gas],
     which is a very detailed look at how gitolite uses ssh's features on the
     server side.  Most people don't know ssh as well as they *think* they do;
     even if you don't have any problems right now, it's worth skimming over.
 
-  * there's a program called `sshkeys-lint` that you can run on your client.
-    Run it without arguments to get help on how to run it and what inputs it
-    needs.
+  * there's a program called `sshkeys-lint` that you can run on your client to
+    figure out which key is doing what.  Run it without arguments to get help
+    on how to run it and what inputs it needs.
 
 ----
 
