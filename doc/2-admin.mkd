@@ -278,23 +278,30 @@ This is a feature that I personally do not use (corporate environments don't
 like unauthenticated access of any kind to any repo!), but someone wanted it,
 so here goes.
 
-Gitolite defines two "special" usernames: `daemon` and `gitweb`.
+Gitolite has two pre-defined, "special", usernames: `daemon` and `gitweb`.
 
 To make a repo or repo group accessible via "git daemon", just give read
 permission to the special user "daemon".  Similarly, give read permission to
-`gitweb` to allow the gitweb CGI to show the repo.
+`gitweb` to allow the gitweb CGI to show the repo.  Something like this:
 
-This gives you a quick way to offer multiple repos up for gitweb/daemon
+    repo    foo bar baz
+        R   =   gitweb daemon
+
+This gives you a quick way to offer multiple repos up for gitweb and/or daemon
 access.
 
 However, setting a description for the project also enables gitweb permissions
-so you may as well use that method and kill two birds with one stone, like so:
+so you can do it that way if you want.  Of course in this case you have to
+deal with each repo separately.  Add lines like this to gitolite.conf:
 
-    gitolite = "fast, secure, access control for git in a corporate environment"
+    foo = "some description"
+    bar = "some other description"
+    baz = "yet another description"
 
-You can also specify an owner for gitweb to show, if you like:
+You can also specify an owner for gitweb to show, if you like; for example I
+might use:
 
-    gitolite "Sitaram Chamarty" = "fast, secure, access control for git in a corporate environment"
+    gitolite "Sitaram Chamarty" = "fast, secure, fine-grained, access control for git"
 
 Note that gitolite does **not** install or configure gitweb/git-daemon -- that
 is a one-time setup you must do separately.  All gitolite does is:
