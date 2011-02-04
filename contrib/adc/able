@@ -1,6 +1,4 @@
-#!/bin/bash
-
-# WARNING: USES BASH FEATURES TO AVOID A TEMP FILE; CAN BE FIXED IF NEEDED
+#!/bin/sh
 
 . $(dirname $0)/adc.common-functions
 
@@ -26,7 +24,7 @@ do
     shift
 done
 
-[[ -z "$locs" ]] && die "give me '@all' or some reponame"
+[ -z "$locs" ] && die "give me '@all' or some reponame"
 
 case $op in
     en|enable )
@@ -36,14 +34,20 @@ case $op in
         done
         ;;
     dis|disable )
-        # bashism
-        read msg <<<$(cat)
+
+        TEMPDIR=$(mktemp -d -t tmp.XXXXXXXXXX)
+        export TEMPDIR
+        trap "/bin/rm -rf $TEMPDIR" 0
+
+        echo 'type the message to be shown to users when they try to push; end with Ctrl-D:'
+        echo > $TEMPDIR/msg
+        cat >> $TEMPDIR/msg
         echo disabling following locations with message:
-        echo $msg
+        cat $TEMPDIR/msg
         echo
         for l in $locs
         do
-            echo $msg > $l/.gitolite.down
+            cat $TEMPDIR/msg > $l/.gitolite.down
             echo $l
         done
         ;;

@@ -57,7 +57,8 @@ do
     expect "give me '@all' or some reponame"
     (echo first line; echo second line) | runlocal ssh gitolite able dis @all
     expect "disabling following locations with message:"
-    expect "first line second line"
+    expect "first line"
+    expect "^second line"
     expect "/home/gitolite-test"
     runremote ls -al .gitolite.down
     expect "^.rw------- 1 gitolite-test gitolite-test .. ... .. ..:.. .gitolite.down"
@@ -67,7 +68,8 @@ do
     mdc; mdc
     runlocal git push origin master
     expect ABORTING
-    expect "first line second line"
+    expect "first line"
+    expect "^second line"
     expect "fatal: The remote end hung up unexpectedly"
 
     name "u2 create and push bar/u2/r1 fail"
@@ -75,7 +77,8 @@ do
     mdc; mdc
     runlocal git push origin master
     expect ABORTING
-    expect "first line second line"
+    expect "first line"
+    expect "^second line"
     expect "fatal: The remote end hung up unexpectedly"
 
     name "enable entire site"
@@ -106,7 +109,7 @@ do
     expect "foo down"
     expect "/home/gitolite-test/repositories/foo.git"
     runremote ls -al /home/gitolite-test/repositories/foo.git/.gitolite.down
-    expect ".rw------- 1 gitolite-test gitolite-test . ... .. ..:.. /home/gitolite-test/repositories/foo.git/.gitolite.down"
+    expect ".rw------- 1 gitolite-test gitolite-test .* ..:.. /home/gitolite-test/repositories/foo.git/.gitolite.down"
 
     name "u1 push foo fail"
     cd ~/td/foo
