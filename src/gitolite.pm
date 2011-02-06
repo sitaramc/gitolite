@@ -388,7 +388,7 @@ sub setup_git_configs
     my ($repo, $git_configs_p) = @_;
 
     while ( my ($key, $value) = each(%{ $git_configs_p->{$repo} }) ) {
-        if ($value) {
+        if ($value ne "") {
             $value =~ s/^"(.*)"$/$1/;
             system("git", "config", $key, $value);
         } else {
