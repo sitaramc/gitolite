@@ -13,6 +13,7 @@ In this document:
   * <a href="#_the_info_command">the "info" command</a>
       * <a href="#_interpreting_the_output">interpreting the output</a>
       * <a href="#_using_patterns_to_limit_output">using patterns to limit output</a>
+      * <a href="#_side_note_openssh_5_6">side note: openssh 5.6</a>
   * <a href="#_the_expand_command">the "expand" command</a>
 
 ----
@@ -102,6 +103,24 @@ gitolite truncates the output after 20 results to prevent a DOS.
 The pattern is also mandatory when an admin wants to find out what access some
 *other* user has, which you may have guessed from the syntax in the "usage"
 line above.
+
+<a name="_side_note_openssh_5_6"></a>
+
+#### side note: openssh 5.6
+
+It used to be that the gitolite documentation would say "just use `ssh
+git@server`" in the past, because gitolite defaults to the "info" command if
+no command is passed.
+
+However, starting with [openssh 5.6][openssh56], this won't work.  Openssh
+will now "Kill channel when pty allocation requests fail".  This means that
+gitolite is not even invoked; you only get a message about pty allocation
+failure, followed by "connection closed".
+
+So now you have to use an explicit "info" command, (`ssh git@server info`) or
+add the `-T` option to ssh (`ssh -T git@server`).
+
+[openssh56]: http://www.openssh.org/txt/release-5.6
 
 <a name="_the_expand_command"></a>
 
