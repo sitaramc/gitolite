@@ -336,8 +336,9 @@ on feedback from my users to find or fix issues.
   * `$REPO_BASE`, string, default "repositories"
 
     This is where all the repos go.  If it's not an absolute path, it is
-    considered to be relative to $HOME.  Changing it after the install has
-    completed is doable, but tricky if you don't know how gitolite works.
+    considered to be relative to $HOME.  Moving all the repositories after the
+    install has completed is doable: just [disable writes][dwr] to gitolite,
+    move `~/repositories/*`, change this variable, then re-enable writes.
 
 [wild]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html
 [bc]: http://sitaramc.github.com/gitolite/doc/big-config.html
@@ -346,3 +347,4 @@ on feedback from my users to find or fix issues.
 [mirr]: http://sitaramc.github.com/gitolite/doc/mirroring.html
 [mob]: http://sitaramc.github.com/gitolite/doc/mob-branches.html
 [smart]: http://sitaramc.github.com/gitolite/doc/http-backend.html
+[dwr]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_disabling_write_access_to_take_backups
