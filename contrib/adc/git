@@ -1,0 +1,123 @@
+#!/usr/bin/perl
+
+# READ ALL INSTRUCTIONS **AND** SOURCE CODE BEFORE DEPLOYING.
+
+# run arbitrary git commands on the server
+
+# ----
+
+# WARNING: HIGHLY INFLAMMABLE.  FISSILE MATERIAL, RADIATION HAZARD.  HANDLE
+# WITH CARE.  DO NOT REMOVE MANUFACTURER LABEL.  NOT TO BE USED WHILE DRIVING
+# OR UNDER THE INFLUENCE OF ALCOHOL.  PATIENTS WITH HEART PROBLEMS MUST SEE
+# THEIR CARDIOLOGIST BEFORE USING.
+
+# ----
+
+# ok, warnings done, here's the saner description.
+#
+# This ADC lets you run arbirtrary git commands on any repo on the server.
+# The first argument will be the repo name, the second and subsequent
+# arguments will be the rest of the git command.  For example, to run `git
+# describe --tags` on repo `foo`, you would run:
+#
+#   ssh git@server git foo describe --tags
+#
+# If that looks weird to you, you can use
+#
+#   ssh git@server git --repo=foo describe --tags
+#
+# (the position remains the same: between 'git' and '<command>')
+
+# SECURITY AND SAFETY NOTES:
+#
+# - ADC arguments are checked (in `sub try_adc`) to fit `ADC_CMD_ARGS_PATT`
+#   and the only special characters allowed by that pattern are ".", "_", "@",
+#   "/", "+", ":", and "-".  Thus, *this* adc does not check arguments
+#   anymore.  ANY RISK IN THIS LAXITY IS YOURS, NOT MINE, although I believe
+#   it is safe enough.
+#
+# - Most commands don't make sense to allow, even among those that do not
+#   require a work-tree.  Avoid commands that can be done using normal git
+#   remote access (ls-remote, clone, archive, push, etc).  Also, avoid
+#   commands that *write* to the repo if possible, or at least think/test
+#   thoroughly before enabling them.
+#
+# - You have to deal with issues like stdin/out, output files created etc.,
+#   which is another reason to avoid most of the more complex commands.
+#
+# - Do not enable prune, gc, etc., if your repos are on NFS/CIFS/etc.  See
+#   http://permalink.gmane.org/gmane.comp.version-control.git/122670 for why.
+#
+# - The list of commands allowed to be executed, and the permissions required
+#   to do so, are defined here.  Feel free to uncomment any of this to make
+#   things more relaxed.  If you add new ones, note that the permissions can
+#   only be 'R', 'W', or 'A'.  The meanings of R and W are obvious; "A" means
+#   the user must have write access to the *gitolite-admin* repo to run this
+#   command -- yeah that's a nice twist innit? ;-)
+
+my %GIT_COMMANDS = (
+#   annotate         =>  'R',
+#   blame            =>  'R',
+    'count-objects'  =>  'R',
+    describe         =>  'R',
+#   diff             =>  'R',
+#   'fast-export'    =>  'R',
+#   grep             =>  'R',
+#   log              =>  'R',
+#   shortlog         =>  'R',
+#   'show-branch'    =>  'R',
+#   show             =>  'R',
+#   whatchanged      =>  'R',
+
+#   config           =>  'A',   # I strongly discourage un-commenting this
+#   fsck             =>  'W',   # write access required
+#   gc               =>  'W',   # write access required
+#   prune            =>  'A',   # admin access required
+#   repack           =>  'A',   # admin access required
+);
+
+# preliminary stuff; indented just to visually get it out of the way
+
+    use strict;
+    use warnings;
+
+    die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+    die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+
+    unshift @INC, $ENV{GL_BINDIR};
+    require gitolite or die "parse gitolite.pm failed\n";
+    gitolite->import;
+
+    my $no_help = "this command is too dangerous to just show a help message; we don't want anyone\nrunning it without reading the source and understanding the implications!\n";
+
+# get the repo name
+my $repo = shift or die $no_help;
+$repo =~ s/^--repo=//;
+$repo =~ s/\.git$//;
+# get the command
+my $cmd = shift or die $no_help;
+
+# is it a valid command at all?
+exists $GIT_COMMANDS{$cmd} or die "invalid git command\n";
+
+# check access
+my $aa = $GIT_COMMANDS{$cmd};   # aa == attempted access
+if ($aa eq 'A') {
+    my ($perm, $creator) = check_access('gitolite-admin');
+    $perm =~ /W/ or die "no admin access\n";
+} else {
+    my ($perm, $creator) = check_access($repo);
+    $perm =~ /$aa/ or die "no $aa access to $repo\n";
+}
+
+# cd to the repo dir
+chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git") or die "chdir failed: $!\n";
+
+# remove or comment the below line to signify you have read and understood all this
+die $no_help;
+
+# now run the git command... fingers crossed
+
+unshift @ARGV, "git", $cmd;
+print STDERR "+ ", join(" ", @ARGV), "\n";
+exec @ARGV;
