@@ -11,6 +11,10 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 BEGIN {
+    # people with shell access should be allowed to bypass the update hook,
+    # simply by setting an env var that the ssh "front door" will never set
+    exit 0 if exists $ENV{GL_BYPASS_UPDATE_HOOK};
+
     die "ENV GL_RC not set\n" unless $ENV{GL_RC};
     die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
 }
@@ -22,10 +26,6 @@ use gitolite qw(:DEFAULT %repos);
 # ----------------------------------------------------------------------------
 #       start...
 # ----------------------------------------------------------------------------
-
-# people with shell access should be allowed to bypass the update hook, simply
-# by setting an env var that the ssh "front door" will never set
-exit 0 if exists $ENV{GL_BYPASS_UPDATE_HOOK};
 
 my ($perm, $creator, $wild) = repo_rights($ENV{GL_REPO});
 my $reported_repo = $ENV{GL_REPO} . ( $wild ? " ($wild)" : "" );
