@@ -1058,6 +1058,7 @@ sub shell_out {
 sub try_adc {
     my ($cmd, @args) = split ' ', $ENV{SSH_ORIGINAL_COMMAND};
     if (-x "$GL_ADC_PATH/$cmd") {
+        die "I don't like $cmd\n" if $cmd =~ /\.\./;
         # yes this is rather strict, sorry.
         do { die "I don't like $_\n" unless $_ =~ $ADC_CMD_ARGS_PATT } for ($cmd, @args);
         log_it("$GL_ADC_PATH/$ENV{SSH_ORIGINAL_COMMAND}");
