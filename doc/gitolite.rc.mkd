@@ -16,6 +16,7 @@ In this document:
   * <a href="#_variables_with_a_security_impact">variables with a security impact</a>
   * <a href="#_less_used_changed_variables">less used/changed variables</a>
   * <a href="#_rarely_changed_variables">rarely changed variables</a>
+  * <a href="#_constants_that_aren_t_">constants that aren't!</a>
 
 [Note: in perl, there is no actual boolean.  The undefined value, the number
 '0', and the empty string, are all 'false'.  Everything else is 'true'.  It is
@@ -339,6 +340,23 @@ on feedback from my users to find or fix issues.
     considered to be relative to $HOME.  Moving all the repositories after the
     install has completed is doable: just [disable writes][dwr] to gitolite,
     move `~/repositories/*`, change this variable, then re-enable writes.
+
+<a name="_constants_that_aren_t_"></a>
+
+### constants that aren't!
+
+The source file `src/gitolite_rc.pm` defines a few "constants", for example:
+
+    $R_COMMANDS=qr/^(git[ -]upload-pack|git[ -]upload-archive)$/;
+
+Let's say you want to disallow the archive feature, you would need to change
+this constant.
+
+As of this version, you can now change these "constants" also, simply by
+defining a new value for any or all of them in your `~/.gitolite.rc` file.
+
+If you use this to relax some of the patterns involved (for example, the value
+of `ADC_CMD_ARGS_PATT`), please be sure you know what you're doing.
 
 [wild]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html
 [bc]: http://sitaramc.github.com/gitolite/doc/big-config.html

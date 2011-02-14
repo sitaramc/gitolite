@@ -27,21 +27,6 @@ use Exporter 'import';
 );
 
 # ------------------------------------------------------------------------------
-#       bring in the rc vars and allow querying them
-# ------------------------------------------------------------------------------
-
-# in case we're running under Apache using smart http
-$ENV{HOME} = $ENV{GITOLITE_HTTP_HOME} if $ENV{GITOLITE_HTTP_HOME};
-
-# we also need to "bring in" the rc variables.  The rc can only be in one of
-# these two places; the first one we find, wins
-for ("$ENV{HOME}/.gitolite.rc", "/etc/gitolite/gitolite.rc") {
-    $ENV{GL_RC} ||= $_ if -f;
-}
-die "no rc file found\n" unless $ENV{GL_RC};
-do $ENV{GL_RC} or die "error parsing $ENV{GL_RC}\n";
-
-# ------------------------------------------------------------------------------
 #       real constants
 # ------------------------------------------------------------------------------
 
@@ -64,6 +49,21 @@ $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/-]*$);
 
 # ADC commands and arguments must match this pattern
 $ADC_CMD_ARGS_PATT=qr(^[0-9a-zA-Z._\@/+:-]*$);
+
+# ------------------------------------------------------------------------------
+#       bring in the rc vars and allow querying them
+# ------------------------------------------------------------------------------
+
+# in case we're running under Apache using smart http
+$ENV{HOME} = $ENV{GITOLITE_HTTP_HOME} if $ENV{GITOLITE_HTTP_HOME};
+
+# we also need to "bring in" the rc variables.  The rc can only be in one of
+# these two places; the first one we find, wins
+for ("$ENV{HOME}/.gitolite.rc", "/etc/gitolite/gitolite.rc") {
+    $ENV{GL_RC} ||= $_ if -f;
+}
+die "no rc file found\n" unless $ENV{GL_RC};
+do $ENV{GL_RC} or die "error parsing $ENV{GL_RC}\n";
 
 # ------------------------------------------------------------------------------
 # per perl rules, this should be the last line in such a file:
