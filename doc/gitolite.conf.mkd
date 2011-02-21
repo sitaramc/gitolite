@@ -113,6 +113,8 @@ check.  Much of the complexity applies only to the second level check, so that
 is all we will be discussing here.  This check is done by the update hook, and
 determines whether the push succeeds or fails.
 
+[l2]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_two_levels_of_access_rights_checking
+
 For basic permissions like this, matching is simple.  Gitolite already knows:
 
   * the user

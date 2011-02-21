@@ -43,3 +43,10 @@ my $ret = check_access($repo, 'refs/heads/foo', 'W', 1);
 #   refs/.*
 # or perhaps this, if you were denied
 #   DENIED by fallthru
+
+# NOTE: do NOT pass "R" as the 3rd argument.  It will seem to work because
+# you're merely testing the permissions in this code, but an *actual* "git
+# fetch" for even a DENIED ref will succeed if the user has read access to at
+# least one branch.  This is because the information on what ref is being read
+# is not made available externally in any useful way (the way the "update"
+# hook gets its arguments when a push happens).
