@@ -408,7 +408,7 @@ sub setup_daemon_access
     my $repo = shift;
 
     if (can_read($repo, 'daemon')) {
-        system("touch $export_ok");
+        wrap_print($export_ok, "");
     } else {
         unlink($export_ok);
     }
