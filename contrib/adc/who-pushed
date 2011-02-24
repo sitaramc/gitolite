@@ -20,7 +20,7 @@ logdir=$(dirname $GL_LOG)      # uncodumented env var ;-)
 
 ls $logdir | tac | while read lf
 do
-    < $logdir/$lf grep receive-pack | egrep "\s$repo\s" | cut -f1,2,3,5- | tac
+    < $logdir/$lf perl -ne "print if /receive-pack.*\s$repo\s/" | cut -f1,2,3,5- | tac
 done | while read ts who IP perm old new repo ref rule
 do
     save_old=$old
