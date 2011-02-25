@@ -119,7 +119,7 @@ sub log_it {
     my ($ip, $logmsg);
     open my $log_fh, ">>", $ENV{GL_LOG} or die "open log failed: $!\n";
     # first space sep field is client ip, per "man ssh"
-    ($ip = $ENV{SSH_CONNECTION}) =~ s/ .*//;
+    ($ip = $ENV{SSH_CONNECTION} || '(no-IP)') =~ s/ .*//;
     # the first part of logmsg is the actual command used; it's either passed
     # in via arg1, or picked up from SSH_ORIGINAL_COMMAND
     $logmsg = $_[0] || $ENV{SSH_ORIGINAL_COMMAND}; shift;
