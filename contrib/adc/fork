@@ -3,6 +3,7 @@
 . $(dirname $0)/adc.common-functions
 
 [ -z "$GL_RC" ] && die "ENV GL_RC not set"
+[ -z "$2" ] && die "Usage: fork source_repo target_repo"
 
 # get_rights_and_owner now also sets $repo; see comments in common functions
 get_rights_and_owner $1; from=$repo
@@ -15,6 +16,8 @@ get_rights_and_owner $2; to=$repo
 git clone --bare -l $GL_REPO_BASE_ABS/$from.git $GL_REPO_BASE_ABS/$to.git
 [ $? -ne 0 ] && exit 1
 
+echo "$from forked to $to"
+
 # fix up creator, gitweb owner, and hooks
 cd $GL_REPO_BASE_ABS/$to.git
 echo $GL_USER > gl-creater
@@ -26,6 +29,8 @@ cp -R $GL_REPO_BASE_ABS/$from.git/hooks/* $GL_REPO_BASE_ABS/$to.git/hooks
 if [ -n "$GL_WILDREPOS_DEFPERMS" ]; then
   echo "$GL_WILDREPOS_DEFPERMS" > gl-perms
 fi
+
+echo "$from" > gl-forked-from
 
 # run gitolite's post-init hook if you can (hook code expects GL_REPO to be set)
 export GL_REPO; GL_REPO="$to"
