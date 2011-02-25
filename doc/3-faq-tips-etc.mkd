@@ -22,6 +22,7 @@ In this document:
           * <a href="#_disabling_write_access_to_take_backups">disabling write access to take backups</a>
       * <a href="#_INconvenience_features">INconvenience features</a>
           * <a href="#_deleting_a_repo">deleting a repo</a>
+          * <a href="#_renaming_a_repo">renaming a repo</a>
       * <a href="#_helping_with_gitweb">helping with gitweb</a>
           * <a href="#_easier_to_link_gitweb_authorisation_with_gitolite">easier to link gitweb authorisation with gitolite</a>
           * <a href="#_umask_setting">umask setting</a>
@@ -378,6 +379,20 @@ do:
 
   * *then* remove the repo from `~/repositories` on the server (or whatever
     you set `$GL_REPO_BASE` to in the `~/.gitolite.rc`)
+
+<a name="_renaming_a_repo"></a>
+
+##### renaming a repo
+
+This is similar; there's no code to do this in gitolite.  What you do is:
+
+  * log on to the server, `cd $REPO_BASE` (default: `cd ~/repositories`), and
+    `mv old-name.git new-name.git`
+  * back on your gitolite-admin clone, edit `conf/gitolite.conf` and replace
+    all occurrences of `old-name` with `new-name`.  Then add, commit, and push
+    as usual.
+
+The order of these 2 steps is important; do not reverse them :-)
 
 <a name="_helping_with_gitweb"></a>
 
