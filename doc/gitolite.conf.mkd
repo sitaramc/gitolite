@@ -220,7 +220,7 @@ whatever value it *currently* has:
     @staff      =   sitaram some_dev another-dev    # line 1
     @staff      =   au.thor                         # line 2
     @interns    =   indy james                      # line 3
-    @alldevs    =   bob @interns                    # line 4
+    @alldevs    =   bob @interns @staff             # line 4
 
 "@alldevs" expands to 7 names now.  However, remember that the config file is
 parsed in a single-pass, so later *additions* to a group name cannot affect
