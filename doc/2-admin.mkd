@@ -210,12 +210,19 @@ if things are not clear -- you can help me fine tune this document :-)
 
         exit 1;
 
-  * (new server) **copy** the repos to the new server, **except** the
-    `gitolite-admin` repo and files called `gitolite-hooked` in the `hooks`
-    directory of each repo.
+  * (new server) if you have not done so already, add your `git` user.  Probably
+    something like:
+
+        sudo adduser git
+
+  * (new server) **copy** the repos to the `git` users home on the new server,
+    **except** the `gitolite-admin` repo and files called `gitolite-hooked` in
+    the `hooks` directory of each repo.
 
     That sounds complicated but it's not.  It's just:
 
+        sudo -s
+        su - git
         cd $HOME
         rsync -a olduser@oldhost:repositories .
         mv repositories/gitolite-admin.git $HOME/old-gitolite-admin.git
