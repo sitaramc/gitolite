@@ -77,6 +77,12 @@ to inadvertently *hide* some of the "official" commands (like "info",
 executable files with those names in this directory.  So don't do that -- you
 have been warned!**
 
+#### configuring ADCs
+
+I didn't want to put configuration variables for ADCs also into the main 'rc'
+file, so I chose to put them in the `adc.common-functions` file instead.  Take
+a look at it sometime.
+
 <a name="_anatomy_of_a_command"></a>
 
 ### anatomy of a command
