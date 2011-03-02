@@ -1,0 +1,182 @@
+# the 'hub' ADC
+
+In this document:
+
+  * <a href="#_a_home_grown_hub_for_git_repos">a home grown 'hub' for git repos</a>
+  * <a href="#_general_syntax">general syntax</a>
+      * <a href="#_Bob_s_commands">Bob's commands</a>
+      * <a href="#_Alice_s_just_looking_commands">Alice's "just looking" commands</a>
+      * <a href="#_Alice_s_action_commands">Alice's "action" commands</a>
+  * <a href="#_what_next_">what next?</a>
+  * <a href="#_note_to_the_admin_configuration_variables">note to the admin: configuration variables</a>
+
+<a name="_a_home_grown_hub_for_git_repos"></a>
+
+### a home grown 'hub' for git repos
+
+This ADC (admin-defined command) helps collaboration among repos.  The name is
+in honor of github, which is the primary host for gitolite itself.
+
+[Note that github is a web-based service, and does a lot more, like comments,
+code reviews, etc., none of which are possible here.  We're only talking about
+some basic stuff to make the most common operations easier.  In particular,
+this system is not a replacement for normal project communications like
+email!]
+
+**Conventions used**: all through the following description, we will assume
+that **Alice** has a repo **parent**, **Bob** has a fork of parent called
+**child**, and he is asking Alice to pull a branch he made called **b1** from
+child to parent.
+
+In plain git (without using github or similar), the pull request process
+starts with an email from Bob to Alice, followed by Alice running a `git fetch
+<Bob's URL> b1` (optionally preceded by a `git remote add` for convenience of
+long term use).  Until this happens she can't see much detail about the
+commits to be pulled.
+
+**What this ADC does** is (a) collect all the pull requests she needs to look
+at in one place, and (b) allow her to examine the changes with any combination
+of `git log` and `git diff` options *without having to fetch the content
+first*, and (c) act as a trusted intermediary to allow Alice to fetch *just
+one branch* from Bob even if she does not have any access to Bob's repository!
+
+In a situation where there may be lots of requests, being able to take a quick
+look at them (and possibly reject some), without having to pull down anything
+at all, could be very useful.
+
+Once past that level, she could get the changes down to her workstation using
+`git fetch` as normal.  With this ADC, however, she has another alternative:
+get them over to `parent` (her repo) on the same gitolite server, then later
+do a normal `git fetch [origin]` to get it to her workstation.  This has the
+added advantage that other people, who may be watching her repo but not Bob's,
+now get to see what Bob sent her and send comments etc.
+
+<a name="_general_syntax"></a>
+
+### general syntax
+
+The general syntax is
+
+    ssh git@server hub <hub-command> <args>
+
+<a name="_Bob_s_commands"></a>
+
+#### Bob's commands
+
+The following commands do not cause a fetch, and should be quite fast:
+
+  * Bob sends a pull request for branch b1 to repo parent.  Notice he does not
+    mention Alice by name.  This command expects a message to be piped/typed
+    in via STDIN [this message is meant to be transient and is not stored long
+    term; use email for more "permanent" communications].
+
+        echo "hi Alice, please pull" | request-pull child b1 [parent]
+
+    If `child` was created by a recent version of the 'fork' ADC (or the KDE
+    'clone' ADC), which records the name of the parent repo on a fork, and it
+    is *that* repo to which Bob wishes to send the pull request, the third
+    argument is optional.
+
+  * Bob lists the status (fetched/rejected/pending) of pull requests he has
+    made from his repo child to repo parent.  (Note we don't say "accepted" but
+    "fetched"; see later for why):
+
+        request-status child [parent]
+
+    The second argument is optional the same way as the 3rd argument in the
+    previous command.
+
+<a name="_Alice_s_just_looking_commands"></a>
+
+#### Alice's "just looking" commands
+
+  * Alice lists requests waiting for her to check and possibly pull into
+    parent.  For each waiting pull request, she will see a serial number, the
+    originating repo name (child, in our example), the requestor (Bob, here),
+    and the branch/tag-name (b1) being pulled:
+
+        list-requests parent
+
+  * Alice views request # 1 waiting to be pulled into parent.  Shows the same
+    details as above for that request, followed by the message that Bob typed
+    in when he ran `request-pull`:
+
+        view-request parent 1
+
+  * Alice views the log of the branch she is being asked to pull.  Note that
+    this does NOT involve a fetch, so it will be pretty fast.  The log starts
+    from b1, and stops at a SHA that represents any of the branches in parent.
+    Alice can use any git-log options she wants to; for instance `--graph`,
+    `--decorate`, `--boundary`, etc., could be quite useful.  However, she
+    can't use any GUI; it has to be 'git log':
+
+        view-log parent 1 <git log options>
+
+    Notice that the repo name Alice supplies is still her own, although the
+    log comes from the child repo that Bob wants Alice to pull from.  It's
+    best if you think of this as "view the commits from pull request #1 in
+    'parent'".
+
+  * Alice views the diff between arbitrary commits on child:
+
+        view-diff parent 1 <git diff options>
+
+    Again, she mentions *her* reponame but the diff's come from `child`.  Also
+    note that, due to restrictions on what characters are allowed in arguments
+    to ADCs, you probably can't do things like `pu^` or `master~3`, and have
+    to use SHAs instead.
+
+<a name="_Alice_s_action_commands"></a>
+
+#### Alice's "action" commands
+
+  * Alice doesn't like what she sees and decides to reject it.  This command
+    expects some text on STDIN as the rejection message:
+
+        echo "hi Bob, your patch needs work; see email" | reject parent 1
+
+The following commands will actually fetch from child into parent, and may take
+time if the changes are large.  However all this is on the server so it does
+not involve network traffic:
+
+  * Alice likes what she sees so far and wants to fetch the branch Bob is
+    asking her to pull.  Note that we are intentionally not using the word
+    "accept", because this command does not (and cannot, since it is running
+    on a bare repo on the server) do a pull.  What it does is it fetches into
+    a branch whose name will be `requests/child/b1`.
+
+    Note that when multiple requests from the same repo (child) for the same
+    branch (b1) happen, each "fetch" overwrites the branch.  This allows Bob
+    to continually refine the branch he is requesting for a pull based on
+    (presumably emailed) comments from Alice.  In a way, this is a "remote
+    tracking branch", just like `refs/remotes/origin/b1`.
+
+        fetch parent 1
+
+<a name="_what_next_"></a>
+
+### what next?
+
+At this point, you're done with the `hub` ADC.  However, all this is on the
+bare `parent.git` on the server, and nothing has hit Alice's workstation yet!
+Alice will still have to run a fetch or a pull on her workstation if she wants
+to check the code in detail, use a tool like gitk, and especially to
+compile/test it.  *Then* she decides whether to accept or reject the request,
+which will have to be communicated via email, of course; see the second para
+of this document ;-)
+
+Finally, note that Alice does not actually need to use the `fetch` subcommand.
+She can do the traditional thing and fetch Bob's repo/branch directly to her
+*workstation*.
+
+<a name="_note_to_the_admin_configuration_variables"></a>
+
+### note to the admin: configuration variables
+
+There are 2 configuration variables.  `BASE_FETCH_URL` should be set to a
+simple "read" URL (so it doesn't even have to be ssh) that almost anyone using
+this server can use.  It's only used in producing the `git fetch` command
+mentioned just above.
+
+`GL_FORKED_FROM` is set to `gl-forked-from` by default, but if your initials
+are `JM` you can set it to `kde-cloned-from` to save time and trouble ;-)

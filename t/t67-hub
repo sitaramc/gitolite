@@ -1,0 +1,156 @@
+# vim: syn=sh:
+for bc in 0 1
+do
+    cd $TESTDIR
+    $TESTDIR/rollback || die "rollback failed"
+    editrc GL_BIG_CONFIG $bc
+    editrc GL_WILDREPOS 1
+
+    rm -rf /tmp/glt-adc
+    mkdir  /tmp/glt-adc || die "mkdir /tmp/glt-adc failed"
+    cp ../contrib/adc/* /tmp/glt-adc
+    echo "\$GL_ADC_PATH = '/tmp/glt-adc';" | addrc
+    runremote rm -f .gitolite.down
+
+    # ----------
+
+    name "INTERNAL"
+    echo "
+        @alice = u1
+        @bob = u2
+        @parent = r1
+        @child = r2
+
+        repo @parent
+            RW+     =   @alice
+            RW      =   tester
+            R       =   @bob
+
+        @children = child/CREATOR/..*
+        repo    @children
+            C               =   @all
+            RW+             =   CREATOR
+    " | ugc
+    expect_push_ok "master -> master"
+
+    name "setup: parent gets some branches"
+    cd ~/td
+    runlocal git clone u1:r1
+    cd r1
+    mdc base1; mdc base2; mdc base3
+    runlocal git branch p3
+    runlocal git branch p2
+    runlocal git branch p1
+    mdc p1a; mdc p1b; mdc p1c
+    runlocal git checkout p2
+    mdc p2a; mdc p2b; mdc p2c
+    runlocal git checkout p3
+    mdc p3a; mdc p3b; mdc p3c
+    runlocal git push origin --all
+    expect To u1:r1
+    expect "\* \[new branch\]      master -> master"
+    expect "\* \[new branch\]      p1 -> p1"
+    expect "\* \[new branch\]      p2 -> p2"
+    expect "\* \[new branch\]      p3 -> p3"
+
+    name "setup: child is cloned and adds b1 and b2"
+    cd ~/td
+    runlocal ssh u2 fork r1 child/u2/myr1
+    runremote ls -al repositories/child/u2/myr1.git/gl-forked-from
+    expect "gitolite-test gitolite-test 3 .* repositories/child/u2/myr1.git/gl-forked-from"
+    runremote cat repositories/child/u2/myr1.git/gl-forked-from
+    expect r1
+    runlocal git clone u2:child/u2/myr1
+    cd myr1
+    runlocal git checkout -b b1 origin/p1
+    mdc c1
+    runlocal git checkout -b b2 origin/p2
+    mdc d1; mdc d2
+    runlocal git checkout -b b3 origin/p3
+    mdc e1; mdc e2; mdc e3
+    runlocal git push origin b1 b2 b3
+    expect To u2:child/u2/myr1
+    expect "\* \[new branch\]      b1 -> b1"
+    expect "\* \[new branch\]      b2 -> b2"
+    expect "\* \[new branch\]      b3 -> b3"
+
+    name "bob sends in a few pull requests"
+    printf "hello\nthere" | runlocal ssh u2 hub request-pull child/u2/myr1 b1
+    notexpect .
+    printf "hi\nthere" | runlocal ssh u2 hub request-pull child/u2/myr1 b2
+    notexpect .
+    printf "hello\nagain" | runlocal ssh u2 hub request-pull child/u2/myr1 b3
+    notexpect .
+
+    name "bob checks his pending requests"
+    runlocal ssh u2 hub request-status child/u2/myr1
+    expect "1	child/u2/myr1	(u2)	b1	pending"
+    expect "2	child/u2/myr1	(u2)	b2	pending"
+    expect "3	child/u2/myr1	(u2)	b3	pending"
+
+    name "alice checks her pull requests"
+    runlocal ssh u1 hub list-requests r1
+    expect "1	child/u2/myr1	(u2)	b1	pending"
+    expect "2	child/u2/myr1	(u2)	b2	pending"
+    expect "3	child/u2/myr1	(u2)	b3	pending"
+
+    name "alice views request 1"
+    runlocal ssh u1 hub view-request r1 1
+    expect "1	child/u2/myr1	(u2)	b1	pending"
+    expect ^hello
+    expect ^there
+
+    name "alice views log and diffs"
+    runlocal ssh u1 hub view-log r1 1
+    expect "setup: child is cloned and adds b1 and b2"
+    expect commit
+    wc < ~/1 > ~/2; > ~/1
+    expect "5  22 178"
+
+    runlocal ssh u1 hub view-log r1 3 --oneline
+    expect "setup: child is cloned and adds b1 and b2"
+    notexpect commit
+    diffargs=`tac ~/1 | cut -f1 -d' ' | sed -n -e1p -e3p`
+    wc < ~/1 > ~/2; > ~/1
+    expect "3  30 150"
+
+    runlocal ssh u1 hub view-log r1 2 b1
+    expect "fatal: ambiguous argument 'b1': unknown revision or path not in the working tree."
+
+    runlocal ssh u1 hub view-diff r1 3 $diffargs
+    expect "diff.*e2"
+    expect "diff.*e3"
+    expect "new file mode"
+
+    name "alice tries to view a SHA she shouldnt"
+    echo > ~/1
+    echo > ~/2
+    runlocal ssh u1 hub view-diff r1 2 $diffargs
+    notexpect "diff.*e2"
+    notexpect "diff.*e3"
+    notexpect "new file mode"
+    expect "invalid SHA:"
+
+    name "alice rejects 2, accepts 3"
+    echo captain was sober today | runlocal ssh u1 hub reject r1 2
+    notexpect .
+    echo | runlocal ssh u1 hub fetch r1 3
+    expect "user u2 asked you to"
+    expect "git fetch git://gl.example.com/child/u2/myr1 b3"
+    expect "From /home/gitolite-test/repositories/child/u2/myr1"
+    expect "\* \[new branch\]      b3         -> requests/child/b3"
+
+    name "bob checks his pending requests"
+    runlocal ssh u2 hub request-status child/u2/myr1
+    expect "1	child/u2/myr1	(u2)	b1	pending"
+    expect "2	child/u2/myr1	(u2)	b2	rejected"
+    expect "3	child/u2/myr1	(u2)	b3	fetched"
+
+    name "alice checks her pull requests"
+    runlocal ssh u1 hub list-requests r1
+    expect "1	child/u2/myr1	(u2)	b1	pending"
+    expect "2	child/u2/myr1	(u2)	b2	rejected"
+    expect "3	child/u2/myr1	(u2)	b3	fetched"
+
+    name "INTERNAL"
+done
