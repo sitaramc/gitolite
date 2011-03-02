@@ -16,6 +16,11 @@ USE_LOCK_UNLOCK=1
 TRASH_CAN=$GL_REPO_BASE_ABS/deleted
 TRASH_SUFFIX=`date +%Y-%m-%d_%H:%M:%S`
 
+# settings for 'hub' ADC
+BASE_FETCH_URL="git://gl.example.com"
+GL_FORKED_FROM="gl-forked-from"
+    # KDE may set this to kde-cloned-from for historical reasons
+
 # ------------------------------------------------------------------------------
 
 # test an option value more concisely

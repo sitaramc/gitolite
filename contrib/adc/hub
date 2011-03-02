@@ -1,0 +1,421 @@
+#!/usr/bin/perl -w
+
+# SECURITY: look for the word SECURITY below and decide...
+
+# handle pull-requests and related stuff
+
+# developer notes:
+# - 'requestor' is too long, so I use "bob"; if you see the documentation
+#   you'll realise this isn't as crazy as you think :-)
+
+use strict;
+use warnings;
+
+die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+
+sub usage {
+    print STDERR <<'EOF';
+GENERAL USAGE: ssh git@server hub <hub-command> <args>
+
+See docs for concepts; this usage message is only a refresher!
+
+Requestor's commands (repo child):
+        request-pull child b1 [parent]
+        request-status child [parent]
+Parent repo owner's commands (repo parent):
+        list-requests parent
+        view-request parent request-number
+        view-log parent request-number <git log options>
+        view-diff parent request-number <git diff options>
+        reject parent request-number
+        fetch parent request-number
+
+EOF
+    exit 1;
+}
+
+our $tempdir;
+END {
+    wrap_chdir($ENV{GL_REPO_BASE_ABS});
+    system("rm", "-rf", "$tempdir.git") if $tempdir and $tempdir =~ /gl-internal-temp-repo/;
+}
+
+my %dispatch = (
+    rp               =>  \&rp,
+    'request-pull'   =>  \&rp,
+    rs               =>  \&rs,
+    'request-status' =>  \&rs,
+    lr               =>  \&lr,
+    'list-requests'  =>  \&lr,
+    vr               =>  \&vr,
+    'view-request'   =>  \&vr,
+    vl               =>  \&vl,
+    'view-log'       =>  \&vl,
+    vd               =>  \&vd,
+    'view-diff'      =>  \&vd,
+    reject           =>  \&reject,
+    fetch            =>  \&fetch,
+);
+
+my $cmd = shift || '';
+usage() unless ($dispatch{$cmd});
+
+unshift @INC, $ENV{GL_BINDIR};
+require gitolite or die "parse gitolite.pm failed\n";
+gitolite->import;
+
+# find what is effectively GL_ADC_PATH, then get the config var we're interested in
+use FindBin;
+my $BASE_FETCH_URL = `. $FindBin::Bin/adc.common-functions; echo \$BASE_FETCH_URL`;
+chomp($BASE_FETCH_URL);
+my $GL_FORKED_FROM = `. $FindBin::Bin/adc.common-functions; echo \$GL_FORKED_FROM`;
+chomp($GL_FORKED_FROM);
+
+my @args = @ARGV; @ARGV = ();
+$dispatch{$cmd}->(@args);
+
+# -------------------- bob's commands
+
+sub rp {
+    # request-pull child b1 [parent]
+    usage() unless @_ == 2 or @_ == 3;
+
+    # implicitly gives owner-parent read access to part of child, so requestor
+    # should already have read access to child (to prevent someone gaining
+    # access to child by faking a pull request against it!)
+    # XXX would it be better to ensure it is writable by Bob, because how/why
+    # would he make a pull request if he didn't just write to it?
+    my ($repo, $creator) = readable_repo(shift);
+    my $ref = valid_ref($repo, shift);
+
+    # the parent is either explicitly given, or the name of the parent
+    # recorded by the 'fork' ADC is used
+    my $repo_to = shift || parent_repo($repo);
+    # requestor need not have any access to parent; it is quite possible he
+    # gets this via git-daemon or something, so we just need to make sure it's
+    # a valid repo
+    $repo_to = valid_repo($repo_to);
+
+    # the 'cover letter' message comes from STDIN
+    my $cover = join("", <>);
+
+    # now create/update the pull request file
+    cd2repo($repo_to);
+    my %hub = get_hub();
+    $hub{$repo}{$ref}{BOB} = $ENV{GL_USER};
+    $hub{$repo}{$ref}{COVER} = $cover;
+    $hub{$repo}{$ref}{TIME} = time();
+    $hub{$repo}{$ref}{STATUS} = 'pending';
+    dump_hub(%hub);
+}
+
+sub rs {
+    # request-status child [parent]
+    usage() unless @_ == 1 or @_ == 2;
+    # same checks as in 'rp' above
+    my ($repo_from, $creator) = readable_repo(shift);
+    my $repo = shift || parent_repo($repo_from);
+    $repo = valid_repo($repo);
+
+    cd2repo($repo);
+    my %hub_full = get_hub();
+    return unless $hub_full{$repo_from};
+    my %hub; $hub{$repo_from} = $hub_full{$repo_from};
+
+    list_hub('', %hub);
+}
+
+# -------------------- alice's commands
+
+sub lr {
+    # list-requests parent
+    usage() unless @_ == 1;
+
+    # Alice must have write access to parent, otherwise she can't really
+    # accept a pull request eventually right?
+    my ($repo, $creator) = writable_repo(shift);
+    cd2repo($repo);
+    my %hub = get_hub();
+    return unless %hub;
+
+    list_hub('', %hub);
+}
+
+sub vr {
+    # view-request parent request-number
+    usage() unless @_ == 2;
+    my ($repo, $n) = @_;
+    my ($child, $ref, %hub) = get_request_N($repo, $n);
+        # this also does a chdir to $repo, by the way
+
+    my %hub1; $hub1{$child}{$ref} = $hub{$child}{$ref};
+    list_hub('', %hub1);
+    print "\nMessage:\n$hub1{$child}{$ref}{COVER}\n";
+}
+
+sub vl {
+    # view-log parent request-number <git log options>
+    usage() unless @_ >= 2;
+
+    my ($repo, $n) = (shift, shift);
+    my ($child, $ref, %hub) = get_request_N($repo, $n);
+
+    # so now we can find the set of SHAs that we already have
+    # XXX should we include tags also?
+    my @known_shas = grep { chomp; } `git for-each-ref refs/heads --format='%(objectname)'`;
+
+    # make a copy of the child repo (Bob's repo) containing only the ref being
+    # offered for fetch, then cd to it.  This is easier to do than to sanitise
+    # all possible git-log arguments.  We're doing this to prevent Alice from
+    # seeing anything more than the ref offered.
+    temp_clone($child, $ref);
+
+    # verify the list of "known_shas" because what's known in Alice's repo may
+    # not be known here.  While you're about it, negate them.  (We don't want
+    # to use "--not" because we're not sure what arguments the user will want
+    # to add and we don't want to negate some of them by mistake
+    @known_shas = grep { $_ = `git rev-parse --verify -q $_`; chomp && s/^/^/ } @known_shas;
+
+    # run the log command
+    # XXX SECURITY XXX do we need to check these arguments?  Don't forget they
+    # are restricted by $ADC_CMD_ARGS_PATT (defined in gitolite_rc.pm), which
+    # is pretty tight to start with, so we know this cannot be used to run
+    # external programs.  The question is, are any of git-log's arguments
+    # dangerous in their own right?
+    my @args = ('git', 'log', $ref);
+    push @args, @known_shas if @known_shas;
+    check_SHAs($ref, @_);
+        # each SHA in @_ must be a parent of $ref.  Non-shas are not allowed
+        # since all refs other than $ref have been deleted in the temp clone
+    push @args, @_ if @_;
+    system @args;
+}
+
+sub vd {
+    # view-diff parent request-number <git diff options>
+    usage() unless @_ >= 4;
+        # we just check for 4 arguments; I guess later on we could also check
+        # to make sure at least 2 of them are SHAs or something but unless
+        # there's a security risk it's not needed
+
+    my ($repo, $n) = (shift, shift);
+    my ($child, $ref, %hub) = get_request_N($repo, $n);
+        # this also does a chdir to $repo, by the way
+
+    # now go to the child repo (Bob's repo)
+    temp_clone($child, $ref);
+
+    # run the diff command
+    # XXX SECURITY XXX do we need to check these arguments?  Don't forget they
+    # are restricted by $ADC_CMD_ARGS_PATT (defined in gitolite_rc.pm), which
+    # is pretty tight to start with, so we know this cannot be used to run
+    # external programs.  The question is, are any of git-diff's arguments
+    # dangerous in their own right?
+    my @args = ('git', 'diff');
+    check_SHAs($ref, @_);
+    push @args, @_ if @_;
+    system @args;
+}
+
+sub reject {
+    # reject parent request-number
+    usage() unless @_ == 2;
+    my ($repo, $n) = @_;
+    my ($child, $ref, %hub) = get_request_N($repo, $n);
+
+    # the 'cover letter' message comes from STDIN
+    my $cover = join("", <>);
+
+    map { die "request status is already $_\n" if $_ ne 'pending' } $hub{$child}{$ref}{STATUS};
+    $hub{$child}{$ref}{STATUS} = 'rejected';
+    $hub{$child}{$ref}{COVER} .= "\n\nRejected.  Message to requestor:\n$cover";
+    dump_hub(%hub);
+}
+
+sub fetch {
+    # fetch parent request-number
+    usage() unless @_ == 2;
+    my ($repo, $n) = @_;
+    my ($child, $ref, %hub) = get_request_N($repo, $n);
+
+    map { die "request status is already $_\n" if $_ ne 'pending' } $hub{$child}{$ref}{STATUS};
+    print "user $hub{$child}{$ref}{BOB} asked you to\n\tgit fetch $BASE_FETCH_URL/$child $ref\n";
+    print "hit enter to accept the fetch request or Ctrl-C to cancel...";
+    <>;
+
+    my $fetched_ref = "refs/heads/requests/child/$ref";
+    # you're already chdir'd to parent, by get_request_N
+    system("git", "update-ref", "-d", "refs/heads/$fetched_ref");
+    system("git", "fetch", "$ENV{GL_REPO_BASE_ABS}/$child.git", "$ref:$fetched_ref");
+
+    $hub{$child}{$ref}{STATUS} = 'fetched';
+    dump_hub(%hub);
+}
+
+# -------------------- service subs
+
+sub assert {
+    my ($expr, $message) = @_;
+    eval $expr or die ($message ? "$message\n" : "assert '$expr' failed\n");
+}
+
+sub cd2repo {
+    my $repo = shift;
+    wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
+}
+
+sub dump_hub {
+    # pwd assumed to git repo.git; dump a file called "gl-adc-hub-requests"
+    use Data::Dumper;
+    $Data::Dumper::Indent = 1;
+    $Data::Dumper::Sortkeys = 1;
+    my %hub = @_;
+
+    my $fh = wrap_open(">", "gl-adc-hub-requests");
+    print $fh Data::Dumper->Dump([\%hub], [qw(*hub)]);
+    close $fh;
+}
+
+sub get_hub {
+    # pwd assumed to git repo.git; "do" a file called "gl-adc-hub-requests"
+
+    return () unless -w "gl-adc-hub-requests";
+    our %hub = ();
+    do "gl-adc-hub-requests" or die "error parsing gl-adc-hub-requests\n";
+    return %hub;
+}
+
+sub get_request_N {
+    # given a repo and an N, return "child", "ref", and %hub (or die trying!)
+
+    # you can't look at pull requests for repos you don't have write access to
+    my ($repo, $creator) = writable_repo(shift);
+    cd2repo($repo);
+    my %hub = get_hub();
+    die "you have no pending requests\n" unless %hub;
+
+    my $n = shift || '';
+    usage() unless ($n =~ /^\d+$/);
+
+    my @hub = hub_sort(%hub);
+    die "you have only " . scalar(@hub) . " requests\n" if @hub < $n;
+    $n--;       # make it 0-relative
+    return ($hub[$n]->{REPO}, $hub[$n]->{REF}, %hub);
+}
+
+sub hub_sort {
+    my %hub = @_;
+    my %sorted_hub = ();
+    for my $child (sort keys %hub) {
+        for my $ref (sort keys %{ $hub{$child} }) {
+            my $key = $hub{$child}{$ref}{TIME} . "-$child-$ref";
+            $sorted_hub{$key} = { REPO=>$child, REF=>$ref };
+        }
+    }
+    my @hub = ();
+    for my $key (sort keys %sorted_hub) {
+        push @hub, $sorted_hub{$key};
+    }
+    return @hub;
+}
+
+sub list_hub {
+    my ($status, %hub) = @_;
+
+    print "#\tchild-repository-name\t(requestor)\tbranch-or-tag-to-pull\tstatus\n----\n";
+    my @hub = hub_sort(%hub);
+    my $sn = 0;
+    for my $pr (@hub) {
+        $sn++;
+        my $child = $pr->{REPO};
+        my $ref = $pr->{REF};
+        my $pr_status = $hub{$child}{$ref}{STATUS};
+        next if $status and $pr_status ne $status;
+        print "$sn\t$child\t($hub{$child}{$ref}{BOB})\t$ref\t$pr_status\n";
+    }
+}
+
+sub parent_repo {
+    my ($repo) = shift;
+    cd2repo($repo);
+    die "parent repo was not recorded, sorry!\n" unless -f $GL_FORKED_FROM;
+    my $gff = `cat $GL_FORKED_FROM`;
+    chomp($gff);
+    return $gff;
+}
+
+sub readable_repo {
+    my $repo = valid_repo(shift);
+    my ($perm, $creator, $wild) = check_access($repo);
+    die "$repo does not exist or you have no read access\n" unless $perm =~ /R/;
+    return ($repo, $creator);
+}
+
+sub valid_log_options {
+}
+
+sub valid_ref {
+    my ($repo, $ref) = @_;
+    cd2repo($repo);
+    die "invalid ref $ref\n" unless `git cat-file -t $ref` =~ /^commit$/;
+    die "invalid ref $ref\n" unless `git rev-parse $ref` =~ /^[0-9a-f]{40}$/;
+    return $ref;
+}
+
+sub valid_repo {
+    my $repo = shift;
+    $repo =~ s/\.git$//;
+    die "no read permissions on $repo\n" unless -d "$ENV{GL_REPO_BASE_ABS}/$repo.git";
+    return $repo;
+}
+
+sub writable_repo {
+    my $repo = valid_repo(shift);
+    my ($perm, $creator, $wild) = check_access($repo);
+    die "$repo does not exist or you have no write access\n" unless $perm =~ /W/;
+    return ($repo, $creator);
+}
+
+sub temp_clone {
+    my ($repo, $ref) = @_;
+
+    die "internal error; temp_clone called twice?\n" if $tempdir;
+
+    # some of this code is also in "rrr" branch
+
+    # first make a temp directory within $REPO_BASE
+    $ENV{TMPDIR} = $ENV{GL_REPO_BASE_ABS};
+    $tempdir = `mktemp -d -t gl-internal-temp-repo.XXXXXXXXXX`;
+    chomp($tempdir);
+    rename $tempdir, "$tempdir.git";
+
+    # make the clone
+    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+    system("git clone --mirror -l $repo.git $tempdir.git >/dev/null 2>&1");
+
+    # go to the clone and delete refs he's not allowed to read
+    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+    wrap_chdir("$tempdir.git");
+    # for each available ref
+    for my $ar (`git for-each-ref refs '--format=%(refname)'`) {
+        chomp($ar);
+        system('git', 'update-ref', '-d', $ar) unless $ar eq "refs/heads/$ref";
+    }
+
+    # you've already cd-d to the temp repo, just set the name up properly
+    $tempdir =~ s/^\Q$ENV{GL_REPO_BASE_ABS}\///;
+}
+
+sub check_SHAs {
+    my $ref = shift;
+    for (@_) {
+        next unless /^[0-9a-f]+$/i;
+        my $fullsha = `git rev-parse $_`;
+        chomp($fullsha);
+        die "invalid SHA: $_\n" unless $fullsha =~ /^[0-9a-f]{40}$/;
+        my $mergebase = `git merge-base $fullsha $ref`;
+        chomp($mergebase);
+        die "invalid SHA: $_\n" unless $mergebase eq $fullsha;
+    }
+}
