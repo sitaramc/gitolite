@@ -70,7 +70,7 @@ The following commands do not cause a fetch, and should be quite fast:
     in via STDIN [this message is meant to be transient and is not stored long
     term; use email for more "permanent" communications].
 
-        echo "hi Alice, please pull" | request-pull child b1 [parent]
+        echo "hi Alice, please pull" | ssh git@server hub request-pull child b1 [parent]
 
     If `child` was created by a recent version of the 'fork' ADC (or the KDE
     'clone' ADC), which records the name of the parent repo on a fork, and it
@@ -81,7 +81,7 @@ The following commands do not cause a fetch, and should be quite fast:
     made from his repo child to repo parent.  (Note we don't say "accepted" but
     "fetched"; see later for why):
 
-        request-status child [parent]
+        ssh git@server hub request-status child [parent]
 
     The second argument is optional the same way as the 3rd argument in the
     previous command.
@@ -95,13 +95,21 @@ The following commands do not cause a fetch, and should be quite fast:
     originating repo name (child, in our example), the requestor (Bob, here),
     and the branch/tag-name (b1) being pulled:
 
-        list-requests parent
+        ssh git@server hub list-requests parent
+
+    This command also takes an optional list of search strings that are OR-d
+    together and matched against the 'status' field.  So saying
+
+        ssh git@server hub list-requests parent fetched pending
+
+    would list only items that were 'fetched' or 'pending' (meaning 'accepted'
+    and 'rejected' would not show up).
 
   * Alice views request # 1 waiting to be pulled into parent.  Shows the same
     details as above for that request, followed by the message that Bob typed
     in when he ran `request-pull`:
 
-        view-request parent 1
+        ssh git@server hub view-request parent 1
 
   * Alice views the log of the branch she is being asked to pull.  Note that
     this does NOT involve a fetch, so it will be pretty fast.  The log starts
@@ -110,7 +118,7 @@ The following commands do not cause a fetch, and should be quite fast:
     `--decorate`, `--boundary`, etc., could be quite useful.  However, she
     can't use any GUI; it has to be 'git log':
 
-        view-log parent 1 <git log options>
+        ssh git@server hub view-log parent 1 <git log options>
 
     Notice that the repo name Alice supplies is still her own, although the
     log comes from the child repo that Bob wants Alice to pull from.  It's
@@ -119,7 +127,7 @@ The following commands do not cause a fetch, and should be quite fast:
 
   * Alice views the diff between arbitrary commits on child:
 
-        view-diff parent 1 <git diff options>
+        ssh git@server hub view-diff parent 1 <git diff options>
 
     Again, she mentions *her* reponame but the diff's come from `child`.  Also
     note that, due to restrictions on what characters are allowed in arguments
@@ -133,11 +141,7 @@ The following commands do not cause a fetch, and should be quite fast:
   * Alice doesn't like what she sees and decides to reject it.  This command
     expects some text on STDIN as the rejection message:
 
-        echo "hi Bob, your patch needs work; see email" | reject parent 1
-
-The following commands will actually fetch from child into parent, and may take
-time if the changes are large.  However all this is on the server so it does
-not involve network traffic:
+        echo "hi Bob, your patch needs work; see email" | ssh git@server hub reject parent 1
 
   * Alice likes what she sees so far and wants to fetch the branch Bob is
     asking her to pull.  Note that we are intentionally not using the word
@@ -151,7 +155,23 @@ not involve network traffic:
     (presumably emailed) comments from Alice.  In a way, this is a "remote
     tracking branch", just like `refs/remotes/origin/b1`.
 
-        fetch parent 1
+        ssh git@server hub fetch parent 1
+
+    This command will actually fetch from child into parent, and may take time
+    when the changes are large.  However all this is on the server so it does
+    not involve network traffic:
+
+  * Alice has fetched the stuff she wants, looked at it/tested it, and decides
+    to merge it into `parent`.  Once that is done, she runs:
+
+        echo "thanks for the frobnitz patch Bob" | ssh git@server hub accept parent 1
+
+    to let Bob know next time he checks 'request-status'.  Like the `reject`
+    sub-command, this is also just a status update; no actual 'git' changes
+    happen.
+
+Notice the sequence of Alice's action commands: it's either 'reject', or a
+'fetch' then 'accept'.
 
 <a name="_what_next_"></a>
 

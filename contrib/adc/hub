@@ -30,6 +30,7 @@ Parent repo owner's commands (repo parent):
         view-diff parent request-number <git diff options>
         reject parent request-number
         fetch parent request-number
+        accept parent request-number
 
 EOF
     exit 1;
@@ -56,6 +57,7 @@ my %dispatch = (
     'view-diff'      =>  \&vd,
     reject           =>  \&reject,
     fetch            =>  \&fetch,
+    accept           =>  \&accept,
 );
 
 my $cmd = shift || '';
@@ -129,8 +131,8 @@ sub rs {
 # -------------------- alice's commands
 
 sub lr {
-    # list-requests parent
-    usage() unless @_ == 1;
+    # list-requests parent [optional search strings]
+    usage() unless @_ >= 1;
 
     # Alice must have write access to parent, otherwise she can't really
     # accept a pull request eventually right?
@@ -139,7 +141,10 @@ sub lr {
     my %hub = get_hub();
     return unless %hub;
 
-    list_hub('', %hub);
+    # create the search pattern.  ADC arg checking is very strict; it doesn't
+    # allow &, | etc., so we just generate an OR condition out of the pieces
+    my $patt = join("|", @_);
+    list_hub($patt, %hub);
 }
 
 sub vr {
@@ -224,11 +229,11 @@ sub reject {
     my ($repo, $n) = @_;
     my ($child, $ref, %hub) = get_request_N($repo, $n);
 
+    map { die "request status is already '$_'\n" if $_ ne 'pending' } $hub{$child}{$ref}{STATUS};
+
     # the 'cover letter' message comes from STDIN
     my $cover = join("", <>);
-
-    map { die "request status is already $_\n" if $_ ne 'pending' } $hub{$child}{$ref}{STATUS};
-    $hub{$child}{$ref}{STATUS} = 'rejected';
+    $hub{$child}{$ref}{STATUS} = "rejected by $ENV{GL_USER}";
     $hub{$child}{$ref}{COVER} .= "\n\nRejected.  Message to requestor:\n$cover";
     dump_hub(%hub);
 }
@@ -239,7 +244,8 @@ sub fetch {
     my ($repo, $n) = @_;
     my ($child, $ref, %hub) = get_request_N($repo, $n);
 
-    map { die "request status is already $_\n" if $_ ne 'pending' } $hub{$child}{$ref}{STATUS};
+    map { die "request status is already '$_'\n" if $_ ne 'pending' } $hub{$child}{$ref}{STATUS};
+
     print "user $hub{$child}{$ref}{BOB} asked you to\n\tgit fetch $BASE_FETCH_URL/$child $ref\n";
     print "hit enter to accept the fetch request or Ctrl-C to cancel...";
     <>;
@@ -249,7 +255,22 @@ sub fetch {
     system("git", "update-ref", "-d", "refs/heads/$fetched_ref");
     system("git", "fetch", "$ENV{GL_REPO_BASE_ABS}/$child.git", "$ref:$fetched_ref");
 
-    $hub{$child}{$ref}{STATUS} = 'fetched';
+    $hub{$child}{$ref}{STATUS} = "fetched by $ENV{GL_USER}";
+    dump_hub(%hub);
+}
+
+sub accept {
+    # accept parent request-number
+    usage() unless @_ == 2;
+    my ($repo, $n) = @_;
+    my ($child, $ref, %hub) = get_request_N($repo, $n);
+
+    map { die "request status is '$_'; must be 'fetched'\n" if $_ !~ /^fetched by / } $hub{$child}{$ref}{STATUS};
+
+    # the 'cover letter' message comes from STDIN
+    my $cover = join("", <>);
+    $hub{$child}{$ref}{STATUS} = "accepted by $ENV{GL_USER}";
+    $hub{$child}{$ref}{COVER} .= "\n\nAccepted.  Message to requestor:\n$cover";
     dump_hub(%hub);
 }
 
@@ -323,7 +344,7 @@ sub hub_sort {
 sub list_hub {
     my ($status, %hub) = @_;
 
-    print "#\tchild-repository-name\t(requestor)\tbranch-or-tag-to-pull\tstatus\n----\n";
+    my $header = "#\tchild-repository-name\t(requestor)\tbranch-or-tag-to-pull\tstatus\n----\n";
     my @hub = hub_sort(%hub);
     my $sn = 0;
     for my $pr (@hub) {
@@ -331,7 +352,8 @@ sub list_hub {
         my $child = $pr->{REPO};
         my $ref = $pr->{REF};
         my $pr_status = $hub{$child}{$ref}{STATUS};
-        next if $status and $pr_status ne $status;
+        next if $status and $pr_status !~ /$status/;
+        print $header if $header; $header = '';
         print "$sn\t$child\t($hub{$child}{$ref}{BOB})\t$ref\t$pr_status\n";
     }
 }

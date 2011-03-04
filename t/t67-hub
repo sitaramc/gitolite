@@ -131,7 +131,7 @@ do
     notexpect "new file mode"
     expect "invalid SHA:"
 
-    name "alice rejects 2, accepts 3"
+    name "alice rejects 2, fetches 3"
     echo captain was sober today | runlocal ssh u1 hub reject r1 2
     notexpect .
     echo | runlocal ssh u1 hub fetch r1 3
@@ -143,14 +143,32 @@ do
     name "bob checks his pending requests"
     runlocal ssh u2 hub request-status child/u2/myr1
     expect "1	child/u2/myr1	(u2)	b1	pending"
-    expect "2	child/u2/myr1	(u2)	b2	rejected"
-    expect "3	child/u2/myr1	(u2)	b3	fetched"
+    expect "2	child/u2/myr1	(u2)	b2	rejected by u1"
+    expect "3	child/u2/myr1	(u2)	b3	fetched by u1"
 
     name "alice checks her pull requests"
     runlocal ssh u1 hub list-requests r1
     expect "1	child/u2/myr1	(u2)	b1	pending"
-    expect "2	child/u2/myr1	(u2)	b2	rejected"
-    expect "3	child/u2/myr1	(u2)	b3	fetched"
+    expect "2	child/u2/myr1	(u2)	b2	rejected by u1"
+    expect "3	child/u2/myr1	(u2)	b3	fetched by u1"
+
+    name "alice checks her pull requests by pattern"
+    runlocal ssh u1 hub list-requests r1 rej
+    notexpect "1	child/u2/myr1	(u2)	b1	pending"
+    expect    "2	child/u2/myr1	(u2)	b2	rejected by u1"
+    notexpect "3	child/u2/myr1	(u2)	b3	fetched by u1"
+    runlocal ssh u1 hub list-requests r1 pend rej
+    expect    "1	child/u2/myr1	(u2)	b1	pending"
+    expect    "2	child/u2/myr1	(u2)	b2	rejected by u1"
+    notexpect "3	child/u2/myr1	(u2)	b3	fetched by u1"
+
+    name "alice accepts 3, then checks her pull requests"
+    echo the rain in spain | runlocal ssh u1 hub accept r1 3
+    notexpect .
+    runlocal ssh u1 hub list-requests r1
+    expect "1	child/u2/myr1	(u2)	b1	pending"
+    expect "2	child/u2/myr1	(u2)	b2	rejected by u1"
+    expect "3	child/u2/myr1	(u2)	b3	accepted by u1"
 
     name "INTERNAL"
 done
