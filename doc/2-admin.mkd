@@ -7,6 +7,7 @@ In this document:
   * <a href="#_using_hooks">using hooks</a>
       * <a href="#_custom_hooks">custom hooks</a>
       * <a href="#_gl_post_init_hook">"gl-post-init" hook</a>
+      * <a href="#_gl_pre_git_hook">"gl-pre-git" hook</a>
       * <a href="#_hook_chaining">hook chaining</a>
       * <a href="#_environment_variables_available_to_hooks">environment variables available to hooks</a>
   * <a href="#_other_features">other features</a>
@@ -105,6 +106,26 @@ accidentally, or all your fancy per-branch permissions will stop working.**
 Sometimes it is necessary to do something whenever a new repo is created.  If
 you need this functionality, just supply a hook called "gl-post-init" with
 whatever code you want in it.
+
+<a name="_gl_pre_git_hook"></a>
+
+#### "gl-pre-git" hook
+
+Although git has lots of nice hooks you can tap into, they all run only on a
+push.  There's nothing that runs on a fetch or a clone, and there's no way to
+run something *before* git-receive-pack or git-upload-pack, (as the case may
+be) are invoked.
+
+That's what the `gl-pre-git` hook is for.  If an executable hook called
+`gl-pre-git` is present, it will be invoked with the current directory set to
+`repo.git`, and with a single argument which will be either `R` or `W`
+depending on what the client is trying to do.  The environment variables
+`GL_USER` and `GL_REPO` are available.  STDOUT will be forced to STDERR before
+it is called, to avoid confusing the client.
+
+If the code returns anything other than 0, gitolite will terminate the
+operation (i.e., not run git at all), just like many git hooks do, so make
+sure you end with `exit 0` or equivalent.
 
 <a name="_hook_chaining"></a>
 

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# sample pre-git hook to print pending hub requests
+
+[ "$1" = "R" ] && exit 0    # we only want to print them on pushes
+
+# print 'fetched' and 'pending' requests only
+SSH_ORIGINAL_COMMAND="hub list-requests $GL_REPO fetched pending" $GL_BINDIR/gl-auth-command $GL_USER
+
+exit 0
