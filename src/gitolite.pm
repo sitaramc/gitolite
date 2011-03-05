@@ -50,6 +50,24 @@ BEGIN {
     die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
 }
 
+# ----------------------------------------------------------------------------
+#       register signal handlers to log any problems
+# ----------------------------------------------------------------------------
+BEGIN {
+    $SIG{__DIE__} = sub {
+        my $msg = join(' ', "Die generated at line", (caller)[2], "in", (caller)[1], ":", @_, "\n");
+        $msg =~ s/[\n\r]+/<<newline>>/g;
+        log_it($msg);
+    };
+
+    $SIG{__WARN__} = sub {
+        my $msg = join(' ', "Warn generated at line", (caller)[2], "in", (caller)[1], ":", @_, "\n");
+        $msg =~ s/[\n\r]+/<<newline>>/g;
+        log_it($msg);
+        warn @_;
+    };
+}
+
 use lib $ENV{GL_BINDIR};
 use gitolite_rc;
 
@@ -126,7 +144,7 @@ sub log_it {
     # the rest of it upto the caller; we just dump it into the logfile
     $logmsg .= "\t@_" if @_;
     # erm... this is hard to explain so just see the commit message ok?
-    $logmsg =~ s/([\x00-\x08\x0A-\x1F\x7F-\xFF]+)/sprintf "<<hex(%*v02X)>>","",$1/ge;
+    $logmsg =~ s/([\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\xFF]+)/sprintf "<<hex(%*v02X)>>","",$1/ge;
     print $log_fh "$ENV{GL_TS}\t$ENV{GL_USER}\t$ip\t$logmsg\n";
     close $log_fh or die "close log failed: $!\n";
 }
