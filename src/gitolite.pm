@@ -210,6 +210,8 @@ sub check_ref {
 # ----------------------------------------------------------------------------
 
 # NOTE: this sub will change your cwd; caller beware!
+# NOTE: this method is safe ONLY if $repo has already been verified not to
+# contain any shell meta characters.
 sub new_repo
 {
     my ($repo, $hooks_dir, $creator) = @_;
@@ -223,7 +225,7 @@ sub new_repo
     wrap_chdir("$repo.git");
     system("git --bare init >&2");
     if ($creator) {
-        system("echo $creator > gl-creater");
+        echo_file("$creator\n", "gl-creater");
         system("git", "config", "gitweb.owner", $creator);
     }
     # propagate our own, plus any local admin-defined, hooks
@@ -251,6 +253,16 @@ sub new_wild_repo {
     setup_daemon_access($repo);
     add_del_line ("$repo.git", $PROJECTS_LIST, setup_gitweb_access($repo, '', ''));
     wrap_chdir($ENV{HOME});
+}
+
+# Like system("echo $text > $file");
+# Except, safer and faster.
+sub echo_file {
+    my ($text, $file) = @_;
+
+    open(my $GL_CREATOR, ">", $file) or die "Unable to open $file: $!\n";
+    print $GL_CREATOR $text;
+    close($GL_CREATOR) or die "Unable to close $file: $!\n";
 }
 
 # ----------------------------------------------------------------------------
