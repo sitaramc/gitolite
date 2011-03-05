@@ -125,6 +125,8 @@ sub log_it {
     $logmsg = $_[0] || $ENV{SSH_ORIGINAL_COMMAND}; shift;
     # the rest of it upto the caller; we just dump it into the logfile
     $logmsg .= "\t@_" if @_;
+    # erm... this is hard to explain so just see the commit message ok?
+    $logmsg =~ s/([\x00-\x08\x0A-\x1F\x7F-\xFF]+)/sprintf "<<hex(%*v02X)>>","",$1/ge;
     print $log_fh "$ENV{GL_TS}\t$ENV{GL_USER}\t$ip\t$logmsg\n";
     close $log_fh or die "close log failed: $!\n";
 }
