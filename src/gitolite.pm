@@ -50,6 +50,23 @@ BEGIN {
     die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
 }
 
+# ----------------------------------------------------------------------------
+#       register signal handlers to log any problems
+# ----------------------------------------------------------------------------
+BEGIN {
+	$SIG{__DIE__} = sub {
+		my @loc = caller(1);
+		log_it(join(' ', "Die generated at line $loc[2] in $loc[1]:", @_, "\n"));
+		return 1;
+	};
+
+	$SIG{__WARN__} = sub {
+		my @loc = caller(1);
+		log_it(join(' ', "Warn generated at line $loc[2] in $loc[1]:", @_, "\n"));
+		return 1;
+	};
+}
+
 use lib $ENV{GL_BINDIR};
 use gitolite_rc;
 
