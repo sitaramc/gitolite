@@ -224,13 +224,13 @@ do not need any of this.
 
 #### bypassing gitolite without intending to
 
-These problems happen to the person who has **utterly failed** to read/heed
-the message that shows up at the end of running the `gl-easy-install` command.
-Both these problems are caused by using the wrong key, thus **bypassing
-gitolite completely**:
+These problems occur when using the wrong key, (one not set up by gitolite;
+have you manually added your public key?) which **bypasses gitolite 
+completely**:
 
   * you get `fatal: 'reponame' does not appear to be a git repository`, and
     yet you are sure 'reponame' exists, you haven't mis-spelled it, etc.
+    You might first run into this when cloning gitolite-admin.git.
 
   * you are able to clone repositories but are unable to push changes back
     (the error complains about the `GL_RC` environment variable not being set,
