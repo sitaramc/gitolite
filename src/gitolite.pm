@@ -610,7 +610,7 @@ sub parse_acl
     }
     unless (defined($data_version) and $data_version eq $current_data_version) {
         # this cannot happen for 'easy-install' cases, by the way...
-        print STDERR "(INTERNAL: $data_version -> $current_data_version; running gl-setup)\n";
+        warn "(INTERNAL: $data_version -> $current_data_version; running gl-setup)\n";
         system("$ENV{SHELL} -l -c gl-setup >&2");
 
         die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
@@ -923,7 +923,7 @@ sub setup_authkeys
 
         # security check (thanks to divVerent for catching this)
         unless ($pubkey =~ $REPONAME_PATT) {
-            print STDERR "$pubkey contains some unsavoury characters; ignored...\n";
+            warn "$pubkey contains some unsavoury characters; ignored...\n";
             next;
         }
 
@@ -952,10 +952,10 @@ sub setup_authkeys
         # don't trust files with multiple lines (i.e., something after a newline)
         if ($pubkey_content =~ /\n./)
         {
-            print STDERR "WARNING: a pubkey file can only have one line (key); ignoring $pubkey\n" .
-                         "         If you want to add multiple public keys for a single user, use\n" .
-                         "         \"user\@host.pub\" file names.  See the \"one user, many keys\"\n" .
-                         "         section in doc/3-faq-tips-etc.mkd for details.\n";
+            warn "WARNING: a pubkey file can only have one line (key); ignoring $pubkey\n" .
+                 "         If you want to add multiple public keys for a single user, use\n" .
+                 "         \"user\@host.pub\" file names.  See the \"one user, many keys\"\n" .
+                 "         section in doc/3-faq-tips-etc.mkd for details.\n";
             next;
         }
         print $newkeys_fh "command=\"$AUTH_COMMAND $user\",$AUTH_OPTIONS ";

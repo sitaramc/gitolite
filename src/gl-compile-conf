@@ -141,7 +141,7 @@ sub parse_conf_line
         @{ $repos_p } = expand_list ( @{ $repos_p } ) unless $GL_BIG_CONFIG;
         # ...sanity check
         for (@{ $repos_p }) {
-            warn "$WARN explicit '.git' extension ignored for $_.git\n" if s/\.git$//;
+            print STDERR "$WARN explicit '.git' extension ignored for $_.git\n" if s/\.git$//;
             die "$ABRT bad reponame $_\n"
                 if ($GL_WILDREPOS and $_ !~ $REPOPATT_PATT);
             die "$ABRT bad reponame $_ or you forgot to set \$GL_WILDREPOS\n"
@@ -161,7 +161,7 @@ sub parse_conf_line
         # if no ref is given, this PERM applies to all refs
         @refs = qw(refs/.*) unless @refs;
         # deprecation warning
-        map { warn "WARNING: old syntax 'PATH/' found; please use new syntax 'NAME/'\n" if s(^PATH/)(NAME/) } @refs;
+        map { print STDERR "WARNING: old syntax 'PATH/' found; please use new syntax 'NAME/'\n" if s(^PATH/)(NAME/) } @refs;
         # fully qualify refs that dont start with "refs/" or "NAME/";
         # prefix them with "refs/heads/"
         @refs = map { m(^(refs|NAME)/) or s(^)(refs/heads/); $_ } @refs;
@@ -242,7 +242,7 @@ sub parse_conf_line
                 my @r = ($repo);                                        # single wildpatt
                 @r = sort keys %{ $groups{$repo} } if $groups{$repo};   # or a group; get its members
                 do {
-                    print STDERR "$WARN git config set for $_ but \$GL_GITCONFIG_WILD not set\n" unless $_ =~ $REPONAME_PATT
+                    warn "$WARN git config set for $_ but \$GL_GITCONFIG_WILD not set\n" unless $_ =~ $REPONAME_PATT
                 } for @r;
             }
         }
