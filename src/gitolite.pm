@@ -100,10 +100,16 @@ sub wrap_open {
 }
 
 sub wrap_print {
-    my ($file, $text) = @_;
+    my ($file, @text) = @_;
     my $fh = wrap_open(">", $file);
-    print $fh $text;
-    close($fh);
+    print $fh @text;
+    close($fh) or die "$ABRT close $file failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
+}
+
+sub slurp {
+    local $/ = undef;
+    my $fh = wrap_open("<", $_[0]);
+    return <$fh>;
 }
 
 sub add_del_line {
@@ -224,7 +230,7 @@ sub new_repo
     wrap_chdir("$repo.git");
     system("git --bare init >&2");
     if ($creator) {
-        system("echo $creator > gl-creater");
+        wrap_print("gl-creater", $creator);
         system("git", "config", "gitweb.owner", $creator);
     }
     # propagate our own, plus any local admin-defined, hooks
@@ -238,7 +244,7 @@ sub new_repo
     # wildcard create but on a normal (config file) create it will actually be
     # set to "gitolite-admin", so we need to make sure that for the duration
     # of the hook it is set correctly.
-    system("env GL_REPO='$repo' hooks/gl-post-init") if -x "hooks/gl-post-init";
+    system("env", "GL_REPO=$repo", "hooks/gl-post-init") if -x "hooks/gl-post-init";
 }
 
 sub new_wild_repo {
@@ -351,14 +357,14 @@ sub get_set_perms
     wrap_chdir("$repo.git");
     if ($verb eq 'getperms') {
         return unless -f "gl-perms";
-        my $perms = `cat gl-perms`;
+        my $perms = slurp("gl-perms");
         # convert R and RW to the actual category names in the config file
         $perms =~ s/^\s*R /READERS /mg;
         $perms =~ s/^\s*RW /WRITERS /mg;
         print $perms;
     } else {
-        system("cat > gl-perms");
-        my $perms = `cat gl-perms`;
+        wrap_print("gl-perms", <>);     # eqvt to: system("cat > gl-perms");
+        my $perms = slurp("gl-perms");
         # convert R and RW to the actual category names in the config file
         $perms =~ s/^\s*R /READERS /mg;
         $perms =~ s/^\s*RW /WRITERS /mg;
@@ -387,11 +393,11 @@ sub get_set_desc
     wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
     wrap_chdir("$repo.git");
     if ($verb eq 'getdesc') {
-        system("cat", "description") if -f "description";
+        print slurp("description") if -f "description";
     } else {
-        system("cat > description");
+        wrap_print("description", <>);
         print "New description is:\n";
-        system("cat", "description");
+        print slurp("description");
     }
 }
 
@@ -480,7 +486,7 @@ sub setup_gitweb_access
 sub report_version {
     my($user) = @_;
     print "hello $user, the gitolite version here is ";
-    system("cat", ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION");
+    print slurp( ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION" );
 }
 
 sub perm_code {
@@ -986,11 +992,10 @@ sub setup_authkeys
     print $newkeys_fh "# gitolite end\n";
     close $newkeys_fh or die "$ABRT close newkeys failed: $!\n";
 
-    # all done; overwrite the file (use cat to avoid perm changes)
-    system("cat $ENV{HOME}/.ssh/authorized_keys > $ENV{HOME}/.ssh/old_authkeys");
-    system("cat $ENV{HOME}/.ssh/new_authkeys > $ENV{HOME}/.ssh/authorized_keys")
-        and die "couldn't write authkeys file\n";
-    system("rm  $ENV{HOME}/.ssh/new_authkeys");
+    # all done; overwrite the file
+    wrap_print("$ENV{HOME}/.ssh/old_authkeys",      slurp("$ENV{HOME}/.ssh/authorized_keys"));
+    wrap_print("$ENV{HOME}/.ssh/authorized_keys",   slurp("$ENV{HOME}/.ssh/new_authkeys"));
+    unlink "$ENV{HOME}/.ssh/new_authkeys";
 }
 
 # ----------------------------------------------------------------------------
