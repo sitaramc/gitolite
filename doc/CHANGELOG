@@ -2,6 +2,28 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v2.0
+
+  - gl-pre-git hook added
+
+  - 'hub' adc added
+
+  - v2.0rc2
+
+*** V1.5.9.1 -- IMPORTANT SECURITY FIX; PLEASE UPGRADE IF YOU'RE USING
+    SOMETHING OLDER THAN THIS ONE
+
+  - supercool new 'git' adc; so cool it's disabled by default
+
+  - '-prune' added to find commands; makes a big diff if REPO_BASE is NFS/CIFS
+    mounted
+
+  - first python ADC contributed -- 'perms' makes setperms etc easier to do
+
+  - 'set-head' ADC added
+
+  - v2.0rc1; major refactor
+
   - v1.5.9
 
   - Nokia MeeGo team contributed ldap scripts
