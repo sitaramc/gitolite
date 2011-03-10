@@ -102,10 +102,9 @@ do
 
     name "alice views log and diffs"
     runlocal ssh u1 hub view-log r1 1
+    expect "commit [0-9a-f]*$"
+    expect "Author: gitolite tester .tester@example.com."
     expect "setup: child is cloned and adds b1 and b2"
-    expect commit
-    wc < ~/1 > ~/2; > ~/1
-    expect "5  22 178"
 
     runlocal ssh u1 hub view-log r1 3 --oneline
     expect "setup: child is cloned and adds b1 and b2"
