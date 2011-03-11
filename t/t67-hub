@@ -169,5 +169,26 @@ do
     expect "2	child/u2/myr1	(u2)	b2	rejected by u1"
     expect "3	child/u2/myr1	(u2)	b3	accepted by u1"
 
+    name "bob checks the request-status on each request"
+    runlocal ssh u2 hub request-status child/u2/myr1 1
+    expect "1	child/u2/myr1	(u2)	b1	pending"
+    expect "^Message:"
+    expect "^hello"
+    expect "^there"
+    runlocal ssh u2 hub request-status child/u2/myr1 2
+    expect "1	child/u2/myr1	(u2)	b2	rejected by u1"
+    expect "^Message:"
+    expect "^hi"
+    expect "^there"
+    expect "Rejected.  Message to requestor:"
+    expect "captain was sober today"
+    runlocal ssh u2 hub request-status child/u2/myr1 3
+    expect "1	child/u2/myr1	(u2)	b3	accepted by u1"
+    expect "^Message:"
+    expect "^hello"
+    expect "^again"
+    expect "Accepted.  Message to requestor:"
+    expect "the rain in spain"
+
     name "INTERNAL"
 done

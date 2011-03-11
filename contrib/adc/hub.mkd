@@ -86,6 +86,12 @@ The following commands do not cause a fetch, and should be quite fast:
     The second argument is optional the same way as the 3rd argument in the
     previous command.
 
+    Requests that have been accepted or rejected will usually have some
+    additional text, supplied by the user who did the reject/accept.  Bob can
+    ask for those details by request number:
+
+        ssh git@server hub request-status child [parent] request-number
+
 <a name="_Alice_s_just_looking_commands"></a>
 
 #### Alice's "just looking" commands

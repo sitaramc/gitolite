@@ -22,7 +22,7 @@ See docs for concepts; this usage message is only a refresher!
 
 Requestor's commands (repo child):
         request-pull child b1 [parent]
-        request-status child [parent]
+        request-status child [parent] [request-number]
 Parent repo owner's commands (repo parent):
         list-requests parent
         view-request parent request-number
@@ -113,19 +113,43 @@ sub rp {
 }
 
 sub rs {
-    # request-status child [parent]
-    usage() unless @_ == 1 or @_ == 2;
+    # request-status child [parent] [request-number]
+    usage() unless @_ > 0 and @_ < 4;   # 1 or 2 or 3
     # same checks as in 'rp' above
     my ($repo_from, $creator) = readable_repo(shift);
-    my $repo = shift || parent_repo($repo_from);
+
+    my $repo;
+    if ($_[0] and $_[0] !~ /^\d+$/) {
+        # next arg is not a number, so it should be 'parent'
+        $repo = shift;
+    } else {
+        $repo = parent_repo($repo_from);
+    }
     $repo = valid_repo($repo);
 
-    cd2repo($repo);
-    my %hub_full = get_hub();
-    return unless $hub_full{$repo_from};
-    my %hub; $hub{$repo_from} = $hub_full{$repo_from};
+    my $rqno = 0;
+    $rqno = shift if ($_[0] and $_[0] =~ /^\d+$/);
 
-    list_hub('', %hub);
+    # there should not be any arguments left over
+    usage() if @_;
+
+    unless ($rqno) {
+        cd2repo($repo);
+        my %hub_full = get_hub();
+        return unless $hub_full{$repo_from};
+        my %hub; $hub{$repo_from} = $hub_full{$repo_from};
+
+        list_hub('', %hub);
+
+        return;
+    }
+
+    my ($child, $ref, %hub) = get_request_N($repo, $rqno);
+        # this also does a chdir to $repo, by the way
+
+    my %hub1; $hub1{$child}{$ref} = $hub{$child}{$ref};
+    list_hub('', %hub1);
+    print "\nMessage:\n$hub1{$child}{$ref}{COVER}\n";
 }
 
 # -------------------- alice's commands
@@ -227,6 +251,7 @@ sub reject {
     # reject parent request-number
     usage() unless @_ == 2;
     my ($repo, $n) = @_;
+    writable_repo($repo);   # yeah we're throwing away the return values
     my ($child, $ref, %hub) = get_request_N($repo, $n);
 
     map { die "request status is already '$_'\n" if $_ ne 'pending' } $hub{$child}{$ref}{STATUS};
@@ -242,6 +267,7 @@ sub fetch {
     # fetch parent request-number
     usage() unless @_ == 2;
     my ($repo, $n) = @_;
+    writable_repo($repo);   # yeah we're throwing away the return values
     my ($child, $ref, %hub) = get_request_N($repo, $n);
 
     map { die "request status is already '$_'\n" if $_ ne 'pending' } $hub{$child}{$ref}{STATUS};
@@ -263,6 +289,7 @@ sub accept {
     # accept parent request-number
     usage() unless @_ == 2;
     my ($repo, $n) = @_;
+    writable_repo($repo);   # yeah we're throwing away the return values
     my ($child, $ref, %hub) = get_request_N($repo, $n);
 
     map { die "request status is '$_'; must be 'fetched'\n" if $_ !~ /^fetched by / } $hub{$child}{$ref}{STATUS};
@@ -310,8 +337,8 @@ sub get_hub {
 sub get_request_N {
     # given a repo and an N, return "child", "ref", and %hub (or die trying!)
 
-    # you can't look at pull requests for repos you don't have write access to
-    my ($repo, $creator) = writable_repo(shift);
+    # you can't look at pull requests for repos you don't have at least read access to
+    my ($repo, $creator) = readable_repo(shift);
     cd2repo($repo);
     my %hub = get_hub();
     die "you have no pending requests\n" unless %hub;
@@ -388,7 +415,7 @@ sub valid_ref {
 sub valid_repo {
     my $repo = shift;
     $repo =~ s/\.git$//;
-    die "no read permissions on $repo\n" unless -d "$ENV{GL_REPO_BASE_ABS}/$repo.git";
+    die "$repo does not exist or you have no read access\n" unless -d "$ENV{GL_REPO_BASE_ABS}/$repo.git";
     return $repo;
 }
 
