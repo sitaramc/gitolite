@@ -66,6 +66,11 @@ setup_tempdir() {
 }
 
 cleanup() {
+    [ $? -eq 0 ] || {
+        printf "\n\n\t\t**ABORTED**\n\n"
+        printf "Please check messages above carefully, fix whatever is needed, and try again.\n"
+        printf "Note that the problem may be on the server, not necessarily on the client.\n\n"
+    }
     rm -rf $tmpgli
 }
 
