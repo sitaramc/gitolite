@@ -1,0 +1,137 @@
+#!/usr/bin/perl
+# Copyright 2011, David Bremner <bremner@debian.org>
+#
+# This add-on to gitolite is licensed under the same terms as gitolite
+# At the time of this writing this is GPL-2, but I also grant
+# Sitaram Chamarty the right to re-license as he chooses.
+
+=pod
+
+S3BACKUP - Backup the whole gitolite home directory to amazon s3.
+
+RUNNING
+
+To run it (assuming you call this "s3backup")
+As an ADC, only by a user with read access to gitolite-admin :
+
+      ssh git@server s3backup [-v error|warning|notice|info|debug] [subcommands]
+
+You must pass the AWS_SECRET_ACCESS_KEY on stdin.
+
+SUBCOMMANDS
+
+You may optionally pass one of the following sub commands
+
+=over
+
+=item incr|full
+
+Run incremental or full backup. By default, leave it to duplicity to
+guess.
+
+=item prune
+
+remove all but $S3_KEEP_FULL (see Configuration below)
+
+=back
+
+OPTIONS
+
+-v specifies a log level, passed straight to duplicity.
+incr or full specify backup level
+
+CONFIGURATION
+
+Make a file ~git/.s3backup.rc that looks like
+
+     $S3_EUROPE=0;			# 1 to store in europe
+					# (only matters at creation)
+     $S3_KEEP_FULL=3;			# keep 3 full backups
+     $S3_BUCKET="my_bucket";		# s3 bucket name, will be created
+					# if it doesn't exist.
+     $S3_AWS_KEY_ID="ABADABA57DOO";	# this is the _non_ secret one
+     $S3_ENCRYPT_KEY="DEADBEEF AA232332"; # gpg keys, space delimited.
+					  # note that duplicity will abort if
+					  # these keys are not trusted
+=cut
+
+use strict;
+use warnings;
+
+die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+
+unshift @INC, $ENV{GL_BINDIR};
+require gitolite or die "parse gitolite.pm failed\n";
+gitolite->import;
+
+my ($perm, $creator) = check_access("gitolite-admin");
+die "no read access to gitolite-admin\n" unless $perm =~ /R/;
+
+our ($S3_EUROPE, $S3_BUCKET, $S3_AWS_KEY_ID, $S3_ENCRYPT_KEYS, $S3_KEEP_FULL);
+
+chdir($ENV{HOME}) or die "chdir $ENV{HOME} : $!\n";
+
+my $configfile = $ENV{HOME} . "/.s3backup.rc";
+
+do $configfile or die "error parsing $configfile\n";
+
+# ANCHOR ALL PATTERNS
+die 'bad value for $S3_EUROPE'
+  unless (defined($S3_EUROPE) && $S3_EUROPE =~ m/^0|1$/);
+
+die 'bad value for $S3_KEEP_FULL'
+  unless (defined($S3_KEEP_FULL) && $S3_KEEP_FULL =~ m/^[0-9]+$/);
+
+die 'bad value for $S3_BACKUP'
+  unless (defined($S3_BUCKET) && $S3_BUCKET =~ m/^[a-z\-_0-9\.]+$/);
+
+die 'bad value for $S3_AWS_KEY_ID'
+  unless (defined($S3_AWS_KEY_ID) && $S3_AWS_KEY_ID =~ m/^[A-Z0-9]+$/);
+
+die 'bad value for $S3_ENCRYPT_KEYS'
+  unless (defined($S3_ENCRYPT_KEYS) &&
+	  $S3_ENCRYPT_KEYS =~ m/^[a-fA-F0-9]+(\s+[a-fA-F0-9]+)*/);
+
+my $verbosity='notice';
+if (scalar(@ARGV)>0 and $ARGV[0] eq '-v'){
+  shift;
+  $verbosity = shift;
+}
+
+die "bad verbosity" unless ($verbosity =~ m/^(error|warning|notice|info|debug)$/);
+
+my $subcommand=shift || 'default';
+
+die "bad subcommand" if (defined($subcommand) &&
+			 $subcommand !~ m/^(incr|full|prune|default)$/);
+
+$ENV{AWS_ACCESS_KEY_ID}=$S3_AWS_KEY_ID;
+
+chomp($ENV{AWS_SECRET_ACCESS_KEY}=<>) or
+  die "must pass SECRET_ACCESS_KEY on stdin";
+
+my @args=();
+
+if ($subcommand ne 'default' ){
+    if ($subcommand eq 'prune') {
+      push(@args, 'remove-all-but-n-full', $S3_KEEP_FULL, '--force');
+    } else {
+      push(@args, $subcommand);
+    }
+}
+
+push(@args, '--verb', $verbosity);
+push(@args, '--s3-use-new-style');
+foreach my $key (split(' ',$S3_ENCRYPT_KEYS)){
+  push(@args, '--encrypt-key', $key);
+}
+
+push(@args, '--s3-european-buckets') if ($S3_EUROPE);
+
+push(@args, $ENV{HOME}) unless ($subcommand eq 'prune');
+
+push(@args, 's3+http://'.$S3_BUCKET);
+
+system '/usr/bin/duplicity', @args;
+
