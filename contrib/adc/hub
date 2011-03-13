@@ -369,7 +369,7 @@ sub parent_repo {
 
 sub readable_repo {
     my $repo = valid_repo(shift);
-    my ($perm, $creator, $wild) = check_access($repo);
+    my ($perm, $creator) = check_access($repo);
     die "$repo does not exist or you have no read access\n" unless $perm =~ /R/;
     return ($repo, $creator);
 }
@@ -394,7 +394,7 @@ sub valid_repo {
 
 sub writable_repo {
     my $repo = valid_repo(shift);
-    my ($perm, $creator, $wild) = check_access($repo);
+    my ($perm, $creator) = check_access($repo);
     die "$repo does not exist or you have no write access\n" unless $perm =~ /W/;
     return ($repo, $creator);
 }
