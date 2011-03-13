@@ -20,6 +20,15 @@ never *really* lost until you do a `git gc`**.
 
 ----
 
+**Update 2011-03-10**: I wrote this with a typical "corporate" setup in mind
+where all the servers involved are owned and administered by the same group of
+people.  As a result, the scripts assume the servers trust each other
+completely.  If that is not your situation, you will have to add code into
+`gl-mirror-shell` to limit the commands the remote may send.  Patches welcome
+:-)
+
+----
+
 In this document:
 
   * <a href="#_RULE_NUMBER_ONE_">RULE NUMBER ONE!</a>

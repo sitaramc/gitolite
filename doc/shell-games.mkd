@@ -36,18 +36,33 @@ clone's `hooks/common` directory, containing the following code:
 
     #!/bin/bash
 
+    [ "$GL_REPO" = "gitolite-admin" ] || exit 0
+
     [ -z "$GL_RC" ] && { echo "ENV GL_RC not set"; exit 1; }
 
     GL_ADMINDIR=`$GL_BINDIR/gl-query-rc GL_ADMINDIR`
 
     cp    $GL_ADMINDIR/local/gitolite.rc    $HOME/.gitolite.rc
     cp -a $GL_ADMINDIR/local/hooks/*        $GL_ADMINDIR/hooks/common
-    $HOME/gitolite-install/src/gl-install -q
 
-Now run easy-install (or gl-setup) once, and you're done.
+    /Full/Path/To/gl-install -q
+        # the path should be the same as that for gl-auth-command in the
+        # "command=" parameter of ~/.ssh/authorized_keys on the server
+
+Don't forget to make it executable!
+
+After this, run the upgrade instructions for the install method you used (just
+as if the `post-update.secondary` file you just created came from a gitolite
+software update).
 
 All future changes to the rc file can be done via local/gitolite.rc in the
 admin repo, and hooks can be added to local/hooks.
+
+**Note**: One quirk of how gitolite [propagates hooks][hpd] is that now this
+`post-update.secondary` exists in all normal repos also.  Just ignore it; it's
+not doing any harm.
+
+[hpd]: http://sitaramc.github.com/gitolite/doc/hook-propagation.html
 
 **Warning**: Nothing in gitolite *removes* hooks, so if you delete (or even
 rename) a script, it still stays on the server -- you'll have to delete them
