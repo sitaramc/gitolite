@@ -16,8 +16,10 @@ if echo $SSH_ORIGINAL_COMMAND | egrep git-upload\|git-receive >/dev/null
 then
 
     # the (special) admin post-update hook needs these, so we cheat
+    export GL_RC
     export GL_ADMINDIR
     export GL_BINDIR
+    GL_RC=$(get_rc_val GL_RC)
     GL_ADMINDIR=$(get_rc_val GL_ADMINDIR)
     GL_BINDIR=$(  get_rc_val GL_BINDIR)
 
