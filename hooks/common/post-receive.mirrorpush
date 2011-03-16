@@ -4,6 +4,10 @@
 
 # please see doc/mirroring.mkd for instructions on how to use this
 
+# flush STDIN coming from git; we have no use for that info in this hook but
+# if you don't do this, git-shell sometimes dies of a signal 13 (SIGPIPE)
+[ -t 0 ] || cat >/dev/null
+
 if [ -n "$GL_SLAVES" ]
 then
     for mirror in $GL_SLAVES
@@ -14,7 +18,7 @@ then
         else
             ssh $mirror mkdir -p $GL_REPO.git
             ssh $mirror git init --bare $GL_REPO.git
-            ssh $mirror git config receive.fsckObjects true
+            ssh $mirror "cd $GL_REPO.git; git config receive.fsckObjects true"
             git push --mirror $mirror:$GL_REPO.git ||
                 echo "WARNING: mirror push to $mirror failed"
         fi
