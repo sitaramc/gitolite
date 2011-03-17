@@ -120,7 +120,7 @@ For basic permissions like this, matching is simple.  Gitolite already knows:
   * the user
   * the repo
   * the branch or tag ("ref") being pushed
-  * whether it is a notmal (ff) push or a rewind (non-ff) push.
+  * whether it is a normal (ff) push or a rewind (non-ff) push.
 
 Gitolite goes down the list of rules matching the user, repo, and the ref.
 The first matching rule that has the permission you're looking for (`W` or
