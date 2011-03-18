@@ -56,9 +56,9 @@ do
     name "setup: child is cloned and adds b1 and b2"
     cd ~/td
     runlocal ssh u2 fork r1 child/u2/myr1
-    runremote ls -al repositories/child/u2/myr1.git/gl-forked-from
-    expect "gitolite-test gitolite-test 3 .* repositories/child/u2/myr1.git/gl-forked-from"
-    runremote cat repositories/child/u2/myr1.git/gl-forked-from
+    runremote ls -al $TEST_BASE/child/u2/myr1.git/gl-forked-from
+    expect "gitolite-test gitolite-test 3 .* $TEST_BASE/child/u2/myr1.git/gl-forked-from"
+    runremote cat $TEST_BASE/child/u2/myr1.git/gl-forked-from
     expect r1
     runlocal git clone u2:child/u2/myr1
     cd myr1
@@ -136,7 +136,7 @@ do
     echo | runlocal ssh u1 hub fetch r1 3
     expect "user u2 asked you to"
     expect "git fetch git://gl.example.com/child/u2/myr1 b3"
-    expect "From /home/gitolite-test/repositories/child/u2/myr1"
+    expect "From $TEST_BASE_FULL/child/u2/myr1"
     expect "\* \[new branch\]      b3         -> requests/child/b3"
 
     name "bob checks his pending requests"

@@ -12,3 +12,4 @@ src/gl-easy-install -q gitolite-test localhost tester
 cd
 tar cf rollback.tar gitolite-admin
 ssh gitolite-test@localhost tar cf rollback.tar .ssh .gitolite .gitolite.rc repositories gitolite-install
+ssh gitolite-test@localhost tar -C /tmp -cf \$HOME/rollback2.tar glrb

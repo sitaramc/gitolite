@@ -25,8 +25,8 @@ do
         expect_push_ok "master -> master"
 
         runlocal git ls-remote u1:bar/u1/try1
-        runremote ls -al repositories/bar/u1/try1.git/git-daemon-export-ok
-        expect "ls: cannot access repositories/bar/u1/try1.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok: No such file or directory"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
@@ -34,8 +34,8 @@ do
         notexpect "bar/u1/try1.git"
 
         runlocal git ls-remote u1:bar/u1/try2
-        runremote ls -al repositories/bar/u1/try2.git/git-daemon-export-ok
-        expect "ls: cannot access repositories/bar/u1/try2.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok: No such file or directory"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
@@ -46,8 +46,8 @@ do
         echo R daemon | runlocal ssh u1 setperms bar/u1/try1
         expect "READERS daemon"
 
-        runremote ls -al repositories/bar/u1/try1.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* repositories/bar/u1/try1.git/git-daemon-export-ok"
+        runremote ls -al $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
@@ -58,8 +58,8 @@ do
         echo R gitweb | runlocal ssh u1 setperms bar/u1/try2
         expect "READERS gitweb"
 
-        runremote ls -al repositories/bar/u1/try2.git/git-daemon-export-ok
-        expect "ls: cannot access repositories/bar/u1/try2.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok: No such file or directory"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 16 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 28 .* projects.list"
@@ -70,8 +70,8 @@ do
 
         name "add default daemon access"
         runlocal git ls-remote u1:bar/u1/try3
-        runremote ls -al repositories/bar/u1/try3.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* repositories/bar/u1/try3.git/git-daemon-export-ok"
+        runremote ls -al $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 16 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 28 .* projects.list"
@@ -82,8 +82,8 @@ do
         echo "\$GL_WILDREPOS_DEFPERMS = 'R gitweb';" | addrc
 
         runlocal git ls-remote u1:bar/u1/try4
-        runremote ls -al repositories/bar/u1/try4.git/git-daemon-export-ok
-        expect "ls: cannot access repositories/bar/u1/try4.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al $TEST_BASE/bar/u1/try4.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try4.git/git-daemon-export-ok: No such file or directory"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 32 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 44 .* projects.list"
@@ -94,8 +94,8 @@ do
         echo "\$GL_WILDREPOS_DEFPERMS = 'R daemon gitweb';" | addrc
 
         runlocal git ls-remote u1:bar/u1/try5
-        runremote ls -al repositories/bar/u1/try5.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* repositories/bar/u1/try5.git/git-daemon-export-ok"
+        runremote ls -al $TEST_BASE/bar/u1/try5.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try5.git/git-daemon-export-ok"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 48 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
@@ -106,8 +106,8 @@ do
         echo "\$GL_WILDREPOS_DEFPERMS = 'R @all daemon gitweb';" | addrc
 
         runlocal git ls-remote u1:bar/u1/try6
-        runremote ls -al repositories/bar/u1/try6.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* repositories/bar/u1/try6.git/git-daemon-export-ok"
+        runremote ls -al $TEST_BASE/bar/u1/try6.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try6.git/git-daemon-export-ok"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 64 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 76 .* projects.list"
@@ -118,8 +118,8 @@ do
         < /dev/null runlocal ssh u1 setperms bar/u1/try6
 
         runlocal git ls-remote u1:bar/u1/try6
-        runremote ls -al repositories/bar/u1/try6.git/git-daemon-export-ok
-        expect "ls: cannot access repositories/bar/u1/try6.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al $TEST_BASE/bar/u1/try6.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try6.git/git-daemon-export-ok: No such file or directory"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 48 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
@@ -130,9 +130,9 @@ do
         echo "\$GL_WILDREPOS_DEFPERMS = 'R @all';" | addrc
 
         runlocal git ls-remote u1:bar/u1/try7
-        runremote ls -al repositories/bar/u1/try7.git/git-daemon-export-ok
-        [ "$ais" = "0" ] && expect "ls: cannot access repositories/bar/u1/try7.git/git-daemon-export-ok: No such file or directory"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test .* repositories/bar/u1/try7.git/git-daemon-export-ok"
+        runremote ls -al $TEST_BASE/bar/u1/try7.git/git-daemon-export-ok
+        [ "$ais" = "0" ] && expect "ls: cannot access $TEST_BASE/bar/u1/try7.git/git-daemon-export-ok: No such file or directory"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try7.git/git-daemon-export-ok"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 48 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 76 .* projects.list"
@@ -144,8 +144,8 @@ do
         echo "\$GL_WILDREPOS_DEFPERMS = 'R daemon';" | addrc
 
         runlocal git ls-remote u1:bar/u1/try8
-        runremote ls -al repositories/bar/u1/try8.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* repositories/bar/u1/try8.git/git-daemon-export-ok"
+        runremote ls -al $TEST_BASE/bar/u1/try8.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try8.git/git-daemon-export-ok"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 48 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 76 .* projects.list"
@@ -156,8 +156,8 @@ do
         echo "\$GL_WILDREPOS_DEFPERMS = 'R gitweb';" | addrc
 
         runlocal git ls-remote u1:bar/u1/try9
-        runremote ls -al repositories/bar/u1/try9.git/git-daemon-export-ok
-        expect "ls: cannot access repositories/bar/u1/try9.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al $TEST_BASE/bar/u1/try9.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try9.git/git-daemon-export-ok: No such file or directory"
         runremote ls -al projects.list
         [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 64 .* projects.list"
         [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 92 .* projects.list"

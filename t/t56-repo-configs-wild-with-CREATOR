@@ -65,10 +65,10 @@ do
 
     name "u1 create bar/u1/try1"
     runlocal git ls-remote u1:bar/u1/try1
-    expect "Initialized empty Git repository in /home/gitolite-test/repositories/bar/u1/try1.git/"
+    expect "Initialized empty Git repository in $TEST_BASE_FULL/bar/u1/try1.git/"
 
     name "check u1 has foo.bar"
-    runremote cat repositories/bar/u1/try1.git/config
+    runremote cat $TEST_BASE/bar/u1/try1.git/config
     expect '^.foo'
     expect 'bar = baz'
 
@@ -86,16 +86,16 @@ do
     expect_push_ok "master -> master"
 
     name "check u1 doesnt have foo.bar"
-    runremote cat repositories/bar/u1/try1.git/config
+    runremote cat $TEST_BASE/bar/u1/try1.git/config
     expect '^.foo'      # git leaves the section header behind
     notexpect 'bar = baz'
 
     name "u2 create bar/u2/try2"
     runlocal git ls-remote u2:bar/u2/try2
-    expect "Initialized empty Git repository in /home/gitolite-test/repositories/bar/u2/try2.git/"
+    expect "Initialized empty Git repository in $TEST_BASE_FULL/bar/u2/try2.git/"
 
     name "check u2 doesnt have foo.bar"
-    runremote cat repositories/bar/u2/try2.git/config
+    runremote cat $TEST_BASE/bar/u2/try2.git/config
     notexpect '^.foo'   # but not here, since this repo never had the key at all
     notexpect 'bar = baz'
 
@@ -113,12 +113,12 @@ do
     expect_push_ok "master -> master"
 
     name "check u1 has foo.frob"
-    runremote cat repositories/bar/u1/try1.git/config
+    runremote cat $TEST_BASE/bar/u1/try1.git/config
     expect '^.foo'
     expect 'frob = nitz'
 
     name "check u2 has foo.frob"
-    runremote cat repositories/bar/u2/try2.git/config
+    runremote cat $TEST_BASE/bar/u2/try2.git/config
     expect '^.foo'
     expect 'frob = nitz'
 

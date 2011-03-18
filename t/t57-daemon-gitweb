@@ -15,9 +15,9 @@ do
             name "INTERNAL"
             echo|ugc
             name "daemon access for testing repo"
-            runremote ls -al repositories/testing.git/git-daemon-export-ok
-            [ "$ais" = "0" ] && expect "ls: cannot access repositories/testing.git/git-daemon-export-ok: No such file or directory"
-            [ "$ais" = "1" ] && expect "gitolite-test gitolite-test .* repositories/testing.git/git-daemon-export-ok"
+            runremote ls -al $TEST_BASE/testing.git/git-daemon-export-ok
+            [ "$ais" = "0" ] && expect "ls: cannot access $TEST_BASE/testing.git/git-daemon-export-ok: No such file or directory"
+            [ "$ais" = "1" ] && expect "gitolite-test gitolite-test .* $TEST_BASE/testing.git/git-daemon-export-ok"
 
             name "INTERNAL"
             echo "
@@ -30,8 +30,8 @@ do
                     RW              =   @devs
             " | ugc
             expect_push_ok "master -> master"
-            runremote ls -al repositories/bar.git/git-daemon-export-ok
-            expect "ls: cannot access repositories/bar.git/git-daemon-export-ok: No such file or directory"
+            runremote ls -al $TEST_BASE/bar.git/git-daemon-export-ok
+            expect "ls: cannot access $TEST_BASE/bar.git/git-daemon-export-ok: No such file or directory"
             runremote ls -al projects.list
             [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
             [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
@@ -43,8 +43,8 @@ do
             echo "
                     R               =   daemon
             " | ugc
-            runremote ls -al repositories/bar.git/git-daemon-export-ok
-            expect "gitolite-test gitolite-test .* repositories/bar.git/git-daemon-export-ok"
+            runremote ls -al $TEST_BASE/bar.git/git-daemon-export-ok
+            expect "gitolite-test gitolite-test .* $TEST_BASE/bar.git/git-daemon-export-ok"
             runremote ls -al projects.list
             [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
             [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
@@ -93,7 +93,7 @@ do
                 baz     =   \"this is repo baz\"
             " | ugc
             expect_push_ok "master -> master"
-            expect "remote: Initialized empty Git repository in /home/gitolite-test/repositories/baz.git/"
+            expect "remote: Initialized empty Git repository in $TEST_BASE_FULL/baz.git/"
             runremote ls -al projects.list
             [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 24 .* projects.list"
             [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 36 .* projects.list"
@@ -103,9 +103,9 @@ do
             expect "foo.git"
             expect "bar.git"
             expect "baz.git"
-            runremote ls -al repositories/baz.git/description
-            expect "gitolite-test gitolite-test 17 .* repositories/baz.git/description"
-            runremote cat repositories/baz.git/description
+            runremote ls -al $TEST_BASE/baz.git/description
+            expect "gitolite-test gitolite-test 17 .* $TEST_BASE/baz.git/description"
+            runremote cat $TEST_BASE/baz.git/description
             expect "this is repo baz"
 
             name "add owner to testing repo"
@@ -120,12 +120,12 @@ do
             expect "foo.git"
             expect "bar.git"
             expect "baz.git"
-            runremote cat repositories/testing.git/config
+            runremote cat $TEST_BASE/testing.git/config
             expect "\[gitweb\]"
             expect "owner = sitaram"
-            runremote ls -al repositories/testing.git/description
-            expect "gitolite-test gitolite-test 25 .* repositories/testing.git/description"
-            runremote cat repositories/testing.git/description
+            runremote ls -al $TEST_BASE/testing.git/description
+            expect "gitolite-test gitolite-test 25 .* $TEST_BASE/testing.git/description"
+            runremote cat $TEST_BASE/testing.git/description
             expect "this is the testing repo"
 
             name INTERNAL

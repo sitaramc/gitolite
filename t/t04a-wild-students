@@ -38,7 +38,7 @@ expect "R access for foo/u4/a1234 DENIED to u4"
 
 name "u4 tries to create his own repo"
 runlocal git clone u4:foo/u4/a12
-expect "Initialized empty Git repository in /home/gitolite-test/repositories/foo/u4/a12.git/"
+expect "Initialized empty Git repository in $TEST_BASE_FULL/foo/u4/a12.git/"
 expect "warning: You appear to have cloned an empty repository."
 
 name "u4 push success"

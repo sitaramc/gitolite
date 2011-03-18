@@ -32,7 +32,7 @@ do
     name "make foo/u1/u1r1"
     rm -rf ~/td/u1r1
     runlocal git clone u1:foo/u1/u1r1
-    expect "Initialized empty Git repository in /home/gitolite-test/repositories/foo/u1/u1r1.git/"
+    expect "Initialized empty Git repository in $TEST_BASE_FULL/foo/u1/u1r1.git/"
     cd ~/td/u1r1
 
     name "CREATOR can push"

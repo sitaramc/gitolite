@@ -23,7 +23,7 @@ do
 
     name "u1 auto-creates a repo"
     runlocal git ls-remote u1:bar/u1/try1
-    expect "Initialized empty Git repository in /home/gitolite-test/repositories/bar/u1/try1.git/"
+    expect "Initialized empty Git repository in $TEST_BASE_FULL/bar/u1/try1.git/"
     name "default permissions for u2 and u4"
     runlocal ssh u1 expand
     expect R.*W.*u1.*bar/u1/try1

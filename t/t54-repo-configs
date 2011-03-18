@@ -45,10 +45,10 @@ do
                 RW              =   @devs
                 config foo.bar  =   baz
         " | ugc -r
-        expect "remote: Initialized empty Git repository in /home/gitolite-test/repositories/bar.git/"
+        expect "remote: Initialized empty Git repository in $TEST_BASE_FULL/bar.git/"
         notexpect "git config.*not allowed"
         expect_push_ok "master -> master"
-        runremote cat repositories/bar.git/config
+        runremote cat $TEST_BASE/bar.git/config
         expect '^.foo'
         expect 'bar = baz'
 
@@ -65,7 +65,7 @@ do
                 config foobar.baz  =   ooka
         " | ugc -r
         expect "remote:         git config foobar.baz not allowed"
-        runremote cat repositories/bar.git/config
+        runremote cat $TEST_BASE/bar.git/config
         expect '^.foo'
         expect 'bar = baz'
         notexpect '^.foobar'
@@ -82,7 +82,7 @@ do
                 RW              =   @devs
                 config foo.bar  =   
         " | ugc -r
-        runremote cat repositories/bar.git/config
+        runremote cat $TEST_BASE/bar.git/config
         expect '^.foo'
         notexpect 'bar = baz'
 

@@ -25,7 +25,7 @@ do
 
     cd ~/td
     runlocal git clone u1:u1/r1
-    expect "Initialized empty Git repository in /home/gitolite-test/repositories/u1/r1.git/"
+    expect "Initialized empty Git repository in $TEST_BASE_FULL/u1/r1.git/"
     cd r1
     mdc r1file1
     runlocal git push origin master
@@ -52,7 +52,7 @@ do
     cd ~/td
     rm -rf r1
     runlocal git clone u3:u3/r1
-    expect "Initialized empty Git repository in /home/gitolite-test/repositories/u3/r1.git/"
+    expect "Initialized empty Git repository in $TEST_BASE_FULL/u3/r1.git/"
     cd r1
     mdc r1file1
     runlocal git push origin master

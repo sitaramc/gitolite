@@ -30,7 +30,7 @@ echo "
 " > conf/fragments/u1r.conf
 ugc < /dev/null
 expect "create mode 100644 conf/fragments/u1r.conf"
-expect "remote: Initialized empty Git repository in /home/gitolite-test/repositories/r1a.git/"
+expect "remote: Initialized empty Git repository in $TEST_BASE_FULL/r1a.git/"
 
 expect "To gitolite:gitolite-admin"
 expect "master -> master"

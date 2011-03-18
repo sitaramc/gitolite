@@ -1,7 +1,13 @@
 #!/bin/bash
 
-# see some sample tests for how to use these functions; there is not
+# see some sample tests for how to use these functions; there is no
 # documentation
+
+# REPO_BASE has 2 manifestations in the output of various commands
+export TEST_BASE=$(perl -e 'do "../conf/example.gitolite.rc"; print $REPO_BASE')
+[ -z "$TEST_BASE" ] && { echo TEST_BASE not set >&2; exit 1; }
+TEST_BASE_FULL=$TEST_BASE
+[ "$TEST_BASE" = "repositories" ] && TEST_BASE_FULL=/home/gitolite-test/repositories
 
 testnum=0
 
@@ -10,14 +16,14 @@ runlocal() { "$@" > ~/1 2> ~/2; }
 # remote run command
 runremote() { ssh gitolite-test@localhost "$@" > ~/1 2> ~/2; }
 # remote list repositories
-listrepos() { ssh gitolite-test@localhost find repositories -type d -name "*.git" | sort > ~/1 2> ~/2; }
+listrepos() { ssh gitolite-test@localhost "cd $TEST_BASE; find . -type d -name '*.git'" | sort > ~/1 2> ~/2; }
 # remote cat compiled pm
 catconf() { ssh gitolite-test@localhost cat .gitolite/conf/gitolite.conf-compiled.pm > ~/1 2> ~/2; }
 catconfs() {
     (
         ssh gitolite-test@localhost cat .gitolite/conf/gitolite.conf-compiled.pm
-        ssh gitolite-test@localhost find repositories -name gl-conf \| sort
-        ssh gitolite-test@localhost find repositories -name gl-conf \| sort \| xargs cat
+        ssh gitolite-test@localhost "cd $TEST_BASE; find . -name gl-conf | sort"
+        ssh gitolite-test@localhost "cd $TEST_BASE; find . -name gl-conf | sort | xargs cat"
     ) > ~/1 2> ~/2
 }
 # remote cat ~/.gitolite.rc

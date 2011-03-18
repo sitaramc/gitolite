@@ -16,7 +16,7 @@ chmod 600 ~/.ssh/u?
 
 # blank out the server side
 echo the next command MAY ask for a password
-ssh gitolite-test@localhost rm -rf .ssh .gitolite .gitolite.rc repositories gitolite-install
+ssh gitolite-test@localhost rm -rf .ssh .gitolite .gitolite.rc repositories gitolite-install /tmp/glrb
 echo the next command SHOULD ask for a password
 ssh-copy-id -i ~/.ssh/id_rsa gitolite-test@localhost
 echo the next command should NOT ask for a password
@@ -33,4 +33,6 @@ git push
 # make the rollback.tar files on both sides
 cd
 tar cf rollback.tar gitolite-admin
+ssh gitolite-test@localhost mkdir -p repositories /tmp/glrb
 ssh gitolite-test@localhost tar cf rollback.tar .ssh .gitolite .gitolite.rc repositories gitolite-install
+ssh gitolite-test@localhost tar -C /tmp -cf \$HOME/rollback2.tar glrb

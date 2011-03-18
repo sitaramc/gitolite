@@ -1,8 +1,9 @@
 #!/bin/bash
 
 cd
-rm -rf .ssh .gitolite .gitolite.rc repositories gitolite-install
+rm -rf .ssh .gitolite .gitolite.rc repositories gitolite-install /tmp/glrb
 tar xf rollback.tar
+( cd /tmp; tar xf ~/rollback2.tar )
 
 # if arg1 is a directory, we have to overwrite sources from there (see commit
 # message for details)

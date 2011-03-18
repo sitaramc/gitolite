@@ -142,7 +142,7 @@ $ENV{GL_REPO}=$repo;
 # first level permissions check
 
 my ($perm, $creator, $wild);
-if ( $GL_ALL_READ_ALL and $verb =~ $R_COMMANDS and -d "$ENV{GL_REPO_BASE_ABS}/$repo.git") {
+if ( $GL_ALL_READ_ALL and $verb =~ $R_COMMANDS and -d "$REPO_BASE/$repo.git") {
     $perm = 'R';
 } else {
     ($perm, $creator, $wild) = repo_rights($repo);
@@ -164,8 +164,8 @@ check_repo_write_enabled($repo) if $aa eq 'W';
 # get confused, in case the code in the pre-git hook forgot.  To make it
 # simple for the script, send in $aa (which will be 'R' or 'W') so now they
 # have all three: GL_USER and GL_REPO in the env, and $aa as arg-1.
-if (-x "$ENV{GL_REPO_BASE_ABS}/$repo.git/hooks/gl-pre-git") {
-    system("cd $ENV{GL_REPO_BASE_ABS}/$repo.git; hooks/gl-pre-git $aa >&2");
+if (-x "$REPO_BASE/$repo.git/hooks/gl-pre-git") {
+    system("cd $REPO_BASE/$repo.git; hooks/gl-pre-git $aa >&2");
     die "gl-pre-git hook failed ($?)\n" if $?;
 }
 

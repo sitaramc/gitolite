@@ -13,7 +13,7 @@ expect "To gitolite:gitolite-admin"
 expect "master -> master"
 
 name "basic create repo"
-expect "remote: Initialized empty Git repository in /home/gitolite-test/repositories/aa.git/"
+expect "remote: Initialized empty Git repository in $TEST_BASE_FULL/aa.git/"
 
 # ----------
 name "basic clone"

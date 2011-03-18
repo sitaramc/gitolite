@@ -383,10 +383,6 @@ die "\n\t\t***** AAARGH! *****\n" .
 # doc/big-config.mkd for details.
 # ----------------------------------------------------------------------------
 
-# repo-base needs to be an absolute path due to all the jumping around we do,
-# so if it was not already absolute, prefix $HOME.
-$ENV{GL_REPO_BASE_ABS} = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
-
 # process the normal repos in %repos.  This includes creating them if needed
 # (and GL_NO_CREATE_REPOS is not set), checking hooks, and finally, if
 # GL_BIG_CONFIG is set, writing out the one-repo config file for directly
@@ -400,7 +396,7 @@ write_compiled_conf();    # write out the final compiled config
 
 sub do_normal_repos
 {
-    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+    wrap_chdir($REPO_BASE);
 
     # start with the ones that are normal repos in %repos
     my @repos = grep { $_ =~ $REPONAME_PATT and not /^@/ } sort keys %repos;
@@ -419,7 +415,7 @@ sub do_normal_repos
                 print STDERR "creating $repo...\n";
                 new_repo($repo, "$GL_ADMINDIR/hooks/common");
                 # new_repo would have chdir'd us away; come back
-                wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+                wrap_chdir($REPO_BASE);
             }
 
             # when repos are copied over from elsewhere, one had to run easy install
@@ -520,13 +516,13 @@ my %projlist = ();
 # sub parse_acl (look for variable $saved_crwu)
 
 for my $repo (@phy_repos) {
-    wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
+    wrap_chdir("$REPO_BASE/$repo.git");
     # daemon is easy
     setup_daemon_access($repo);
 }
 
 for my $repo (@phy_repos) {
-    wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git");
+    wrap_chdir("$REPO_BASE/$repo.git");
     # gitweb is a little more complicated.  Here're some notes:
     # - "setup_gitweb_access" also sets "owner", despite the name
     # - specifying a description also counts as enabling gitweb

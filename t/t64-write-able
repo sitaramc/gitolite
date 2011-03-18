@@ -43,7 +43,7 @@ do
     name "u2 create and push bar/u2/r1"
     cd ~/td
     runlocal git clone u2:bar/u2/r1
-    expect "Initialized empty Git repository in /home/gitolite-test/repositories/bar/u2/r1.git/"
+    expect "Initialized empty Git repository in $TEST_BASE_FULL/bar/u2/r1.git/"
     expect "warning: You appear to have cloned an empty repository."
     cd r1
     mdc; mdc
@@ -107,9 +107,9 @@ do
     echo foo down|runlocal ssh gitolite able dis foo
     expect "disabling following locations with message:"
     expect "foo down"
-    expect "/home/gitolite-test/repositories/foo.git"
-    runremote ls -al /home/gitolite-test/repositories/foo.git/.gitolite.down
-    expect ".rw------- 1 gitolite-test gitolite-test .* ..:.. /home/gitolite-test/repositories/foo.git/.gitolite.down"
+    expect "$TEST_BASE/foo.git"
+    runremote ls -al $TEST_BASE/foo.git/.gitolite.down
+    expect ".rw------- 1 gitolite-test gitolite-test .* ..:.. $TEST_BASE/foo.git/.gitolite.down"
 
     name "u1 push foo fail"
     cd ~/td/foo
@@ -129,15 +129,15 @@ do
     runlocal ssh u1 able en foo
     expect "just .what. are you trying to pull, young man"
     runlocal ssh gitolite able en foo
-    expect "removed ./home/gitolite-test/repositories/foo.git/.gitolite.down."
+    expect "removed .$TEST_BASE_FULL/foo.git/.gitolite.down."
     echo bar/u2/r1 down | runlocal ssh u1 able dis foo
     expect "just .what. are you trying to pull, young man"
     echo bar/u2/r1 down | runlocal ssh gitolite able dis bar/u2/r1
     expect "disabling following locations with message:"
     expect "bar/u2/r1 down"
-    expect "/home/gitolite-test/repositories/bar/u2/r1.git"
-    runremote ls -al /home/gitolite-test/repositories/bar/u2/r1.git/.gitolite.down
-    expect ".rw------- 1 gitolite-test gitolite-test .. ... .. ..:.. /home/gitolite-test/repositories/bar/u2/r1.git/.gitolite.down"
+    expect "$TEST_BASE/bar/u2/r1.git"
+    runremote ls -al $TEST_BASE/bar/u2/r1.git/.gitolite.down
+    expect ".rw------- 1 gitolite-test gitolite-test .. ... .. ..:.. $TEST_BASE/bar/u2/r1.git/.gitolite.down"
 
     name "u1 push foo"
     cd ~/td/foo

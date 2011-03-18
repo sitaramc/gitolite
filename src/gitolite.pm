@@ -171,7 +171,7 @@ sub list_phy_repos
 {
     my @phy_repos;
 
-    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+    wrap_chdir($REPO_BASE);
     for my $repo (`find . -type d -name "*.git" -prune`) {
         chomp ($repo);
         $repo =~ s(\./(.*)\.git$)($1);
@@ -250,7 +250,7 @@ sub new_repo
 sub new_wild_repo {
     my ($repo, $user) = @_;
 
-    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+    wrap_chdir($REPO_BASE);
     new_repo($repo, "$GL_ADMINDIR/hooks/common", $user);
         # note pwd is now the bare "repo.git"; new_repo does that...
     wrap_print("gl-perms", "$GL_WILDREPOS_DEFPERMS\n") if $GL_WILDREPOS_DEFPERMS;
@@ -294,8 +294,8 @@ sub new_wild_repo {
 
         # creator
         my $c = '';
-        if (                     -f "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-creater") {
-            my $fh = wrap_open("<", "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-creater");
+        if (                     -f "$REPO_BASE/$repo.git/gl-creater") {
+            my $fh = wrap_open("<", "$REPO_BASE/$repo.git/gl-creater");
             chomp($c = <$fh>);
         }
 
@@ -308,8 +308,8 @@ sub new_wild_repo {
         # "WRITERS=>foo" and "TESTERS=>@all"
         my %perm_cats;
 
-        if ($user and            -f "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-perms") {
-            my $fh = wrap_open("<", "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-perms");
+        if ($user and            -f "$REPO_BASE/$repo.git/gl-perms") {
+            my $fh = wrap_open("<", "$REPO_BASE/$repo.git/gl-perms");
             my $perms = join ("", <$fh>);
             # discard comments
             $perms =~ s/#.*//g;
@@ -353,7 +353,7 @@ sub get_set_perms
     $GL_WILDREPOS_PERM_CATS ||= "READERS WRITERS";
     my ($creator, $dummy, $dummy2) = wild_repo_rights($repo, "");
     die "$repo doesnt exist or is not yours\n" unless $user eq $creator;
-    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+    wrap_chdir($REPO_BASE);
     wrap_chdir("$repo.git");
     if ($verb eq 'getperms') {
         return unless -f "gl-perms";
@@ -390,7 +390,7 @@ sub get_set_desc
     my($repo, $verb, $user) = @_;
     my ($creator, $dummy, $dummy2) = wild_repo_rights($repo, "");
     die "$repo doesnt exist or is not yours\n" unless $user eq $creator;
-    wrap_chdir("$ENV{GL_REPO_BASE_ABS}");
+    wrap_chdir($REPO_BASE);
     wrap_chdir("$repo.git");
     if ($verb eq 'getdesc') {
         print slurp("description") if -f "description";
@@ -562,7 +562,7 @@ sub expand_wild
     # display matching repos (from *all* the repos in the system) that $user
     # has at least "R" access to
 
-    chdir("$ENV{GL_REPO_BASE_ABS}") or die "chdir $ENV{GL_REPO_BASE_ABS} failed: $!\n";
+    chdir($REPO_BASE) or die "chdir $REPO_BASE failed: $!\n";
     my $count = 0;
     for my $actual_repo (`find . -type d -name "*.git" -prune|sort`) {
         chomp ($actual_repo);
@@ -665,7 +665,7 @@ sub add_repo_conf
 {
     my ($repo) = shift;
     return unless $split_conf{$repo};
-    do "$ENV{GL_REPO_BASE_ABS}/$repo.git/gl-conf" or return;
+    do "$REPO_BASE/$repo.git/gl-conf" or return;
     $repos{$repo} = $one_repo{$repo};
     $git_configs{$repo} = $one_git_config{$repo};
 }
@@ -694,6 +694,8 @@ sub add_repo_conf
             # means we've been called from outside; see doc/admin-defined-commands.mkd
             where_is_rc();
             die "parse $ENV{GL_RC} failed: "       . ($! or $@) unless do $ENV{GL_RC};
+            # fix up REPO_BASE
+            $REPO_BASE = "$ENV{HOME}/$REPO_BASE" unless $REPO_BASE =~ m(^/);
         }
 
         my $perm = '   ';
@@ -701,7 +703,7 @@ sub add_repo_conf
 
         # get basic info about the repo and fill %repos
         my $wild = '';
-        my $exists = -d "$ENV{GL_REPO_BASE_ABS}/$repo.git";
+        my $exists = -d "$REPO_BASE/$repo.git";
         if ($exists) {
             # the list of permission categories within gl-perms that this user is a member
             # of, or that specify @all as a member.  See comments in
@@ -768,7 +770,7 @@ sub can_read {
 # helper to manage "disabling" a repo or the whole site for "W" access
 sub check_repo_write_enabled {
     my ($repo) = shift;
-    for my $d ("$ENV{HOME}/.gitolite.down", "$ENV{GL_REPO_BASE_ABS}/$repo.git/.gitolite.down") {
+    for my $d ("$ENV{HOME}/.gitolite.down", "$REPO_BASE/$repo.git/.gitolite.down") {
         next unless -f $d;
         die $ABRT . slurp($d) if -s $d;
         die $ABRT . "writes are currently disabled\n";

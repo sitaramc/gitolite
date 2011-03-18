@@ -65,6 +65,9 @@ for ("$ENV{HOME}/.gitolite.rc", "/etc/gitolite/gitolite.rc") {
 die "no rc file found\n" unless $ENV{GL_RC};
 do $ENV{GL_RC} or die "error parsing $ENV{GL_RC}\n";
 
+# fix up REPO_BASE
+$REPO_BASE = "$ENV{HOME}/$REPO_BASE" unless $REPO_BASE =~ m(^/);
+
 # ------------------------------------------------------------------------------
 # per perl rules, this should be the last line in such a file:
 1;

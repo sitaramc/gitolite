@@ -26,7 +26,7 @@ do
         runlocal git clone u1:foo/u1/bar
         [ "$wr" = "0" ] && expect "R access for foo/u1/bar DENIED to u1"
         [ "$wr" = "0" ] && expect "fatal: The remote end hung up unexpectedly"
-        [ "$wr" = "1" ] && expect "Initialized empty Git repository in /home/gitolite-test/repositories/foo/u1/bar.git/"
+        [ "$wr" = "1" ] && expect "Initialized empty Git repository in $TEST_BASE_FULL/foo/u1/bar.git/"
 
         name "u3 fails to make a wildrepo"
         runlocal git clone u3:foo/u3/baz

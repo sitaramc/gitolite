@@ -21,7 +21,7 @@ do
 
     cd ~/td
     runlocal git clone u1:foo/u1/bar
-    expect "Initialized empty Git repository in /home/gitolite-test/repositories/foo/u1/bar.git/"
+    expect "Initialized empty Git repository in $TEST_BASE_FULL/foo/u1/bar.git/"
 
     cd bar
     mdc u1file1

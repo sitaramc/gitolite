@@ -19,7 +19,7 @@ do
             R                   =   @g2
     " | ugc
     expect_push_ok "master -> master"
-    expect "remote: Initialized empty Git repository in /home/gitolite-test/repositories/aa.git/"
+    expect "remote: Initialized empty Git repository in $TEST_BASE_FULL/aa.git/"
 
     cd ~/td
     name "check u1 can auto-create and push"
@@ -71,24 +71,24 @@ do
     expect "R access for aa DENIED to u6"
 
     # now the same thing with the repo-on-disk missing
-    runremote rm -rf repositories/aa.git
+    runremote rm -rf $TEST_BASE/aa.git
 
     cd ~/td
     name "repo on disk missing: u1"
     runlocal git clone u1:aa
-    [ "$bc" = "0" ] && expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+    [ "$bc" = "0" ] && expect "fatal: '$TEST_BASE_FULL/aa.git' does not appear to be a git repository"
     [ "$bc" = "1" ] && expect "R access for aa DENIED to u1"
     [ "$bc" = "1" ] && expect "Or there may be no repository at the given path. Did you spell it correctly?"
 
     name "repo on disk missing: tester"
     runlocal git clone gitolite:aa
-    [ "$bc" = "0" ] && expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+    [ "$bc" = "0" ] && expect "fatal: '$TEST_BASE_FULL/aa.git' does not appear to be a git repository"
     [ "$bc" = "1" ] && expect "R access for aa DENIED to tester"
     [ "$bc" = "1" ] && expect "Or there may be no repository at the given path. Did you spell it correctly?"
 
     name "repo on disk missing: u4"
     runlocal git clone u4:aa
-    [ "$bc" = "0" ] && expect "fatal: 'repositories/aa.git' does not appear to be a git repository"
+    [ "$bc" = "0" ] && expect "fatal: '$TEST_BASE_FULL/aa.git' does not appear to be a git repository"
     [ "$bc" = "1" ] && expect "R access for aa DENIED to u4"
     [ "$bc" = "1" ] && expect "Or there may be no repository at the given path. Did you spell it correctly?"
 

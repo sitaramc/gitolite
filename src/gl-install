@@ -53,9 +53,6 @@ unless ($ENV{GL_RC}) {
     exit;
 }
 
-# ok now the rc file exists; read it to get the other paths
-die "parse $ENV{GL_RC} failed: " . ($! or $@) unless do $ENV{GL_RC};
-
 # add a custom path for git binaries, if specified
 $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 
@@ -63,8 +60,7 @@ $ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
 umask($REPO_UMASK);
 
 # mkdir $REPO_BASE, $GL_ADMINDIR if they don't already exist
-$ENV{GL_REPO_BASE_ABS} = ( $REPO_BASE =~ m(^/) ? $REPO_BASE : "$ENV{HOME}/$REPO_BASE" );
-wrap_mkdir($ENV{GL_REPO_BASE_ABS});
+wrap_mkdir($REPO_BASE);
 wrap_mkdir($GL_ADMINDIR, 0700);
 # mkdir $GL_ADMINDIR's subdirs
 for my $dir qw(conf doc keydir logs src hooks hooks/common hooks/gitolite-admin) {
@@ -93,7 +89,7 @@ EOF
 }
 
 # finally, hooks must be propagated to all the repos in case they changed
-chdir("$ENV{GL_REPO_BASE_ABS}") or die "chdir $ENV{GL_REPO_BASE_ABS} failed: $!\n";
+chdir($REPO_BASE) or die "chdir $REPO_BASE failed: $!\n";
 for my $repo (`find . -type d -name "*.git" -prune`) {
     chomp ($repo);
     # propagate our own, plus any local admin-defined, hooks
