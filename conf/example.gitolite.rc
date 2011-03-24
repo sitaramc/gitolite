@@ -35,6 +35,7 @@ $REPO_UMASK = 0077;
 $GL_BIG_CONFIG = 0;
 $GL_NO_DAEMON_NO_GITWEB = 0;
 # $GL_NICE_VALUE = 0;
+# $BIG_INFO_CAP = 20;
 
 # ------------------------------------------------------------------------------
 # VARIABLES WITH A SECURITY IMPACT.  READ DOCS BEFORE CHANGING THESE!

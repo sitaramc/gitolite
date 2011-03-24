@@ -86,6 +86,10 @@ things happen if you change them.
     Please do NOT set it if your bits/resource.h does not define PRIO_PROCESS
     is 0.  For Linux this is true...
 
+  * `$BIG_INFO_CAP`, number, default 20
+
+    See [using patterns to limit output][limit] for details.
+
 <a name="_variables_with_a_security_impact"></a>
 
 ### variables with a security impact
@@ -366,3 +370,4 @@ of `ADC_CMD_ARGS_PATT`), please be sure you know what you're doing.
 [mob]: http://sitaramc.github.com/gitolite/doc/mob-branches.html
 [smart]: http://sitaramc.github.com/gitolite/doc/http-backend.html
 [dwr]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_disabling_write_access_to_take_backups
+[limit]: http://sitaramc.github.com/gitolite/doc/report-output.html#_using_patterns_to_limit_output
