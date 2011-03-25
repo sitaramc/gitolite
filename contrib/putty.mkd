@@ -1,0 +1,248 @@
+## putty and msysgit
+
+In this document:
+
+  * <a href="#_msysgit_setup">msysgit setup</a>
+  * <a href="#_Going_back_to_OpenSSH">Going back to OpenSSH</a>
+  * <a href="#_Putty_keys">Putty keys</a>
+      * <a href="#_Creating_a_new_key">Creating a new key</a>
+      * <a href="#_Importing_an_existing_key">Importing an existing key</a>
+      * <a href="#_Loading_an_existing_key">Loading an existing key</a>
+      * <a href="#_Public_key">Public key</a>
+      * <a href="#_Putty_ageant">Putty ageant</a>
+  * <a href="#_Sessionless_or_raw_hostname_usage">Sessionless or raw hostname usage</a>
+  * <a href="#_Putty_sessions">Putty sessions</a>
+  * <a href="#_Host_key_authentication">Host key authentication</a>
+  * <a href="#_Debugging_multiple_putty_ageant_keys">Debugging multiple putty ageant keys</a>
+  * <a href="#_Setperms_and_other_commands">Setperms and other commands</a>
+  * <a href="#_About_this_document">About this document</a>
+
+This document is intended for those who wish to use Putty/Plink with msysgit.
+
+If you need more help with putty or component programs I suggest looking at [the official putty documentation](http://the.earth.li/~sgtatham/putty/latest/htmldoc/).
+
+**If you are not already using Putty for SSH it is recommended you do _NOT_ use it with msysgit.**
+
+**Please note that this only covers the client side of things, and does not involve server side components to troubleshooting. For that, please see the [ssh-troubleshooting document](http://sitaramc.github.com/gitolite/doc/ssh-troubleshooting.html).**
+
+<a name="msysgit_setup"/>
+
+<a name="_msysgit_setup"></a>
+
+### msysgit setup
+
+Provided you have putty sessions msysgit should give you the option of specifying a location to plink. If it did not then you will need to add an environment variable named "GIT\_SSH" to point at plink.exe, wherever you have that sitting.
+
+How to do that on your version of windows will likely vary, and is not covered here. For purposes of example, on a 64 bit Windows Vista machine the GIT\_SSH value could be:
+
+    C:\Program Files (x86)\PuTTY\plink.exe
+
+Note the lack of quotes.
+
+Testing that msysgit is properly configured can be done from the git bash shell. Simply type (case sensitive, include the quotes):
+
+    "$GIT_SSH" -V
+
+You should get a response similar to this:
+
+    plink: Release 0.60
+
+If instead you get a "command not found" type error you likely have a typo in your environment variable.
+
+<a name="Going_back_to_OpenSSH"/>
+
+<a name="_Going_back_to_OpenSSH"></a>
+
+### Going back to OpenSSH
+
+If you wish to go back to OpenSSH all you need to do is delete the GIT\_SSH environment variable. This will vary by your version of windows and thus is not covered here.
+
+<a name="Putty_keys"/>
+
+<a name="_Putty_keys"></a>
+
+### Putty keys
+
+If you do not already have putty private key files (.ppk) you will need to make at least one. You can either make a new one or convert an existing key to putty private key format.
+
+Either way, you will want to use puttygen. Note that you can go the other way if you want to stop using putty but keep the key by exporting the key to OpenSSH format.
+
+<a name="Creating_a_new_key"/>
+
+<a name="_Creating_a_new_key"></a>
+
+#### Creating a new key
+
+To make it simple, I suggest SSH-2 RSA and a bit size of at least 1024. Larger keys will take longer to generate and will take longer to authenticate you on most systems. Making the key is as simple at hitting "Generate".
+
+It is recommended to give the key a meaningful comment.
+
+<a name="Importing_an_existing_key"/>
+
+<a name="_Importing_an_existing_key"></a>
+
+#### Importing an existing key
+
+If you already have an OpenSSH or ssh.com key you can import it using the "Import" option on the "Conversions" menu.
+
+If the key does not have a meaningful comment I would suggest adding one at this point.
+
+<a name="Loading_an_existing_key"/>
+
+<a name="_Loading_an_existing_key"></a>
+
+#### Loading an existing key
+
+If you need to load an existing key to edit or view it you can do so from the File menu.
+
+<a name="Public_key"/>
+
+<a name="_Public_key"></a>
+
+#### Public key
+
+To get your public key for use with gitolite, load (or generate, or import) your key into puttygen. There is a box labeled "Public key for pasting into OpenSSH `authorized_keys` file" there. Copy the text into your preferred text editor and save.
+
+<a name="Putty_ageant"/>
+
+<a name="_Putty_ageant"></a>
+
+#### Putty ageant
+
+Though not required in all cases you may wish to use the putty ageant, pageant, to load your key(s). This will allow for your key(s) to be passphrase protected but not have to enter the passphrase when you go to use them, provided you have already loaded the key into the ageant.
+
+<a name="Sessionless_or_raw_hostname_usage"/>
+
+<a name="_Sessionless_or_raw_hostname_usage"></a>
+
+### Sessionless or raw hostname usage
+
+When using plink without a putty session you pretty much have to load your keys with putty ageant, if only so that plink can find them.
+
+<a name="Putty_sessions"/>
+
+<a name="_Putty_sessions"></a>
+
+### Putty sessions
+
+In addition to hostnames msysgit can, when using putty, use putty sessions. This works in a manner similar to definitions in OpenSSH's `ssh_config` file. All settings in the session that apply to plink usage will be loaded, including the key file to use and even the username to connect to. Thus, instead of:
+
+    ssh://user@host.example.ext:port/repo
+
+You can use:
+
+    ssh://session_name/repo
+
+<a name="Host_key_authentication"/>
+
+<a name="_Host_key_authentication"></a>
+
+### Host key authentication
+
+Whether you are using hostnames or sessions you still run into one potential problem. Plink currently wants to validate the server's SSH host key before allowing you to connect, and when git calls plink there is no way to tell it yes. Thus, you may get something like this:
+
+    The server's host key is not cached in the registry. You
+    have no guarantee that the server is the computer you
+    think it is.
+    The server's rsa2 key fingerprint is:
+    ssh-rsa 2048 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+    Connection abandoned.
+    fatal: The remote end hung up unexpectedly
+
+Or, in the case of the host key changing, something like this:
+
+    WARNING - POTENTIAL SECURITY BREACH!
+    The server's host key does not match the one PuTTY has
+    cached in the registry. This means that either the
+    server administrator has changed the host key, or you
+    have actually connected to another computer pretending
+    to be the server.
+    The new rsa2 key fingerprint is:
+    ssh-rsa 2048 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+    Connection abandoned.
+    fatal: The remote end hung up unexpectedly
+
+The solution is to call plink directly, or start putty and connect with it first. To use plink, open the Git Bash shell and enter:
+
+    "$GIT_SSH" hostname_or_session_name
+
+When you do you will see something like this:
+
+    The server's host key is not cached in the registry. You
+    have no guarantee that the server is the computer you
+    think it is.
+    The server's rsa2 key fingerprint is:
+    ssh-rsa 2048 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+    If you trust this host, enter "y" to add the key to
+    PuTTY's cache and carry on connecting.
+    If you want to carry on connecting just once, without
+    adding the key to the cache, enter "n".
+    If you do not trust this host, press Return to abandon the
+    connection.
+    Store key in cache? (y/n)
+
+Or, in the case of a changed key, a response like this:
+
+    WARNING - POTENTIAL SECURITY BREACH!
+    The server's host key does not match the one PuTTY has
+    cached in the registry. This means that either the
+    server administrator has changed the host key, or you
+    have actually connected to another computer pretending
+    to be the server.
+    The new rsa2 key fingerprint is:
+    ssh-rsa 2048 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+    If you were expecting this change and trust the new key,
+    enter "y" to update PuTTY's cache and continue connecting.
+    If you want to carry on connecting but without updating
+    the cache, enter "n".
+    If you want to abandon the connection completely, press
+    Return to cancel. Pressing Return is the ONLY guaranteed
+    safe choice.
+    Update cached key? (y/n, Return cancels connection)
+
+In either case hit y and the key will be stored.
+
+<a name="Debugging_multiple_putty_ageant_keys"/>
+
+<a name="_Debugging_multiple_putty_ageant_keys"></a>
+
+### Debugging multiple putty ageant keys
+
+In the event you are using putty ageant with multiple keys loaded you may see the wrong key being used. In general, pageant keys are tried in the order they were loaded into the ageant. If you have descriptive comment on each of your keys you can try connecting with plink in verbose mode to see what keys are being tried. Simply open the Git bash shell and run:
+
+    "$GIT_SSH" -v user@hostname
+
+Or, if using sessions with a pre-entered username:
+
+    "$GIT_SSH" -v session_name
+
+In either case, you should look for lines like:
+
+    Trying Pageant key #0
+	Authenticating with public key "My Key" from agent
+
+The first says which (numerical) key the ageant is trying. The second tells you the key comment for the authenticating key. To my knowledge the second line should only show up once, for the valid key.
+
+<a name="Setperms_and_other_commands"/>
+
+<a name="_Setperms_and_other_commands"></a>
+
+### Setperms and other commands
+
+When using wildcard repos the setperms command is very important, and other commands can come in handy as well. See their documentation for how to use them, but where they use:
+
+    ssh user@host command etc etc
+
+You will want to use:
+
+    "$GIT_SSH" user@host command etc etc
+
+Otherwise everything should be identical.
+
+<a name="About_this_document"/>
+
+<a name="_About_this_document"></a>
+
+### About this document
+
+This document was written by Thomas Berezansky (tsbere (at) mvlc (dot) org) in the hopes that it would be useful to those using putty on windows and wishing to use git/gitolite with their putty keys and sessions.
