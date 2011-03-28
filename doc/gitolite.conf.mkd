@@ -231,11 +231,13 @@ have 6 names in it.
 
 ##### the special `@all` group
 
-There's a special group called `@all` that includes all authenticated users;
-you've seen examples of it earlier.
+There's a special group called `@all` that includes all authenticated users
+when used as a username; you've seen examples of it earlier.
 
 [Advanced users: also see the entry for `GL_ALL_INCLUDES_SPECIAL` in
 [doc/gitolite.rc.mkd][rcdoc].]
+
+When used as a reponame, it includes all repos.
 
 <a name="_advanced_access_control"></a>
 

@@ -14,21 +14,23 @@ gitolite would just run out of memory and die!).
 [fedora]: http://lists.fedoraproject.org/pipermail/devel-announce/2010-July/000647.html
 [bc]: http://sitaramc.github.com/gitolite/doc/big-config.html
 
-The **KDE project** is currently [testing][kdet] gitolite to see if it will
-suit their needs (in combination with redmine for issue tracking and
-reviewboard for code review), after an initial [review of alternatives][kdera]
-by a core group.  Apart from the usual access control, the KDE folks will be
-using many of the "ad hoc repo creation" features enabled by wildrepos and the
-accompanying commands.  Some of the changes to the "admin defined commands"
-were inspired by KDE's needs.
+The **KDE project** [uses][kde] gitolite (in combination with redmine for
+issue tracking and reviewboard for code review).  Apart from the usual access
+control, the KDE folks are heavy users of the "ad hoc repo creation" features
+enabled by wildrepos and the accompanying commands.  Several of the changes to
+the "admin defined commands" were also inspired by KDE's needs.  See [section
+5][s5] and [section 6][s6] of the above linked page for details.
 
-[kdet]: http://www.omat.nl/2010/07/07/move-to-git-the-progress-so-far/
+[kde]: http://community.kde.org/Sysadmin/GitKdeOrgManual
+[s5]: http://community.kde.org/Sysadmin/GitKdeOrgManual#Server-side_commands
+[s6]: http://community.kde.org/Sysadmin/GitKdeOrgManual#Personal_repositories
 [kdera]: http://permalink.gmane.org/gmane.comp.kde.scm-interest/1437
 
 **Prof. Hiren Patel** of the University of Waterloo is responsible for the
 existence of the fairly popular "[wildrepos][wild]" feature.  The
 documentation was pretty much written with his use case in mind, but of course
-it turns out to be useful for a lot of people.
+it turns out to be useful for a lot of people, as you can see from the
+previous para on KDE's use of gitolite.
 
 In fact, he surprised the heck out of me recently by saying that if it hadn't
 been for this feature, he might not have used git itself -- which is a pretty
