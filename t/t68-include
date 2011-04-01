@@ -1,0 +1,62 @@
+cd $TESTDIR
+$TESTDIR/rollback || die "rollback failed"
+# ----------
+
+name "setup"
+echo "
+    repo foo
+        RW      =   u1 u2
+" | ugc
+notexpect ABORT
+expect "remote: creating foo..."
+expect "remote: Initialized empty Git repository in $TEST_BASE_FULL/foo.git/"
+expect "remote: u3(u3.pub),u4(u4.pub),u5(u5.pub),u6(u6.pub)"
+
+name "add i1.conf, i2.conf, and i3"
+cd ~/gitolite-admin
+echo "
+    repo bar
+        RW      =   u3 u4
+" > conf/i1.conf
+echo "
+    repo baz
+        RW      =   u5
+" > conf/i2.conf
+echo "
+    repo frob
+        RW      =   u6
+" > conf/i3
+ugc < /dev/null
+notexpect "remote: creating bar..."
+notexpect "remote: Initialized empty Git repository in $TEST_BASE_FULL/bar.git/"
+notexpect "remote: creating baz..."
+notexpect "remote: Initialized empty Git repository in $TEST_BASE_FULL/baz.git/"
+
+name "add include statement"
+echo "
+    include \"*.conf\"
+" | ugc
+
+expect "remote:         conf/gitolite.conf already included"
+notexpect "remote:         conf/i1.conf already included"
+notexpect "remote:         conf/i2.conf already included"
+expect "remote: creating bar..."
+expect "remote: Initialized empty Git repository in $TEST_BASE_FULL/bar.git/"
+expect "remote: creating baz..."
+expect "remote: Initialized empty Git repository in $TEST_BASE_FULL/baz.git/"
+expect "remote: u6(u6.pub)"
+notexpect frob
+notexpect "u3(u3.pub)"
+notexpect "u4(u4.pub)"
+notexpect "u5(u5.pub)"
+
+name "append again to conf"
+echo "
+    include \"i*.conf\"
+" | ugc
+
+expect "remote:         conf/gitolite.conf already included"
+expect "remote:         conf/i1.conf already included"
+expect "remote:         conf/i2.conf already included"
+
+name INTERNAL

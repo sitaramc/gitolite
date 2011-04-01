@@ -71,6 +71,15 @@ will include the contents of the file "foo.conf" from the same directory as
 the main config file.  You can also use an absolute path if you like, although
 in the interests of cloning the admin-repo sanely you should avoid doing this!
 
+You can also use a glob, as in:
+
+    include     "*.conf"
+
+which will include all the ".conf" files from the directory in which the main
+config file exists.
+
+Files that have been already processed once are skipped, with a warning.
+
 [Advanced users: the include statement cannot be used inside a delegated
 config file, for security reasons].
 

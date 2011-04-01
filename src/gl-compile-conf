@@ -93,9 +93,18 @@ sub expand_list
     return @new_list;
 }
 
+sub device_inode {
+    my $file = shift;
+    return join("/", (stat $file)[0,1]);
+}
+
 # ----------------------------------------------------------------------------
 #       "compile" GL conf
 # ----------------------------------------------------------------------------
+
+# detect recursion in include files; see processing of "include" statement later
+our %included;
+$included{device_inode("conf/gitolite.conf")}++;
 
 sub check_fragment_repo_disallowed
 {
@@ -250,12 +259,16 @@ sub parse_conf_line
     # include
     elsif ($line =~ /^include "(.+)"/)
     {
-        my $file = $1;
-        $file = "$GL_ADMINDIR/conf/$file" unless $file =~ /^\//;
-        die "$ABRT $fragment attempting to include configuration\n" if $fragment ne 'master';
-        die "$ABRT included file not found: '$file'\n" unless -f $file;
+        my $include_glob = $1;
+        for my $file (glob($include_glob =~ m(^/) ? $include_glob : "conf/$include_glob")) {
+            die "$ABRT $fragment attempting to include configuration\n" if $fragment ne 'master';
+            die "$ABRT included file not found: '$file'\n" unless -f $file;
 
-        parse_conf_file( $file, $fragment );
+            my $file_id = device_inode($file);
+            warn("$WARN $file already included\n"), next if ($included{$file_id}++);
+
+            parse_conf_file( $file, $fragment );
+        }
     }
     # very simple syntax for the gitweb description of repo; one of:
     #       reponame = "some description string"
