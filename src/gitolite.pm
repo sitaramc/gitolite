@@ -101,6 +101,8 @@ sub wrap_open {
 
 sub wrap_print {
     my ($file, @text) = @_;
+    my $line;
+    for $line(@text) { $line =~ s/\r//g; } # clean up DOS line endings.
     my $fh = wrap_open(">", $file);
     print $fh @text;
     close($fh) or die "$ABRT close $file failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
