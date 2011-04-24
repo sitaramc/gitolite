@@ -133,5 +133,18 @@ push(@args, $ENV{HOME}) unless ($subcommand eq 'prune');
 
 push(@args, 's3+http://'.$S3_BUCKET);
 
-system '/usr/bin/duplicity', @args;
+my $semaphore=$ENV{HOME}."/.gitolite.down";
 
+die "$semaphore already exists" if (-f $semaphore);
+
+eval {
+  open (SEMFD,'>',$semaphore) or die ("failed to open $semaphore");
+  my $now = gmtime();
+  print SEMFD "Repo unavailable due to $subcommand backup started at $now GMT\n";
+  close SEMFD;
+
+  system '/usr/bin/duplicity', @args;
+
+};
+
+unlink $semaphore;
