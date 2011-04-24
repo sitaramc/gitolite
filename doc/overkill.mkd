@@ -38,6 +38,16 @@ the "--shared" argument, do this on each of them:
 
 I think that should do it.
 
+Once you've setup the Unix level permissions, you may consider setting the
+shell of some of the less experienced users to "git-shell" (using its full
+path) if they don't really need a shell on the server.  This will let them
+access git remotely but not do anything else.
+
+Combining this with settings like `receive.denyDeletes` and
+`receive.denyNonFastForwards`, or at least `core.logAllRefUpdates`, can go a
+long way toward preventing accidents or at least making it feasible to recover
+from them.
+
 ----
 
 You can do more complex things using Unix acls.  If you do, and feel like

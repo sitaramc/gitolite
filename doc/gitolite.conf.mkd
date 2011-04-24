@@ -412,6 +412,15 @@ Elsewhere in the file, you would specify access for individual repos (like RW,
 RW+, etc).  Gitolite combines all of these access rules, maintaining the
 textual order in which they occur, when authorising a push.
 
+And although this example used groups, you can use reponames as well, or mix
+and match them.  You can even distribute rulesets across multiple "include"
+files if you wish.
+
+Just remember that if you use [deny rules][dr] anywhere then the *order of the
+rules matters*!
+
+[dr]: http://sitaramc.github.com/gitolite/doc/gitolite.conf.html#_deny_rules
+
 This feature also helps people who generate their gitolite.conf itself from
 some *other* database -- it allows them much more flexibility in how they
 generate rules.
