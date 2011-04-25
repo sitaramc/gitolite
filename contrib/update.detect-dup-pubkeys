@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# update "hooklet" to detect duplicate public keys
+
+# This particular hooklet also serves as an example for people writing others.
+# [It should be quite easy to figure out what parts apply to any hooklet and
+# what parts are specific to *this* hooklet and its function.]
+
+# see hooks/common/update.secondary.sample for instructions on *enabling*
+# hooklets
+
+# a hooklet is called as follows:
+#   git-receive-pack --> 'update' --> 'update.secondary' --> this script
+# note: the same three arguments that git passes to the update hook are passed
+# along to each hooklet.
+
+# the update hook, and therefore the hooklets, are called for *every* repo out
+# there.  If you want this hooklet to run only for certain repos, here's how:
+[ "$GL_REPO" = "gitolite-admin" ] || exit 0
+
+# superfluous, since update.secondary already did it, but I'd like to
+# emphasise that all output MUST go to STDERR
+exec >&2
+
+# ----
+
+# the main functionality of the hooklet starts here.  In this one (and I
+# suspect many others) we want to examine the actual files from the commit
+# that was pushed.
+
+# get the tip commit being pushed
+sha=$3
+
+# git sets this; and we don't want it at this point...
+unset GIT_DIR
+
+# paranoia
+set -e
+
+# setup the temp area
+export TMPDIR=$GL_REPO_BASE_ABS
+export tmp=$(mktemp -d -t gl-internal-temp-repo.XXXXXXXXXX);
+trap "rm -rf $tmp" EXIT;
+
+# now get the files into $tmp.
+    # (note: if your task does not require the actual files, and you can
+    # manage with "git cat-file -s" and so on, then you may not even need a
+    # $tmp; you may be able to do it all right in the repo.git directory)
+
+git archive $sha keydir | tar -C $tmp -xf -
+    # DO NOT try, say, 'GIT_WORK_TREE=$tmp git checkout $sha'.  It'll screw up
+    # both the 'index' and 'HEAD' of the repo.git.  Screwing up the index is
+    # BAD because now it goes out of sync with $GL_ADMINDIR.  Think of a push
+    # that had a deleted pubkey but failed a hooklet for some reason.  A
+    # subsequent push that fixes the error will now result in a $GL_ADMINDIR
+    # that still *has* that deleted pubkey!!
+
+    # And this is equally applicable to cases where you're using a
+    # post-receive or similar hook to live update a web site or something,
+    # which is a pretty common usage, I am given to understand.
+
+cd $tmp
+
+# ----
+
+# *finally*, the actual check you need to do in this hook: look for duplicate
+# pubkeys and exit 1 if dups are found
+for f in `find keydir -name "*.pub"`
+do
+    ssh-keygen -l -f "$f"
+done | perl -ane '
+    die "$F[2] is a duplicate of $seen{$F[1]}\n" if $seen{$F[1]};
+    $seen{$F[1]} = $F[2];
+'

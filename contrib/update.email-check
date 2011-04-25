@@ -4,9 +4,7 @@
 
     # Gitolite specific script to check "author email" field of every commit
     # pushed and to disallow if this email does not match the email that the
-    # user pushing is expected to have.  Needs to be renamed to
-    # "update.secondary"; see gitolite docs for how to propagate this to all
-    # repos.
+    # user pushing is expected to have.
 
     # Use without gitolite is also possible; just substitute your access
     # control system's notion of "user" for the env var GL_USER in the code

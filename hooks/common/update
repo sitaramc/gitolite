@@ -86,14 +86,14 @@ if (exists $repos{$ENV{GL_REPO}}{NAME_LIMITS}) {
 my $log_refex = check_ref(\@allowed_refs, $ENV{GL_REPO}, (shift @refs), $att_acc);
 check_ref                (\@allowed_refs, $ENV{GL_REPO}, $_           , $att_acc) for @refs;
 
-# if we returned at all, all the checks succeeded, so we log the action and exit 0
+# if we returned at all, all the checks succeeded.  Check secondary hooks now
+$UPDATE_CHAINS_TO ||= 'hooks/update.secondary';
+( -f $UPDATE_CHAINS_TO or -l $UPDATE_CHAINS_TO )
+    and system ( $UPDATE_CHAINS_TO, @ARGV )
+    and die "$UPDATE_CHAINS_TO died\n";
 
+# now log it and exit 0 so git can get on with it
 log_it("", "$att_acc\t" .  substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
     "\t$reported_repo\t$ref\t$log_refex");
-
-# now chain to the local admin defined update hook, if present
-$UPDATE_CHAINS_TO ||= 'hooks/update.secondary';
-exec $UPDATE_CHAINS_TO, @ARGV
-    if -f $UPDATE_CHAINS_TO or -l $UPDATE_CHAINS_TO;
 
 exit 0;
