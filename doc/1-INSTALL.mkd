@@ -38,13 +38,26 @@ In this document:
 
 Please make sure you understand the following points first.
 
-  * gitolite runs as a single user on a server, and is invoked via ssh.  Thus,
-    every user on the server is a potential "gitolite host".
+  * gitolite runs as a single (real) user on a server, and is invoked via ssh.
+    Traditionally, this "hosting user" is "git" or "gitolite".
 
-  * gitolite depends **heavily** on ssh pubkey (passwordless) access.  Do not
-    assume you know all about ssh -- most people **don't**.  If in doubt, use
-    a dedicated userid on both client and server for installation and
-    administration of gitolite.
+      * there is *usually* only one hosting user per server (machine), but
+        gitolite makes it trivial to have as many as you want.  In fact, every
+        user on the server is a potential hosting user.  Advanced users can
+        look [here][mgs]!)
+
+  * using this single user and sshd (or httpd) authentication, gitolite allows
+    you to create any number of "virtual" users.  Virtual user names only mean
+    something to gitolite, and they need not be the same as any real userid on
+    the server or any of the clients accessing it.
+
+      * the first such virtual user is the "admin user", created during the
+        install sequence.
+
+  * gitolite, in its most commonly used form, depends **heavily** on ssh
+    pubkey (passwordless) access.  Do not assume you know all about ssh --
+    most people **don't**.  If in doubt, use a dedicated userid on both client
+    and server for installation and administration of gitolite.
 
     To make matters worse, ssh problems in gitolite don't always look like ssh
     problems.  See [doc/ssh-troubleshooting.mkd][doc6] for help.
@@ -54,14 +67,11 @@ Please make sure you understand the following points first.
 
     Apparently this was not obvious to some people.
 
-A gitolite setup has:
+Thus a bare minimum gitolite setup has:
 
   * a server
-  * a "hosting user" on the server -- the userid under which gitolite runs.
-    (Side note: there is *usually* only one hosting user per server (machine),
-    but gitolite makes it trivial to have as many as you want.  Advanced users
-    can look [here][mgs]!)
-  * an "admin user" -- the user who sets up gitolite and configures it
+  * a real "hosting user" on the server -- usually "git" or "gitolite"
+  * a virtual "admin user" -- the user who sets up gitolite and configures it.
   * the admin user's client or workstation, from which he does all his work
 
 It is possible to have the server and the client be the same machine, and even
@@ -219,14 +229,15 @@ we mean `conf/gitolite.conf` on your gitolite-admin clone.
         mkdir -p /usr/local/share/gitolite/conf /usr/local/share/gitolite/hooks
         src/gl-system-install /usr/local/bin /usr/local/share/gitolite/conf /usr/local/share/gitolite/hooks
 
-  * on the server, "su - git", then as "git" user, run `which gl-setup`.  This
-    should respond with `/usr/local/bin/gl-setup`.  If this is not what you
-    get, you have some `$PATH` issues.  Make sure `/usr/local/bin` is in the
-    `$PATH` for the git user, and that no prior components of the path contain
-    another copy of `gl-setup`.  You *must* run the one in the directory that
-    is the first argument of `gl-system-install` above.
+  * on the server, as root, run "su - git", then as "git" user, run `which
+    gl-setup`.  This should respond with `/usr/local/bin/gl-setup`.  If this
+    is not what you get, you have some `$PATH` issues.  Make sure
+    `/usr/local/bin` is in the `$PATH` for the git user, and that no prior
+    components of the path contain another copy of `gl-setup`.  You *must* run
+    the one in the directory that is the first argument of `gl-system-install`
+    above.
 
-  * now run `gl-setup /tmp/YourName.pub`.
+  * on the server, still as "git", run `gl-setup /tmp/YourName.pub`.
 
   * on the client, run `cd; git clone git@server:gitolite-admin`
 
@@ -243,8 +254,8 @@ to handle multiple keys in ssh.**
   * from your workstation, copy your `~/.ssh/id_rsa.pub` file to the server.
     Put it in `/tmp/YourName.pub`.
 
-  * if `$HOME/bin` is not on the default PATH, fiddle with your `.bashrc` or
-    `.bash_profile` or similar files and add it somehow.
+  * if `$HOME/bin` is not on the default PATH for the "git" user, fiddle with
+    the `.bashrc` or `.bash_profile` or similar files and add it somehow.
 
   * (U) on the server, as "git", do the following:
 

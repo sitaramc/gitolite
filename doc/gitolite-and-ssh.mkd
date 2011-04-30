@@ -1,6 +1,11 @@
 # how gitolite uses ssh
 
-***Gitolite is heavily dependent on ssh***!
+Although other forms of authentications exist (see
+[doc/gitolite-without-ssh.mkd][ws]), ssh is the one that most git users use.
+
+***Therefore, gitolite is (usually) heavily dependent on ssh***.
+
+[ws]: http://sitaramc.github.com/gitolite/doc/gitolite-without-ssh.html
 
 Most people didn't realise this, and even if they did they didn't know ssh
 well enough to help themselves.  If you don't understand how ssh public key
