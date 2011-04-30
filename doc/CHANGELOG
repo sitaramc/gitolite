@@ -2,6 +2,20 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v2.0.1
+
+  - "hooklets" allow you to have any number of site-local 'update hook'
+    scripts play nicely with gitolite
+
+  - the "include" statement can now use globs -- makes some types of setups
+    sooooo easy!
+
+  - mirroring finally tested properly after v2
+
+  - 'hub' adc (pull requests etc)
+
+  - warn() and die() are now logged
+
   - v2.0
 
   - gl-pre-git hook added
