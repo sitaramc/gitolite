@@ -1,0 +1,84 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+# allow a user to delete a ref if the last create of the ref was done by the
+# same user, *and* it was done within a certain time limie
+
+# change this to suit your needs
+my $oldest = 60*60*24*7;        # in seconds
+
+# use a generic error message to avoid information leak
+my $error = "didn't find repo/ref, or the ref is too old, or you did not create it\n";
+
+# ----
+
+die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+
+unshift @INC, $ENV{GL_BINDIR};
+require gitolite or die "parse gitolite.pm failed\n";
+gitolite->import;
+
+# arg check
+die "need two arguments, a reponame and a refname\n" unless @ARGV == 2;
+# get the repo name
+my $repo = shift;
+$repo =~ s/\.git$//;
+# get the ref name to be deleted, and allow the same convenience shortcut
+# (prefix "refs/heads/" if it doesn't start with "refs/") as in the main
+# config file
+my $ref = shift;
+$ref =~ m(^refs/) or $ref =~ s(^)(refs/heads/);
+
+# XXX WARNING: we do not do any access control checking -- we just go by the
+# fact that if *you* created a branch within the last $limit seconds (default
+# value is 1 week), you are allowed to delete the branch.
+
+# find the earliest log entry we're willing to look at
+my $limit = `date -d '$oldest seconds ago' '+%F.%T'`;
+    # NOTE: this is the format that gitolite uses in its log entries (see sub
+    # 'get_logfilename in one of the pm files).  The logic also depends on the
+    # fact that this is sortable, because we read backwards and stop when we
+    # reach something older than $limit
+chomp($limit);
+
+# find the last 2 log files; here also we depend on the fact that the file
+# *names* are time ordered when sorted
+my ($lf1, $lf2) = reverse sort glob("$ENV{GL_ADMINDIR}/logs/gitolite*log");
+
+my $found = 0;
+my($ts, $user, $ip, $cmd, $op, $oldsha, $newsha, $logrepo, $logref, $refrule);
+for my $lf ($lf1, $lf2) {
+    next unless $lf;
+    open(LF, "-|", "tac", $lf) or die "tac $lf failed: $!\n";
+    while (<LF>) {
+        ($ts, $user, $ip, $cmd, $op, $oldsha, $newsha, $logrepo, $logref, $refrule) = split /\t/;
+        next unless $refrule;
+        if ($ts le $limit) {
+            # we don't look at entries earlier than this
+            $found = -1;
+            last;
+        }
+        if ($op eq 'C' and $oldsha =~ /^0+$/ and $logrepo eq $repo and $logref eq $ref) {
+            # creation record found; no need to look at any more entries
+            $found = 1;
+            last;
+        }
+    }
+    last if $found;
+}
+# check user in creation record to make sure it is the same one
+if ($found == 1 and $user eq $ENV{GL_USER}) {
+    chdir("$ENV{GL_REPO_BASE_ABS}/$repo.git") or die "chdir $ENV{GL_REPO_BASE_ABS}/$repo.git failed: $!\n";
+    system("git", "update-ref", "-d", $ref, $newsha) and die "ref deletion failed\n";
+    warn "deleted $ref from $repo (created on $ts)\n";
+        # NOTE: we use warn so this gets into the log in some way; perhaps
+        # later we can adjust the format to more closely resemble a normal
+        # remote delete operation
+    exit 0;
+}
+
+print STDERR $error;
+exit 1;
