@@ -440,6 +440,8 @@ setup_pta() {
 
     echo "cd $REPO_BASE/gitolite-admin.git
 PATH=\$PATH:$GIT_PATH
+git config --get user.email || git config user.email \$USER@\`hostname\`
+git config --get user.name  || git config user.name  \"\$USER on \`hostname\`\"
 GIT_WORK_TREE=$GL_ADMINDIR git add conf/gitolite.conf keydir
 GIT_WORK_TREE=$GL_ADMINDIR git diff --cached --quiet 2>/dev/null || GIT_WORK_TREE=$GL_ADMINDIR git commit -am start
 " | ssh -T $p_port $user@$host
