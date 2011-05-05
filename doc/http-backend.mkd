@@ -64,6 +64,12 @@ I assume you've installed apache 2.x and git on the server.
 I assume your httpd runs under the "apache" userid; adjust instructions below
 if it does not.  Similarly for "/var/www" and other file names/locations.
 
+I assume you have read the "[please read this first][1rtf]" section of the
+main install document to get an idea of the general concepts and terminology
+(just ignore anything that is specific to ssh).
+
+[1rtf]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html#_please_read_this_first
+
 <a name="_install_gitolite_under_apache_"></a>
 
 #### install gitolite under "apache"

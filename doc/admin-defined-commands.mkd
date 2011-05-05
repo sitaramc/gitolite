@@ -13,6 +13,7 @@ In this document:
 
   * <a href="#_background">background</a>
   * <a href="#_setting_it_up">setting it up</a>
+      * <a href="#_configuring_ADCs">configuring ADCs</a>
   * <a href="#_anatomy_of_a_command">anatomy of a command</a>
   * <a href="#_example_uses_and_sample_commands_in_contrib">example uses and sample commands in contrib</a>
       * <a href="#_fork">fork</a>
@@ -76,6 +77,8 @@ to inadvertently *hide* some of the "official" commands (like "info",
 "expand", "setperms", etc., or worse, say "git-upload-pack"!) by creating
 executable files with those names in this directory.  So don't do that -- you
 have been warned!**
+
+<a name="_configuring_ADCs"></a>
 
 #### configuring ADCs
 

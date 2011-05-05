@@ -2,19 +2,19 @@
 
 In this document:
 
-  * <a href="#terminology">terminology</a>
-  * <a href="#notes_and_background">notes and background</a>
-  * <a href="#quick_instructions_for_running_the_test_suite">quick instructions for running the test suite</a>
-  * <a href="#instructions_for_adding_new_tests">instructions for adding new tests</a>
+  * <a href="#_terminology">terminology</a>
+  * <a href="#_notes_and_background">notes and background</a>
+  * <a href="#_quick_instructions_for_running_the_test_suite">quick instructions for running the test suite</a>
+  * <a href="#_instructions_for_adding_new_tests">instructions for adding new tests</a>
 
-<a name="terminology"></a>
+<a name="_terminology"></a>
 
 ### terminology
 
     #define PW "patches welcome!"
     #define TODO PW
 
-<a name="notes_and_background"></a>
+<a name="_notes_and_background"></a>
 
 ### notes and background
 
@@ -33,7 +33,7 @@ In this document:
   * the test driver has evolved as new scripts were added; you will see that
     older scripts are a little less sophisticated.
 
-<a name="quick_instructions_for_running_the_test_suite"></a>
+<a name="_quick_instructions_for_running_the_test_suite"></a>
 
 ### quick instructions for running the test suite
 
@@ -80,7 +80,7 @@ In this document:
         # or
         prove ./test-driver.sh :: t51
 
-<a name="instructions_for_adding_new_tests"></a>
+<a name="_instructions_for_adding_new_tests"></a>
 
 ### instructions for adding new tests
 

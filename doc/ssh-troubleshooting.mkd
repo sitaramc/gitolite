@@ -133,6 +133,9 @@ This is a quick checklist:
     these components are correct.  `ls -ald ~ ~/.ssh ~/.ssh/authorized_keys`
     will tell you what they are.
 
+  * some OSs/distributions require that the "git" user should have a password
+    and/or not be a locked account.  You may want to check that as well.
+
   * if all that fails, log onto the server as root, `cd /var/log`, and look
     for a file called `auth.log` or `secure` or some such name.  Look inside
     this file for messages matching the approximate time of your last attempt

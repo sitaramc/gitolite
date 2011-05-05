@@ -25,6 +25,7 @@ In this document:
       * <a href="#_IMPORTANT_WARNING_ABOUT_THIS_FEATURE_">**IMPORTANT WARNING ABOUT THIS FEATURE**</a>
   * <a href="#_setting_a_gitweb_description_for_a_wildcard_matched_repo">setting a gitweb description for a wildcard-matched repo</a>
   * <a href="#_reporting">reporting</a>
+  * <a href="#_deleting_a_wild_repo">deleting a wild repo</a>
   * <a href="#_how_it_actually_works">how it actually works</a>
 
 ----
@@ -262,6 +263,8 @@ commands, thanks to Teemu.
 
 In order to see what repositories were created from a wildcard, use the
 "expand" command, described briefly in [doc/report-output.mkd][repout].
+
+<a name="_deleting_a_wild_repo"></a>
 
 ### deleting a wild repo
 

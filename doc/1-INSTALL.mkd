@@ -38,8 +38,9 @@ In this document:
 
 Please make sure you understand the following points first.
 
-  * gitolite runs as a single (real) user on a server, and is invoked via ssh.
-    Traditionally, this "hosting user" is "git" or "gitolite".
+  * gitolite runs as a single (real) user on a server, and is invoked via ssh
+    (or, less commonly, via http).  Traditionally, this "hosting user" is
+    "git" or "gitolite".
 
       * there is *usually* only one hosting user per server (machine), but
         gitolite makes it trivial to have as many as you want.  In fact, every
@@ -111,6 +112,7 @@ don't know ssh it'll be a nightmare to support you.
         normally; see the `$GIT_PATH` variable in the "rc" file
   * perl (but since git requires it anyway, you probably have it)
   * openssh or any ssh that can understand the `authorized_keys` file format
+    (probably optional if you're using the http backend)
 
 <a name="_technical_skills"></a>
 
