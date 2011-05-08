@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# adc for someone with admin privs to invoke "setperms/getperms" on other
+# users.
+
+# copy this file under both names (su-setperms and su-getperms).  It'll figure
+# out from the name what to do, since the code is almost the same for both
+# cases.
+
+# usage
+
+    #   ssh gitolite su-setperms user1 reponame     # expects STDIN, like setperms
+    #   ssh gitolite su-getperms user1 reponame     # prints existing perms, like getperms
+
+# WARNING: DO NOT NAME THIS SCRIPT "setperms" or "getperms".  It won't work.
+
+. $(dirname $0)/adc.common-functions
+
+get_rights_and_owner gitolite-admin
+[ -z "$perm_write" ] && die "just *what* are you trying to pull here, $GL_USER?"
+
+# find the command name; we don't do a lot of fancy checking -- we just go
+# "safe" and assume that anything but a name of "su-setperms" runs getperms
+cmd=getperms
+echo $0 | grep su-setperms$ >/dev/null 2>&1 && cmd=setperms
+
+# user and repo
+user="$1"; shift
+repo="$1"; shift
+
+[ -z "$repo" ] && die requires two parameters: a username and a reponame
+
+SSH_ORIGINAL_COMMAND="$cmd $repo" $GL_BINDIR/gl-auth-command $user
