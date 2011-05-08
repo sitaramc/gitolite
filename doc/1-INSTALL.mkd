@@ -8,11 +8,11 @@ In this document:
           * <a href="#_client_workstation">client/workstation</a>
           * <a href="#_server">server</a>
           * <a href="#_technical_skills">technical skills</a>
+      * <a href="#_naming_conventions_used">naming conventions used</a>
   * <a href="#_getting_the_gitolite_software">getting the gitolite software</a>
       * <a href="#_getting_a_tar_file_from_a_clone">getting a tar file from a clone</a>
   * <a href="#_installation_and_setup">installation and setup</a>
       * <a href="#_install_methods_and_deciding_which_one_to_use">install methods and deciding which one to use</a>
-      * <a href="#_conventions_used">conventions used</a>
       * <a href="#_package_method_directly_on_the_server_using_RPM_DEB">(package method) directly on the server, using RPM/DEB</a>
       * <a href="#_root_method_directly_on_the_server_manually_with_root_access">(root method) directly on the server, manually, with root access</a>
       * <a href="#_non_root_method_directly_on_the_server_manually_without_root_access">(non-root method) directly on the server, manually, without root access</a>
@@ -131,6 +131,22 @@ don't know ssh it'll be a nightmare to support you.
   * regular expressions are a big part of gitolite in many places but
     familiarity is not necessary to do basic access control.
 
+<a name="_naming_conventions_used"></a>
+
+#### naming conventions used
+
+Throughout the documentation, we use "YourName" as the admin user, and his
+workstation is called "client".  The hosting user is "git", and the server is
+called "server".  **Please substitute your values as needed**.
+
+**If you're using DEB or RPM**, the installer creates a user called
+"gitolite", so substitute that for "git" anywhere in the docs where the
+"hosting user" is mentioned as "git".
+
+Also, we often say "the rc file".  This means `~/.gitolite.rc` on the server.
+And when we say the "access control rules", or "conf file", or "config file",
+we mean `conf/gitolite.conf` on your gitolite-admin clone.
+
 <a name="_getting_the_gitolite_software"></a>
 
 ### getting the gitolite software
@@ -184,22 +200,6 @@ Gitolite has 4 install methods:
 Here's how you install using these 3 methods.  Future upgrades are equally
 easy -- the steps required for upgrading are marked "(U)".
 
-<a name="_conventions_used"></a>
-
-#### conventions used
-
-Throughout the documentation, we use "YourName" as the admin user, and his
-workstation is called "client".  The hosting user is "git", and the server is
-called "server".  **Please substitute your values as needed**.
-
-**If you're using DEB or RPM**, the installer creates a user called
-"gitolite", so substitute that for "git" anywhere in the docs where the
-"hosting user" is mentioned as "git".
-
-Also, we often say "the rc file".  This means `~/.gitolite.rc` on the server.
-And when we say the "access control rules", or "conf file", or "config file",
-we mean `conf/gitolite.conf` on your gitolite-admin clone.
-
 <a name="_package_method_directly_on_the_server_using_RPM_DEB"></a>
 
 #### (package method) directly on the server, using RPM/DEB
@@ -252,6 +252,9 @@ on the server should be via `su - git` from some other userid.  If that is not
 possible, you should (a) know the password in case you screw up the keys AND
 (b) know how to force ssh to ask for a password if required, AND (c) know how
 to handle multiple keys in ssh.**
+
+***NOTE: if this is still confusing, try the [tutorial][tut].  That was
+written for this specific method of install.***
 
   * from your workstation, copy your `~/.ssh/id_rsa.pub` file to the server.
     Put it in `/tmp/YourName.pub`.
@@ -429,3 +432,4 @@ uninstalling gitolite is described in great detail in
 [transcript]: http://sitaramc.github.com/gitolite/doc/install-transcript.html
 [mgs]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html#_special_cases_multiple_gitolite_servers
 [gash]: http://sitaramc.github.com/gitolite/doc/gitolite-and-ssh.html
+[tut]: http://sites.google.com/site/senawario/home/gitolite-tutorial

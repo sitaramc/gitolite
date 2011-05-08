@@ -2,8 +2,13 @@
 
 <a name="start"></a>
 
-***IMPORTANT NOTE: v2.0rc1 is out; all development will be on that now.
-Please see new doc/developer-notes.mkd***
+***IMPORTANT NOTE: There is a [master table of contents of all gitolite
+documentation][docs] that can help if you're looking for stuff.  Just click
+the link and use your browser's search function (Ctrl-F, usually) to look for
+likely sounding words.  All documents are listed, as well as links to section
+headers in some of the longer documents***
+
+[docs]: http://sitaramc.github.com/gitolite
 
 ----
 
@@ -196,7 +201,6 @@ Gitolite is released under GPL v2.  See COPYING for details.
 [install]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html
 [admin]: http://sitaramc.github.com/gitolite/doc/2-admin.html
 [migr]: http://sitaramc.github.com/gitolite/doc/migrate.html
-[docs]: http://sitaramc.github.com/gitolite
 [doc9gas]: http://sitaramc.github.com/gitolite/doc/gitolite-and-ssh.html
 [doc6sts]: http://sitaramc.github.com/gitolite/doc/ssh-troubleshooting.html
 [who]: http://sitaramc.github.com/gitolite/doc/who-uses-it.html

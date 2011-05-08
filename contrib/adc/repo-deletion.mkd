@@ -1,6 +1,8 @@
 # deleting repos safely
 
-(see http://groups.google.com/group/gitolite/browse_thread/thread/fb9cf5a464b6dfee )
+(see [this thread][thr] on the gitolite mailing list)
+
+[thr]: http://groups.google.com/group/gitolite/browse_thread/thread/fb9cf5a464b6dfee
 
 By default, the old 'rmrepo' ADC (admin-defined command) just went and deleted
 the repo -- no questions asked!  Sometimes, that could be a disaster -- you
@@ -13,12 +15,13 @@ either, both, or neither family of commands.
 Local settings for these ADCs can be found in the common settings file
 "adc.common-functions".
 
-1.  'rm' will remove the repo.  If USE_LOCK_UNLOCK is set, rm will refuse to
+1.  'rm' will remove the repo.  If `USE_LOCK_UNLOCK` is set, rm will refuse to
     remove a locked repo.  All repos are locked by default, and you have to
     explicitly 'unlock' a repo to remove it.  You can also 'lock' it again
     instead of removing it of course.
 
-    There's also ARE_YOU_SURE, for situations where a simple warning suffices.
+    There's also `ARE_YOU_SURE`, for situations where a simple warning
+    suffices.
 
     You can also use both these flags if you wish.
 
