@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
-our (%users, %linenos);
+our (%users, %linenos, %pubkeyfiles);
 
 my $thisbin = $0;
 $thisbin = "$ENV{PWD}/$thisbin" unless $thisbin =~ /^\//;
@@ -33,13 +33,15 @@ print "\n";
 # all *.pub in current dir should be exactly one line, starting with ssh-rsa
 # or ssh-dss
 
-my @pubkeys = glob("*.pub");
+my @pubkeys = sort glob("*.pub");
 die "no *.pub files here\n" unless @pubkeys;
 for my $pub (@pubkeys) {
     my @lines = filelines($pub);
     die "$pub has more than one line\n" if @lines > 1;
     die "$pub does not start with ssh-rsa or ssh-dss\n" unless $lines[0] =~ /^(?:ssh-rsa|ssh-dss) (\S+)/;
     my $key = $1;
+    print "$pub seems to be A COPY OF $pubkeyfiles{$key}\n" if $pubkeyfiles{$key};
+    $pubkeyfiles{$key} ||= $pub;
     if ($users{$key}) {
         print "$pub $users{$key}\n";
     } else {
