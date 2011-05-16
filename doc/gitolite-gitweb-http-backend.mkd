@@ -1,4 +1,4 @@
-# how to set up gitolite+gitweb+ssh+http-backend
+## how to set up gitolite+gitweb+ssh+http-backend
 
 In this document:
 

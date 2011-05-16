@@ -11,6 +11,8 @@ be, and usually *isn't*, an actual *unix* username).
 
 [gas]: http://sitaramc.github.com/gitolite/doc/gitolite-and-ssh.html
 
+<a name="_sidebar_authentication_versus_authorisation"></a>
+
 ### sidebar: authentication versus authorisation
 
 >   Just for completeness, I'd like to loosely define these two animals.
@@ -22,6 +24,8 @@ be, and usually *isn't*, an actual *unix* username).
 
 >   **Authorisation** is the process of asking what you want to do and
 >   deciding if you're allowed to do it or not.
+
+<a name="_what_does_gitolite_actually_do"></a>
 
 ### what does gitolite actually do
 
@@ -42,6 +46,8 @@ In other words, authentication is the job of `sshd` or `httpd`, not gitolite.
 It is also why I often ignore emails and IRC messages that seem like just ssh
 issues if I am too busy.  I will never ignore core gitolite issues like that,
 of course!]
+
+<a name="_using_other_authentication_systems_with_gitolite"></a>
 
 ### using other authentication systems with gitolite
 

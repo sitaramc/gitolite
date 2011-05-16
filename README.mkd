@@ -94,8 +94,9 @@ But there are several disadvantages here:
     impossible without extraneous tools
   * errors or omissions in setting the permissions exactly can cause problems
     of either kind: false accepts or false rejects
-  * without going into ACLs it is not possible to give someone read-only
-    access to a repo; they either get read-write access or no access
+  * without going into ACLs it is not possible to give some people read-only
+    access while some others have read-write access to a repo (unless you make
+    it world-readable).  Group access just doesn't have enough granularity
   * it is absolutely impossible to restrict pushing by branch name or tag
     name.
 

@@ -62,10 +62,11 @@ Once you've cloned it, you're ready to add users and repos.
     if you wish, since the entire tree is searched.
 
   * edit the config file (`conf/gitolite.conf` in your admin repo clone).  See
-    `doc/gitolite.conf.mkd` in the gitolite source for details on what goes in
-    that file, syntax, etc.  Just add new repos as needed, and add new users
-    and give them permissions as required.  The users names should be exactly
-    the same as their keyfile names, but without the `.pub` extension
+    [doc/gitolite.conf.mkd][confmkd] in the gitolite source for details on
+    what goes in that file, syntax, etc.  Just add new repos as needed, and
+    add new users and give them permissions as required.  The users names
+    should be exactly the same as their keyfile names, but without the `.pub`
+    extension
 
   * when done, commit your changes and push.  Any new repos you specified will
     automatically be created (empty, but clonable) and users' access will be
@@ -380,4 +381,4 @@ It does not (currently) support other options like `--add`, the `value_regex`,
 etc.
 
 [genpub]: http://sitaramc.github.com/0-installing/2-access-gitolite.html#generating_a_public_key
-
+[confmkd]: http://sitaramc.github.com/gitolite/doc/gitolite.conf.html

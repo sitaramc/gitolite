@@ -115,9 +115,9 @@ It used to be that the gitolite documentation would say "just use `ssh
 git@server`" in the past, because gitolite defaults to the "info" command if
 no command is passed.
 
-However, starting with [openssh 5.6][openssh56], this won't work.  Openssh
-will now "Kill channel when pty allocation requests fail".  This means that
-gitolite is not even invoked; you only get a message about pty allocation
+However, starting with [openssh 5.6][openssh56], this won't work.  The ssh
+client will now "Kill channel when pty allocation requests fail".  This means
+that gitolite is not even invoked; you only get a message about pty allocation
 failure, followed by "connection closed".
 
 So now you have to use an explicit "info" command, (`ssh git@server info`) or
