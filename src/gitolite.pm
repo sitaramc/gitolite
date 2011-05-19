@@ -1087,7 +1087,7 @@ sub try_adc {
     if (-x "$GL_ADC_PATH/$cmd") {
         die "I don't like $cmd\n" if $cmd =~ /\.\./;
         # yes this is rather strict, sorry.
-        do { die "I don't like $_\n" unless $_ =~ $ADC_CMD_ARGS_PATT } for ($cmd, @args);
+        do { die "I don't like $_\n" unless $_ =~ $ADC_CMD_ARGS_PATT and $_ !~ m(\.\./) } for ($cmd, @args);
         log_it("$GL_ADC_PATH/$ENV{SSH_ORIGINAL_COMMAND}");
         exec("$GL_ADC_PATH/$cmd", @args);
     }
