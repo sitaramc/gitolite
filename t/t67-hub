@@ -47,7 +47,7 @@ do
     runlocal git checkout p3
     mdc p3a; mdc p3b; mdc p3c
     runlocal git push origin --all
-    expect To u1:r1
+    expect "To u1:r1"
     expect "\* \[new branch\]      master -> master"
     expect "\* \[new branch\]      p1 -> p1"
     expect "\* \[new branch\]      p2 -> p2"
@@ -69,7 +69,7 @@ do
     runlocal git checkout -b b3 origin/p3
     mdc e1; mdc e2; mdc e3
     runlocal git push origin b1 b2 b3
-    expect To u2:child/u2/myr1
+    expect "To u2:child/u2/myr1"
     expect "\* \[new branch\]      b1 -> b1"
     expect "\* \[new branch\]      b2 -> b2"
     expect "\* \[new branch\]      b3 -> b3"
