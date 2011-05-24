@@ -560,11 +560,12 @@ for my $repo (@phy_repos) {
 
 # write out the project list, but not if GL_NO_DAEMON_NO_GITWEB is set
 unless ($GL_NO_DAEMON_NO_GITWEB) {
-    my $projlist_fh = wrap_open( ">", $PROJECTS_LIST);
+    my $projlist_fh = wrap_open( ">", "$PROJECTS_LIST.$$");
     for my $proj (sort keys %projlist) {
         print $projlist_fh "$proj\n";
     }
     close $projlist_fh;
+    rename "$PROJECTS_LIST.$$", $PROJECTS_LIST;
 }
 
 # ----------------------------------------------------------------------------
