@@ -1151,7 +1151,7 @@ EOFhtp
     my $password = <>;
     $password =~ s/[\n\r]*$//;
     die "empty passwords are not allowed\n" unless $password;
-    my $rc = system("htpasswd", "-b", $HTPASSWD_FILE, $ENV{GL_USER}, $password);
+    my $rc = system("htpasswd", "-mb", $HTPASSWD_FILE, $ENV{GL_USER}, $password);
     die "htpasswd command seems to have failed with $rc return code...\n" if $rc;
 }
 
