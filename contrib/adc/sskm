@@ -148,7 +148,7 @@ sub safe_stdin {
 
 sub highlander {
     # there can be only one
-    my($keyid, @a) = @_;
+    my($keyid, $die_if_empty, @a) = @_;
     # too many?
     if (@a > 1) {
         print STDERR "
@@ -160,7 +160,7 @@ The keys are:
         exit 1;
     }
     # too few?
-    die "no keys with " . ($keyid || "empty") . " keyid found\n" unless @a;
+    die "no keys with " . ($keyid || "empty") . " keyid found\n" if $die_if_empty and not @a;
 
     return @a;
 }
@@ -183,8 +183,8 @@ sub kf_add {
 sub kf_confirm_add {
     my($gl_user, $keyid) = @_;
     # find entries in both @pubkeys and @marked_for_add whose basename matches $gl_user$keyid
-    my @pk = highlander($keyid, grep { m(^(.*/)?$gl_user$keyid.pub$) } @pubkeys);
-    my @mfa = highlander($keyid, grep { m(^zzz-marked/zzz-marked-for-add-$gl_user$keyid.pub$) } @marked_for_add);
+    my @pk = highlander($keyid, 0, grep { m(^(.*/)?$gl_user$keyid.pub$) } @pubkeys);
+    my @mfa = highlander($keyid, 1, grep { m(^zzz-marked/zzz-marked-for-add-$gl_user$keyid.pub$) } @marked_for_add);
 
     cd_temp_clone();
     chdir("keydir");
@@ -203,7 +203,7 @@ sub kf_confirm_add {
 sub kf_undo_add {
     # XXX some code at start is shared with kf_confirm_add
     my($gl_user, $keyid) = @_;
-    my @mfa = highlander($keyid, grep { m(^zzz-marked/zzz-marked-for-add-$gl_user$keyid.pub$) } @marked_for_add);
+    my @mfa = highlander($keyid, 1, grep { m(^zzz-marked/zzz-marked-for-add-$gl_user$keyid.pub$) } @marked_for_add);
 
     cd_temp_clone();
     chdir("keydir");
@@ -221,7 +221,7 @@ sub kf_del {
     chdir("keydir");
 
     mkdir("zzz-marked");
-    my @pk = highlander($keyid, grep { m(^(.*/)?$gl_user$keyid.pub$) } @pubkeys);
+    my @pk = highlander($keyid, 1, grep { m(^(.*/)?$gl_user$keyid.pub$) } @pubkeys);
 
     my $fp = fingerprint($pk[0]);
     system("git", "mv", $pk[0], "zzz-marked/zzz-marked-for-del-$gl_user$keyid.pub") and die "git mv failed\n";
@@ -231,7 +231,7 @@ sub kf_del {
 
 sub kf_confirm_del {
     my($gl_user, $keyid) = @_;
-    my @mfd = highlander($keyid, grep { m(^zzz-marked/zzz-marked-for-del-$gl_user$keyid.pub$) } @marked_for_del);
+    my @mfd = highlander($keyid, 1, grep { m(^zzz-marked/zzz-marked-for-del-$gl_user$keyid.pub$) } @marked_for_del);
 
     cd_temp_clone();
     chdir("keydir");
@@ -245,7 +245,7 @@ sub kf_confirm_del {
 sub kf_undo_del {
     my ($gl_user, $keyid) = @_;
 
-    my @mfd = highlander($keyid, grep { m(^zzz-marked/zzz-marked-for-del-$gl_user$keyid.pub$) } @marked_for_del);
+    my @mfd = highlander($keyid, 1, grep { m(^zzz-marked/zzz-marked-for-del-$gl_user$keyid.pub$) } @marked_for_del);
 
     print STDERR "
 You're undeleting a key that is currently marked for deletion.
