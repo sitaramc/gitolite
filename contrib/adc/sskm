@@ -124,10 +124,11 @@ BEGIN { $TEMPDIR=`mktemp -d -t tmp.XXXXXXXXXX`; }
 END { `/bin/rm -rf $TEMPDIR`; }
 sub cd_temp_clone {
     chomp($TEMPDIR);
-    system("git clone $ENV{GL_REPO_BASE_ABS}/gitolite-admin.git $TEMPDIR");
+    hushed_git("clone", "$ENV{GL_REPO_BASE_ABS}/gitolite-admin.git", "$TEMPDIR");
     chdir($TEMPDIR);
-    system("git config --get user.email || git config user.email \$USER@`hostname`");
-    system("git config --get user.name  || git config user.name  \"\$USER on `hostname`\"");
+    my $hostname = `hostname`; chomp($hostname);
+    hushed_git("config", "--get", "user.email") and hushed_git("config", "user.email", $ENV{USER} . "@" . $hostname);
+    hushed_git("config", "--get", "user.name") and hushed_git("config", "user.name", "$ENV{USER} on $hostname");
 }
 
 sub fingerprint {
@@ -144,6 +145,14 @@ sub safe_stdin {
     die "could not read pubkey data" . (defined($ret) ? "" : ": $!") . "\n" unless $ret;
     die "pubkey data seems to have more than one line\n" if $data =~ /\n./;
     return $data;
+}
+
+sub hushed_git {
+    local(*STDOUT) = \*STDOUT;
+    local(*STDERR) = \*STDERR;
+    open(STDOUT, ">", "/dev/null");
+    open(STDERR, ">", "/dev/null");
+    system("git", @_);
 }
 
 sub highlander {
@@ -174,10 +183,10 @@ sub kf_add {
 
     mkdir("zzz-marked");
     wrap_print("zzz-marked/zzz-marked-for-add-$gl_user$keyid.pub", $keymaterial);
-    system("git", "add", ".") and die "git add failed\n";
+    hushed_git("add", ".") and die "git add failed\n";
     my $fp = fingerprint("zzz-marked/zzz-marked-for-add-$gl_user$keyid.pub");
-    system("git", "commit", "-m", "sskm: add $gl_user$keyid ($fp)") and die "git commit failed\n";
-    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+    hushed_git("commit", "-m", "sskm: add $gl_user$keyid ($fp)") and die "git commit failed\n";
+    system("env GL_BYPASS_UPDATE_HOOK=1 git push >/dev/null 2>/dev/null") and die "git push failed\n";
 }
 
 sub kf_confirm_add {
@@ -191,13 +200,13 @@ sub kf_confirm_add {
 
     my $fp = fingerprint($mfa[0]);
     if ($pk[0]) {
-        system("git", "mv", "-f", $mfa[0], $pk[0]);
-        system("git", "commit", "-m", "sskm: confirm-add (replace) $pk[0] ($fp)") and die "git commit failed\n";
+        hushed_git("mv", "-f", $mfa[0], $pk[0]);
+        hushed_git("commit", "-m", "sskm: confirm-add (replace) $pk[0] ($fp)") and die "git commit failed\n";
     } else {
-        system("git", "mv", "-f", $mfa[0], "$gl_user$keyid.pub");
-        system("git", "commit", "-m", "sskm: confirm-add $gl_user$keyid ($fp)") and die "git commit failed\n";
+        hushed_git("mv", "-f", $mfa[0], "$gl_user$keyid.pub");
+        hushed_git("commit", "-m", "sskm: confirm-add $gl_user$keyid ($fp)") and die "git commit failed\n";
     }
-    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+    system("env GL_BYPASS_UPDATE_HOOK=1 git push >/dev/null 2>/dev/null") and die "git push failed\n";
 }
 
 sub kf_undo_add {
@@ -209,9 +218,9 @@ sub kf_undo_add {
     chdir("keydir");
 
     my $fp = fingerprint($mfa[0]);
-    system("git", "rm", $mfa[0]);
-    system("git", "commit", "-m", "sskm: undo-add $gl_user$keyid ($fp)") and die "git commit failed\n";
-    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+    hushed_git("rm", $mfa[0]);
+    hushed_git("commit", "-m", "sskm: undo-add $gl_user$keyid ($fp)") and die "git commit failed\n";
+    system("env GL_BYPASS_UPDATE_HOOK=1 git push >/dev/null 2>/dev/null") and die "git push failed\n";
 }
 
 sub kf_del {
@@ -224,9 +233,9 @@ sub kf_del {
     my @pk = highlander($keyid, 1, grep { m(^(.*/)?$gl_user$keyid.pub$) } @pubkeys);
 
     my $fp = fingerprint($pk[0]);
-    system("git", "mv", $pk[0], "zzz-marked/zzz-marked-for-del-$gl_user$keyid.pub") and die "git mv failed\n";
-    system("git", "commit", "-m", "sskm: del $pk[0] ($fp)") and die "git commit failed\n";
-    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+    hushed_git("mv", $pk[0], "zzz-marked/zzz-marked-for-del-$gl_user$keyid.pub") and die "git mv failed\n";
+    hushed_git("commit", "-m", "sskm: del $pk[0] ($fp)") and die "git commit failed\n";
+    system("env GL_BYPASS_UPDATE_HOOK=1 git push >/dev/null 2>/dev/null") and die "git push failed\n";
 }
 
 sub kf_confirm_del {
@@ -237,9 +246,9 @@ sub kf_confirm_del {
     chdir("keydir");
 
     my $fp = fingerprint($mfd[0]);
-    system("git", "rm", $mfd[0]);
-    system("git", "commit", "-m", "sskm: confirm-del $gl_user$keyid ($fp)") and die "git commit failed\n";
-    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+    hushed_git("rm", $mfd[0]);
+    hushed_git("commit", "-m", "sskm: confirm-del $gl_user$keyid ($fp)") and die "git commit failed\n";
+    system("env GL_BYPASS_UPDATE_HOOK=1 git push >/dev/null 2>/dev/null") and die "git push failed\n";
 }
 
 sub kf_undo_del {
@@ -260,7 +269,7 @@ actually delete it.
     chdir("keydir");
 
     my $fp = fingerprint($mfd[0]);
-    system("git", "mv", "-f", $mfd[0], "$gl_user$keyid.pub" );
-    system("git", "commit", "-m", "sskm: undo-del $gl_user$keyid ($fp)") and die "git commit failed\n";
-    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+    hushed_git("mv", "-f", $mfd[0], "$gl_user$keyid.pub" );
+    hushed_git("commit", "-m", "sskm: undo-del $gl_user$keyid ($fp)") and die "git commit failed\n";
+    system("env GL_BYPASS_UPDATE_HOOK=1 git push >/dev/null 2>/dev/null") and die "git push failed\n";
 }
