@@ -5,24 +5,31 @@
 
 usage() { echo "
     Usage:
-        $0 shared-bin-dir shared-conf-dir shared-hooks-dir
+        $0 [shared-bin-dir shared-conf-dir shared-hooks-dir]
 
-    Example:
+    Examples:
+        # as root
+        $0
+        # this defaults to:
         $0 /usr/local/bin /var/gitolite/conf /var/gitolite/hooks
+
+        # as a normal user
+        $0
+        # this defaults to:
+        $0 $HOME/bin $HOME/share/gitolite/conf $HOME/share/gitolite/hooks
 
     In this example, all the binaries go to /usr/local/bin, and the shared
     conf and hooks files/directories go to the other 2 directories given.  All
     the 3 paths supplied MUST be absolute.
 
     [RPM packagers: you can supply a 4th argument to specify a 'buildroot'
-    directory.  DEB folks would call this a 'DESTDIR', I believe.]
+    directory.  DEB folks would call this a 'DESTDIR', I believe.  In this
+    usage the first 3 arguments are NOT optional]
 "
     exit 1;
 }
 
 die() { echo "$@"; echo; usage; exit 1; } >&2
-
-[ -z "$3" ] && usage
 
 validate_dir() {
     echo $1 | grep ^/ >/dev/null || die "$1 should be an absolute path"
@@ -33,6 +40,22 @@ validate_dir() {
 buildroot=$4;
 [ -n "$buildroot" ] && validate_dir $buildroot
 [ -n "$buildroot" ] && buildroot=$buildroot/
+
+# either all 3 args must be supplied or none at all
+[ -n "$1" ] && [ -z "$3" ] && die "I need all 3 directories or none at all"
+# supply default values to args 1, 2, and 3 if not provided
+[ -z "$1" ] && {
+    euid=$(perl -e 'print $>')
+    if [ "$euid" = "0" ]
+    then
+        set /usr/local/bin /var/gitolite/conf /var/gitolite/hooks
+    else
+        set $HOME/bin $HOME/share/gitolite/conf $HOME/share/gitolite/hooks
+    fi
+    echo "using default value for EUID=$euid:" >&2
+    echo "$@" >&2
+}
+
 gl_bin_dir=$1; validate_dir $buildroot$gl_bin_dir
 gl_conf_dir=$2; validate_dir $buildroot$gl_conf_dir
 gl_hooks_dir=$3; validate_dir $buildroot$gl_hooks_dir

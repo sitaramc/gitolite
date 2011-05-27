@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 export TESTDIR=$PWD
 
 # prepare local ssh
@@ -16,15 +17,31 @@ chmod 600 ~/.ssh/u?
 
 # blank out the server side
 echo the next command MAY ask for a password
-ssh gitolite-test@localhost rm -rf .ssh .gitolite .gitolite.rc repositories gitolite-install /tmp/glrb
+ssh gitolite-test@localhost rm -rf .ssh .gitolite .gitolite.rc repositories /tmp/glrb bin share
 echo the next command SHOULD ask for a password
 ssh-copy-id -i ~/.ssh/id_rsa gitolite-test@localhost
 echo the next command should NOT ask for a password
+scp ~/.ssh/tester.pub gitolite-test@localhost:
 
 # install it
-../src/gl-easy-install -q gitolite-test localhost tester
+echo installing whatever is here now...
+# ../src/gl-easy-install -q gitolite-test localhost tester
+cat <<EOF | ssh gitolite-test@localhost
+cd gitolite
+git describe --tags --long HEAD > conf/VERSION
+src/gl-system-install
+cd
+gl-setup -q tester.pub
+EOF
+echo =============================
+echo
+echo
+echo
 
 # add 6 keys
+rm -rf ~/gitolite-admin
+cd
+git clone gitolite:gitolite-admin
 cd ~/gitolite-admin
 cp $TESTDIR/keys/u*pub keydir
 git add keydir; git commit -m 'added 6 keys'
@@ -34,5 +51,5 @@ git push
 cd
 tar cf rollback.tar gitolite-admin
 ssh gitolite-test@localhost mkdir -p repositories /tmp/glrb
-ssh gitolite-test@localhost tar cf rollback.tar .ssh .gitolite .gitolite.rc repositories gitolite-install
+ssh gitolite-test@localhost tar cf rollback.tar .ssh .gitolite .gitolite.rc repositories bin share
 ssh gitolite-test@localhost tar -C /tmp -cf \$HOME/rollback2.tar glrb

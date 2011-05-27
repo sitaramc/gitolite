@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd
-rm -rf .ssh .gitolite .gitolite.rc repositories gitolite-install /tmp/glrb
+rm -rf .ssh .gitolite .gitolite.rc repositories gitolite-install /tmp/glrb bin share
 tar xf rollback.tar
 ( cd /tmp; tar xf ~/rollback2.tar )
 
