@@ -56,7 +56,7 @@ gitolite put your new hook in the correct place.
 	
 	ADMIN_POST_UPDATE_CHAINS_TO=hooks/post-update.tertiary
 	
-	if [[ -f $ADMIN_POST_UPDATE_CHAINS_TO || -L $ADMIN_POST_UPDATE_CHAINS_TO ]]; then
+	if [[ -x $ADMIN_POST_UPDATE_CHAINS_TO ]]; then
 	    exec $ADMIN_POST_UPDATE_CHAINS_TO "$@"
 	fi
 

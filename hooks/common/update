@@ -88,9 +88,7 @@ check_ref                (\@allowed_refs, $ENV{GL_REPO}, $_           , $att_acc
 
 # if we returned at all, all the checks succeeded.  Check secondary hooks now
 $UPDATE_CHAINS_TO ||= 'hooks/update.secondary';
-( -f $UPDATE_CHAINS_TO or -l $UPDATE_CHAINS_TO )
-    and system ( $UPDATE_CHAINS_TO, @ARGV )
-    and die "$UPDATE_CHAINS_TO died\n";
+-x $UPDATE_CHAINS_TO and system ( $UPDATE_CHAINS_TO, @ARGV ) and die "$UPDATE_CHAINS_TO died\n";
 
 # now log it and exit 0 so git can get on with it
 log_it("", "$att_acc\t" .  substr($oldsha, 0, 14) . "\t" . substr($newsha, 0, 14) .
