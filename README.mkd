@@ -2,38 +2,31 @@
 
 <a name="start"></a>
 
-***IMPORTANT NOTE: There is a [master table of contents of all gitolite
-documentation][docs] that can help if you're looking for stuff.  Just click
-the link and use your browser's search function (Ctrl-F, usually) to look for
-likely sounding words.  All documents are listed, as well as links to section
-headers in some of the longer documents***
-
-[docs]: http://sitaramc.github.com/gitolite
+The [install][install] document has a quick install section at the top for the
+impatient.  Just remember that "impatient" does not always mean "successful"
+;-)
 
 ----
 
 Gitolite is an access control layer on top of git, which allows access control
 down to the branch level, including specifying who can and cannot *rewind* a
-given branch.
+given branch.  [Here][who]'s some information on some of the projects and
+people using gitolite (and who, in turn, have helped shape its features).
 
 Gitolite comes with a **huge** amount of documentation.  If you're absolutely
 new, the suggested reading order is this:
 
   * the README (this document) for a quick intro
   * the [INSTALL][install] document
+      * the most common installation issues are caused by ssh.  Here's how
+        [gitolite uses ssh][doc9gas].  And here's an [ssh trouble
+        shooting][doc6sts] document
   * the [ADMIN][admin] document
+  * (if you're migrating from gitosis, read [this][migr])
 
-If you run into trouble start [here](#support).  If you're migrating from
-gitosis, read [this][migr].
-
-And [here][who]'s some information on some of the projects and people using
-gitolite (and who, in turn, have helped shape its features).
-
-Once you've installed it and started using it, you'll want to explore some of
-the more powerful features.  **The documentation is best read [online
-here][docs] or you can read it in your clone's `doc/` directory**.  All the
-longer documents have tables of contents, so you can quickly get a feel for
-what is covered right at the top.
+There is also a **[master TOC of all gitolite documentation][docs]**; use your
+browser's search function (Ctrl-F, usually) to look for likely sounding words
+or just browse around -- you never know what you'll find!
 
 ----
 
@@ -42,7 +35,6 @@ In this document:
   * <a href="#_what">what</a>
   * <a href="#_why">why</a>
   * <a href="#_main_features">main features</a>
-  * <a href="#_support">support</a>
   * <a href="#_security">security</a>
   * <a href="#_contact_and_license">contact and license</a>
 
@@ -54,9 +46,8 @@ In this document:
 
 Gitolite lets you use a single user on a server to host many git repositories
 and provide access to many developers, without having to give them real
-userids on or shell access to the server.  The essential magic in doing this
-is ssh's pubkey access and the `authorized_keys` file, and the inspiration was
-an older program called gitosis.
+userids on or shell access to the server.  Authentication is most commonly
+done using sshd, but you can also use httpd if you prefer.
 
 Gitolite can restrict who can read from (clone/fetch) or write to (push) a
 repository.  It can also restrict who can push to what branch or tag, which is
@@ -147,25 +138,6 @@ detail somewhere in gitolite's [doc/][docs] subdirectory.
   * specify repos using patterns (patterns may include creator's name)
   * define powerful operations on the server side, even github-like forking
 
-<a name="support"></a>
-
-<a name="_support"></a>
-
-### support
-
-Most installation problems are caused by not knowing ssh.  Take a look at this
-[transcript][] to see how simple it actually is, if your server's ssh daemon
-is behaving itself.  Someone also wrote a tutorial, see [here][tut].
-
-If I suspect your problem is an ssh issue, I will probably ignore it.  Please
-learn how [gitolite uses ssh][doc9gas] and then methodically go through the
-[ssh trouble shooting][doc6sts] document.  These two documents contain
-everything I could possibly tell you.  I have nothing to add.
-
-Even for other topics, please look through at least the table of contents of
-at least the numbered documents to see if your question is already answered,
-before asking.
-
 <a name="_security"></a>
 
 ### security
@@ -206,3 +178,4 @@ Gitolite is released under GPL v2.  See COPYING for details.
 [doc6sts]: http://sitaramc.github.com/gitolite/doc/ssh-troubleshooting.html
 [who]: http://sitaramc.github.com/gitolite/doc/who-uses-it.html
 [tut]: http://sites.google.com/site/senawario/home/gitolite-tutorial
+[docs]: http://sitaramc.github.com/gitolite

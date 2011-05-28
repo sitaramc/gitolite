@@ -9,9 +9,9 @@ user called "mob".  **This means all the access control is -- as you might
 expect -- in the gitolite.conf file, so make sure you don't give the `mob`
 user too many rights!**
 
-(tested on Fedora 13; assumes your gitolite server userid is "gitolite" and
-install was "from-client" method; adjust according to your environment.  If
-you need more than this, you should not be enabling mob branches anyway ;-)
+(tested on Fedora 14; assumes your gitolite server userid is "gitolite" and
+install was "non-root" method; adjust according to your environment.  If you
+need more than this, you should not be enabling mob branches anyway ;-)
 
 [hah!  Easy way out of being badgered with questions!]
 
@@ -23,7 +23,7 @@ you need more than this, you should not be enabling mob branches anyway ;-)
         export SSH_ORIGINAL_COMMAND
         SSH_ORIGINAL_COMMAND="$*"
 
-        /home/gitolite/.gitolite/src/gl-auth-command mob
+        /home/gitolite/bin/gl-auth-command mob
             # see one of the lines in ~gitolite/.ssh/authorized_keys for the
             # precise location of the gl-auth-command script
 
