@@ -996,10 +996,11 @@ sub setup_authkeys
     print $newkeys_fh "# gitolite end\n";
     close $newkeys_fh or die "$ABRT close newkeys failed: $!\n";
 
-    # all done; overwrite the file
-    wrap_print("$ENV{HOME}/.ssh/old_authkeys",      slurp("$ENV{HOME}/.ssh/authorized_keys"));
-    wrap_print("$ENV{HOME}/.ssh/authorized_keys",   slurp("$ENV{HOME}/.ssh/new_authkeys"));
-    unlink "$ENV{HOME}/.ssh/new_authkeys";
+    # all done; overwrite the file (use cat to avoid perm changes)
+    system("cat $ENV{HOME}/.ssh/authorized_keys > $ENV{HOME}/.ssh/old_authkeys");
+    system("cat $ENV{HOME}/.ssh/new_authkeys > $ENV{HOME}/.ssh/authorized_keys")
+        and die "couldn't write authkeys file\n";
+    system("rm  $ENV{HOME}/.ssh/new_authkeys");
 }
 
 # ----------------------------------------------------------------------------
