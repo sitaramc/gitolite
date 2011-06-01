@@ -2,6 +2,19 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v2.0.2
+
+  - self-service key management
+
+  - (from-client install method is now loosely deprecated)
+
+  - su-setperms and su-getperms, like su-expand -- allow an admin to get/set
+    perms on behalf of some user
+
+  - 'delete-branch' ADC -- this is the most practical way to allow someone to
+    delete a branch that they themselves created; see commit message for
+    89b68bf
+
   - v2.0.1
 
   - "hooklets" allow you to have any number of site-local 'update hook'
@@ -13,6 +26,8 @@ the tags can help you position stuff approximately
   - mirroring finally tested properly after v2
 
   - 'hub' adc (pull requests etc)
+
+  - s3backup ADC contributed by Bremner
 
   - warn() and die() are now logged
 
