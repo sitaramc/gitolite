@@ -1,0 +1,266 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+
+# pull in modules we need
+unshift @INC, $ENV{GL_BINDIR};
+require gitolite_rc or die "parse gitolite_rc.pm failed\n";
+gitolite_rc->import;
+require gitolite or die "parse gitolite.pm failed\n";
+gitolite->import;
+
+# get to the keydir
+die "keydir not accessible\n" unless -d $gitolite_rc::GL_KEYDIR;
+chdir($gitolite_rc::GL_KEYDIR);
+
+# save arguments for later
+my $operation = shift || 'list';
+my $keyid = shift || '';
+# keyid must fit a very specific pattern
+$keyid and $keyid !~ /^@[-0-9a-z_]+$/i and die "invalid keyid $keyid\n";
+
+# get the actual userid and keytype
+my $gl_user = $ENV{GL_USER};
+my $keytype = '';
+$keytype = $1 if $gl_user =~ s/^zzz-marked-for-(...)-//;
+print STDERR "hello $gl_user, you are currently using " .
+    ($keytype ? "a key in the 'marked for $keytype' state\n"
+              : "a normal (\"active\") key\n" );
+
+# ----
+# first collect the keys
+
+my (@pubkeys, @marked_for_add, @marked_for_del);
+# get the list of pubkey files for this user, including pubkeys marked for
+# add/delete
+
+for my $pubkey (`find . -type f -name "*.pub" | sort`) {
+    chomp($pubkey);
+    $pubkey =~ s(^./)();    # artifact of the find command
+
+    my $user = $pubkey;
+    $user =~ s(.*/)();                  # foo/bar/baz.pub -> baz.pub
+    $user =~ s/(\@[^.]+)?\.pub$//;      # baz.pub, baz@home.pub -> baz
+
+    next unless $user eq $gl_user or $user =~ /^zzz-marked-for-...-$gl_user/;
+
+    if ($user =~ m(^zzz-marked-for-add-)) {
+        push @marked_for_add, $pubkey;
+    } elsif ($user =~ m(^zzz-marked-for-del-)) {
+        push @marked_for_del, $pubkey;
+    } else {
+        push @pubkeys, $pubkey;
+    }
+}
+
+# ----
+# list mode; just do it and exit
+sub print_keylist {
+    my ($message, @list) = @_;
+    return unless @list;
+    print "== $message ==\n";
+    my $count=1;
+    for (@list) {
+        my $fp = fingerprint($_);
+        s/zzz-marked(\/|-for-...-)//g;
+        print $count++ . ": $fp : $_\n";
+    }
+}
+if ($operation eq 'list') {
+    print "you have the following keys:\n";
+    print_keylist("active keys", @pubkeys);
+    print_keylist("keys marked for addition/replacement", @marked_for_add);
+    print_keylist("keys marked for deletion", @marked_for_del);
+    print "\n\n";
+    exit;
+}
+
+# ----
+# please see docs for details on how a user interacts with this
+
+if ($keytype eq '') {
+    # user logging in with a normal key
+    die "valid operations: add, del, undo-add, confirm-del\n" unless $operation =~ /^(add|del|confirm-del|undo-add)$/;
+    if ($operation eq 'add') {
+        print STDERR "please supply the new key on STDIN.  (I recommend you
+        don't try to do this interactively, but use a pipe)\n";
+        kf_add($gl_user, $keyid, safe_stdin());
+    } elsif ($operation eq 'del') {
+        kf_del($gl_user, $keyid);
+    } elsif ($operation eq 'confirm-del') {
+        die "you dont have any keys marked for deletion\n" unless @marked_for_del;
+        kf_confirm_del($gl_user, $keyid);
+    } elsif ($operation eq 'undo-add') {
+        die "you dont have any keys marked for addition\n" unless @marked_for_add;
+        kf_undo_add($gl_user, $keyid);
+    }
+} elsif ($keytype eq 'del') {
+    # user is using a key that was marked for deletion.  The only possible use
+    # for this is that she changed her mind for some reason (maybe she marked
+    # the wrong key for deletion) or is not able to get her client-side sshd
+    # to stop using this key
+    die "valid operations: undo-del\n" unless $operation eq 'undo-del';
+
+    # reinstate the key
+    kf_undo_del($gl_user, $keyid);
+} elsif ($keytype eq 'add') {
+    die "valid operations: confirm-add\n" unless $operation eq 'confirm-add';
+    # user is trying to validate a key that has been previously marked for
+    # addition.  This isn't interactive, but it *could* be... if someone asked
+    kf_confirm_add($gl_user, $keyid);
+}
+
+exit;
+
+# ----
+
+# make a temp clone and switch to it
+our $TEMPDIR;
+BEGIN { $TEMPDIR=`mktemp -d -t tmp.XXXXXXXXXX`; }
+END { `/bin/rm -rf $TEMPDIR`; }
+sub cd_temp_clone {
+    chomp($TEMPDIR);
+    system("git clone $ENV{GL_REPO_BASE_ABS}/gitolite-admin.git $TEMPDIR");
+    chdir($TEMPDIR);
+    system("git config --get user.email || git config user.email \$USER@`hostname`");
+    system("git config --get user.name  || git config user.name  \"\$USER on `hostname`\"");
+}
+
+sub fingerprint {
+    my $fp = `ssh-keygen -l -f $_[0]`;
+    die "does not seem to be a valid pubkey\n" unless $fp =~ /(([0-9a-f]+:)+[0-9a-f]+ )/i;
+    return $1;
+}
+
+sub safe_stdin {
+    # read one line from STDIN
+    my $data;
+    my $ret = read STDIN, $data, 4096;
+    # current pubkeys are approx 400 bytes so we go a little overboard
+    die "could not read pubkey data" . (defined($ret) ? "" : ": $!") . "\n" unless $ret;
+    die "pubkey data seems to have more than one line\n" if $data =~ /\n./;
+    return $data;
+}
+
+sub highlander {
+    # there can be only one
+    my($keyid, @a) = @_;
+    # too many?
+    if (@a > 1) {
+        print STDERR "
+more than one key satisfies this condition, and I can't deal with that!
+The keys are:
+
+";
+        print STDERR "\t" . join("\n\t", @a), "\n\n";
+        exit 1;
+    }
+    # too few?
+    die "no keys with " . ($keyid || "empty") . " keyid found\n" unless @a;
+
+    return @a;
+}
+
+sub kf_add {
+    my($gl_user, $keyid, $keymaterial) = @_;
+
+    # add a new "marked for addition" key for $gl_user.
+    cd_temp_clone();
+    chdir("keydir");
+
+    mkdir("zzz-marked");
+    wrap_print("zzz-marked/zzz-marked-for-add-$gl_user$keyid.pub", $keymaterial);
+    system("git", "add", ".") and die "git add failed\n";
+    my $fp = fingerprint("zzz-marked/zzz-marked-for-add-$gl_user$keyid.pub");
+    system("git", "commit", "-m", "sskm: add $gl_user$keyid ($fp)") and die "git commit failed\n";
+    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+}
+
+sub kf_confirm_add {
+    my($gl_user, $keyid) = @_;
+    # find entries in both @pubkeys and @marked_for_add whose basename matches $gl_user$keyid
+    my @pk = highlander($keyid, grep { m(^(.*/)?$gl_user$keyid.pub$) } @pubkeys);
+    my @mfa = highlander($keyid, grep { m(^zzz-marked/zzz-marked-for-add-$gl_user$keyid.pub$) } @marked_for_add);
+
+    cd_temp_clone();
+    chdir("keydir");
+
+    my $fp = fingerprint($mfa[0]);
+    if ($pk[0]) {
+        system("git", "mv", "-f", $mfa[0], $pk[0]);
+        system("git", "commit", "-m", "sskm: confirm-add (replace) $pk[0] ($fp)") and die "git commit failed\n";
+    } else {
+        system("git", "mv", "-f", $mfa[0], "$gl_user$keyid.pub");
+        system("git", "commit", "-m", "sskm: confirm-add $gl_user$keyid ($fp)") and die "git commit failed\n";
+    }
+    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+}
+
+sub kf_undo_add {
+    # XXX some code at start is shared with kf_confirm_add
+    my($gl_user, $keyid) = @_;
+    my @mfa = highlander($keyid, grep { m(^zzz-marked/zzz-marked-for-add-$gl_user$keyid.pub$) } @marked_for_add);
+
+    cd_temp_clone();
+    chdir("keydir");
+
+    my $fp = fingerprint($mfa[0]);
+    system("git", "rm", $mfa[0]);
+    system("git", "commit", "-m", "sskm: undo-add $gl_user$keyid ($fp)") and die "git commit failed\n";
+    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+}
+
+sub kf_del {
+    my($gl_user, $keyid) = @_;
+
+    cd_temp_clone();
+    chdir("keydir");
+
+    mkdir("zzz-marked");
+    my @pk = highlander($keyid, grep { m(^(.*/)?$gl_user$keyid.pub$) } @pubkeys);
+
+    my $fp = fingerprint($pk[0]);
+    system("git", "mv", $pk[0], "zzz-marked/zzz-marked-for-del-$gl_user$keyid.pub") and die "git mv failed\n";
+    system("git", "commit", "-m", "sskm: del $pk[0] ($fp)") and die "git commit failed\n";
+    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+}
+
+sub kf_confirm_del {
+    my($gl_user, $keyid) = @_;
+    my @mfd = highlander($keyid, grep { m(^zzz-marked/zzz-marked-for-del-$gl_user$keyid.pub$) } @marked_for_del);
+
+    cd_temp_clone();
+    chdir("keydir");
+
+    my $fp = fingerprint($mfd[0]);
+    system("git", "rm", $mfd[0]);
+    system("git", "commit", "-m", "sskm: confirm-del $gl_user$keyid ($fp)") and die "git commit failed\n";
+    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+}
+
+sub kf_undo_del {
+    my ($gl_user, $keyid) = @_;
+
+    my @mfd = highlander($keyid, grep { m(^zzz-marked/zzz-marked-for-del-$gl_user$keyid.pub$) } @marked_for_del);
+
+    print STDERR "
+You're undeleting a key that is currently marked for deletion.
+    Hit ENTER to undelete this key
+    Hit Ctrl-C to cancel the undelete
+Please see documentation for caveats on the undelete process as well as how to
+actually delete it.
+";
+    <>; # yeay... always wanted to do that -- throw away user input!
+
+    cd_temp_clone();
+    chdir("keydir");
+
+    my $fp = fingerprint($mfd[0]);
+    system("git", "mv", "-f", $mfd[0], "$gl_user$keyid.pub" );
+    system("git", "commit", "-m", "sskm: undo-del $gl_user$keyid ($fp)") and die "git commit failed\n";
+    system("env", "GL_BYPASS_UPDATE_HOOK=1", "git", "push") and die "git push failed\n";
+}
