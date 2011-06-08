@@ -907,7 +907,8 @@ sub setup_authkeys
     # command and options for authorized_keys
     my $AUTH_COMMAND="$ENV{GL_BINDIR}/gl-auth-command";
     $AUTH_COMMAND="$ENV{GL_BINDIR}/gl-time $ENV{GL_BINDIR}/gl-auth-command" if $GL_PERFLOGT;
-    my $AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
+    # set default authentication options
+    $AUTH_OPTIONS ||= "no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
 
     # START
 
