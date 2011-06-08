@@ -57,13 +57,13 @@ BEGIN {
     $SIG{__DIE__} = sub {
         my $msg = join(' ', "Die generated at line", (caller)[2], "in", (caller)[1], ":", @_, "\n");
         $msg =~ s/[\n\r]+/<<newline>>/g;
-        log_it($msg);
+        log_it($msg) if $ENV{GL_LOG};
     };
 
     $SIG{__WARN__} = sub {
         my $msg = join(' ', "Warn generated at line", (caller)[2], "in", (caller)[1], ":", @_, "\n");
         $msg =~ s/[\n\r]+/<<newline>>/g;
-        log_it($msg);
+        log_it($msg) if $ENV{GL_LOG};
         warn @_;
     };
 }
