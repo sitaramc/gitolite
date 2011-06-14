@@ -35,8 +35,8 @@ With that background, here's the truth about gitolite:
 
 Yes, the default mode of using gitolite does use ssh keys, but all it's doing
 is helping you **setup** ssh-based authentication **as a convenience to you**.
-But nothing forces you to use it.  The best example: there are no ssh keys
-involved if you setup [smart http][sh] mode.
+But nothing forces you to use it.  The best example: gitolite does not setup
+any keys or passwords if you install it in [smart http][sh] mode.
 
 [sh]: http://sitaramc.github.com/gitolite/doc/http-backend.html
 
