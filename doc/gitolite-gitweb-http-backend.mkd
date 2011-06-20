@@ -101,6 +101,10 @@ For the purposes of example, we assume that we have two groups accessing each re
     # Repository Definitions
     #
 
+    # Note that we give access to the daemon user, thus enabling
+    # git-daemon-export-ok (see
+    # https://github.com/sitaramc/gitolite/blob/pu/doc/2-admin.mkd#gwd)
+
     repo    gitolite-admin
             RW      =   @sysops daemon
             R       =   @all
@@ -115,7 +119,7 @@ For the purposes of example, we assume that we have two groups accessing each re
     repo    operations
             RW      = @operations @engineering @gladmin daemon
             R       = @all
-            config  gitweb.url                  = git@git.example.com:engineering
+            config  gitweb.url                  = git@git.example.com:operations
             config  receive.denyNonFastforwards = true
             config  receive.denyDeletes         = true
 
