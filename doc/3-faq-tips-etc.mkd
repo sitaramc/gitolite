@@ -448,7 +448,9 @@ feature and tie it to gitolite.  Configuration example can be found in
 ##### umask setting
 
 Gitweb not able to read your repos?  You can change the umask for newly
-created repos to something more relaxed -- see the `~/.gitolite.rc` file
+created repos to something more relaxed -- see the `REPO_UMASK` setting in the [`~/.gitolite.rc`][rc] file.
+
+[rc]: http://sitaramc.github.com/gitolite/doc/gitolite.rc.html
 
 <a name="_advanced_features"></a>
 

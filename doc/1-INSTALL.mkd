@@ -11,6 +11,7 @@ In this document:
       * <a href="#_package_method">package method</a>
       * <a href="#_root_method">root method</a>
       * <a href="#_non_root_method">non-root method</a>
+          * <a href="#_upgrading_from_from_client_method_to_non_root_method">upgrading from from-client method to non-root method</a>
   * <a href="#_troubleshooting">troubleshooting</a>
   * <a href="#_important_points_to_note">important points to note</a>
   * <a href="#_naming_conventions_used">naming conventions used</a>
@@ -169,6 +170,38 @@ similar files and add it somehow.  Then:
 On your *workstation*:
 
     git clone git@server:gitolite-admin
+
+<a name="_upgrading_from_from_client_method_to_non_root_method"></a>
+
+##### upgrading from from-client method to non-root method
+
+Since the from-client method is now deprecated for reasons explained
+elsewhere, some folks may want to do their next upgrade using the non-root
+method.
+
+There are many, many ways to skin this cat; here's one way:
+
+  * follow non-root install but stop after the gl-system-install step
+
+  * temporarily rename your `~/.gitolite.rc` file to something else
+
+  * now run the gl-setup step
+
+    (background: this will create a default rc file with default values, but
+    crucially, it will give you the correct values for two very critical
+    variables that are not used in the old from-client install method)
+
+  * edit `~/.gitolite.rc` and bring in any non-default settings you may have
+    had in your old rc file.
+
+    When you're done, the only difference between your old and current rc
+    files should be that the `$GL_PACKAGE_CONF` and the `$GL_PACKAGE_HOOKS`
+    variables are no longer commented out and look somewhat like this:
+
+        $GL_PACKAGE_CONF = '/home/git/share/gitolite/conf';
+        $GL_PACKAGE_HOOKS = '/home/git/share/gitolite/hooks';
+
+    Now save the file.
 
 ----
 

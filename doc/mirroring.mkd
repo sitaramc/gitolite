@@ -114,7 +114,7 @@ slaves.
 #### generate keypairs
 
 Each server will be potentially logging on to one or more of the other
-servers, so first generate keypairs for all of them (`ssh-keygen`) and copy
+servers, so first generate keypairs on each of them (`ssh-keygen`) and copy
 the `.pub` files to all other servers, named appropriately.  So foo will have
 bar.pub and baz.pub, etc.
 

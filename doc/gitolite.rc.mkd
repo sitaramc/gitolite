@@ -60,6 +60,11 @@ things happen if you change them.
     adjust permissions of files and directories that have already been
     created.
 
+    **Note**: if you change this setting on a running gitolite install, you
+    *do* need to run a manual `chmod` on the server to fix up files already
+    created, since umask only affects the permissions on newly created files,
+    not existing ones.
+
 <a name="_variables_with_an_efficiency_performance_impact"></a>
 
 ### variables with an efficiency/performance impact
