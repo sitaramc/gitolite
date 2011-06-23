@@ -599,7 +599,7 @@ sub report_basic
     for my $r (sort keys %repos) {
         next unless $r =~ /$repo/i;
         # if $GL_BIG_CONFIG is on, limit the number of output lines
-        next if $GL_BIG_CONFIG and $count++ >= $BIG_INFO_CAP;
+        next if $GL_BIG_CONFIG and  $BIG_INFO_CAP and $count++ >= $BIG_INFO_CAP;
         if ($r =~ $REPONAME_PATT and $r !~ /\bCREAT[EO]R\b/) {
             parse_acl($r, "NOBODY");
         } else {
@@ -617,7 +617,7 @@ sub report_basic
         $perm .= perm_code( $repos{$r}{W}{'@all'} || $repos{'@all'}{W}{'@all'}, $repos{'@all'}{W}{$user}, $repos{$r}{W}{$user}, 'W');
         print "$perm\t$r\r\n" if $perm =~ /\S/ and not check_deny_repo($r);
     }
-    print "only $BIG_INFO_CAP out of $count candidate repos examined\r\nplease use a partial reponame or regex pattern to limit output\r\n" if $GL_BIG_CONFIG and $count > $BIG_INFO_CAP;
+    print "only $BIG_INFO_CAP out of $count candidate repos examined\r\nplease use a partial reponame or regex pattern to limit output\r\n" if $GL_BIG_CONFIG and $BIG_INFO_CAP and $count > $BIG_INFO_CAP;
     print "$GL_SITE_INFO\n" if $GL_SITE_INFO;
 }
 
@@ -646,13 +646,13 @@ sub expand_wild
         $actual_repo =~ s/\.git$//;
         # actual_repo has to match the pattern being expanded
         next unless $actual_repo =~ /$repo/i;
-        next if $GL_BIG_CONFIG and $count++ >= $BIG_INFO_CAP;
+        next if $GL_BIG_CONFIG and $BIG_INFO_CAP and $count++ >= $BIG_INFO_CAP;
 
         my($perm, $creator, $wild) = repo_rights($actual_repo);
         next unless $perm =~ /\S/;
         print "$perm\t$creator\t$actual_repo\n";
     }
-    print "only $BIG_INFO_CAP out of $count candidate repos examined\nplease use a partial reponame or regex pattern to limit output\n" if $GL_BIG_CONFIG and $count > $BIG_INFO_CAP;
+    print "only $BIG_INFO_CAP out of $count candidate repos examined\nplease use a partial reponame or regex pattern to limit output\n" if $GL_BIG_CONFIG and $BIG_INFO_CAP and $count > $BIG_INFO_CAP;
     print "$GL_SITE_INFO\n" if $GL_SITE_INFO;
 }
 
