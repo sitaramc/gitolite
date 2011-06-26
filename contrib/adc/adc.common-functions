@@ -45,7 +45,7 @@ valid_owned_repo() {
 get_rights_and_owner() {
     local ans
     repo=${1%.git}
-    ans=$(perl -I$GL_BINDIR -Mgitolite -e 'cli_repo_rights("'$repo'")')
+    ans=$(perl -I$GL_BINDIR -Mgitolite -e "cli_repo_rights('"$repo"')")
 
     # set shell variables as needed
     owner=${ans#* }
