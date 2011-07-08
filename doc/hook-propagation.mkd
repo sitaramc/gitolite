@@ -123,9 +123,7 @@ there; they're harmless/redundant (TODO)]
 This method was created later, just piggy-backing on everything that already
 existed to cater to the "package" and "root" methods.  In this method, the
 `$GL_PACKAGE_HOOKS` is as accessible or under your control as
-`$HOME/.gitolite`, so it doesn't matter where you put your hooks.  I
-*strongly* suggest putting them in `$GL_PACKAGE_HOOKS` and ignoring
-`$HOME/.gitolite` completely.
+`$HOME/.gitolite`, so it doesn't matter where you put your hooks.
 
 <a name="_when_do_hooks_propagate_"></a>
 

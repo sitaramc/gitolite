@@ -124,9 +124,10 @@ On your *server*, as *root*:
     # to upgrade gitolite, repeat the above commands.  Make sure you use the
     # same arguments for the last command each time.
 
-    # create your "hosting user" if not already created
-    useradd git
+    # now create your "hosting user" ('git' in our examples) using whatever
+    # command your distro expects you to use
 
+    # switch to the hosting user
     su - git
 
     # (now as git)
@@ -432,6 +433,10 @@ here's how to clean the slate.
         start` and `# gitolite end` inclusive.
       * remove `~/.gitolite`, `~/.gitolite.rc` and
         `~/repositories/gitolite-admin.git`
+      * depending on which install method you used, you may also need to clean
+        out all gitolite files from `/usr/local/bin` or `$HOME/bin`, and then
+        delete `/var/gitolite/conf` and `/var/gitolite/hooks` or
+        `$HOME/share/gitolite/conf` and `$HOME/share/gitolite/hooks`
 
 <a name="_uninstalling_gitolite_completely"></a>
 

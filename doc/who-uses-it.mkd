@@ -40,7 +40,7 @@ little one-man show!
 He explains his use of it [here][hiren].
 
 [wild]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html
-[hiren]: http://ece.uwaterloo.ca/~hdpatel/uwhtml/?p=470
+[hiren]: http://ece.uwaterloo.ca/~hdpatel/uwhtml/wildrepos-in-gitolite/
 
 **Gentoo Linux** has [just moved][gentoo1] their git repositories from gitosis
 to gitolite. There are about 200 repositories, some of them are the so called
