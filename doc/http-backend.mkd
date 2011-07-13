@@ -31,7 +31,7 @@ In this document:
     inherently less secure than pubkeys so not much point worrying about it.
 
   * I have not tested any of the ancillary standalone programs (like
-    gl-dont-panic) in this mode.  They're most likely going to crash and burn
+    gl-admin-push) in this mode.  They're most likely going to crash and burn
     because `$HOME` is not defined or in the wrong place; manually set
     `HOME=$GITOLITE_HTTP_HOME` and hope for the best.  Luckily most of them
     have to do with sshkeys so this may not matter.  YMMV.

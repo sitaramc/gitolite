@@ -131,7 +131,7 @@ gets this from `GL_BINDIR`.
 
 #### OUTLIER!
 
-  * gl-dont-panic is an outlier.  For some silly reason I have the notion that
+  * gl-admin-push is an outlier.  For some silly reason I have the notion that
     even if it runs from /tmp it should get the right values, so it is the
     only one that interrogates `~/.ssh/authorized_keys` to get the actual
     BINDIR in use!

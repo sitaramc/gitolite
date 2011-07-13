@@ -19,6 +19,7 @@ In this document:
           * <a href="#_personal_branches">"personal" branches</a>
           * <a href="#_custom_hooks_and_custom_git_config">custom hooks and custom git config</a>
           * <a href="#_bypassing_gitolite">bypassing gitolite</a>
+          * <a href="#_gl_admin_push_bypassing_gitolite_for_the_gitolite_admin_repo">gl-admin-push: bypassing gitolite for the gitolite-admin repo</a>
           * <a href="#_disabling_write_access_to_take_backups">disabling write access to take backups</a>
       * <a href="#_INconvenience_features">INconvenience features</a>
           * <a href="#_deleting_a_repo">deleting a repo</a>
@@ -326,11 +327,37 @@ to set that variable permanently, preferring this mode instead:
 
     GL_BYPASS_UPDATE_HOOK=1 git push
 
-**WARNING**: Do **NOT** try this with the special `gitolite-admin` repo.  That
-repo also runs a `post-update` hook which needs additional information which
-is NOT available if you bypass gitolite.  Mucking with that repo in this
-manner is strongly discouraged, as in "are you feeling lucky today?".  Use
-`gl-dont-panic` if you need to do some server-side surgery for that repo.
+<a name="_gl_admin_push_bypassing_gitolite_for_the_gitolite_admin_repo"></a>
+
+##### gl-admin-push: bypassing gitolite for the gitolite-admin repo
+
+The method described in the previous section (setting `GL_BYPASS_UPDATE_HOOK`)
+will work for all the repos managed by gitolite, **except** for the special
+`gitolite-admin` repo.  For that you will need some extra magic, because there
+is also a `post-update` hook that runs here, and this needs additional
+information which is NOT available if you bypass gitolite.
+
+Use the `gl-admin-push` program to make changes to the admin repo directly on
+the server.  Here's how:
+
+  * clone the repo to some safe location and cd to it:
+
+        cd /tmp
+        git clone ~/repositories/gitolite-admin.git
+        cd gitolite-admin
+
+  * make whatever changes you want to that clone and commit.  You can add new
+    keys, change the conf file, or anything at all that needs fixing up.  You
+    can even reset to an older commit (rewind) if that is the simplest way to
+    fix up some config problem that may have lost you your access.
+
+  * when done, instead of `git push <push arguments>`, use this program
+    instead, like so:
+
+        gl-admin-push <push arguments>
+
+Note that this method will work for *any* repo, not just the special admin
+repo.
 
 <a name="_disabling_write_access_to_take_backups"></a>
 

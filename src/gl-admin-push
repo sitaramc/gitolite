@@ -1,0 +1,50 @@
+#!/bin/sh
+
+die() { echo "$@"; exit 1; } >&2
+
+# ----------
+
+# if GL_BINDIR was not passed in, find it
+[ -z "$GL_BINDIR" ] &&
+    GL_BINDIR=$(  perl -ne 'print($1), exit if /^command="(.+?)\/gl-(time|auth-command) /' < $HOME/.ssh/authorized_keys)
+# GL_BINDIR still not known?  we have a problem...
+[ -z "$GL_BINDIR" ] && {
+    cat <<EOF2
+
+Unable to determine correct path for gitolite scripts from the authkeys file.
+
+Perhaps you haven't installed gitolite yet?
+
+Or perhaps this is an HTTP mode install?  If so, please set the GL_BINDIR
+environment variable to the full path of the gitolite scripts, then re-try
+this command.  For example (if you followed doc/http-backend.mkd precisely):
+
+    GL_BINDIR=/var/www/gitolite-home/bin $0 $@
+
+EOF2
+    exit 1
+}
+
+# ----------
+
+get_rc_val() {
+    $GL_BINDIR/gl-query-rc $1
+}
+
+# bypass the update hook
+export GL_BYPASS_UPDATE_HOOK
+GL_BYPASS_UPDATE_HOOK=1
+
+# for normal repos, the GL_BYPASS_UPDATE_HOOK above suffices, and in fact you
+# don't even need this program.  But for the gitolite-admin repo, the
+# post-update hook will also get called, which then needs these:
+export GL_RC
+export GL_BINDIR
+export GL_ADMINDIR
+GL_RC=$(get_rc_val GL_RC 2>/dev/null)
+[ -z "$GL_RC" ] && die "hmm weird... GL_RC is undefined; ABORTING"
+GL_BINDIR=$(  get_rc_val GL_BINDIR  )
+GL_ADMINDIR=$(get_rc_val GL_ADMINDIR)
+
+# and finally:
+git push "$@"

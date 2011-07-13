@@ -250,9 +250,11 @@ first place, so the simplest way is to enable it from the server side only.
 #### losing your admin key
 
 If you lost the admin key, and need to re-establish ownership of the
-gitolite-admin repository with a fresh key, take a look at the
-`src/gl-dont-panic` program.  You will need shell access to the server of
-course.  Run it without arguments to get instructions.
+gitolite-admin repository with a fresh key, get a shell on the server and use
+the program called `gl-admin-push` that comes with gitolite.  See instructions
+[here][gssp].
+
+[gssp]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_gl_server_side_push_bypassing_gitolite_for_the_gitolite_admin_repo
 
 <a name="_simulating_ssh_copy_id"></a>
 
@@ -431,14 +433,13 @@ invokes gitolite) is ignored.
 
 To fix this, you have to use a different keypair for gitolite access.  The
 best way to do this is to create a new keypair, copy the pubkey to the server
-as YourName.pub, then run `~/.gitolite/src/gl-dont-panic YourName.pub` on the
-server.  Remember to adjust your agent identities using ssh-add -D and ssh-add
-if you're using ssh-agent, otherwise these new keys may not work.
+as YourName.pub, then run `gl-setup YourName.pub` on the server.  Remember to
+adjust your agent identities using ssh-add -D and ssh-add if you're using
+ssh-agent, otherwise these new keys may not work.
 
-[In addition, for the 'from-client' install method, the admin may have used
-the wrong URL syntax, having **utterly failed** to read/heed the message that
-shows up at the end of running `gl-easy-install`.  In this case the keys are
-different, but the wrong one is being used.]
+NOTE: If you installed using the 'from-client' install method, `gl-setup`
+won't work.  You will have to use the more generic method described
+[here][gssp].
 
 <a name="_appendix_3_ssh_client_may_not_be_offering_the_right_key"></a>
 
