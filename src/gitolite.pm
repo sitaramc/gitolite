@@ -173,7 +173,10 @@ sub list_phy_repos
     my @phy_repos;
 
     wrap_chdir($REPO_BASE);
-    for my $repo (`find . -type d -name "*.git" -prune`) {
+    
+    my $max_depth = ($REPO_FIND_MAXDEPTH ? "-maxdepth $REPO_FIND_MAXDEPTH" : "" );
+    
+    for my $repo (`find . $max_depth -type d -name "*.git" -prune`) {
         chomp ($repo);
         $repo =~ s(\./(.*)\.git$)($1);
         push @phy_repos, $repo;
@@ -565,7 +568,8 @@ sub expand_wild
 
     chdir($REPO_BASE) or die "chdir $REPO_BASE failed: $!\n";
     my $count = 0;
-    for my $actual_repo (`find . -type d -name "*.git" -prune|sort`) {
+    my $max_depth = ($REPO_FIND_MAXDEPTH ? "-maxdepth $REPO_FIND_MAXDEPTH" : "" );
+    for my $actual_repo (`find . $max_depth -type d -name "*.git" -prune|sort`) {
         chomp ($actual_repo);
         $actual_repo =~ s/^\.\///;
         $actual_repo =~ s/\.git$//;
