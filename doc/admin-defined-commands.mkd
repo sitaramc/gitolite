@@ -177,9 +177,9 @@ or some such incantation.
 
 #### deleting/trashing repos
 
-See [contrib/adc/repo-deletion.README][rdR] for details about this.
+See the [repo-deletion document][rdR] for details about this.
 
-[rdR]: http://github.com/sitaramc/gitolite/blob/pu/contrib/adc/repo-deletion.README
+[rdR]: http://sitaramc.github.com/gitolite/contrib/adc/repo-deletion.html
 
 <a name="_enable_disable_push_access_temporarily"></a>
 

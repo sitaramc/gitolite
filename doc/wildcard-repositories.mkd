@@ -273,7 +273,7 @@ install/setup "adc"s (admin defined commands).  See
 [doc/admin-defined-commands.mkd][adc] for how to do that.
 
 [adc]: http://sitaramc.github.com/gitolite/doc/admin-defined-commands.html
-[rmr]: http://github.com/sitaramc/gitolite/blob/pu/contrib/adc/repo-deletion.README
+[rmr]: http://sitaramc.github.com/gitolite/contrib/adc/repo-deletion.html
 
 <a name="_how_it_actually_works"></a>
 

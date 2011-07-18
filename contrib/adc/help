@@ -36,7 +36,7 @@ deleting/trashing repos:
     you can then 'restore' whichever repo you need to bring back.
 
     More details can be found at:
-    http://github.com/sitaramc/gitolite/blob/pu/contrib/adc/repo-deletion.README
+    http://sitaramc.github.com/gitolite/contrib/adc/repo-deletion.html
 
 EOF
 
