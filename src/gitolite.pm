@@ -9,6 +9,7 @@ use Exporter 'import';
     check_repo_write_enabled
     cli_repo_rights
     dbg
+    dos2unix
     list_phy_repos
     ln_sf
     log_it
@@ -138,6 +139,12 @@ sub dbg {
     for my $i (@_) {
         print STDERR "DBG: " .  Dumper($i);
     }
+}
+
+sub dos2unix {
+    # WARNING: when calling this, make sure you supply a list context
+    s/\r\n/\n/g for @_;
+    return @_;
 }
 
 sub log_it {
@@ -310,8 +317,7 @@ sub new_wild_repo {
         my %perm_cats;
 
         if ($user and            -f "$REPO_BASE/$repo.git/gl-perms") {
-            my $fh = wrap_open("<", "$REPO_BASE/$repo.git/gl-perms");
-            my $perms = join ("", <$fh>);
+            my ($perms) = dos2unix(slurp("$REPO_BASE/$repo.git/gl-perms"));
             # discard comments
             $perms =~ s/#.*//g;
             # convert R and RW to the actual category names in the config file
