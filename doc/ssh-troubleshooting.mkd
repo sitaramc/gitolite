@@ -501,7 +501,7 @@ key.  (Using `git@server:reponame` will end up using the default key
 [transcript]: http://sitaramc.github.com/gitolite/doc/install-transcript.html
 [openssh56]: http://www.openssh.org/txt/release-5.6
 [tut]: http://sites.google.com/site/senawario/home/gitolite-tutorial
-[wo]: http://sitaramc.github.com/gitolite/doc/gitolite-without-ssh.html
+[wo]: http://sitaramc.github.com/gitolite/doc/authentication-vs-authorisation.html
 [putty]: http://sitaramc.github.com/gitolite/contrib/putty.html
 
 <a name="_appendix_5_why_bypassing_gitolite_causes_a_problem"></a>

@@ -1,0 +1,104 @@
+# authentication versus authorisation
+
+This document will explain why an "ssh issue" is almost never a "gitolite
+issue", and, indirectly, why I dont get too excited about the former.
+
+Note: for actual ssh troubleshooting see [this][glsts].
+
+[glsts]: http://sitaramc.github.com/gitolite/doc/ssh-troubleshooting.html
+
+----
+
+Here is a fundamental point: <font color="red">**Gitolite does not do
+authentication.  It only does authorisation**.</font>
+
+So first, let's loosely define these words:
+
+>   **Authentication** is the process of verifying that you are who you claim
+>   to be.  An authentication system will establish that I am the user
+>   "sitaram" on my work system.  The one behind gmail will similarly
+>   establish that I am "sitaramc".  And so on...
+
+>   **Authorisation** is the process of asking what you want to do and
+>   deciding if you're allowed to do it or not.
+
+Now, if you managed to read [doc/gitolite-and-ssh.mkd][gas], you know that
+gitolite is meant to be invoked as:
+
+    /full/path/to/gl-auth-command some-authenticated-gitolite-username
+
+(where the "gitolite username" is a "virtual" username; it does not have to
+be, and usually *isn't*, an actual *unix* username).
+
+As you can see, authentication happens before gitolite is called.
+
+[gas]: http://sitaramc.github.com/gitolite/doc/gitolite-and-ssh.html
+
+<a name="_but_but_you_have_all_that_ssh_stuff_in_there_"></a>
+
+### but... but... you have all that ssh stuff in there!
+
+The default mode of using gitolite does use ssh keys, but all it's doing is
+helping you **setup** ssh-based authentication **as a convenience to you**.
+
+You don't have to use it, though.  And many people don't.  The examples I know
+are [smart http][sh], and ldap-backed sshd.  In both cases, gitolite has no
+role to play in creating users, setting up their passwords/keys, etc.  There's
+even a `GL_NO_SETUP_AUTHKEYS` option to make sure gitolite doesn't meddle with
+the authkeys file in such installations.
+
+[sh]: http://sitaramc.github.com/gitolite/doc/http-backend.html
+
+<a name="_so_you_re_basically_saying_you_won_t_support_X_"></a>
+
+### so you're basically saying you won't support "X"
+
+(where "X" is some ssh related behaviour change or feature)
+
+Well, if it's not a security issue I *probably* won't.  I'm willing to change
+my mind if enough people convince me they need it.  (There's a mailing list if
+you want to find others who also need the same thing.)
+
+While we're on the subject, locking someone out is *not* a security issue.
+Even if you locked yourself (the admin) out, the docs tell you how to recover
+from such errors.  You do need some password based method to get a shell
+command line on the server, of course.
+
+<a name="_appendix_how_to_use_other_authentication_systems_with_gitolite"></a>
+
+### appendix: how to use other authentication systems with gitolite
+
+The bottom line in terms of how to invoke gitolite has been described above,
+and as long as you manage to do that gitolite won't even know how the
+authentication was done.  Which in turn means you can use whatever
+authentication scheme you want.
+
+It also expects the `SSH_ORIGINAL_COMMAND` environment variable to contain the
+full command (typically starting with git-receive-pack or git-upload-pack)
+that the client sent.  Also, when using [smart http][sh], things are somewhat
+different: gitolite uses certain environment variables that it expects httpd
+to have set up.  Even the user name comes from the `REMOTE_USER` environment
+variable instead of as a command line argument in this case.
+
+However, it has to be an authentication system that is compatible with sshd or
+httpd in some form.  Why?  Because the git *client* accessing the server only
+knows those 2 protocols to "speak git".  (Well, the `git://` protocol is
+unauthenticated, and `file://` doesn't really apply to this discussion, so
+we're ignoring those).
+
+For example, let's say you have an LDAP-based authentication system somewhere.
+It is possible to make apache use that to authenticate users, so when a user
+accesses a git url using `http://sitaram:password@git.example.com/repo`, it is
+LDAP that does the actual authentication.  [I wouldn't know how to do it but I
+know it is possible.  Patches to this doc explaining how are welcome!]
+
+There are also ssh daemons that use LDAP to store the authorised keys (instead
+of putting them all in `~/.ssh/authorized_keys`).  The clients will still need
+to generate keypairs and send them to the admin, but they can be more
+centrally stored and perhaps used by other programs or tools simultaneously,
+which can be useful.
+
+Finally, gitolite allows you to store *group* information externally too.  See
+[here][ldap] for more on this.
+
+[ldap]: http://sitaramc.github.com/gitolite/doc/big-config.html#_storing_usergroup_information_outside_gitolite_like_in_LDAP_
