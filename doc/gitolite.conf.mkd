@@ -110,6 +110,10 @@ A "rewind" is more often called a "non-fast forward push"; see git docs for
 what that is.  The `+` was chosen because it is part of the "git push" syntax
 for non-ff pushes.
 
+Note that *tags* are generally considered "write once", so they are treated
+specially by gitolite: you need rewind permission (`RW+`) to *overwrite* a
+tag with a new value.
+
 In a later section you'll see some more advanced permissions.
 
 <a name="_how_rules_are_matched"></a>

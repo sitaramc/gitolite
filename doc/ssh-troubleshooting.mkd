@@ -254,7 +254,7 @@ gitolite-admin repository with a fresh key, get a shell on the server and use
 the program called `gl-admin-push` that comes with gitolite.  See instructions
 [here][gssp].
 
-[gssp]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_gl_server_side_push_bypassing_gitolite_for_the_gitolite_admin_repo
+[gssp]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_gl_admin_push_bypassing_gitolite_for_the_gitolite_admin_repo
 
 <a name="_simulating_ssh_copy_id"></a>
 

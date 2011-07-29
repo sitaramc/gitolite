@@ -1,10 +1,12 @@
-# main README file for gitolite -- start here!
+# Hosting git repositories
 
 <a name="start"></a>
 
-The [install][install] document has a quick install section at the top for the
-impatient.  Just remember that "impatient" does not always mean "successful"
-;-)
+Gitolite allows you to setup git hosting on a central server, with
+fine-grained access control and many (many!) more powerful features.
+
+**Impatient?** The [install][install] document has a quick install section at
+the top.  Just remember that "impatient" does not always mean "successful" ;-)
 
 ----
 
