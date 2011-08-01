@@ -1,8 +1,13 @@
 ## hook propagation in gitolite
 
-Advanced users need to know how hooks propagate, and when.  They also need to
-know where to place their hooks, and since there appear to be two places to
-put them, what takes precedence.  I'll try and set out the logic here.
+Some users like to know how hooks propagate, and when, and why there appear to
+be two places to put them, and so on.  I'll try and set out the logic here.
+
+**Note**: This is **not** the document to read if you just want to install a
+new custom hook; treat it as more "theory" than "lab".  ([Here][ch] is the
+"lab" version!)
+
+[ch]: http://sitaramc.github.com/gitolite/doc/2-admin.html#_custom_hooks
 
 In this document:
 

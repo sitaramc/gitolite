@@ -26,7 +26,7 @@ In this document:
   * <a href="#_appendix_2_which_key_is_which_running_sshkeys_lint">appendix 2: which key is which -- running sshkeys-lint</a>
       * <a href="#_typical_cause_s_">typical cause(s)</a>
   * <a href="#_appendix_3_ssh_client_may_not_be_offering_the_right_key">appendix 3: ssh client may not be offering the right key</a>
-  * <a href="#_appendix_4_making_git_use_the_right_key_using_ssh_config_">appendix 4: making git use the right key using `~/.ssh/config`</a>
+  * <a href="#_appendix_4_host_aliases">appendix 4: host aliases</a>
   * <a href="#_appendix_5_why_bypassing_gitolite_causes_a_problem">appendix 5: why bypassing gitolite causes a problem</a>
 
 ----
@@ -452,7 +452,7 @@ won't work.  You will have to use the more generic method described
 
     If some keys *are* being offered, but not the key that was supposed to be
     used, you may be using ssh-agent (next bullet).  You may also need to
-    setup/edit `~/.ssh/config` (appendix 4).
+    create some host aliases in `~/.ssh/config` (appendix 4).
 
   * (ssh-agent issues) If `ssh-add -l` responds with either "The agent has no
     identities." or "Could not open a connection to your authentication
@@ -465,30 +465,47 @@ won't work.  You will have to use the more generic method described
     In that case, add the key you want using `ssh-add ~/.ssh/YourName` and try
     the access again.
 
-<a name="_appendix_4_making_git_use_the_right_key_using_ssh_config_"></a>
+<a name="_appendix_4_host_aliases"></a>
 
-### appendix 4: making git use the right key using `~/.ssh/config`
+### appendix 4: host aliases
 
-If you have several pubkeys with access to the same server, you **need** to
-create/edit a file called `~/.ssh/config` to make sure git picks up the right
-one when it accesses the server.  There is no other way to do this, as far as
-I know.
+(or "making git use the right options for ssh")
 
-  * (side note) this is *mandatory* for the 'from-client' method of install,
-    and indeed that mode automatically sets up all this anyway.  This install
-    method runs from the client, so it clearly needs a shell-capable key which
-    is distinct from the gitolite key for the admin user.
+The ssh command has several options for non-default items to be specified.
+Two common examples are `-p` for the port number if it is not 22, and `-i` for
+the public key file if you do not want to use just `~/.ssh/id_rsa` or such.
 
-What you need is to add something like this to `~/.ssh/config`:
+Git has two ssh-based URL syntaxes, but neither allows specifying a
+non-default public key file.  And a port number is only allowed in one of
+them.  (See `man git-clone` for details).  Finally, hosts often have to be
+referred with IP addresses (such is life), or the name is very long, or hard
+to remember.
+
+Using a "host" para in `~/.ssh/config` lets you nicely encapsulate all this
+within ssh and give it a short, easy-to-remember, name.  Example:
 
     host gitolite
-         user git
-         hostname server
-         identityfile ~/.ssh/YourName
+        user git
+        hostname a.long.server.name.or.annoying.IP.address
+        port 22
+        identityfile ~/.ssh/id_rsa
 
-Now you can use `gitolite:reponame` as the URL to make ssh use the named
-key.  (Using `git@server:reponame` will end up using the default key
-`id_rsa` and, presumably, bypass gitolite).
+Now you can simply use the one word `gitolite` (which is the host alias we
+defined here) and ssh will infer all those details defined under it -- just
+say `ssh gitolite` and `git clone gitolite:reponame` and things will work.
+
+(By the way, the 'port' and 'identityfile' lines are needed only if you have
+non-default values, although I put them in anyway just to be complete).
+
+If you have *more than one* pubkey with access to the *same* server, you
+**must** use this method to make git pick up the right key.  There is no other
+way to do this, as far as I know.
+
+>   *Side note*: this is *mandatory* in the 'from-client' method of install,
+>   and indeed that mode automatically sets up all this anyway.  This install
+>   method runs from the client, so it starts with one key that can get a
+>   shell on the server, and then creates another one as the "gitolite key"
+>   for the admin user.
 
 ----
 
