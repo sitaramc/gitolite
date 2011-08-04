@@ -63,7 +63,7 @@ umask($REPO_UMASK);
 wrap_mkdir($REPO_BASE);
 wrap_mkdir($GL_ADMINDIR, 0700);
 # mkdir $GL_ADMINDIR's subdirs
-for my $dir qw(conf doc keydir logs src hooks hooks/common hooks/gitolite-admin) {
+for my $dir (qw(conf doc keydir logs src hooks hooks/common hooks/gitolite-admin)) {
     # some of them will stay empty; too lazy to fix right now ;-)
     wrap_mkdir("$GL_ADMINDIR/$dir", 0700);
 }
@@ -112,7 +112,7 @@ if ( -d "gitolite-admin.git/hooks" ) {
 }
 
 # fixup program renames
-for my $oldname qw(pta-hook.sh conf-convert.pl 00-easy-install.sh 99-emergency-addkey.sh gl-emergency-addkey install.pl update-hook.pl hooks/update ga-post-update-hook VERSION) {
+for my $oldname (qw(pta-hook.sh conf-convert.pl 00-easy-install.sh 99-emergency-addkey.sh gl-emergency-addkey install.pl update-hook.pl hooks/update ga-post-update-hook VERSION)) {
     unlink "$GL_ADMINDIR/src/$oldname";
     unlink "$ENV{HOME}/gitolite-install/src/$oldname";
 }
