@@ -245,6 +245,11 @@ sub parse_conf_line
         for my $repo (@{ $repos_p })       # each repo in the current stanza
         {
             $git_configs{$repo}{$key} = $value;
+
+            # force entry in %repos.  Without this, a repo para with just a
+            # config line and no ACLs gets ignored in the output
+            $repos{$repo}{HAS_CONFIG} = 1;
+
             # no problem if it's a plain repo (non-pattern, non-groupname)
             # OR wild configs are allowed
             unless ( ($repo =~ $REPONAME_PATT and $repo !~ /^@/) or $GL_GITCONFIG_WILD) {

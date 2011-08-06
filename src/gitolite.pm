@@ -644,13 +644,18 @@ sub parse_acl
     # the old "convenience copy" thing.  Now on steroids :)
 
     # note that when copying the @all entry, we retain the destination name as
-    # @all; we dont change it to $repo or $gl_user
+    # @all; we dont change it to $repo or $gl_user.  We need to maintain this
+    # distinction to be able to print the @/#/& prefixes in the report output
+    # (see doc/report-output.mkd)
     for my $r ('@all', @repo_plus) {
         my $dr = $repo; $dr = '@all' if $r eq '@all';
         $repos{$dr}{DELETE_IS_D} = 1 if $repos{$r}{DELETE_IS_D};
         $repos{$dr}{CREATE_IS_C} = 1 if $repos{$r}{CREATE_IS_C};
         $repos{$dr}{NAME_LIMITS} = 1 if $repos{$r}{NAME_LIMITS};
-        $git_configs{$dr} = $git_configs{$r} if $git_configs{$r};
+        # this needs to copy the key-value pairs from RHS to LHS, not just
+        # assign RHS to LHS!  However, we want to roll in '@all' configs also
+        # into the actual $repo; there's no need to preserve the distinction
+        map { $git_configs{$repo}{$_} = $git_configs{$r}{$_} } keys %{$git_configs{$r}} if $git_configs{$r};
 
         for my $u ('@all', "$gl_user - wild", @user_plus, keys %perm_cats) {
             my $du = $gl_user; $du = '@all' if $u eq '@all' or ($perm_cats{$u} || '') eq '@all';
