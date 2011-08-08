@@ -2,6 +2,10 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v2.0.3
+
+  - gl-dont-panic replaced by more generic gl-admin-push
+
   - v2.0.2
 
   - self-service key management
