@@ -93,10 +93,6 @@ unless ($ENV{SSH_ORIGINAL_COMMAND}) {
     $ENV{SSH_ORIGINAL_COMMAND} = 'info';
 }
 
-# slave mode should not do much
-die "server is in slave mode; you can only fetch\n"
-    if ($GL_SLAVE_MODE and $ENV{SSH_ORIGINAL_COMMAND} !~ /^(info|expand|get|git-upload-)/);
-
 # admin defined commands; please see doc/admin-defined-commands.mkd
 if ($GL_ADC_PATH and -d $GL_ADC_PATH) {
     try_adc();  # if it succeeds, this also 'exec's out
@@ -139,6 +135,18 @@ $ENV{GL_REPO}=$repo;
 #       the real git commands (git-receive-pack, etc...)
 # ----------------------------------------------------------------------------
 
+# we know the user and repo; we just need to know what perm he's trying for
+# (aa == attempted access; setting this makes some later logic simpler)
+my $aa = ($verb =~ $R_COMMANDS ? 'R' : 'W');
+
+# writes may get redirected under certain conditions
+if ( $GL_HOSTNAME and $aa eq 'W' and mirror_mode($repo) =~ /^slave of (\S+)/ ) {
+    my $master = $1;
+    die "$ABRT $GL_HOSTNAME not the master, please push to $master\n" unless mirror_redirectOK($repo, $GL_HOSTNAME);
+    print STDERR "$GL_HOSTNAME ==== $user ($repo) ===> $master\n";
+    exec("ssh", $master, "USER=$user", "SOC=$ENV{SSH_ORIGINAL_COMMAND}");
+}
+
 # first level permissions check
 
 my ($perm, $creator, $wild);
@@ -150,9 +158,6 @@ if ( $GL_ALL_READ_ALL and $verb =~ $R_COMMANDS and -d "$REPO_BASE/$repo.git") {
 # it was missing, and you have create perms, so create it
 new_wild_repo($repo, $user) if ($perm =~ /C/);
 
-# we know the user and repo; we just need to know what perm he's trying for
-# (aa == attempted access)
-my $aa = ($verb =~ $R_COMMANDS ? 'R' : 'W');
 die "$aa access for $repo DENIED to $user
 (Or there may be no repository at the given path. Did you spell it correctly?)\n" unless $perm =~ /$aa/;
 

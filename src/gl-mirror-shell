@@ -1,30 +1,139 @@
-#!/bin/bash
+#!/usr/bin/perl
 
-export GL_BYPASS_UPDATE_HOOK
-GL_BYPASS_UPDATE_HOOK=1
+# terminology:
+#   native repo: a repo for which we are the master; pushes happen here
+#   authkeys: shorthand for ~/.ssh/authorized_keys
 
-get_rc_val() {
-    ${0%/*}/gl-query-rc $1
+# this is invoked in one of two ways:
+
+# (1) locally, from a shell script or command line
+
+# (2) from a remote server, via authkeys, with one argument (the name of the
+# sending server), similar to what happens with normal users and the
+# 'gl-auth-command' program.  SSH_ORIGINAL_COMMAND will then contain the
+# actual command that the remote sent.
+#
+# Currently, these commands are (a) 'info', (b) 'git-receive-pack' when a
+# mirror push is *received* by a slave, (c) 'request-push' sent by a slave
+# (possibly via an ADC) when the slave finds itself out of sync, (d) a
+# redirected push, from a user pushing to a slave, which is represented not by
+# a command per se but by starting with "USER=..."
+
+use strict;
+use warnings;
+
+# ----------------------------------------------------------------------------
+# this section of code snarfed from gl-auth-command
+# XXX add this program to 'that bindir thing' in doc/developer-notes.mkd
+BEGIN {
+    $0 =~ m|^(/)?(.*)/| and $ENV{GL_BINDIR} = ($1 || "$ENV{PWD}/") . $2;
 }
 
-REPO_BASE=$( get_rc_val REPO_BASE)
-REPO_UMASK=$(get_rc_val REPO_UMASK)
+use lib $ENV{GL_BINDIR};
 
-umask $REPO_UMASK
+use gitolite_rc;
+use gitolite_env;
+use gitolite;
 
-if echo $SSH_ORIGINAL_COMMAND | egrep git-upload\|git-receive >/dev/null
-then
+setup_environment();
+die "fatal: GL_HOSTNAME not set in rc; mirroring disabled\n" unless $GL_HOSTNAME;
 
-    # the (special) admin post-update hook needs these, so we cheat
-    export GL_RC
-    export GL_ADMINDIR
-    export GL_BINDIR
-    GL_RC=$(      get_rc_val GL_RC)
-    GL_ADMINDIR=$(get_rc_val GL_ADMINDIR)
-    GL_BINDIR=$(  get_rc_val GL_BINDIR)
+my $soc = $ENV{SSH_ORIGINAL_COMMAND} || '';
 
-    SSH_ORIGINAL_COMMAND=`echo $SSH_ORIGINAL_COMMAND | sed -e "s:':'$REPO_BASE/:"`
-    exec git shell -c "$SSH_ORIGINAL_COMMAND"
-else
-    bash -c "cd $REPO_BASE; $SSH_ORIGINAL_COMMAND"
-fi
+# ----------------------------------------------------------------------------
+
+# deal with local invocations first
+
+# on the "master", run from a shell, for one specific repo, with an optional
+# list of slaves, like so:
+#       gl-mirror-shell request-push some-repo [optional-list-of-slaves]
+if ( ($ARGV[0] || '') eq 'request-push' and not $soc) {
+    shift;
+    # rest of the arguments are fit to go directly to gl-mirror-push
+    # (reponame, optional list of slaves)
+    system("gl-mirror-push", @ARGV);
+
+    exit;
+}
+
+unless (@ARGV) { print STDERR "fatal: missing argument\n"; exit 1; }
+
+# ----------
+
+# now the remote invocations; log it, then get the sender name
+my $sender = shift;
+$ENV{GL_USER} ||= "host:$sender";
+log_it();
+
+# ----------
+
+# our famous 'info' command
+if ($soc eq 'info') {
+    print STDERR "Hello $sender, I am $GL_HOSTNAME\n";
+
+    exit;
+}
+
+# ----------
+
+# when running on the "slave", we have to "receive" the `git push --mirror`
+# from a master.  Check that the repo is indeed a slave and the sender is the
+# correct master before allowing the push.
+
+if ($soc =~ /^git-receive-pack '(\S+)'$/) {
+    my $repo = $1;
+    my $mm = mirror_mode($repo);
+
+    # reminder: we're not going through the slave-side gl-auth-command.  This
+    # is a server-to-server transaction, with an authenticated sender.
+    # Authorisation consists of checking to make sure our config says this
+    # sender is indeed the master for this repo
+    die "$ABRT fatal: $GL_HOSTNAME <==//== $sender mirror-push rejected: $repo is $mm\n" unless $mm eq "slave of $sender";
+    print STDERR "$GL_HOSTNAME <=== ($repo) ==== $sender\n";
+
+    $ENV{GL_BYPASS_UPDATE_HOOK} = 1;
+    # replace the repo path with the full path and hand off to git-shell
+    # m-TODO: the admin repo will need more stuff :)
+    $soc =~ s(')('$ENV{GL_REPO_BASE_ABS}/);
+    exec("git", "shell", "-c", $soc);
+}
+
+# ----------
+
+# a slave may have found itself out of sync (perhaps the network was down at
+# the time of the last push to the master), and now wants to request a sync.
+# This is similar to the "local invocation" described above, but we check the
+# sender name against gitolite.mirror.slaves to prevent some random slave from
+# asking for a repo it should not be having!
+
+if ($soc =~ /^request-push (\S+)$/) {
+    my $repo = $1;
+    die "$ABRT fatal: $GL_HOSTNAME ==//==> $sender refused: not in slave list\n" unless mirror_listslaves($repo) =~ /(^|\s)$sender(\s|$)/;
+    print STDERR "$GL_HOSTNAME ==== ($repo) ===> $sender\n";
+    # just one sender, and we've checked that he is "on the list".  Foreground...
+    system("$ENV{GL_BINDIR}/gl-mirror-push", $repo, "-fg", $sender);
+
+    exit;
+}
+
+# ----------
+
+# experimental feature...
+
+# when running on the "master", receive a redirected push from a slave.  This
+# is disabled by default and needs to be explicitly enabled on both the master
+# and the slave.  SEE DOCUMENTATION FOR CAVEATS AND CAUTIONS.
+
+if ($soc =~ /^USER=(\S+) SOC=(git-receive-pack '(\S+)')$/) {
+
+    my $user = $1;
+    $ENV{SSH_ORIGINAL_COMMAND} = $2;
+    my $repo = $3;
+    die "$ABRT fatal: $GL_HOSTNAME <==//== $sender redirected push rejected\n" unless mirror_redirectOK($repo, $sender);
+    print STDERR "$GL_HOSTNAME <=== $user ($repo) ==== $sender\n";
+
+    my $pgm = $0;
+    $pgm =~ s([^/]+$)(gl-auth-command);
+
+    exec($pgm, $user);
+}

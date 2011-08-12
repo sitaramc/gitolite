@@ -1,0 +1,88 @@
+#!/bin/sh
+
+# arguments: reponame, list of slaves
+
+# optional flag after reponame: "-fg" to run in foreground.  This is only
+# going to be given by one specific invocation, and if given will only work
+# for one slave.
+
+# if list of slaves not given, get it from '...slaves' config
+
+die() { echo gl-mirror-push${hn:+ on $hn}: "$@" >&2; exit 1; }
+get_rc_val() { ${0%/*}/gl-query-rc $1; }
+
+# ----------
+
+# is mirroring even enabled?
+hn=`get_rc_val GL_HOSTNAME`
+[ -z "$hn" ] && exit
+
+# we should not be invoked directly from the command line
+[ -z "$GL_LOG" ] && die fatal: do not run $0 directly
+
+# ----------
+
+# get repo name then check if it's a local or slave (ie we're not the master)
+[ -z "$1" ] && die fatal: missing reponame argument
+repo=$1; shift
+
+REPO_BASE=`get_rc_val REPO_BASE`
+cd $REPO_BASE/$repo.git
+gmm=`git config --get gitolite.mirror.master`
+
+# is it local? (remember, empty/undef ==> local
+gmm=${gmm:-local}
+[ "$gmm" = "local" ] && exit
+
+# is it a slave?
+[ "$hn" = "$gmm" ] || die fatal: wrong master.  Try $gmm...
+
+# ----------
+
+# now see if we want to be foregrounded.  Fg mode accepts only one slave
+[ "$1" = "-fg" ] && {
+    [ -z "$2" ] && die fatal: missing slavename argument
+    [ -n "$3" ] && die fatal: too many slavenames
+    git push --mirror $2:$repo 2>&1 | sed -e "s/^/$hn:/"
+    exit
+}
+
+# ----------
+
+# normal (self-backgrounding) mode.  Any number of slaves.  If none are given,
+# use the slave list from the repo config
+
+export slaves
+if [ -n "$1" ]
+then
+    slaves="$*"
+else
+    slaves=`git config --get gitolite.mirror.slaves`
+fi
+
+# ----------
+
+# print out the job ID, then redirect all 3 FDs
+export job_id=$$        # can change to something else if needed
+echo "($job_id&) $hn ==== ($repo) ===>" $slaves >&2
+logfile=${GL_LOG/%.log/-mirror-pushes.log}
+exec >>$logfile 2>&1 </dev/null
+
+# ----------
+
+# and finally...
+
+# double fork, no zombies
+(
+    (
+        echo `date +%T` $repo '===>'
+
+        for s in $slaves
+        do
+            [ "$s" = "$hn" ] && continue    # skip ourselves
+            git push --mirror $s:$repo
+        done 2>&1 | sed -e "s/^/    /"
+        echo `date +%T` '===>' $slaves
+        echo
+    )  2>&1 | sed -e "s/^/$job_id:/" &        # background the whole thing
+)
