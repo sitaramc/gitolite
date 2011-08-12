@@ -22,11 +22,16 @@ use Exporter 'import';
     setup_git_configs
     setup_gitweb_access
     shell_out
+    slurp
     special_cmd
     try_adc
     wrap_chdir
     wrap_open
     wrap_print
+
+    mirror_mode
+    mirror_listslaves
+    mirror_redirectOK
 );
 @EXPORT_OK = qw(
     %repos
@@ -1180,6 +1185,47 @@ sub ext_cmd_svnserve
     $SVNSERVE =~ s/%u/$ENV{GL_USER}/g;
     exec $SVNSERVE;
     die "svnserve exec failed\n";
+}
+
+# ----------------------------------------------------------------------------
+#       MIRRORING HELPERS
+# ----------------------------------------------------------------------------
+
+sub mirror_mode {
+    my $repo = shift;
+
+    # 'local' is the default if the config is empty or not set
+    my $gmm = `git config --file $REPO_BASE/$repo.git/config --get gitolite.mirror.master` || 'local';
+    chomp $gmm;
+    return 'local' if $gmm eq 'local';
+    return 'master' if $gmm eq ( $GL_HOSTNAME || '' );
+    return "slave of $gmm";
+}
+
+sub mirror_listslaves {
+    my $repo = shift;
+
+    return ( `git config --file $REPO_BASE/$repo.git/config --get gitolite.mirror.slaves` || '' );
+}
+
+sub mirror_redirectOK {
+    my $repo = shift;
+    my $slave = shift || '';
+
+    my $gmrOK = `git config --file $REPO_BASE/$repo.git/config --get gitolite.mirror.redirectOK` || '';
+    chomp $gmrOK;
+    my $slavelist = mirror_listslaves($repo);
+
+    # if gmrOK is 'true', any valid slave can redirect
+    return 1 if $gmrOK eq 'true' and $slavelist =~ /(^|\s)$slave(\s|$)/;
+    # otherwise, gmrOK is a list of slaves who can redirect
+    return 1 if $gmrOK =~ /(^|\s)$slave(\s|$)/;
+
+    return 0;
+
+    # LATER/NEVER: include a call to an external program to override a 'true',
+    # based on, say, the time of day or network load etc.  Cons: shelling out,
+    # deciding the name of the program (yet another rc var?)
 }
 
 # ------------------------------------------------------------------------------

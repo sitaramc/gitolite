@@ -23,6 +23,7 @@ use Exporter 'import';
     $GL_SLAVE_MODE $GL_WILDREPOS $GL_WILDREPOS_DEFPERMS
     $GL_WILDREPOS_PERM_CATS $HTPASSWD_FILE $PROJECTS_LIST $REPO_BASE
     $REPO_UMASK $RSYNC_BASE $SVNSERVE $UPDATE_CHAINS_TO $AUTH_OPTIONS
+    $GL_HOSTNAME
 
     $GL_HTTP_ANON_USER
 );
@@ -71,6 +72,11 @@ do $ENV{GL_RC} or die "error parsing $ENV{GL_RC}\n";
 
 # fix up REPO_BASE
 $REPO_BASE = "$ENV{HOME}/$REPO_BASE" unless $REPO_BASE =~ m(^/);
+
+# <sigh> backward incompat detection for mirroring.  Normally I wouldn't do
+# this but this is *important*
+die "$ABRT Mirroring has completely changed in this version.\tYou need to check the documentation for how to upgrade\n"
+    if (defined $GL_SLAVE_MODE or exists $ENV{GL_SLAVES});
 
 # ------------------------------------------------------------------------------
 # per perl rules, this should be the last line in such a file:

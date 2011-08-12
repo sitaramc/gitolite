@@ -67,6 +67,7 @@ $SVNSERVE = "";
 # PLEASE USE SINGLE QUOTES ABOVE, NOT DOUBLE QUOTES
 $GL_WILDREPOS_PERM_CATS = "READERS WRITERS";
 # $GL_SITE_INFO = "XYZ.COM DEVELOPERS: PLEASE SEE http://xyz.com/gitolite/help first";
+# $GL_HOSTNAME = "frodo";       # read doc/mirroring.mkd COMPLETELY before setting this
 
 # ------------------------------------------------------------------------------
 # rarely changed variables
