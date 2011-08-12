@@ -1,75 +1,106 @@
-#!/bin/sh
+#!/usr/bin/perl -w
 
-# BEGIN USAGE
+# help/instructions are at the bottom, in the __DATA__ section
 
-# $0 -- make some server side tasks easier
+use strict;
+use warnings;
 
-# Usage:
-#   $0 [sub-command [args]]
+use FindBin;
+BEGIN { $ENV{GL_BINDIR} = $FindBin::Bin; }
 
-# Security notes: this program does not do any sanitisation of input.  You're
-# running it at the CLI on the server, so you already have the power to do
-# whatever you want anyway.
+use lib $ENV{GL_BINDIR};
+use gitolite_rc;
+use gitolite;
 
-# current sub-commands:
+sub usage { print <DATA>; exit 1; }
+usage() unless (@ARGV);
 
-# (1) REPLACE THE OLD $SHELL_USERS MECHANISM
-#
-#       $0 shell-add foo.pub
-#
-# adds the pubkey in foo.pub into the authkeys file with "-s" argument (shell
-# access) and user "foo".  The line will be added *before* the "# gitolite
-# start" section, so that a gitolite-admin push will not affect it.
+my $cmd = shift;
+my $pub = shift;
 
-# Although there is no "shell-remove" sub-command, you can do that quite
-# easily by editing ~/.ssh/authorized_keys and deleting the appropriate line.
-
-# END USAGE
-
-
-die() { echo "$@"; exit 1; } >&2
-
-if [ -z "$1" ]
-then
-    perl -ne 's/\$0/$ARGV/ge; print if /BEGIN USAGE/../END USAGE/' $0 | grep -v USAGE | cut -c3-
-    exit 1
-fi
-
-if [ "$1" = "shell-add" ]
-then
+if ($cmd eq 'add-shell-user' or $cmd eq 'add-mirroring-peer') {
     # sanity checks
-    [ -z "$2" ] && exec $0
-    [ -f "$2" ] || die "$2 does not exist"
-    wc -l < $2 | grep '^1$' >/dev/null || die "$2 contains more than one line"
+    $pub or usage();
+    my $user = validate_pubkeyfile($pub);
+
+    # write the file out, with the new authkeys line added just *before* the
+    # gitolite section.  But first, set the command that gets invoked
+    $cmd = ( $cmd eq 'add-shell-user' ? 'gl-auth-command -s' : 'gl-mirror-shell' );
+    ak_insert($cmd, $user, $pub);
+
+    exit 0;
+}
+
+die "could not understand command $cmd\n";
+
+sub validate_pubkeyfile {
+    my $pub = shift;
+
+    -f $pub or die "$pub does not exist\n";
+    die "$pub contains more than one line\n" if wc_l($pub) > 1;
+
+    my $user = $pub;
+    $user =~ s(^.*/)();  # remove optional directory
+    die "file name must end in .pub\n" unless $user =~ /(.*)\.pub$/;
+    $user = $1;
+
+    return $user;
+}
+
+sub ak_insert {
+    my ($cmd, $user, $pub) = @_;
 
     # must be kept consistent with what's in src/gl-compile-conf; on the plus
     # side, it's not likely to change anytime soon!
-    AUTH_OPTIONS="no-port-forwarding,no-X11-forwarding,no-agent-forwarding"
+    my $AUTH_OPTIONS = "no-port-forwarding,no-X11-forwarding,no-agent-forwarding";
 
-    GL_BINDIR=`${0%/*}/gl-query-rc GL_BINDIR`
+    my $authline = "command=\"$ENV{GL_BINDIR}/$cmd $user\",$AUTH_OPTIONS " . slurp($pub);
 
-    pubkey_file=$2
-    user=`basename $pubkey_file .pub`
+    my $authkeys = "$ENV{HOME}/.ssh/authorized_keys";
+    my $ak_lines = slurp($authkeys);
+    $ak_lines =~ s/^.*$cmd $user.*\n//m;  # remove existing keyline, if present
+    $ak_lines =~ s/^# gitolite start/$authline# gitolite start/m;
+    my $akfh = wrap_open(">", $authkeys);
+    print $akfh $ak_lines;
+    close $akfh;
+}
 
-    authline="command=\"$GL_BINDIR/gl-auth-command -s $user\",$AUTH_OPTIONS `cat $pubkey_file`";
+sub wc_l {
+    my $fh = wrap_open("<", shift);
+    my @l = <$fh>;
+    my $l = @l;
+    return $l;
+}
 
-    authkeys=$HOME/.ssh/authorized_keys
+__DATA__
 
-    for i in 1
-    do
-        perl -lne "last if /# gitolite start/; print unless /gl-auth-command -s $user/; " $authkeys
-        echo $authline
-        perl -lne "print if /# gitolite start/ .. 0; " $authkeys
-    done > $authkeys.new
+gl-tool -- make some server side tasks easier
 
-    diff -u $authkeys $authkeys.new && die no change to authkey file
-    echo
-    echo If the above diff looks ok, press enter.  Else press Ctrl-C.
-    read dummy
-    cat $authkeys     > $authkeys.old
-    cat $authkeys.new > $authkeys
+Usage:
+    gl-tool [sub-command [args]]
 
-    exit 0
-fi
+Security notes: this program does not do any sanitisation of input.  You're
+running it at the CLI on the server, so you already have the power to do
+whatever you want anyway.
 
-die "could not understand command $1"
+current sub-commands:
+
+(1) REPLACE THE OLD $SHELL_USERS MECHANISM
+
+    gl-tool add-shell-user foo.pub
+
+Adds the pubkey in foo.pub into the authkeys file with "-s" argument (shell
+access) and user "foo".  The line will be added *before* the "# gitolite
+start" section, so that a gitolite-admin push will not affect it.
+
+Although there is no "remove-shell-user" sub-command, you can do that quite
+easily by editing ~/.ssh/authorized_keys and deleting the appropriate line.
+
+(2) ADD A MIRRORING PEER KEY
+
+    gl-tool add-mirroring-peer git@server.company.com.pub
+
+As above, but the given key will invoke 'gl-mirror-shell' instead of the
+usual 'gl-auth-command'.  This is meant to be a server-to-server key, allowing
+(in this example), the gitolite server called 'git@server.company.com' to
+access this server for mirroring operations.
