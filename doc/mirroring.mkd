@@ -132,8 +132,9 @@ and 'gollum' as examples here.
 
     (Remember the "rc" file is NOT mirrored; it is meant to be site-local).
 
-    Note: if `GL_HOSTNAME` is undefined, all mirroring features are disabled
-    on that server, regardless of other settings.
+    Note: if `GL_HOSTNAME` is undefined, you cannot push to repos which have
+    the 'gitolite.mirror.master' config variable set.  (See 'details' section
+    below for more info on this variable).
 
 5.  On each machine, add the keys for all other machines.  For example, on
     frodo you'd run these two commands:

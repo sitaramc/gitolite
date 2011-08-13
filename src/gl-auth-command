@@ -140,8 +140,9 @@ $ENV{GL_REPO}=$repo;
 my $aa = ($verb =~ $R_COMMANDS ? 'R' : 'W');
 
 # writes may get redirected under certain conditions
-if ( $GL_HOSTNAME and $aa eq 'W' and mirror_mode($repo) =~ /^slave of (\S+)/ ) {
+if ( $aa eq 'W' and mirror_mode($repo) =~ /^slave of (\S+)/ ) {
     my $master = $1;
+    die "$ABRT GL_HOSTNAME not set; rejecting push to non-local repo\n" unless $GL_HOSTNAME;
     die "$ABRT $GL_HOSTNAME not the master, please push to $master\n" unless mirror_redirectOK($repo, $GL_HOSTNAME);
     print STDERR "$GL_HOSTNAME ==== $user ($repo) ===> $master\n";
     exec("ssh", $master, "USER=$user", "SOC=$ENV{SSH_ORIGINAL_COMMAND}");

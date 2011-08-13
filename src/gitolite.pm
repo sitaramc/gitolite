@@ -1208,9 +1208,11 @@ sub mirror_listslaves {
     return ( `git config --file $REPO_BASE/$repo.git/config --get gitolite.mirror.slaves` || '' );
 }
 
+# is a redirect ok for this repo from this slave?
 sub mirror_redirectOK {
     my $repo = shift;
-    my $slave = shift || '';
+    my $slave = shift || return 0;
+        # if we don't know who's asking, the answer is "no"
 
     my $gmrOK = `git config --file $REPO_BASE/$repo.git/config --get gitolite.mirror.redirectOK` || '';
     chomp $gmrOK;
