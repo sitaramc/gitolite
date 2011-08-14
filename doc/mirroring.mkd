@@ -5,24 +5,17 @@ Mirroring a repo is simple in git; you just need code like this in a
 
     #!/bin/bash
     git push --mirror slave_user@mirror.host:/path/to/repo.git
+    # if running gitolite, the $GL_REPO variable could be useful:
+    # git push --mirror slave_user@mirror.host:/repo/base/path/$GL_REPO.git
 
-The hard part is managing this across multiple mirror sites with multiple
-repositories being mirrored.
-
-**This document has been tested using a 3-server setup, all installed using
-the "non-root" method (see doc/1-INSTALL.mkd).  However, the process is
-probably not going to be very forgiving of human error -- like anything that
-is this deep in "system admin" territory, errors are likely to be costly.  If
-you're the kind who hits enter first and then thinks about what he typed,
-you're in for some fun times ;-)**
-
-**On the plus side, everything we do is done using git commands, so things are
-never *really* lost until you do a `git gc`**.
+For a lot of people, though, mirroring is more than just 'backup', and their
+needs are complex enough that setup is hard.
 
 ----
 
 In this document:
 
+  * <a href="#_why">why</a>
   * <a href="#_RULE_NUMBER_ONE_">RULE NUMBER ONE!</a>
   * <a href="#_what_will_will_not_work">what will/will not work</a>
   * <a href="#_concepts_and_terminology">concepts and terminology</a>
@@ -40,6 +33,33 @@ In this document:
   * <a href="#_appendix_B_efficiency_versus_paranoia">appendix B: efficiency versus paranoia</a>
 
 ----
+
+<a name="_why"></a>
+
+### why
+
+This document is useful if:
+
+  * you have multiple repositories spread across multiple sites around the
+    country/world, and would like developers to access their local server
+    instead of hitting the WAN, at least for 'fetch' operations.
+
+  * you don't want all your repos mirrored to all the servers for various
+    reasons, technical or otherwise (epecially true when some of the mirrors
+    don't belong to you).
+
+  * you want some mirrors to be updated only at certain times of the day,
+    (with a simple command), instead of every time a push happens.
+
+  * you don't want *one* server being the master server for *all* repos;
+    instead you want to choose where a repo gets "mastered" based on where the
+    majority of that repo's users are.
+
+  * you might even, if your servers are all in your control, want the
+    convenience of them *pushing to a mirror*, and having the push redirect
+    transparently to the master server.
+
+As you can see, this is a bit more than a backup solution ;-)
 
 <a name="_RULE_NUMBER_ONE_"></a>
 
@@ -59,23 +79,33 @@ recovers.
 
 ### what will/will not work
 
-This process will only mirror your git repositories, using `git push
---mirror`.  It will not mirror log files, and repo-specific files like
-`gl-creater` and `gl-perms` files, or indeed anything that was manually
-created or added (for example, custom config entries added manually instead of
-via gitolite).
+  * This process will *only* mirror your git repositories, using `git push
+    --mirror`.  It will *not* mirror log files, and repo-specific files like
+    `gl-creater` and `gl-perms` files, or indeed anything that was manually
+    created or added (for example, custom config entries added manually
+    instead of via gitolite).
 
-None of these affect actual repo contents of course, but they could be
-important, (especially the gl-creator, although if your wildcard pattern had
-"CREATOR" in it you can recreate those files easily enough anyway).
+    None of these affect actual repo contents of course, but they could be
+    important, (especially the gl-creator, although if your wildcard pattern
+    had "CREATOR" in it you can recreate those files easily enough anyway).
 
-Mirroring has not been, and will not be, tested when gitolite is installed
-using the deprecated 'from-client' method.  Please use one of the other
-methods.
+  * This document has been tested using a 3-server setup, all installed using
+    the *non-root* method (see doc/1-INSTALL.mkd).  However, the process is
+    probably not going to be very forgiving of human error -- like anything
+    that is this deep in "system admin" territory, errors are likely to be
+    costly.  If you're the kind who hits enter first and then thinks about
+    what he typed, you're in for some fun times ;-)
 
-Also, none of this has been tested with smart-http.  I'm not even sure it'll
-work; http is very fiddly to get right.  If you want mirroring, at least your
-server-to-server comms should be over ssh.
+    On the plus side, everything we do is done using git commands, so things
+    are never *really* lost until you do a `git gc`.
+
+  * Mirroring has *not* been, and will not be, tested with gitolite installed
+    using the deprecated 'from-client' method.  Please use one of the other
+    methods.
+
+  * Also, this has *not* been tested with smart-http.  I'm not even sure it'll
+    work; http is very fiddly to get right.  If you want mirroring, at least
+    your server-to-server comms should be over ssh.
 
 <a name="_concepts_and_terminology"></a>
 
