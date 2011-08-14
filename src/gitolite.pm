@@ -164,7 +164,8 @@ sub log_it {
     $logmsg .= "\t@_" if @_;
     # erm... this is hard to explain so just see the commit message ok?
     $logmsg =~ s/([\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\xFF]+)/sprintf "<<hex(%*v02X)>>","",$1/ge;
-    print $log_fh "$ENV{GL_TS}\t$ENV{GL_USER}\t$ip\t$logmsg\n";
+    my $user = $ENV{GL_USER} || "(no user)";
+    print $log_fh "$ENV{GL_TS}\t$user\t$ip\t$logmsg\n";
     close $log_fh or die "close log failed: $!\n";
 }
 
