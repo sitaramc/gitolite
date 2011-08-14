@@ -38,8 +38,6 @@ use gitolite;
 setup_environment();
 die "fatal: GL_HOSTNAME not set in rc; mirroring disabled\n" unless $GL_HOSTNAME;
 
-my $soc = $ENV{SSH_ORIGINAL_COMMAND} || '';
-
 # ----------------------------------------------------------------------------
 
 # deal with local invocations first
@@ -47,7 +45,7 @@ my $soc = $ENV{SSH_ORIGINAL_COMMAND} || '';
 # on the "master", run from a shell, for one specific repo, with an optional
 # list of slaves, like so:
 #       gl-mirror-shell request-push some-repo [optional list of slaves/keys]
-if ( ($ARGV[0] || '') eq 'request-push' and not $soc) {
+if ( ($ARGV[0] || '') eq 'request-push' and not $ENV{SSH_ORIGINAL_COMMAND} ) {
     shift;
     my $repo = shift or die "fatal: missing reponame\n";
     -d "$REPO_BASE/$repo.git" or die "fatal: no such repo?\n";
@@ -87,6 +85,10 @@ unless (@ARGV) { print STDERR "fatal: missing command\n"; exit 1; }
 # now the remote invocations; log it, then get the sender name
 my $sender = shift;
 $ENV{GL_USER} ||= "host:$sender";
+# default SSH_ORIGINAL_COMMAND is 'info', as usual
+$ENV{SSH_ORIGINAL_COMMAND} ||= 'info';
+# and it's too long to bloody type...
+my $soc = $ENV{SSH_ORIGINAL_COMMAND};
 log_it();
 
 # ----------
