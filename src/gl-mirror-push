@@ -27,7 +27,7 @@ hn=`get_rc_val GL_HOSTNAME`
 repo=$1; shift
 
 REPO_BASE=`get_rc_val REPO_BASE`
-cd $REPO_BASE/$repo.git
+cd $REPO_BASE/$repo.git 2>/dev/null || die fatal: could not change directory to "$repo"
 gmm=`git config --get gitolite.mirror.master`
 
 # is it local? (remember, empty/undef ==> local

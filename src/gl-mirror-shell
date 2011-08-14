@@ -56,7 +56,7 @@ if ( ($ARGV[0] || '') eq 'request-push' and not $soc) {
     exit;
 }
 
-unless (@ARGV) { print STDERR "fatal: missing argument\n"; exit 1; }
+unless (@ARGV) { print STDERR "fatal: missing command\n"; exit 1; }
 
 # ----------
 
@@ -82,6 +82,7 @@ if ($soc eq 'info') {
 
 if ($soc =~ /^git-receive-pack '(\S+)'$/) {
     my $repo = $1;
+    die "fatal: invalid characters in $repo\n" unless $repo =~ $REPONAME_PATT;
     my $mm = mirror_mode($repo);
 
     # reminder: we're not going through the slave-side gl-auth-command.  This
@@ -93,7 +94,6 @@ if ($soc =~ /^git-receive-pack '(\S+)'$/) {
 
     $ENV{GL_BYPASS_UPDATE_HOOK} = 1;
     # replace the repo path with the full path and hand off to git-shell
-    # m-TODO: the admin repo will need more stuff :)
     $soc =~ s(')('$ENV{GL_REPO_BASE_ABS}/);
     exec("git", "shell", "-c", $soc);
 }
@@ -108,6 +108,7 @@ if ($soc =~ /^git-receive-pack '(\S+)'$/) {
 
 if ($soc =~ /^request-push (\S+)$/) {
     my $repo = $1;
+    die "fatal: invalid characters in $repo\n" unless $repo =~ $REPONAME_PATT;
     die "$ABRT fatal: $GL_HOSTNAME ==//==> $sender refused: not in slave list\n" unless mirror_listslaves($repo) =~ /(^|\s)$sender(\s|$)/;
     print STDERR "$GL_HOSTNAME ==== ($repo) ===> $sender\n";
     # just one sender, and we've checked that he is "on the list".  Foreground...
@@ -129,6 +130,8 @@ if ($soc =~ /^USER=(\S+) SOC=(git-receive-pack '(\S+)')$/) {
     my $user = $1;
     $ENV{SSH_ORIGINAL_COMMAND} = $2;
     my $repo = $3;
+    die "fatal: invalid characters in $user\n" unless $user =~ $USERNAME_PATT;
+    die "fatal: invalid characters in $repo\n" unless $repo =~ $REPONAME_PATT;
     die "$ABRT fatal: $GL_HOSTNAME <==//== $sender redirected push rejected\n" unless mirror_redirectOK($repo, $sender);
     print STDERR "$GL_HOSTNAME <=== $user ($repo) ==== $sender\n";
 
