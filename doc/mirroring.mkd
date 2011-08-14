@@ -303,44 +303,99 @@ So here's how our example would go:
 
 #### commands to (re-)sync mirrors
 
-Sometimes there's a network problem and a mirror will not receive an update
-immediately on a push.  When the network is back up, you can do one of these
-things to get it back in sync.
+You don't have to put all the slaves in `gitolite.mirror.slaves`.  For
+example, let's say you have some repos that are very active, and two of your
+mirrors that are halfway across the world are getting pushed very frequently.
+But you don't need those mirrors to be that closely updated, perhaps *because*
+they are halfway across the world and those guys are asleep ;-)
+
+Or maybe there was a network glitch and even the default slaves are now
+lagging, so they need to be manually synced.
+
+Or a slave realised that one of its repos is lagging for some reason, and
+wants to request an immediate update.
+
+Whatever the reason, you need ways to sync a repo from a command line.  Here
+are ways to do that:
 
 1.  On the master server, you can start a **background** job to mirror a repo.
-    For example, this:
+    The command/syntax is
+
+        gl-mirror-shell request-push reponame [list of keys/slaves]
+
+    The list at the end is optional, and can be a mix of slave names or your
+    own gitolite mirror config keys.  (Yes, you can have any key, named
+    anything you like, as long as it starts with `gitolite.mirror.`).
+
+    If the list is not supplied, the `gitolite.mirror.slaves` key is used.
+
+    Keys can have values that in turn contain a list of keys/slaves.  The list
+    is recursively *expanded* but recursion is not *detected*.  Order is
+    preserved while duplicates are removed.  If you didn't get that, see the
+    example :-)
+
+    **Warning**: the `gitolite.mirror.slaves` key should have only hosts, no
+    keys, in it.
+
+    The program exits with a return value of "1" if it found no slaves in the
+    list passed, otherwise it fires off the background job, prints an
+    informative message, and exits with a return value of "0".
+
+    We'll take an example.  Let's say your gitolite config file has this:
+
+        repo ip1
+            config gitolite.mirror.master       =   "frodo"
+            config gitolite.mirror.slaves       =   "sam merry pippin"
+            config gitolite.mirror.hourly       =   "sam legolas"
+            config gitolite.mirror.nightly      =   "gitolite.mirror.hourly gimli"
+            config gitolite.mirror.all          =   "gitolite.mirror.nightly gitolite.mirror.hourly gitolite.mirror.slaves"
+
+    Then the following commands have the results described in comments:
 
         gl-mirror-shell request-push ip1
-
-    triggers a mirror-push of repo "ip1" to all slaves listed in that repo's
-    "gitolite.mirror.slaves" config.
-
-    On the hand, this:
+        # which is the same as:
+        gl-mirror-shell request-push ip1 gitolite.mirror.slaves
+        # pushes to sam, merry, pippin
 
         gl-mirror-shell request-push ip1 gollum
+        # pushes only to gollum.  Note that gollum is not a member of any of
+        # the slave lists we defined.
 
-    triggers a mirror-push of "ip1" *only* to the gollum server, regardless of
-    what servers are listed as slaves in the config.
+        gl-mirror-shell request-push ip1 gitolite.mirror.slaves gollum
+        # pushes to sam, merry, pippin, gollum
 
-    Note that this invocation does not even check if gollum is listed as a
-    slave for "ip1"; since you're doing it at the command line on the master
-    server, you're allowed to push it to *any* slave that will accept it.
+        gl-mirror-shell request-push ip1 gitolite.mirror.slaves gitolite.mirror.hourly
+        # pushes to sam, merry, pippin, legolas
 
-    <font color="gray">
+        gl-mirror-shell request-push ip1 gitolite.mirror.all
+        # pushes to sam, legolas, gimli, merry, pippin
 
-    >   Side note: if you want to start a **foreground** job, the syntax is
-    >   `gl-mirror-shell request-push ip1 -fg gollum`.  Foreground mode
-    >   requires one (and only one) slave name -- you cannot send to an
-    >   implicit list, nor to more than one slave.
+    The last two examples show recursive expansion with order-preserving
+    duplicate removal (hey there's now a published conference paper on
+    gitolite, so we have to use jargon *somewhere* or they won't accept
+    follow-on papers!).
 
-    </font>
+    If you do something like this:
 
-2.  Cronjobs and custom mirroring schemes are now very easy to do.  Just use
-    the second form of the command above to push any repo to any slave, and it
-    can form the basis of any scheme you like.  Appendix A contains an example
-    setup.
+        config gitolite.mirror.nightly      =   "gimli gitolite.mirror.nightly"
 
-3.  Once in a while a slave will realise it needs an update, and wants to ask
+    or this:
+
+        config gitolite.mirror.nightly      =   "gimli gitolite.mirror.hourly"
+        config gitolite.mirror.hourly       =   "legolas gitolite.mirror.nightly"
+
+    you deserve what you get.
+
+2.  If you want to start a **foreground** job, the syntax is `gl-mirror-shell
+    request-push ip1 -fg gollum`.  Foreground mode requires one (and only one)
+    slave name -- you cannot send to an implicit list, nor to more than one
+    slave.
+
+3.  Cronjobs and custom mirroring schemes are now very easy to do.  Use either
+    of the command forms above and write a script around it.  Appendix A
+    contains an example setup.
+
+4.  Once in a while a slave will realise it needs an update, and wants to ask
     for one.  It can run this command to do so:
 
         ssh sam request-push ip2
@@ -388,6 +443,10 @@ config file right?).  These are:
   * `gitolite.mirror.redirectOK`
 
     See the section on "redirecting pushes"
+
+  * In addition, you can create your own slave lists, named whatever you want,
+    except they have to start with `gitolite.mirror.`.  The section on
+    "commands to (re-)sync mirrors" has some examples.
 
 <a name="_redirecting_pushes"></a>
 
@@ -517,34 +576,31 @@ pros/cons:
 
 ### appendix A: example cronjob based mirroring
 
-Let's say you have some repos that are so active that you're pushing halfway
-across the world every few seconds.  The slaves do not need to be that closely
-updated, and it is sufficient to update them once an hour instead.  Here's how
-you might do that:
+Let's say you have some repos that are very active.  You're pushing halfway
+across the world every few seconds, but those slaves do not need to be that closely
+updated, perhaps *because* they are halfway across the world and those guys
+are asleep ;-)
 
-    repo foo bar frob/nitz
-        config gitolite.mirror.hourly = "slave1 slave2 slave3"
+You'd like to update them once an hour instead.  Here's how you might do that.
 
-Then you'd write a cron job that looks like this (untested):
+First add this line to the configuration for those repos:
+
+    config gitolite.mirror.hourly = "slave1 slave2 slave3"
+
+Then write a cron job that looks like this (untested).
 
     #!/bin/bash
 
     REPO_BASE=`${0%/*}/gl-query-rc REPO_BASE`
-    GL_BINDIR=`${0%/*}/gl-query-rc GL_BINDIR`
 
     cd $REPO_BASE
     find . -type d -name "*.git" -prune | while read r
     do
-        cd $REPO_BASE; cd $r
-
         # get reponame as gitolite knows it
         r=${r:2}
         r=${r%.git}
 
-        # get slaves list
-        slaves=`git config --get gitolite.mirror.hourly`
-
-        gl-mirror-shell request-push $r $slaves
+        gl-mirror-shell request-push $r gitolite.mirror.hourly
 
         # that command backgrounds the push, so you'd best wait a few seconds
         # before hitting the next one, otherwise you'll have all your repos

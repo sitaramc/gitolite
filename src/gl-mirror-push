@@ -49,16 +49,11 @@ gmm=${gmm:-local}
 
 # ----------
 
-# normal (self-backgrounding) mode.  Any number of slaves.  If none are given,
-# use the slave list from the repo config
+# normal (self-backgrounding) mode, one or more slaves
 
+[ -z "$1" ] && die fatal: missing list of slaves
 export slaves
-if [ -n "$1" ]
-then
-    slaves="$*"
-else
-    slaves=`git config --get gitolite.mirror.slaves`
-fi
+slaves="$*"
 
 # ----------
 

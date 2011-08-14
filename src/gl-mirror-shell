@@ -46,14 +46,38 @@ my $soc = $ENV{SSH_ORIGINAL_COMMAND} || '';
 
 # on the "master", run from a shell, for one specific repo, with an optional
 # list of slaves, like so:
-#       gl-mirror-shell request-push some-repo [optional-list-of-slaves]
+#       gl-mirror-shell request-push some-repo [optional list of slaves/keys]
 if ( ($ARGV[0] || '') eq 'request-push' and not $soc) {
     shift;
-    # rest of the arguments are fit to go directly to gl-mirror-push
-    # (reponame, optional list of slaves)
-    system("gl-mirror-push", @ARGV);
+    my $repo = shift or die "fatal: missing reponame\n";
+    -d "$REPO_BASE/$repo.git" or die "fatal: no such repo?\n";
 
-    exit;
+    # this is the default argument if no slave list or key is supplied
+    @ARGV = ('gitolite.mirror.slaves') unless @ARGV;
+
+    my @slaves = ();
+    my %seen = ();
+    # each argument in @ARGV is either a slave name, or a gitolite mirroring
+    # key to be replaced with its value, split into a list of slaves
+    while (@ARGV) {
+        $a = shift @ARGV;
+        if ($a =~ /^gitolite\.mirror\.[\w.-]+$/) {
+            my @values = split(' ', `git config --file $REPO_BASE/$repo.git/config --get $a` || '');
+            unshift @ARGV, @values;
+        } else {
+            push @slaves, $a unless $seen{$a}++;
+        }
+    }
+
+    exit 1 unless @slaves;
+        # we don't want to complain louder than that because the most common
+        # use of this script on the master server is via cron, run against
+        # *all* known repos without checking their individual key values
+
+    print STDERR "info: mirror-push $repo ", join(" ", @slaves), "\n";
+    system("gl-mirror-push", $repo, @slaves);
+
+    exit 0;
 }
 
 unless (@ARGV) { print STDERR "fatal: missing command\n"; exit 1; }

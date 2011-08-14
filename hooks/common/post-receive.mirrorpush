@@ -16,7 +16,9 @@
 # but we won't!), and (b) we can't distinguish easily between that and this
 # case (the slave receiving a mirror push case)
 
-[ -z "$GL_REPO" ] && { echo $0: GL_REPO not set -- this is BAD >&2; exit 1; }
-[ -z "$GL_BINDIR" ] && { echo $0: GL_BINDIR not set -- this is BAD >&2; exit 1; }
+[ -z "$GL_REPO" ] && die GL_REPO not set
+[ -z "$GL_BINDIR" ] && die GL_BINDIR not set
 
-$GL_BINDIR/gl-mirror-push $GL_REPO
+slaves=`git config --get gitolite.mirror.slaves`
+[ -z "$slaves" ] && exit 0
+$GL_BINDIR/gl-mirror-push $GL_REPO $slaves
