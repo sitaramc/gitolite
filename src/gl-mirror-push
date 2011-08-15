@@ -75,7 +75,7 @@ exec >>$logfile 2>&1 </dev/null
         for s in $slaves
         do
             [ "$s" = "$hn" ] && continue    # skip ourselves
-            git push --mirror $s:$repo
+            git push --mirror $s:$repo || echo ==== WARNING: RC=$? from git push --mirror $s:$repo ====
         done 2>&1 | sed -e "s/^/    /"
         echo `date +%T` '===>' $slaves
         echo
