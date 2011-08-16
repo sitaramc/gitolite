@@ -466,7 +466,14 @@ The syntax is simple:
 
 This does either a plain "git config section.key value" (for the first 3
 examples above) or "git config --unset-all section.key" (for the last
-example).  Other forms (--add, the `value_regex`, etc) are not supported.
+example).
+
+**WARNING**: deleting the config line from the `conf/gitolite.conf` file will
+*not* delete the variable from `repo.git/config`.  The syntax in the last
+example is the *only* way to make gitolite execute a `--unset-all` operation
+on the given key.
+
+Other forms (--add, the `value_regex`, etc) are not supported.
 
 **Note**: this won't work unless the rc file has the right settings; please
 see comments around the variable `$GL_GITCONFIG_KEYS` in doc/gitolite.rc.mkd

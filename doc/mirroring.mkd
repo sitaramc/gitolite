@@ -17,7 +17,7 @@ In this document:
 
   * <a href="#_why">why</a>
   * <a href="#_RULE_NUMBER_ONE_">RULE NUMBER ONE!</a>
-  * <a href="#_what_will_will_not_work">what will/will not work</a>
+  * <a href="#_IMPORTANT_cautions">IMPORTANT cautions</a>
   * <a href="#_concepts_and_terminology">concepts and terminology</a>
   * <a href="#_setup_and_usage">setup and usage</a>
       * <a href="#_server_level_setup">server level setup</a>
@@ -75,9 +75,18 @@ Corollary: if the primary went down and you effected a changeover, you must
 make sure that the primary does not come up in a push-enabled mode when it
 recovers.
 
-<a name="_what_will_will_not_work"></a>
+<a name="_IMPORTANT_cautions"></a>
 
-### what will/will not work
+### IMPORTANT cautions
+
+  * For reasons given in the 'discussion' section later, the mirroring process
+    will never *create* a repo on the receiving side.  It has to exist, and be
+    willing to accept pushes from the master.
+
+    In particular, this means that repositories created by end-users ("wild"
+    repos) *need to be explicitly created* on the mirror (preferably by the
+    same user, assuming his ssh key works there as well).  Once the repo has
+    been created on the slave, subsequent pushes will be mirrored correctly.
 
   * This process will *only* mirror your git repositories, using `git push
     --mirror`.  It will *not* mirror log files, and repo-specific files like
@@ -106,6 +115,13 @@ recovers.
   * Also, this has *not* been tested with smart-http.  I'm not even sure it'll
     work; http is very fiddly to get right.  If you want mirroring, at least
     your server-to-server comms should be over ssh.
+
+  * Finally, this method uses repo-specific `git config` variables to store
+    the mirroring information.  Please read the **WARNING** in the
+    documentation on [git config commands][rsgc] if you wish to **delete** one
+    of those lines.
+
+[rsgc]: http://sitaramc.github.com/gitolite/doc/gitolite.conf.html#_repo_specific_git_config_commands
 
 <a name="_concepts_and_terminology"></a>
 
@@ -210,17 +226,18 @@ machines are slaves for the repo.
 
 <font color="gray">
 
->   Side note: if you just want to simulate the old mirroring scheme, despite
->   its limitations, it's very easy.  Say frodo is the master for all repos,
->   and the other 2 are slaves.  Just clone the gitolite-admin repos of all
->   servers, add these lines to the top of each:
+>   Side note: if you just want to **simulate the old mirroring scheme**,
+>   despite its limitations, it's very easy.  Say frodo is the master for all
+>   repos, and the other 2 are slaves.  Just clone the gitolite-admin repos of
+>   all servers, add these lines to the top of each:
 
         repo @all
             config gitolite.mirror.master   =   "frodo"
             config gitolite.mirror.slaves   =   "sam gollum"
 
 >   then commit, and push all 3.  Finally, make a dummy commit on just the
->   frodo clone and push again.  You're done.
+>   frodo clone and push again.  At this point you can do a one-time manual
+>   sync (see Appendix A) if you wish but otherwise you're done.
 
 </font>
 
@@ -538,21 +555,32 @@ as such:
 
 #### the new mirroring model
 
-In the new model, servers can be (but, I hasten to add, don't *have to* be!)
-much more independent and autonomous than in the old model.  This has a few
-pros/cons:
+In the new model, servers can be much more independent and autonomous than in
+the old model.  (Don't miss the side note in the 'repository level setup'
+section if you prefer the old model).
+
+The new model has a few pros and cons.  The pros come from the flexibility and
+freedom that mirrors servers get, and the cons come from authorisation being
+more rigorously checked (for example, a slave will only accept a push if *its*
+configuration also says that the sending server is indeed the master for this
+repo).
+
+  * A mirroring operation will not *create* a repo on the mirror; it has to
+    exist before a push happens on the master.  Typically, the admin on the
+    slave must create the repo by adding the appropriate lines in his config.
+
+    If your setup is not autonomous (i.e., you're mirroring the admin repo as
+    well) then this happens automatically for normal repos.  However,
+    *wildcard repos still won't work as seamlessly as in the old model*; see
+    the first bullet in the 'IMPORTANT cautions' section earlier.
 
   * The gitolite-admin repo (and config) need not be mirrored.  This allows
-    site-local repos not meant to be mirrored, without unnecessarily creating
-    a second gitolite install just for those.
+    the slave server admin to create site-local repos, without forcing him to
+    create a second gitolite install for them.
 
     (Site-local repos are useful for purely local projects that need
     not/should not be mirrored for some reason, or ad-hoc personal repos that
     developers create for themselves, etc.)
-
-    Of course, then the admin(s) need to make an effort to keep things
-    consistent for the "blessed" repos.  For example, two servers can both
-    claim to be "master"!
 
   * Servers can choose to mirror a subset of the repos from one of the bigger
     servers.
