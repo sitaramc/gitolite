@@ -643,8 +643,8 @@ Then write a cron job that looks like this (untested).
 If you're paranoid enough to use mirrors, you should be paranoid enough to
 use the `receive.fsckObjects` setting.  However, informal tests indicate a
 40-50% CPU overhead from this.  If you're ok with that, make the appropriate
-adjustments to `GL_GITCONFIG_KEYS` and possibly `GL_GITCONFIG_WILD` in the rc
-file, then add this to your gitolite.conf file:
+adjustments to `GL_GITCONFIG_KEYS` in the rc file, then add this to your
+gitolite.conf file:
 
     repo @all
         config receive.fsckObjects = "true"

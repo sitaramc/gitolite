@@ -1,12 +1,11 @@
 # vim: syn=sh:
-for gcw in 0 1
+for gcw in 0
 do
     cd $TESTDIR
     $TESTDIR/rollback || die "rollback failed"
 
     name INTERNAL
     editrc GL_WILDREPOS 1
-    echo "\$GL_GITCONFIG_WILD = $gcw;" | addrc
 
     # ----------
 
@@ -42,8 +41,6 @@ do
             RW              =   @leads
             config foo.bar  =   baz
     " | ugc -r
-    [ "$gcw" = "0" ] &&    expect "remote:         git config set for bar/\$creator/..\* but \$GL_GITCONFIG_WILD not set"
-    [ "$gcw" = "1" ] && notexpect "remote:         git config set for bar/\$creator/..\* but \$GL_GITCONFIG_WILD not set"
     notexpect "git config.*not allowed"
     expect_push_ok "master -> master"
 

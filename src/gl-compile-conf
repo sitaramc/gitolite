@@ -250,16 +250,6 @@ sub parse_conf_line
             # force entry in %repos.  Without this, a repo para with just a
             # config line and no ACLs gets ignored in the output
             $repos{$repo}{HAS_CONFIG} = 1;
-
-            # no problem if it's a plain repo (non-pattern, non-groupname)
-            # OR wild configs are allowed
-            unless ( ($repo =~ $REPONAME_PATT and $repo !~ /^@/) or $GL_GITCONFIG_WILD) {
-                my @r = ($repo);                                        # single wildpatt
-                @r = sort keys %{ $groups{$repo} } if $groups{$repo};   # or a group; get its members
-                do {
-                    warn "$WARN git config set for $_ but \$GL_GITCONFIG_WILD not set\n" unless $_ =~ $REPONAME_PATT
-                } for @r;
-            }
         }
     }
     # include
