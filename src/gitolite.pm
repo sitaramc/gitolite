@@ -426,12 +426,24 @@ sub setup_git_configs
 {
     my ($repo, $git_configs_p) = @_;
 
-    while ( my ($key, $value) = each(%{ $git_configs_p->{$repo} }) ) {
-        if ($value ne "") {
-            $value =~ s/^"(.*)"$/$1/;
-            system("git", "config", $key, $value);
-        } else {
-            system("git", "config", "--unset-all", $key);
+    # new_wild calls us without checking!
+    return unless $git_configs_p->{$repo};
+
+    # git_configs_p is a ref to a hash whose elements look like
+    # {"reponame"}{sequence_number}{"key"} = "value";
+
+    my %rch = %{ $git_configs_p->{$repo} };
+    # %rch has elements that look like {sequence_number}{"key"} = "value"
+    for my $seq (sort { $a <=> $b } keys %rch) {
+        # and the final step is the repo config: {"key"} = "value"
+        my $rc = $rch{$seq};
+        while ( my ($key, $value) = each(%{ $rc }) ) {
+            if ($value ne "") {
+                $value =~ s/^"(.*)"$/$1/;
+                system("git", "config", $key, $value);
+            } else {
+                system("git", "config", "--unset-all", $key);
+            }
         }
     }
 }

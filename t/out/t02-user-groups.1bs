@@ -1,4 +1,4 @@
-$data_version = '1.7';
+$data_version = '2.0';
 %repos = ();
 %split_conf = (
   'aa' => 1,

@@ -49,8 +49,9 @@ open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
 # names of repos whose ACLs don't make it into the main compiled config file
 # copy above desc to lite.pm -- my %split_conf = ();
 
-# rule sequence number
+# rule and config sequence numbers
 my $rule_seq = 0;
+my $config_seq = 0;
 
 # <sigh>...  having been forced to use a list as described above, we lose some
 # efficiency due to the possibility of the same {ref, perms} pair showing up
@@ -244,7 +245,7 @@ sub parse_conf_line
         die "$ABRT git config $key not allowed\ncheck GL_GITCONFIG_KEYS in the rc file for how to allow it\n" if (@matched < 1);
         for my $repo (@{ $repos_p })       # each repo in the current stanza
         {
-            $git_configs{$repo}{$key} = $value;
+            $git_configs{$repo}{$config_seq++}{$key} = $value;
 
             # force entry in %repos.  Without this, a repo para with just a
             # config line and no ACLs gets ignored in the output

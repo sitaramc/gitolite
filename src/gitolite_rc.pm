@@ -32,7 +32,7 @@ use Exporter 'import';
 #       real constants
 # ------------------------------------------------------------------------------
 
-$current_data_version = '1.7';
+$current_data_version = '2.0';
 
 $ABRT = "\n\t\t***** ABORTING *****\n       ";
 $WARN = "\n\t\t***** WARNING *****\n       ";
