@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # adc for someone with admin privs to invoke "setperms/getperms" on other
 # users.

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # this command is pretty cool, even if I may say so myself :)
 
