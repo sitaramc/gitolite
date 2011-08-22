@@ -97,10 +97,15 @@ as usual, then:
 You can use this procedure to install new hooks as well as to update hooks
 that you had previously installed.
 
-**VERY IMPORTANT SECURITY NOTE:  the `update` hook in `hooks/common` is what
-implements all the branch-level permissions in gitolite.  If you fiddle with
-the hooks directory, please make sure you do not mess with this file
-accidentally, or all your fancy per-branch permissions will stop working.**
+<font color="red">**IMPORTANT WARNINGS**</font>
+
+  * The `update` hook in `hooks/common` is what implements all the
+    branch-level permissions in gitolite.  If you fiddle with the hooks
+    directory, please make sure you do not mess with this file accidentally,
+    or all your fancy per-branch permissions will stop working.
+
+  * Do not under any conditions put anything in `hooks/gitolite-admin` --
+    nothing in gitolite requires you to do anything here.  Leave it alone!
 
 <a name="_gl_post_init_hook"></a>
 
@@ -134,26 +139,50 @@ sure you end with `exit 0` or equivalent.
 
 #### hook chaining
 
-Gitolite basically takes over the update hook for all repos, but some setups
-really need the update hook functionality for their own purposes too.  In
-order to allow this, Gitolite now exec's a hook called `update.secondary` when
-it's own "update" hook is done and everything is ready to go.
+Sometimes you need to use git hooks for your own purposes (site-local
+validations, CI integration, email notifications, or the ever popular "live
+website update"!).  However, the hooks you want to use may already be in use
+by gitolite.
 
-You can create this `update.secondary` hook manually on selected repos on the
-server, or use the mechanism in the previous section to make gitolite put it
-on *all* your repos.
+This section will tell you what to do in such cases.  First, let's list the
+hooks that gitolite uses:
 
-Similarly, gitolite also takes over the post-update hook for the special
-"gitolite-admin" repo.  This hook will also chain to a `post-update.secondary`
-if such a hook exists.  People wishing to do exotic things on the server side
-when the admin repo is pushed should see doc/shell-games.notes for how to
-exploit this :-)
+  * The `update` hook is used in all repos and is critical to gitolite's
+    access control!
 
-In addition, gitolite now contains the basic infrastructure to support
-multiple such hooks without having to remember to chain them yourself.  You
-can look in `hooks/common/update.secondary.sample` for instructions.
+  * The `post-receive` hook is used in all repos but only if mirroring has
+    been enabled.  Shipped as `post-receive.mirrorpush`, it is renamed to
+    'post-receive' and installed as part of the mirroring setup.
 
-Finally, these names (`update.secondary` and `post-update.secondary`) are
+  * The `post-update` hook is used in the `gitolite-admin` repo only, to
+    "compile" the configuration and so on.
+
+To run your own 'update' hook, just put it in a file called `update.secondary`
+and install it as a hook.  Gitolite's update hook will automatically chain to
+it, taking care to pass it the same 3 arguments the original update hook
+received from git.
+
+<font color="gray">
+
+>   In addition, gitolite now contains the basic infrastructure to support
+>   multiple 'update' hooks without having to remember to chain them yourself.
+>   See `hooks/common/update.secondary.sample` for instructions.
+
+</font>
+
+For `post-receive`, (if using mirroring) do the opposite.  You're normally
+expected to rename the shipped 'post-receive.mirrorpush' to 'post-receive',
+but don't do this.  Instead, simply run `hooks/post-receive.mirrorpush` at the
+end of *your* hook code.  Do not worry about replicating STDIN (the documented
+way in which a post-receive hook receives its input) because the mirroring
+code does not use it.
+
+To run your own `post-update` hook on normal repos, just install a hook called
+'post-update' the usual way.  It'll be installed on all normal repos but not
+on the special gitolite-admin repo.  If you need that for the gitolite-admin
+repo, you'll have to call it `post-update.secondary`.
+
+Finally, these names ('update.secondary' and 'post-update.secondary') are
 merely the defaults.  You can change them to anything you want; look in
 conf/example.gitolite.rc for details.
 
