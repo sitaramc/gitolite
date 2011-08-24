@@ -19,6 +19,10 @@ TRASH_SUFFIX=`date +%Y-%m-%d_%H:%M:%S`
 # settings for 'hub' ADC
 BASE_FETCH_URL="git://gl.example.com"
 GL_FORKED_FROM="gl-forked-from"
+
+# settings for 'set-head' ADC
+SH_WRITER_ALLOWED=1
+
     # KDE may set this to kde-cloned-from for historical reasons
 
 # ------------------------------------------------------------------------------

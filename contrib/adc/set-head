@@ -6,11 +6,22 @@
 
 [ -z "$2" ] && die "usage: set-head /path/to/repo.git refs/heads/branchname"
 
-get_rights_and_owner $1; to=$repo
-[ -z "$perm_write" ] && die "no write permissions on $to"
+if [ $SH_WRITER_ALLOWED ]; then
+  # this will check only for write permission on the given repository
+  get_rights_and_owner $1; to=$repo # this also set $repo variable
+  [ -z "$perm_write" ] && die "You don't have write permission on $repo"
+else
+  # require a repository creator to change default branch
+  valid_owned_repo $1; to=$repo
+fi
 
-# change head
+# move to repo dir
 cd $GL_REPO_BASE_ABS/$to.git
+
+# check for branch existence
+match=`git branch | sed 's/^\( \|*\) //' | grep $2`
+# this will check for an exact match in branch name  
+[ "$2" = "$match" ] || die "Unable to find branch $2 in repository $repo"
 
 git symbolic-ref HEAD $2
 echo HEAD on $to is `git symbolic-ref HEAD`
