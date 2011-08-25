@@ -5,15 +5,63 @@
 Gitolite allows you to setup git hosting on a central server, with
 fine-grained access control and many (many!) more powerful features.
 
-**Impatient?** The [install][install] document has a quick install section at
-the top.  Just remember that "impatient" does not always mean "successful" ;-)
+----
+
+In this document:
+
+  * <a href="#_quick_install">quick install</a>
+  * <a href="#_what">what</a>
+  * <a href="#_why">why</a>
+  * <a href="#_main_features">main features</a>
+  * <a href="#_security">security</a>
+  * <a href="#_contact_and_license">contact and license</a>
 
 ----
 
-Gitolite is an access control layer on top of git, which allows access control
-down to the branch level, including specifying who can and cannot *rewind* a
-given branch.  [Here][who]'s some information on some of the projects and
-people using gitolite (and who, in turn, have helped shape its features).
+<a name="_quick_install"></a>
+
+### quick install
+
+If you're comfortable with Unix and ssh, the following steps should work.
+<font color="gray">(However, gitolite has lots and lots of useful features;
+don't miss out on them by skipping the excellent
+[documentation][docs]!)</font>
+
+  * create a user called `git`.  Login to this user.
+  * copy your ssh pubkey from your workstation.  Rename it to `YourName.pub`.
+  * now run these commands:
+
+        git clone git://github.com/sitaramc/gitolite
+        cd gitolite
+        src/gl-system-install
+        gl-setup ~/YourName.pub
+
+You're done.  Now run `git clone git@server:gitolite-admin` on your
+workstation and [add users and repos][aur].
+
+[aur]: http://sitaramc.github.com/gitolite/doc/2-admin.html#_adding_users_and_repos
+
+<a name="_what"></a>
+
+### what
+
+Gitolite is an access control layer on top of git.  Here's an "executive
+summary":
+
+  * use a single unix user ("real" user) on the server
+  * provide access to many gitolite users
+      * they are not "real" users
+      * they do not get shell access
+  * control access to many git repositories
+      * read access controlled at the repo level
+      * write access controlled at the branch/tag/file/directory level,
+        including who can rewind, create, and delete branches/tags
+  * can be installed without root access, assuming git and perl are already
+    installed
+  * authentication is most commonly done using sshd, but you can also use
+    httpd if you prefer (this may require root access).
+  * several other neat features described below and elsewhere in the
+    [doc/][docs] directory.
 
 Gitolite comes with a **huge** amount of documentation.  If you're absolutely
 new, the suggested reading order is this:
@@ -27,36 +75,11 @@ new, the suggested reading order is this:
   * (if you're migrating from gitosis, read [this][migr])
 
 There is also a **[master TOC of all gitolite documentation][docs]**; use your
-browser's search function (Ctrl-F, usually) to look for likely sounding words
-or just browse around -- you never know what you'll find!
+browser's search function to look for likely sounding words or just browse
+around -- you never know what you'll find!
 
-----
-
-In this document:
-
-  * <a href="#_what">what</a>
-  * <a href="#_why">why</a>
-  * <a href="#_main_features">main features</a>
-  * <a href="#_security">security</a>
-  * <a href="#_contact_and_license">contact and license</a>
-
-----
-
-<a name="_what"></a>
-
-### what
-
-Gitolite lets you use a single user on a server to host many git repositories
-and provide access to many developers, without having to give them real
-userids on or shell access to the server.  Authentication is most commonly
-done using sshd, but you can also use httpd if you prefer.
-
-Gitolite can restrict who can read from (clone/fetch) or write to (push) a
-repository.  It can also restrict who can push to what branch or tag, which is
-very important in a corporate environment.  Gitolite can be installed without
-requiring root permissions, and with no additional software than git itself
-and perl.  It also has several other neat features described below and
-elsewhere in the [doc/][docs] directory.
+[Here][who]'s some information on some of the projects and
+people using gitolite (and who, in turn, have helped shape its features).
 
 <a name="_why"></a>
 
