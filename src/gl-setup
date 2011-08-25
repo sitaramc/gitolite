@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 GL_PACKAGE_CONF=/tmp/share/gitolite/conf
 # must be the same as the value for the same variable in

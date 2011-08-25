@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # install the gitolite software *system wide*.  Not too robust, fancy, etc.,
 # but does have a usage message and catches simple problems.
