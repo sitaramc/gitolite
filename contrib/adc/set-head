@@ -4,7 +4,7 @@
 
 [ -z "$GL_RC" ] && die "ENV GL_RC not set"
 
-[ -z "$2" ] && die "usage: set-head /path/to/repo.git refs/heads/branchname"
+[ -z "$2" ] && die "usage: set-head /path/to/repo.git refs/heads/branchname (or just branch name if it's located in refs/heads or refs/tags)"
 
 if [ $SH_WRITER_ALLOWED ]; then
   # this will check only for write permission on the given repository
@@ -18,11 +18,16 @@ fi
 # move to repo dir
 cd $GL_REPO_BASE_ABS/$to.git
 
-# check for branch existence
-match=`git branch | sed 's/^\( \|*\) //' | grep $2`
-# this will check for an exact match in branch name  
-[ "$2" = "$match" ] || die "Unable to find branch $2 in repository $repo"
+# Check if $2 is a full reference
+git show-ref --verify --quiet $2 && ref=$2
+# Match partial reference in heads
+[ -z "$ref" ] && ref=`git show-ref --heads $2 | sed 's/^[a-fA-F0-9]\{40\} //'`
+# Match partial reference in tags
+[ -z "$ref" ] && ref=`git show-ref --tags $2 | sed 's/^[a-fA-F0-9]\{40\} //'`
+# Invalid reference given as $2
+[ -z "$ref" ] && die "Invalid reference given $2"
 
-git symbolic-ref HEAD refs/heads/$match  
+# Update HEAD with the found reference in $2
+git symbolic-ref HEAD $ref
 echo HEAD on $to is `git symbolic-ref HEAD`
 cd - > /dev/null
