@@ -43,28 +43,16 @@ GetOptions('batch' => \$batch);
 unless ($batch) {
     print STDERR "
     This is a cronnable, batchable, program to rewrite ~/.ssh/authorized_keys
-    using public keys in a given directory.  It MUST be run by supplying its
-    full path, and the rest of the gitolite scripts must be in the same
-    directory.  Here's how to run it:
+    using public keys in a given directory.  You MUST make sure you run the
+    one that is in the same directory as that used by gl-auth-command (and for
+    what that is, see ~/.ssh/authorized_keys).
 
-        /full/path/to/gl-setup-authkeys -batch keydir
+    Except for the deprecated 'from-client' install mode, this should work:
 
-    where 'keydir' contains a bunch of '*.pub' files.
+        gl-setup-authkeys -batch keydir
 
-    If you're not sure what the full path to the script should be, look in
-    ~/.ssh/authorized_keys for the path to the gl-auth-command script.
+    where 'keydir' contains a bunch of '*.pub' files.\n\n";
 
-    If you managed to lose that file (how careless of you!) then, depending on
-    what install mode you used, it's either \$HOME/.gitolite/src or \$HOME/bin
-    or /usr/local/bin or whatever your package maintainer decided.  I leave it
-    to you to figure out which method gets you which PATH ;-)  In this case
-    you'll also have to set GL_BINDIR to that same path *and* export it, so
-    something like this should do:
-
-        export GL_BINDIR=/that/full/path/you/just/found
-        \$GL_BINDIR/gl-setup-authkeys -batch keydir
-
-    The keydir can be found from the value of \$GL_KEYDIR in ~/.gitolite.rc\n\n";
     exit 1;
 }
 
