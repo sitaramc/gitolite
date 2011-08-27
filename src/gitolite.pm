@@ -439,7 +439,7 @@ sub setup_git_configs
         my $rc = $rch{$seq};
         while ( my ($key, $value) = each(%{ $rc }) ) {
             if ($value ne "") {
-                $value =~ s/^"(.*)"$/$1/;
+                $value =~ s/^['"](.*)["']$/$1/;
                 system("git", "config", $key, $value);
             } else {
                 system("git", "config", "--unset-all", $key);
