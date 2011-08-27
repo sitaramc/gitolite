@@ -117,9 +117,7 @@ expect_filesame() {
 die() {
     echo '***** AAAAARRRGGH! *****' >&2
     echo ${BASH_LINENO[1]} ${BASH_SOURCE[2]} >&2
-    cd $TESTDIR
-    vim +${BASH_LINENO[1]} '+r !head ~/1 ~/2 /dev/null' ${BASH_SOURCE[2]}
-
+    echo "vim +${BASH_LINENO[1]} \'+r !head ~/1 ~/2 /dev/null\' ${BASH_SOURCE[2]}" >&2
     exit 1
 }
 
@@ -128,7 +126,6 @@ expect() {
     then
         ok
     else
-        die foo
         notok "expecting: $1, got:"
         cat ~/1 ~/2|sed -e 's/^/# /'
     fi
@@ -137,7 +134,6 @@ expect() {
 notexpect() {
     if cat ~/1 ~/2 | grep "$1" >/dev/null
     then
-        die foo
         notok "NOT expecting: $1, got:"
         cat ~/1 ~/2|sed -e 's/^/# /'
     else
