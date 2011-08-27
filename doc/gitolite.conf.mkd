@@ -444,15 +444,21 @@ Gitolite allows you to specify access for git-daemon and gitweb.  See
 
 (Thanks to teemu dot matilainen at iki dot fi)
 
-Sometimes you want to specify `git config` settings for some of your repos.
-For example, you may have a custom post-receive hook that sends an email when
-a push happens, and this hook needs to know whom to send the email to, etc.
+>   ----
 
-You can set git config values by specifying something like this within a
-"repo" paragraph:
+>   **Note**: this won't work unless the rc file has the right settings;
+>   please see `$GL_GITCONFIG_KEYS` in [doc/gitolite.rc.mkd][rcdoc] for
+>   details and security information.
 
-example usage: if you placed a hook in hooks/common that requires
-configuration information that is specific to each repo, you could do this:
+>   ----
+
+Sometimes you want to specify `git config` settings for your repos.
+
+For example, say you have a custom post-receive hook that sends an email when
+a push happens, and this hook looks in the config for whom to send the email
+to, etc.
+
+You can set these git config values within a "repo" paragraph:
 
     repo gitolite
         config hooks.mailinglist = gitolite-commits@example.tld
@@ -466,18 +472,39 @@ The syntax is simple:
 
 This does either a plain "git config section.key value" (for the first 3
 examples above) or "git config --unset-all section.key" (for the last
-example).
+example).  Other forms of the `git config` command (`--add`, the
+`value_regex`, etc) are not supported.
 
-**WARNING**: deleting the config line from the `conf/gitolite.conf` file will
-*not* delete the variable from `repo.git/config`.  The syntax in the last
-example is the *only* way to make gitolite execute a `--unset-all` operation
-on the given key.
+>   ----
 
-Other forms (--add, the `value_regex`, etc) are not supported.
+>   **WARNING**: simply deleting the config line from the `conf/gitolite.conf`
+>   file will *not* delete the variable from `repo.git/config`.  The syntax in
+>   the last example is the *only* way to make gitolite execute a
+>   `--unset-all` operation on the given key.
 
-**Note**: this won't work unless the rc file has the right settings; please
-see comments around the variable `$GL_GITCONFIG_KEYS` in doc/gitolite.rc.mkd
-for details and security information.
+>   ----
+
+You can repeat the 'config' line as many times as you like, and the last
+occurrence will be the one in effect.  This allows you to override settings
+just for one project, as in this example:
+
+    repo @all
+        config gitolite.mirror.master = "frodo"
+        config gitolite.mirror.slaves = "sam gollum"
+
+    repo top-secret-project
+        # only sam, because we don't trust gollum
+        config gitolite.mirror.slaves = "sam"
+
+The "delete config variable" syntax can also be used, if you wish:
+
+    repo highlander     # there can be only one!
+        config gitolite.mirror.master =
+        config gitolite.mirror.slaves =
+
+As you can see, the general idea is to place the most generic ones (`repo
+@all`, or repo patterns like `repo foo.*`) first, and place more specific ones
+later to override the generic settings.
 
 [rcdoc]: http://sitaramc.github.com/gitolite/doc/gitolite.rc.html
 
