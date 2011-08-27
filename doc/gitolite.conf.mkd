@@ -80,6 +80,11 @@ config file exists.
 
 Files that have been already processed once are skipped, with a warning.
 
+<font color="gray">Advanced users: `subconf`, a command that is very closely
+related to `include`, is documented [here][subconf].</gray>
+
+[subconf]: http://sitaramc.github.com/gitolite/doc/delegation.html#_the_subconf_command
+
 <a name="_basic_access_control"></a>
 
 ### basic access control

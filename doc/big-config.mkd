@@ -308,16 +308,7 @@ this (note the clever date command that always gets you last months log file!)
 
 ### what are the downsides?
 
-There are some downsides.  The first one applies in all cases:
-
-  * If you use the delegation feature, you can no longer define or extend
-    @groups in a fragment, for security reasons.  It will also not let you use
-    any group other than the @fragname itself (specifically, groups which
-    contained a subset of the allowed @fragname, which would work normally, do
-    not work now).
-
-    (If you didn't understand all that, you're probably not using delegation,
-    so feel free to ignore it!)
+There are some downsides.
 
 The following apply if individual ("split") conf files are written, which in
 turn only happens if you used repo names instead of group names on the `repo`

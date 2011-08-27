@@ -87,7 +87,7 @@ echo "
 " > conf/fragments/u3r.conf
 ugc u3 < /dev/null
 [[ $1 == 0 ]] && expect "u3r.conf attempting to set access for r2b"
-[[ $1 == 1 ]] && expect "defining groups is not allowed inside fragments"
+[[ $1 == 1 ]] && expect "u3r.conf attempting to set access for locally modified @u3r"
 [[ $1 == 1 ]] && notexpect "u3r.conf attempting to set access for r2b"
 [[ $1 == 0 ]] && notexpect "defining groups is not allowed inside fragments"
 git reset --hard origin/master &>/dev/null

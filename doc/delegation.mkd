@@ -1,16 +1,14 @@
 ## delegating access control responsibilities
 
-[Thanks to jeromeag for forcing me to think through this...]
-
-----
-
 In this document:
 
   * <a href="#_lots_of_repos_lots_of_users">lots of repos, lots of users</a>
-  * <a href="#_splitting_up_the_set_of_repos_into_groups">splitting up the set of repos into groups</a>
-  * <a href="#_delegating_ownership_of_groups_of_repos">delegating ownership of groups of repos</a>
-  * <a href="#_other_notes">other notes</a>
-  * <a href="#_security_philosophy_note">security/philosophy note</a>
+  * <a href="#_how_to_use_delegation">how to use delegation</a>
+      * <a href="#_the_subconf_command">the subconf command</a>
+      * <a href="#_backward_compatibility">backward compatibility</a>
+  * <a href="#_security_notes">security notes</a>
+      * <a href="#_group_names">group names</a>
+      * <a href="#_delegating_pubkeys">delegating pubkeys</a>
 
 ----
 
@@ -36,96 +34,118 @@ repos, otherwise it doesn't scale.  It would also be nice if we could prevent
 an admin from creating access rules for *any* repo in the system -- i.e., set
 limits on what repos he can control.  This would be a nice "security" feature.
 
-Delegation offers a way to do all that.  Note that delegated admins cannot
-create or remove users, nor can they define new repos.  They can only define
-access control rules for a set of repos they have been given authority for.
+Delegation offers a way to do all that.  You can allow access control rules
+for a set of repos to be specified in a **subconf** file and allow someone (a
+**sub-admin**) to make changes within that file.  (Note: sub-admins cannot
+create or remove users).
 
-----
+<a name="_how_to_use_delegation"></a>
 
-It's easier to show how it all works with an example instead of long
-descriptions.
+### how to use delegation
 
-<a name="_splitting_up_the_set_of_repos_into_groups"></a>
+First, you group your repos however you want.  In the example below, I'm
+considering firefox and lynx (projects at the root of the gitolite server) as
+well as *any* repo inside the `browsers` subdirectory, as members of the
+`webbrowsers` group.  Similarly for the others.
 
-### splitting up the set of repos into groups
+    @webbrowsers        = firefox lynx browsers/..*
+    @webservers         = apache nginx servers/..*
+    @malwares           = conficker storm ms/..*
+        # side note: if anyone objects, we claim ms stands for "metasploit" ;-)
 
-To start with, recall that gitolite allows you to specify **groups** (of users
-or repos, same syntax).  So the basic idea is that the main config file
-(`conf/gitolite.conf` in your admin repo clone) will specify some repo groups:
+Each of these groups is called a **subconf** from here on.
 
-    # group your projects/repos however you want
-    @webbrowser_repos           = firefox lynx
-    @webserver_repos            = apache nginx
-    @malware_repos              = conficker storm
+Then you designate a **sub-admin** to manage each subconf, and you ensure
+(using the standard gitolite feature of restricting pushes by names of changed
+files) that a sub-admin can make changes only to her subconf file and nothing
+else.
 
-    # any other config as usual, including access control lines for any of the
-    # above projects or groups
-
-<a name="_delegating_ownership_of_groups_of_repos"></a>
-
-### delegating ownership of groups of repos
-
-Once the repos are grouped, give each person charge of one or more groups.
-For example, Alice may be in charge of all web browser development projects,
-Bob takes care of web servers, and Mallory, as [tradition][abe] dictates, is
-in charge of malware ;-)
+For example, Alice is in charge of all web browser development projects.
+Similarly, Bob takes care of web servers, and Mallory, as [tradition][abe]
+dictates, is in charge of malware ;-)
 
 [abe]: http://en.wikipedia.org/wiki/Alice_and_Bob#List_of_characters
 
-You do this by adding files with specific names to the `gitolite-admin` repo:
-
     # the admin repo access was probably like this to start with:
     repo gitolite-admin
-        RW+                                         = sitaram
+        RW+                                     = sitaram
     # now add these lines to the config for the admin repo
-        RW                                          = alice bob mallory
-        RW+ NAME/                                   = sitaram
-        RW  NAME/conf/fragments/webbrowser_repos    = alice
-        RW  NAME/conf/fragments/webserver_repos     = bob
-        RW  NAME/conf/fragments/malware_repos       = mallory
+        RW                                      = alice bob mallory
+        RW+ NAME/                               = sitaram
+        RW  NAME/conf/subs/webbrowsers          = alice
+        RW  NAME/conf/subs/webservers           = bob
+        RW  NAME/conf/subs/malwares             = mallory
 
-This uses gitolite's ability to restrict pushes by file/dir name being changed
--- the syntax you see above ensures that, while "sitaram" does not have any
-NAME based restrictions, the other 3 users do.  See `conf/example.conf` for
-syntax and notes.
+Finally, you tell gitolite to pull in these files using the "subconf" command
 
-As you can see, **for each repo group** you want to delegate authority over,
-there's a rule for a **corresponding file** in `conf/fragments` in the
-`gitolite-admin` repo.  If you have write access to that file, you are allowed
-to define rules for repos in that repo group.
+    subconf "subs/*.conf"
 
-In other words, we use gitolite's file/dir NAME-based permissions to "enforce"
-the separation between the delegated configs!
+You can put this command anywhere in the main gitolite.conf file, but it's
+best to put it at the end.
 
-Here's how to use this in practice:
+Now alice can clone the admin repo, add a file called `conf/subs/webbrowsers`
+with whatever access rules she wants for the repositories under her control,
+commit and push.
 
-  * Alice clones the `gitolite-admin` repo, and adds a file called
-    `conf/fragments/webbrowser_repos.conf`
+And that's really all there is to it.
 
-  * she writes in this file any access control rules for the "firefox" and
-    "lynx" repos.  She should not write access rules for any other project --
-    they will be ignored
+<a name="_the_subconf_command"></a>
 
-  * Alice then commits and pushes to the `gitolite-admin` repo
+#### the subconf command
 
-Naturally, a successful push invokes the post-update hook that the admin repo
-has, which eventually runs the compile script.  The **net effect** is as if
-you appended the contents of all the "fragment" files, in alphabetical order,
-to the bottom of the main file.
+This command is much like the "include" command, but in addition it checks
+that a subconf does not contain ACL rules for repos that are outside its
+purview.
 
-<a name="_other_notes"></a>
+In the above example, the `webbrowsers` subconf file can only have access
+control lines for firefox, lynx, and anything under "browsers/" because those
+are the elements of the `@webbrowsers` group.  (This is checked using a regex
+match, which is why "anything under browsers/" is written `browsers/..*`)
 
-### other notes
+In more precise terms:
 
-If you're in big-config mode (`GL_BIG_CONFIG` set to 1 in the rc file), a
-fragment file cannot define any new groups; all groups have to be defined in
-the main config file or in a file included from it.
+  * the subconf name is simply the basename of the conf file, without the
+    .conf extension, and
+  * the elements of an `@` group of the same name are then used to limit what
+    repos the subconf can have ACL lines for.
 
-----
+(Additional notes: it can also contain lines for an actual repo called
+`webbrowsers`, or, in big-config mode, for a group called `@webbrowsers`).
 
-<a name="_security_philosophy_note"></a>
+<a name="_backward_compatibility"></a>
 
-### security/philosophy note
+#### backward compatibility
+
+For backward compatibility, if no `subconf` commands have been seen at the end
+of processing the main config file, gitolite pretends you appended
+
+    subconf "conf/fragments/*.conf"
+
+to the end of the file.
+
+<a name="_security_notes"></a>
+
+### security notes
+
+<a name="_group_names"></a>
+
+#### group names
+
+You can use "@group"s defined in the main config file but do not attempt to
+redefine or extend them in your own subconf file.  If you must extend a group
+(say `@foo`) defined in the main config file, do this:
+
+    @myfoo  =   @foo
+    # now do whatever you want with @myfoo
+
+Group names you define in your subconf will not clash even if the exact same
+name is used in another subconf file, so you need not worry about that.
+
+<a name="_delegating_pubkeys"></a>
+
+#### delegating pubkeys
+
+Short answer: not gonna happen.
 
 The delegation feature is meant only for access control rules, not pubkeys.
 Adding/removing pubkeys is a much more significant event than changing branch
@@ -134,12 +154,11 @@ be allowed to do it.
 
 Gitolite's "userids" all live in the same namespace.  This is unlikely to
 change, so please don't ask -- it gets real complicated to do otherwise.
-Allowing delegated admins to add users means username collisions, which also
-means security problems (admin-A creates a pubkey for Admin-B, thus gaining
-access to all of Admin-B's stuff).
+Allowing sub-admins to add users means username collisions, which also means
+security problems (admin-A creates a pubkey for Admin-B, thus gaining access
+to all of Admin-B's stuff).
 
 If you feel the need to delegate even that, please just go the whole hog and
 give them separate gitolite instances!  It's pretty easy to setup the
-*software* itself system-wide, so that many users can use it without all the
-"easy install" fuss.  See the "system install / user setup" section in
-doc/1-INSTALL.mkd for details.
+*software* itself system-wide, so that many users can use it; see the root
+install method in the install document.
