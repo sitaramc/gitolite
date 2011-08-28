@@ -80,9 +80,6 @@ config file exists.
 
 Files that have been already processed once are skipped, with a warning.
 
-[Advanced users: the include statement cannot be used inside a delegated
-config file, for security reasons].
-
 <a name="_basic_access_control"></a>
 
 ### basic access control

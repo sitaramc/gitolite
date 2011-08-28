@@ -257,7 +257,6 @@ sub parse_conf_line
     {
         my $include_glob = $1;
         for my $file (glob($include_glob =~ m(^/) ? $include_glob : "conf/$include_glob")) {
-            die "$ABRT $fragment attempting to include configuration\n" if $fragment ne 'master';
             die "$ABRT included file not found: '$file'\n" unless -f $file;
 
             my $file_id = device_inode($file);

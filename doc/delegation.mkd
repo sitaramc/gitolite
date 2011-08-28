@@ -117,8 +117,9 @@ to the bottom of the main file.
 
 ### other notes
 
-The "include" statement cannot be used in fragment files, for security
-reasons.
+If you're in big-config mode (`GL_BIG_CONFIG` set to 1 in the rc file), a
+fragment file cannot define any new groups; all groups have to be defined in
+the main config file or in a file included from it.
 
 ----
 
