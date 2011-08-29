@@ -154,12 +154,6 @@ on feedback from my users to find or fix issues.
     `\\.` (two backslashes and a dot).  So this is how you'd allow any keys in
     the "foo" category: `$GL_GITCONFIG_KEYS = "foo\\..*";`
 
-  * `$GL_GITCONFIG_WILD`, boolean, default 0
-
-    This setting allows gitconfig keys even for wild repos.  This is an
-    efficiency issue more than a security issue, since this requires trawling
-    through all of `$REPO_BASE` looking for stuff :)
-
   * `$GL_NO_CREATE_REPOS`, boolean, default 0
 
     DO NOT CHANGE THIS unless you have other means to create repos and

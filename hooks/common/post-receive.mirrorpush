@@ -8,19 +8,17 @@
 # if you don't do this, git-shell sometimes dies of a signal 13 (SIGPIPE)
 [ -t 0 ] || cat >/dev/null
 
-if [ -n "$GL_SLAVES" ]
-then
-    for mirror in $GL_SLAVES
-    do
-        if git push --mirror $mirror:$GL_REPO.git
-        then
-            :
-        else
-            ssh $mirror mkdir -p $GL_REPO.git
-            ssh $mirror git init --bare $GL_REPO.git
-            ssh $mirror "cd $GL_REPO.git; git config receive.fsckObjects true"
-            git push --mirror $mirror:$GL_REPO.git ||
-                echo "WARNING: mirror push to $mirror failed"
-        fi
-    done
-fi >&2
+# even slaves have post-receive hooks, but due to the way the push happens, we
+# don't have GL_REPO set.  So we detect that generic situation and bail...
+[ -n "$GL_BYPASS_UPDATE_HOOK" ] && exit 0
+# CAUTION: this means that a server-side push (bypassing gitolite) will not be
+# mirrored automatically because (a) we don't know GL_REPO (we can deduce it
+# but we won't!), and (b) we can't distinguish easily between that and this
+# case (the slave receiving a mirror push case)
+
+[ -z "$GL_REPO" ] && die GL_REPO not set
+[ -z "$GL_BINDIR" ] && die GL_BINDIR not set
+
+slaves=`git config --get gitolite.mirror.slaves`
+[ -z "$slaves" ] && exit 0
+$GL_BINDIR/gl-mirror-push $GL_REPO $slaves
