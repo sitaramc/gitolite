@@ -1,0 +1,344 @@
+# semi-autonomous mirroring setup example
+
+[deldoc]: http://sitaramc.github.com/gitolite/doc/delegation.html
+[sc]: http://sitaramc.github.com/gitolite/doc/delegation.html#_the_subconf_command
+
+This document describes one way to do this.  Gitolite is powerful so you can
+probably find other ways to suit you.
+
+In this document:
+
+  * <a href="#_overview_of_problem">overview of problem</a>
+  * <a href="#_overview_of_setup">overview of setup</a>
+      * <a href="#_gitolite_feature_recap">gitolite feature recap</a>
+  * <a href="#_pre_requisites">pre-requisites</a>
+  * <a href="#_quick_setup">quick setup</a>
+  * <a href="#_step_by_step">step by step</a>
+      * <a href="#_1_gitolite_conf_">(1) `gitolite.conf`</a>
+      * <a href="#_2_master_sam_conf_">(2) `master/sam.conf`</a>
+      * <a href="#_3_host_admins_only_master_sam_p1_conf_">(3) host admins only -- `master/sam/p1.conf`</a>
+      * <a href="#_4_mirrors_sam_p1_conf_">(4) `mirrors/sam/p1.conf`</a>
+      * <a href="#_5_slave_frodo_sam_conf_">(5) `slave/frodo/sam.conf`</a>
+      * <a href="#_6_manual_sync">(6) manual sync</a>
+  * <a href="#_next_steps">next steps</a>
+  * <a href="#_appendix_A_delegation_helper_files">appendix A: delegation helper files</a>
+
+----
+
+<a name="_overview_of_problem"></a>
+
+### overview of problem
+
+The example is from real life, with the following characteristics:
+
+  * multiple servers (hosts)
+  * multiple "products", each product has one or more git repos
+  * different products are "native to" (mastered on) different hosts
+  * a product may be mirrored to zero or more other hosts (mirrored to zero
+    hosts means it is **local** to the host)
+
+The admin requirements are:
+
+  * the overall system will have one or more **master admins**; they manage
+    the main config file, for instance.
+  * each host will have one or more **host admins**
+  * these host admins should be allowed to create any repos they need (within
+    one of a set of directory names allocated to them), and assign access to
+    whomever they please
+  * they should not be able to "step on each other" -- setup access rules for
+    repos not in their control
+
+The following can only be done by the master admins:
+
+  * authentication (ssh keys) are centrally managed and distributed.  Host
+    admins should not be allowed to do this.
+  * mirroring setup -- who's the master and who're the slaves for any repo
+  * allowing redirected pushes from slaves
+
+<a name="_overview_of_setup"></a>
+
+### overview of setup
+
+We will use p1 as the product, with sam as the master and frodo as a slave.
+Assume equivalent text/code for other product/master/slave combos.
+
+This setup imposes the condition that all repos should be under some directory
+name; either a product name or, for local repos, a hostname.  In our example,
+these directory names would be p1 or sam on the host sam, and frodo on the
+host frodo.
+
+<a name="_gitolite_feature_recap"></a>
+
+#### gitolite feature recap
+
+We use [delegation][deldoc], to ensure that admins for sam can only write
+files whose names start with `master/sam/`.  The actual files they will write
+are `master/sam/p1.conf` etc., one for each product that is mastered on their
+server.
+
+We use [subconf][sc].  When you say `subconf "path/to/foo.conf`, then within
+that file (and anything included from it), access can only be defined for
+repos that regex-match one of the elements of `@foo`.
+
+<a name="_pre_requisites"></a>
+
+### pre-requisites
+
+First, install mirroring on all servers according to the main mirroring
+document.  Set it up so that the gitolite-admin repo is mastered at one server
+and everyone else slaves it.
+
+Also, after (or during) the normal mirroring install, edit `~/.gitolite.rc` on
+all servers and set `$GL_WILDREPOS` to 1 (from its default of 0).
+
+<a name="_quick_setup"></a>
+
+### quick setup
+
+  * edit your `gitolite.conf` file as given in step 1 below
+      * ignore all the comments, even the ones that tell you to do something :-)
+      * change only the names of the admin users, and the names of the servers
+        in the config lines.  Everything else stays the same
+  * now copy `mirror-conf-helper` from the contrib directory to your home or
+    some easy to type place, and run it to setup your hosts, products, and slaves
+
+A typical sequence with that script is:
+
+    # cd to your gitolite-admin clone
+
+    # create a new host
+    ~/mirror-conf-helper newhost sam sam-admin
+
+    # create the actual repository and access rules.  This is done by the host
+    # admin for the host on which it is mastered (or you can do it yourself).
+    # See step 3 below for details.
+    mkdir -p conf/master/sam
+    vim      conf/master/sam/p1.conf
+        # now add in some "repo p1/..." and "RW ..." lines for the repos in
+        # product p1 and save
+
+    # add product p1 to the list of repos sam is allowed to control
+    ~/mirror-conf-helper newprod sam p1
+
+    # add a slave
+    ~/mirror-conf-helper newslave sam p1 frodo
+
+You can then treat the detailed steps described below as extra information or
+"background reading" ;-)
+
+<a name="_step_by_step"></a>
+
+### step by step
+
+If the script is not cutting it for you and want to vary the technique for
+some reason, or you simply want to gain a better understanding of what is
+happening, it may be better to do each step manually instead of just using the
+script.
+
+**Note**: all files mentioned below are assumed to be under **`conf/`**.  The
+only place where you have to explicitly state this is in the delegation code
+in the appendix.  The rest of the time, "conf/" is assumed.
+
+<a name="_1_gitolite_conf_"></a>
+
+#### (1) `gitolite.conf`
+
+The main config file has these items in it.  **Please add them in this
+order**.
+
+If you follow this document completely, your gitolite.conf file can be pretty
+static, changing only if the master admin changes or you need to add a new
+host as slave to the gitolite-admin repo.  Therefore you can set it up first.
+
+Here's what it looks like:
+
+    # (1.1)---------------------------------------------------------------------
+    # First the main setup:
+
+    @master-admins    =   sitaram dilbert
+    repo gitolite-admin
+        RW+ =   @master-admins
+        config gitolite.mirror.master   =   "master"
+        config gitolite.mirror.slaves   =   "list of slave servers"
+        # you cannot use continuation lines for this; sorry!  You have to list
+        # them all in ONE long line within one set of double quotes...
+
+    # (1.2)---------------------------------------------------------------------
+    # If you have any files with "convenience" group definitions, pull them in:
+
+    include "groups/users.conf"
+    include "groups/repos.conf"
+
+    # (1.3)---------------------------------------------------------------------
+    # Next is delegation.  If you don't want delegation, omit this section,
+    # and replace all "subconf" commands with "include" in the rest of this
+    # document.
+
+    include "host-product-map.conf"
+        # create this file; see step A1 in appendix A
+
+    repo gitolite-admin
+        # now that you're adding a NAME/ section, you need this for master
+        # admins to retain their access
+        RW+ NAME/                   =   @master-admins
+
+    include "NAME-restrictions.conf"
+        # create this file; see step A2 in appendix A
+
+    # (1.4)---------------------------------------------------------------------
+    # Now you include the access rules for native repos
+    # (example: master/sam.conf)
+
+    subconf "master/HOSTNAME.conf"
+
+    # (1.5)---------------------------------------------------------------------
+    # After this you have the mirror config for native repos.  We place this
+    # *after* the access rules above, to make sure we override any mirror
+    # config lines accidentally added by a host admin!
+    # (example: mirrors/sam/p1.conf)
+
+    include "mirrors/HOSTNAME/*.conf"
+
+    # (1.6)---------------------------------------------------------------------
+    # Now we pull in all setup (mirror config *and* access rules) for
+    # non-native repos.  For the product "p1", this file will get pulled in
+    # when the config is processed on frodo.
+    # (example: slave/frodo/sam.conf)
+
+    subconf "slave/HOSTNAME/*.conf"
+
+You'll get some warnings about missing include files; ignore them.
+
+<a name="_2_master_sam_conf_"></a>
+
+#### (2) `master/sam.conf`
+
+For each host sam, one file called `master/sam.conf` is needed.  This file
+contains just one line:
+
+    include "master/sam/*.conf"
+
+<font color="gray">It is pulled in by the main config file using `subconf
+"master/HOSTNAME.conf"`, which -- on host sam -- translates to `subconf
+"master/sam.conf"`.  The only purpose of this is to setup the subconf
+restriction on the combined contents of `master/sam/*.conf`.</font>
+
+<a name="_3_host_admins_only_master_sam_p1_conf_"></a>
+
+#### (3) host admins only -- `master/sam/p1.conf`
+
+(recap: the host admins for sam can only write files in `master/sam`).
+
+For each product p1 with master on host sam, the admins for host sam will
+create a file `master/sam/p1.conf`.  This file will contain reponames (must
+start with `p1/`) and access rules for these repos.
+
+If they have some common groupnames etc., they can probably put them in
+`master/sam/users.conf` or some such file and pull those in into each of their
+product.conf files.
+
+By default, everything is local to their server.  (Mirroring can only be setup
+by the master admins).
+
+<a name="_4_mirrors_sam_p1_conf_"></a>
+
+#### (4) `mirrors/sam/p1.conf`
+
+For each product p1 mastered on host sam, a file called `mirrors/sam/p1.conf`
+will be created, containing mirror config lines for all repos of product p1.
+In this case, it could be
+
+    repo    p1/..*
+            config gitolite.mirror.master   =   "sam"
+            config gitolite.mirror.slaves   =   "frodo"
+
+If this file does not exist, p1 is local to sam and not mirrored.
+
+<a name="_5_slave_frodo_sam_conf_"></a>
+
+#### (5) `slave/frodo/sam.conf`
+
+For each product that slave frodo gets from master sam, this file has the
+following lines
+
+    # pull in the access lines
+    include "master/sam/p1.conf"
+
+    # pull in the mirror config lines
+    include "mirrors/sam/p1.conf"
+
+<font color="gray">This file is pulled in on a slave server via a `subconf
+slave/HOSTNAME/*.conf` line in the main config file.  On frodo, this would
+pull in `slave/frodo/sam.conf` (among others), establishing, again, a subconf
+restriction on `@sam`.</font>
+
+<font color="gray">Security note: what this achieves is that the access lines,
+which were written by sam's admins, are parsed on frodo *under the subconf
+restriction of "sam"*.  This is important to prevent sam's admins from writing
+rules for repos they don't own and having them processed on other
+servers!</font>
+
+<a name="_6_manual_sync"></a>
+
+#### (6) manual sync
+
+The new repo(s) you just created would not have been synced up to frodo.  You
+can either make an empty commit and push, or log on to sam and run
+
+     gl-mirror-shell request-push p1/reponame
+
+<a name="_next_steps"></a>
+
+### next steps
+
+Once you've done the initial setup, here's what ongoing additions will
+require.
+
+  * any new repos that are created for the same *product* require only step 3
+
+  * a new *product* will require steps A1, 3, 4 and 5
+
+  * a new *host* will require additions in all the steps, including adding the
+    hostname in the slaves list for the admin repo (this is in the main
+    gitolite.conf file)
+
+<a name="_appendix_A_delegation_helper_files"></a>
+
+### appendix A: delegation helper files
+
+These two files were briefly mentioned in the delegation setup.
+
+(A1) `conf/host-product-map.conf` has the following contents:
+
+    # For each host foo, there will be one line:
+    #   @foo    =   foo/..*
+    # line (for local repos for the host).
+
+    # For each product bar whose master is a host foo, there will be one line:
+    #   @foo    =   bar/..*
+    # to add bar/..* to the allowed patterns when subconf "foo" is in effect
+
+    # ------------------------------------------------------------------------------
+    # so for our example:
+
+    @sam        =   sam/..*
+    @sam        =   p1/..*
+
+    @frodo      =   frodo/..*
+
+(A2) `conf/NAME-restrictions.conf` has the following contents:
+
+    # For each host foo, there will be two lines:
+    #   RW                          =   username-of-foo-host-admin
+    #   RW  NAME/conf/master/foo/   =   username-of-foo-host-admin
+    #           IMPORTANT: DO NOT MISS THE TRAILING SLASH IN THE LINE ABOVE!
+
+    # ------------------------------------------------------------------------------
+
+    repo gitolite-admin     # this line is required
+
+        RW                          =   sam-admin
+        RW  NAME/conf/master/sam/   =   sam-admin
+
+        RW                          =   frodo-admin
+        RW  NAME/conf/master/frodo/ =   frodo-admin
