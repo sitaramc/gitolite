@@ -12,20 +12,22 @@ my $lineno = 0;
 for (@authlines)
 {
     $lineno++;
-    if (/^# gitolite start/ .. /^# gitolite end/) {
-        warn "line $lineno: non-gitolite key found in gitolite section" if /ssh-rsa|ssh-dss/ and not /command=.*gl-auth-command/;
-    } else {
-        warn "line $lineno: gitolite key found outside gitolite section" if /command=.*gl-auth-command/;
-    }
+    my $in_gs = (/^# gitolite start/ .. /^# gitolite end/);
     next if /\# gitolite (start|end)/;
-    die "line $lineno: unrecognised line\n" unless /^(?:command=".*gl-auth-command (\S+?)"\S+ )?(?:ssh-rsa|ssh-dss) (\S+)/;
-    my ($user, $key) = ($1 || '', $2);
+
+    my $user = "";
+    $user = "host $1" if /^command=.*gl-mirror-shell (\S+?)"/;
+    $user = "user $1" if /^command=.*gl-auth-command (\S+?)"/;
+    $user = "shell user $1" if /^command=.*gl-auth-command -s (\S+?)"/;
+
+    die "line $lineno: unrecognised line\n" unless /^(?:command=".*(?:gl-mirror-shell|gl-auth-command(?: -s)?) (?:\S+?)"\S+ )?(?:ssh-rsa|ssh-dss) (\S+)/;
+    my $key = $1;
     if ($linenos{$key}) {
         warn "authkeys file line $lineno is repeat of line $linenos{$key}, will be ignored by server sshd\n";
         next;
     }
     $linenos{$key} = $lineno;
-    $users{$key}   = ($user ? "maps to gitolite user $user" : "gets you a command line");
+    $users{$key}   = ($user ? "maps to $user" : "gets you a command line");
 }
 
 print "\n";
