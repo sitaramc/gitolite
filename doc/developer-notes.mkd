@@ -2,9 +2,6 @@
 
 In this document:
 
-  * <a href="#_current_development_version">current development version</a>
-      * <a href="#_testing_status_of_gitolite_v2_0rc1">testing status of gitolite v2.0rc1</a>
-  * <a href="#_migration_to_gitolite_v2_x">migration to gitolite v2.x</a>
   * <a href="#_general_stuff">general stuff</a>
   * <a href="#_the_rc_file">the rc file</a>
   * <a href="#_modules">modules</a>
@@ -16,46 +13,6 @@ In this document:
       * <a href="#_Fedora">Fedora</a>
 
 ----
-
-<a name="_current_development_version"></a>
-
-### current development version
-
-The current gitolite development version is v2.0rc1.  Unless there is a
-serious security problem, *or* one of my large users [i.e., anyone whose name
-is in doc/who-uses-it.mkd (grin!)] needs it, all future changes will now
-happen here.
-
-The commit looks *huge*, but it's mostly just large chunks of code moving
-around; there's not a whole lot of new code.  However, I do apologise if
-anyone has their local changes conflicted when merging or rebasing against
-this version, and I promise to help as much as I can.
-
-<a name="_testing_status_of_gitolite_v2_0rc1"></a>
-
-#### testing status of gitolite v2.0rc1
-
-Pretty much all the major features have been properly tested using the test
-suite.  The following exceptions exist:
-
-  * basic, manual, testing only
-      * most admin defined commands
-      * smart http
-      * mob branches
-  * not yet tested
-      * mirroring
-  * things which I have no easy way to test
-      * controlling gitweb authentication using gitolite (as described [here][gw])
-      * SVN passthru
-
-<a name="_migration_to_gitolite_v2_x"></a>
-
-### migration to gitolite v2.x
-
-In general, the procedure for migrating described in the install document
-should suffice.  Even the rc file hasn't really changed much from the latest
-versions in v1.x, except that if you add a new variable to it you must also
-add it to the @EXPORT list in `src/gitolite_rc.pm`.
 
 <a name="_general_stuff"></a>
 
@@ -108,6 +65,7 @@ gets this from `GL_BINDIR`.
   * for frequently run perl programs, I prefer my method
 
       * gl-auth-command -- this is invoked with a full path
+      * gl-mirror-shell -- same as above
       * gl-time -- same as above
 
   * "their" ideal is "FindBin".  I will use it only on manually or
@@ -123,9 +81,9 @@ gets this from `GL_BINDIR`.
     method, not FindBin).  This is suitable for calling from shell scripts
     as `${0%/*}/gl-query-rc GL_BINDIR`
 
-      * gl-mirror-shell (frequent use)
       * gl-setup
       * gl-tool
+      * gl-mirror-push
 
 <a name="_OUTLIER_"></a>
 

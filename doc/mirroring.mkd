@@ -68,6 +68,9 @@ of setup you need. Here're some advantages:
     for everything. They don't need to know where the master is, so they're
     insulated from any changes you make behind the scenes.
 
+    This is as close to **active-active** mirroring as you can get without
+    worrying about race conditions and similar problems.
+
   * **partial mirroring**: all repos don't have to go all mirrors.  You can
     choose not to mirror a repo at all, or mirror it only to certain servers.
     This could be due to any reason: repo too big/high-traffic for the server,

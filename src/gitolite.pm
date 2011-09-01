@@ -994,6 +994,8 @@ sub setup_authkeys
         if ($pubkey_content =~ /\n./)
         {
             warn "WARNING: a pubkey file can only have one line (key); ignoring $pubkey\n" .
+                 "         Perhaps you're using a key in a different format (like putty/plink)?\n" .
+                 "         If so, please convert it to openssh format using 'ssh-keygen -i'.\n" .
                  "         If you want to add multiple public keys for a single user, use\n" .
                  "         \"user\@host.pub\" file names.  See the \"one user, many keys\"\n" .
                  "         section in doc/3-faq-tips-etc.mkd for details.\n";

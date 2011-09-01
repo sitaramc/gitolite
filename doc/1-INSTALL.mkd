@@ -337,12 +337,12 @@ we mean `conf/gitolite.conf` on your gitolite-admin clone.
 
 ### getting the gitolite software
 
-You can get the latest version of gitolite from github or indefero using the
-'git clone' command:
+You can get the latest version of gitolite from github or google code using
+the 'git clone' command:
 
     git clone git://github.com/sitaramc/gitolite.git
             # (OR)
-    git clone git://sitaramc.indefero.net/sitaramc/gitolite.git
+    git clone https://code.google.com/p/gitolite/
 
 <a name="_getting_a_tar_file_from_a_clone"></a>
 

@@ -17,6 +17,7 @@ In this document:
   * <a href="#_summary_permissions">summary: permissions</a>
   * <a href="#_virtual_ref_types">virtual "ref"-types</a>
   * <a href="#_other_tips">other tips</a>
+      * <a href="#_personal_branches">personal branches</a>
       * <a href="#_splitting_up_rules_into_rulesets">splitting up rules into rulesets</a>
       * <a href="#_gitweb_and_daemon">gitweb and daemon</a>
       * <a href="#_repo_specific_git_config_commands">repo specific `git config` commands</a>
@@ -81,7 +82,7 @@ config file exists.
 Files that have been already processed once are skipped, with a warning.
 
 <font color="gray">Advanced users: `subconf`, a command that is very closely
-related to `include`, is documented [here][subconf].</gray>
+related to `include`, is documented [here][subconf].</font>
 
 [subconf]: http://sitaramc.github.com/gitolite/doc/delegation.html#_the_subconf_command
 
@@ -117,6 +118,22 @@ specially by gitolite: you need rewind permission (`RW+`) to *overwrite* a
 tag with a new value.
 
 In a later section you'll see some more advanced permissions.
+
+<font color="gray">
+
+Side note: apparently it needs to be spelled out that "R" permissions can only
+apply to the entire repo and not to individual branches/tags.  Mention was
+made of a certain popular Linux distribution named after animals with
+adjectives, chosen merely for alliterative purposes, prefixed to their names,
+and of their users not being clueful enough to know that this (the "read"
+thing, not the alliterative adjective thing, in case you lost track) is an
+inherent git characteristic.
+
+Meanwhile, people who *desperately* need this are directed to gerrit, which
+can do this because they have their own git stack and dont use the one written
+by Linus and currently maintained by Junio.
+
+</font>
 
 <a name="_how_rules_are_matched"></a>
 
@@ -389,9 +406,19 @@ found in doc/wildcard-repositories.mkd.]
 This is a highly advanced topic; see [doc/virtualrefs-and-scoring.mkd][vs] for
 details.
 
+[vs]: http://sitaramc.github.com/gitolite/doc/virtualrefs-and-scoring.html
+
 <a name="_other_tips"></a>
 
 ### other tips
+
+<a name="_personal_branches"></a>
+
+#### personal branches
+
+Gitolite lets you define a "personal" or "scratch" namespace prefix for each
+developer (for example, `refs/personal/<devname>/*`); see the "personal
+branches" section in `doc/3-faq-tips-etc.mkd` for details.
 
 <a name="_splitting_up_rules_into_rulesets"></a>
 
