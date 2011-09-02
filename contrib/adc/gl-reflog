@@ -47,7 +47,7 @@ unshift @INC, $ENV{GL_BINDIR};
 require gitolite or die "parse gitolite.pm failed\n";
 gitolite->import;
 
-my ($perm, $creator, $wild) = repo_rights($repo);
+my ($perm, $creator) = check_access($repo);
 die "you don't have read access to $repo\n" unless $perm =~ /R/;
 
 my @logfiles = sort glob("$ENV{GL_ADMINDIR}/logs/*");
