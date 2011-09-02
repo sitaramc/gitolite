@@ -4,14 +4,30 @@
 
 [ -z "$GL_RC" ] && die "ENV GL_RC not set"
 
-[ -z "$2" ] && die "usage: set-head /path/to/repo.git refs/heads/branchname"
+[ -z "$2" ] && die "usage: set-head /path/to/repo.git refs/heads/branchname (or just branch name if it's located in refs/heads or refs/tags)"
 
-get_rights_and_owner $1; to=$repo
-[ -z "$perm_write" ] && die "no write permissions on $to"
+if [ $SH_WRITER_ALLOWED ]; then
+  # this will check only for write permission on the given repository
+  get_rights_and_owner $1; to=$repo # this also set $repo variable
+  [ -z "$perm_write" ] && die "You don't have write permission on $repo"
+else
+  # require a repository creator to change default branch
+  valid_owned_repo $1; to=$repo
+fi
 
-# change head
+# move to repo dir
 cd $GL_REPO_BASE_ABS/$to.git
 
-git symbolic-ref HEAD $2
+# Check if $2 is a full reference
+git show-ref --verify --quiet $2 && ref=$2
+# Match partial reference in heads
+[ -z "$ref" ] && ref=`git show-ref --heads $2 | sed 's/^[a-fA-F0-9]\{40\} //'`
+# Match partial reference in tags
+[ -z "$ref" ] && ref=`git show-ref --tags $2 | sed 's/^[a-fA-F0-9]\{40\} //'`
+# Invalid reference given as $2
+[ -z "$ref" ] && die "Invalid reference given $2"
+
+# Update HEAD with the found reference in $2
+git symbolic-ref HEAD $ref
 echo HEAD on $to is `git symbolic-ref HEAD`
 cd - > /dev/null
