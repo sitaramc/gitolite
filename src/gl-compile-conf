@@ -383,7 +383,7 @@ parse_conf_file($GL_CONF, 'master');
 #       what's the git version?
 # ----------------------------------------------------------------------------
 
-# we don't like stuff older than 1.6.2
+# we don't like stuff older than 1.6.6
 
 my $git_version = `git --version`;
 die "
@@ -397,10 +397,10 @@ die "$ABRT I can't understand $git_version\n" unless ($gv_maj >= 1);
 $git_version = $gv_maj*10000 + $gv_min*100 + $gv_patchrel;  # now it's "normalised"
 
 die "\n\t\t***** AAARGH! *****\n" .
-    "\tyour git version is older than 1.6.2\n" .
+    "\tyour git version is older than 1.6.6\n" .
     "\tsince that is now more than one year old, and gitolite needs some of\n" .
     "\tthe newer features, please upgrade.\n"
-    if $git_version < 10602;     # that's 1.6.2 to you
+    if $git_version < 10606;     # that's 1.6.6 to you
 
 # ----------------------------------------------------------------------------
 # most of the rest of this program can be "switched off"; see
