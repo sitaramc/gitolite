@@ -110,7 +110,9 @@ sub wrap_print {
     my $fh = wrap_open(">", "$file.$$");
     print $fh @text;
     close($fh) or die "$ABRT close $file failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
+    my $oldmode = ( (stat $file)[2] );
     rename "$file.$$", $file;
+    chmod $oldmode, $file if $oldmode;
 }
 
 sub slurp {
