@@ -88,16 +88,8 @@ section tells you how to add users and repos.
 You can supply your own, custom, hook scripts if you wish.  Install gitolite
 as usual, then:
 
-  * if you installed using "from-client" method (gl-easy-install):
-      * go to the gitolite *source* clone from which you did the original
-        install
-      * add your new hook into "hooks/common"
-      * run src/gl-easy-install with the same arguments as you ran the first
-        time
-  * if you installed using one of the other methods
-      * go to ~/.gitolite/hooks/common on the server and put your new hook
-        there
-      * now run "gl-setup" again
+  * go to ~/.gitolite/hooks/common on the server and put your new hook there
+  * now run "gl-setup" again
 
 You can use this procedure to install new hooks as well as to update hooks
 that you had previously installed.
@@ -361,14 +353,6 @@ if things are not clear -- you can help me fine tune this document :-)
         mv repositories/gitolite-admin.git $HOME/old-gitolite-admin.git
         find repositories -name gitolite-hooked | xargs rm
 
-  * (workstation) if your old server was installed using the "from-client"
-    method, and you intend to use the same method to install the new server,
-    then
-
-      * edit `~/.ssh/config` and change the line that says `host gitolite` to
-        `host old-gitolite`, or in fact anything that does not match the
-        string "host gitolite" :-)
-
   * (workstation, new server) **install** gitolite normally on your new
     server.  Use whatever install method suits you, but you must use the
     **same** name for the admin ("YourName" in the install instructions).  You
@@ -400,7 +384,6 @@ if things are not clear -- you can help me fine tune this document :-)
       * set the URL for the new server
 
             git remote --set-url origin git@newserver:gitolite-admin
-                # if you used easy install this will be "gitolite:gitolite-admin"
 
       * push the config, including past history
 

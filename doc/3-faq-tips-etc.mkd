@@ -571,10 +571,6 @@ have to be first "compiled", and the access control programs use this
 "compiled" version of the config.  (The compile step also refreshes
 `~/.ssh/authorized_keys`).
 
-If you choose the "easy install" method, all this is quite transparent to you
-anyway.  If you cannot use the easy install and must install manually, I have
-clear instructions on how to set it up.
-
 [repout]: http://sitaramc.github.com/gitolite/doc/report-output.html
 [delegation]: http://sitaramc.github.com/gitolite/doc/delegation.html
 [rmrepo]: http://sitaramc.github.com/gitolite/doc/admin-defined-commands.html#rmrepo

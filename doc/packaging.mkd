@@ -30,9 +30,6 @@ location values please):
         $GL_PACKAGE_CONF="X";
         $GL_PACKAGE_HOOKS="Y";
 
-  * delete `src/gl-easy-install`; that script is meant for a totally different
-    mode of installation and does *not* play well in this mode :-)
-
 **Step 3**: Move (or arrange to move) the files to their proper locations as
 given below:
 

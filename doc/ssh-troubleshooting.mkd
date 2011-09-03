@@ -73,28 +73,12 @@ and accessing gitolite.
     this is an RPM/DEB install, the hosting user is probably called
     "gitolite", however we will use "git" in this document.
 
-  * If you installed gitolite using the `from-client` method of installation,
-    then, in the following description, wherever you see `git@server` just
-    substitute `gitolite`.  Example: `git clone git@server:foo` becomes `git
-    clone gitolite:foo`.
-
-      * No changes are required if you installed using one of the other 3
-        methods.
-
-      * Note: to determine which method you used, in case you forgot, run
-
-            grep GL_PACKAGE ~/.gitolite.rc
-
-        on the server.  If there are only two, **commented**, lines, you're
-        using the `from-client` method.
-
 <a name="_taking_stock_relevant_files_and_directories"></a>
 
 #### taking stock -- relevant files and directories
 
   * the client has a `~/.ssh` containing a few keypairs.  It may also have a
-    `config` file (if you used the [from-client][fc] method of install it
-    definitely will have one).
+    `config` file.
 
   * the client also has a clone of the "gitolite-admin" repo, which contains a
     bunch of `*.pub` files in `keydir`.  We assume this clone is in `$HOME`;
@@ -140,12 +124,8 @@ Here's how normal gitolite key handling works:
 
 ### (Other resources)
 
-  * people who think installing gitolite is too hard should take a look at
-    this [transcript][] to **see how simple it *actually* is**.  This
-    transcript uses the 'from-client' method of install.
-
-  * someone also wrote a tutorial, see [here][tut].  This uses the 'non-root'
-    method of install, to provide a different perspective.
+People who think installing gitolite is too hard should take a look at this
+[tutorial][tut] to **see how simple it *actually* is**.
 
 <a name="_common_problems"></a>
 
@@ -225,18 +205,9 @@ We've managed (thanks to an idea from Jesse Keating) to make it possible for a
 single key to allow both gitolite access *and* shell access.
 
 This is done by copying the pubkey (to which you want to give shell access) to
-the server and running either
-
-    cd $HOME/.gitolite  # assuming default $GL_ADMINDIR in ~/.gitolite.rc
-    src/gl-tool shell-add ~/foo.pub
-
-or
+the server and running
 
     gl-tool shell-add ~/foo.pub
-
-The first method is applicable if you installed using the **from-client**
-method, while the second method is for any of the other three (see
-doc/1-INSTALL.mkd, section on "install methods", for more on this)
 
 **IMPORTANT UPGRADE NOTE**: previous implementations of this feature were
 crap.  There was no easy/elegant way to ensure that someone who had repo admin
@@ -324,8 +295,8 @@ You have generated a keypair on your workstation (`ssh-keygen`) and copied the
 public part of it (`~/.ssh/id_rsa.pub`, by default) to the server.
 
 On the server you have appended this file to `~/.ssh/authorized_keys`.  Or you
-ran something, like the `gl-setup` or `gl-easy-install` steps during a
-gitolite install, which should have done that for you.
+ran something, like the `gl-setup` step during a gitolite install, which
+should have done that for you.
 
 You now expect to log in without having to type in a password, but when you
 try, you are being asked for a password.
@@ -422,10 +393,9 @@ need.  Be careful:
 
 #### typical cause(s)
 
-For server-based installs (i.e., not the 'from-client' install mode), the
-admin often has passwordless shell access to `git@server` already, and then
-used that same key to get access to gitolite (i.e., copied that same pubkey as
-YourName.pub and gave it to gitolite in some way).
+The admin often has passwordless shell access to `git@server` already, and
+then used that same key to get access to gitolite (i.e., copied that same
+pubkey as YourName.pub and ran `gl-setup` on it).
 
 As a result, the same key appears twice in the authkeys file now, and since
 the ssh server will always use the first match, the second occurrence (which
@@ -436,10 +406,6 @@ best way to do this is to create a new keypair, copy the pubkey to the server
 as YourName.pub, then run `gl-setup YourName.pub` on the server.  Remember to
 adjust your agent identities using ssh-add -D and ssh-add if you're using
 ssh-agent, otherwise these new keys may not work.
-
-NOTE: If you installed using the 'from-client' install method, `gl-setup`
-won't work.  You will have to use the more generic method described
-[here][gssp].
 
 <a name="_appendix_3_ssh_client_may_not_be_offering_the_right_key"></a>
 
@@ -500,12 +466,6 @@ non-default values, although I put them in anyway just to be complete).
 If you have *more than one* pubkey with access to the *same* server, you
 **must** use this method to make git pick up the right key.  There is no other
 way to do this, as far as I know.
-
->   *Side note*: this is *mandatory* in the 'from-client' method of install,
->   and indeed that mode automatically sets up all this anyway.  This install
->   method runs from the client, so it starts with one key that can get a
->   shell on the server, and then creates another one as the "gitolite key"
->   for the admin user.
 
 ----
 

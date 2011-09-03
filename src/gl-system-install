@@ -64,7 +64,6 @@ bindir=`echo $0 | perl -lpe 's/^/$ENV{PWD}\// unless /^\//; s/\/[^\/]+$//;'`
 cd $bindir/..       # we assume the standard gitolite source tree is here!
 
 cp src/* $buildroot$gl_bin_dir || die "cp src/* to $buildroot$gl_bin_dir failed"
-rm $buildroot$gl_bin_dir/gl-easy-install
 perl -lpi -e "s(^GL_PACKAGE_CONF=.*)(GL_PACKAGE_CONF=$gl_conf_dir)" $buildroot$gl_bin_dir/gl-setup
 
 # record which version is being sent across; we assume it's HEAD

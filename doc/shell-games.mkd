@@ -8,16 +8,14 @@ fixed as and when found.
 
 Thus, settings that have security implications can be set only from the rc
 file, which needs to be edited directly on the server.  And adding a new hook
-requires adding it to the *gitolite* clone and running easy install again, or
-gl-setup, if you used the server-side install method, both of which require
-shell access.
+requires shell access anyway.
 
 While this is great for my main target (corporate environments), some people
 don't like it.  They want to do all of this from the *gitolite-admin* repo,
 because the security concern mentioned above does not bother them.  They don't
 want to log on to the server to make a change in the rc file or don't want to
-run easy install to propagate a new set of hooks.  In addition, they may want
-all of these animals versioned in the "gitolite-admin" repo itself, which
+run gl-setup to propagate a new set of hooks.  In addition, they may want all
+of these animals versioned in the "gitolite-admin" repo itself, which
 certainly makes sense.
 
 So here's how you might do that.

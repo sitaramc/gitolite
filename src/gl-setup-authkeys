@@ -47,7 +47,7 @@ unless ($batch) {
     one that is in the same directory as that used by gl-auth-command (and for
     what that is, see ~/.ssh/authorized_keys).
 
-    Except for the deprecated 'from-client' install mode, this should work:
+    This should work:
 
         gl-setup-authkeys -batch keydir
 

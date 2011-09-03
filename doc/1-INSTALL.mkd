@@ -295,9 +295,6 @@ we mean `conf/gitolite.conf` on your gitolite-admin clone.
       * even msysgit on Windows is fine; please don't ask me for help if
         you're using putty, plink, puttygen, etc., for ssh; I recommend
         msysgit for Windows and the openssh that comes with it
-  * if you're using the "from-client" method of install (see below), the bash
-    shell is needed
-      * again, msysgit on Windows is fine
 
 <a name="_server"></a>
 
@@ -446,21 +443,18 @@ uninstalling gitolite is described in great detail in
 ### appendix a: the from-client method
 
 This method was the only install mode at one time, but the newer ones are much
-better, so it's kinda legacy now (Wow -- fancy something being "legacy" in
-software that is not yet 2 years old!)
+better, so it's gone now, to reduce confusion and support/documentation load.
 
-The only advantage of this method is that it forces you to solve the ssh
+The only advantage of this method was that it forced you to solve the ssh
 pubkey problem **before** attempting to install.
 
-But I'm not sure if that is worth the hassle of supporting an install scheme
+But it turned out not to be worth the hassle of supporting an install scheme
 that ends up with the admin user having [two keys][twokeys], though.  And this
-in turn forces the admin to use a different URL to access gitolite repos than
-normal users, which seems to confuse a heck of a lot of people who don't read
+in turn forced the admin to use a different URL to access gitolite repos than
+normal users, which seemed to confuse a heck of a lot of people who don't read
 the prominently displayed messages and/or the documentation.
 
-All in all, I plan to obsolete it eventually.  Meanwhile, it is verbosely
-documented in this [transcript][], including *outputs* of the commands
-concerned.
+All in all, it wasn't one of my best ideas.
 
 <a name="_appendix_b_PATH_issues_for_gl_setup"></a>
 

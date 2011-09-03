@@ -645,7 +645,6 @@ sub parse_acl
         die "parse $GL_CONF_COMPILED failed: " . ($! or $@) unless do $GL_CONF_COMPILED;
     }
     unless (defined($data_version) and $data_version eq $current_data_version) {
-        # this cannot happen for 'easy-install' cases, by the way...
         warn "(INTERNAL: $data_version -> $current_data_version; running gl-setup)\n";
         system("$ENV{SHELL} -l -c gl-setup >&2");
 

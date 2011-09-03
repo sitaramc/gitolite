@@ -442,10 +442,8 @@ sub do_normal_repos
                 wrap_chdir($REPO_BASE);
             }
 
-            # when repos are copied over from elsewhere, one had to run easy install
-            # once again to make the new (OS-copied) repo contain the proper update
-            # hook.  Perhaps we can make this easier now, and eliminate the easy
-            # install, with a quick check (and a new, empty, "hook" as a sentinel)
+            # detect repos copied from elsewhere by absence of (empty)
+            # sentinel file, and if it doesn't exist run the ln -sf
             unless (-l "$repo.git/hooks/gitolite-hooked") {
                 ln_sf("$GL_ADMINDIR/hooks/common", "*", "$repo.git/hooks");
                 # in case of package install, GL_ADMINDIR is no longer the top cop;

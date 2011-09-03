@@ -4,10 +4,6 @@ Running "ssh git@server info" or "ssh git@server expand" gives you certain
 output.  This doclet describes the output; you're welcome to help me make it
 clearer :)
 
-(Side note: if you installed using the "from-client" method, and you're the
-administrator, please replace `ssh git@server` with `ssh gitolite`, all
-through this document).
-
 In this document:
 
   * <a href="#_the_info_command">the "info" command</a>

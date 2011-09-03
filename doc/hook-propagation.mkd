@@ -13,10 +13,8 @@ In this document:
 
   * <a href="#_hooks_used_by_gitolite">hooks used by gitolite</a>
   * <a href="#_where_do_I_the_admin_put_the_hooks_">**where** do I (the admin) put the hooks?</a>
-      * <a href="#_the_from_client_method">the "from-client" method</a>
-      * <a href="#_the_other_3_methods">the other 3 methods</a>
-          * <a href="#_the_GL_PACKAGE_HOOKS_directory">the `GL_PACKAGE_HOOKS` directory</a>
-          * <a href="#_the_HOME_gitolite_directory">the `$HOME/.gitolite` directory</a>
+      * <a href="#_the_GL_PACKAGE_HOOKS_directory">the `GL_PACKAGE_HOOKS` directory</a>
+      * <a href="#_the_HOME_gitolite_directory">the `$HOME/.gitolite` directory</a>
       * <a href="#_why_two_places_">why two places?</a>
       * <a href="#_special_case_the_non_root_method">special case: the "non-root" method</a>
   * <a href="#_when_do_hooks_propagate_">**when** do hooks propagate?</a>
@@ -51,24 +49,9 @@ used.
 
 (Please refer to [doc/1-INSTALL.mkd][0inst] for what these "methods" are).
 
-<a name="_the_from_client_method"></a>
-
-#### the "from-client" method
-
-Let's get this out of the way first, because it is simple: if you're using the
-"from-client" method, there's only one place: the `hooks` directory in your
-gitolite clone on the client side.  This is where you run
-`src/gl-easy-install` from.  Nothing else in this section is relevant to this
-method; skip to the next section ("when do hooks propagate") if you installed
-using the "from-client" method.
-
-<a name="_the_other_3_methods"></a>
-
-#### the other 3 methods
-
 <a name="_the_GL_PACKAGE_HOOKS_directory"></a>
 
-##### the `GL_PACKAGE_HOOKS` directory
+#### the `GL_PACKAGE_HOOKS` directory
 
 You might recall that the "root", and "non-root" methods run a command called
 `gl-system-install`, the third argument of which is some directory of your
@@ -87,7 +70,7 @@ place your hooks.
 
 <a name="_the_HOME_gitolite_directory"></a>
 
-##### the `$HOME/.gitolite` directory
+#### the `$HOME/.gitolite` directory
 
 You might also recall that, in these three methods, each **hosting user** has
 to run `gl-setup`.  This sets up, among other things, `$HOME/.gitolite`
