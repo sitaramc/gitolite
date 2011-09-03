@@ -2,6 +2,35 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v2.1
+
+  - 'symbolic-ref' ADC replaces and obsoletes 'set-head'
+
+  - BIG CHANGE: easy-install ('from-client' method) is now HISTORY from the
+    docs and code.  Upgrade to one of the other methods.  Look for a section
+    on "upgrading from from-client method to non-root method" in the docs
+
+  - nice new "password access" mode for people who can't grok ssh keys
+
+  - new program gl-dryrun, to be run in any admin repo clone, to check syntax
+    errors etc before you actually push
+
+  - very complex mirroring setups now have a helper script to setup
+
+  - behanw contributed a better converter for gitosis
+
+  - the mirroring stuff is just out of this world now...
+
+  - new 'subconf' feature to explicitly delegate; the implicit one is now
+    legacy, but is backward compatibly handled so you don't need to fix your
+    config
+
+  - delegation now allows includes in fragments -- no idea why we first
+    disallowed this
+
+  - fix accumulation and sequencing of git config lines; very important for
+    mirroring (coming up)
+
   - v2.0.3
 
   - gl-dont-panic replaced by more generic gl-admin-push
