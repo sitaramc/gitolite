@@ -32,6 +32,8 @@ In this document:
           * <a href="#_admin_defined_commands">admin defined commands</a>
           * <a href="#_access_control_for_external_commands">access control for external commands</a>
               * <a href="#_svnserve">svnserve</a>
+  * <a href="#_odds_and_ends">odds and ends</a>
+      * <a href="#_poking_the_admin_repo_to_force_a_compile">"poking" the admin repo to force a compile</a>
   * <a href="#_design_choices">design choices</a>
       * <a href="#_keeping_the_parser_and_the_access_control_separate">keeping the parser and the access control separate</a>
 
@@ -107,46 +109,44 @@ features than the original goal of branch-level access control.
 
 ##### one user, many keys
 
-I have a laptop and a desktop I need to access the server from.  I have
-different private keys on them, but as far as gitolite is concerned both of
-them should be treated as "sitaram".  How does this work?
+If you have a user who has more than one pubkey (like from different machines)
+the simplest way to deal with it is to add subdirectories and add keys there.
+For example, I might have these files in `keydir/`:
 
-The way it works is that you copy one pubkey as "sitaram@laptop.pub" and the
-other as "sitaram@desktop.pub".  The part before the "@" is the username, so
-gitolite knows these two keys belong to the same person.  The part after the
-"@" can be anything you like, of course; gitolite doesn't care.
+    sitaram.pub
+    home/sitaram.pub
+    laptop/sitaram.pub
 
-Note that you don't say "sitaram@laptop" and so on in the **config** file --
-as far as the config file is concerned there's just **one** user called
-"sitaram" -- so you only say "sitaram" there.
+<font color="gray">
 
-I think this is easier to maintain if you have to delete or change one of
-those keys.
+The older method will continue to work, simply because I prefer it.  But I am
+not going to document it except for the example below, nor am I going to
+support it in terms of questions.  Sorry.  Apparently it was too complex to
+understand, even for some smart folks I know.  This tells me it was probably
+ill thought out and should have been obsoleted as soon as e0fe73a was pushed.
 
-However, now that `sitaramc@gmail.com` is also a valid username, we need to
-distinguish between `sitaramc@gmail.com.pub` and `sitaramc@desktop.pub`.  We
-do that by requiring that the multi-key suffix you use (like "desktop" and
-"laptop") should not have a `"."` in it.  If it does, it looks like an email
-address.  The following table lists sample pubkey filenames and the
-corresponding derived usernames (which is what goes into the
-`conf/gitolite.conf` file):
+Anyway, here's *all* the documentation for it -- some sample pubkey filenames
+and the corresponding derived usernames:
 
-  * old style multikeys; not mistaken for emails because there is no "." in
-    hostname part
+  * plain username, no multikey
 
         sitaramc.pub                            sitaramc
+
+  * plain username, with multikeys
+
         sitaramc@laptop.pub                     sitaramc
         sitaramc@desktop.pub                    sitaramc
 
-  * new style, email keys; there is a "." in hostname part; so it's an email
-    address
+  * email address as username, no multikey
 
         sitaramc@gmail.com.pub                  sitaramc@gmail.com
 
-  * multikeys *with* email address
+  * email address as username, with multikeys
 
         sitaramc@gmail.com@laptop.pub           sitaramc@gmail.com
         sitaramc@gmail.com@desktop.pub          sitaramc@gmail.com
+
+</font>
 
 <a name="_security_access_control_and_auditing"></a>
 
@@ -531,6 +531,23 @@ variable in `~/.gitolite.rc` to tie `svnserve` with gitolite's authentication
 system. Assuming you installed gitolite to the same user as the one you used
 for SVN, SVN connectivity will be retained, and users will be able to use
 both SVN and git using the same SSH configuration.
+
+<a name="_odds_and_ends"></a>
+
+### odds and ends
+
+<a name="_poking_the_admin_repo_to_force_a_compile"></a>
+
+#### "poking" the admin repo to force a compile
+
+Sometimes you need to force a compile, as if you pushed the gitolite-admin
+repo.  I have a git alias that looks like this:
+
+    [alias]
+        poke = !git ls-remote origin | grep -w refs/heads/poke && git push origin :poke || git push origin master:poke
+
+so I just run `git poke`.  This toggles between deleting and creating a dummy
+branch called "poke".  Either operation will trigger the hooks.
 
 <a name="_design_choices"></a>
 

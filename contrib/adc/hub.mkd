@@ -1,4 +1,4 @@
-# the 'hub' ADC
+## the 'hub' ADC
 
 In this document:
 

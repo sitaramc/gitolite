@@ -127,7 +127,8 @@ on feedback from my users to find or fix issues.
     This setting allows the repo admin to define acceptable gitconfig keys.
 
     Gitolite allows you to set git repo options using the "config" keyword;
-    see doc/gitolite.conf.mkd for details and syntax.
+    see the section on "repo specific git config commands" in
+    [doc/gitolite.conf.mkd][gitconf] for details and syntax.
 
     However, if you are in an installation where the repo admin does not (and
     should not) have shell access to the server, then allowing him to set
@@ -367,3 +368,4 @@ of `ADC_CMD_ARGS_PATT`), please be sure you know what you're doing.
 [smart]: http://sitaramc.github.com/gitolite/doc/http-backend.html
 [dwr]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_disabling_write_access_to_take_backups
 [limit]: http://sitaramc.github.com/gitolite/doc/report-output.html#_using_patterns_to_limit_output
+[gitconf]: http://sitaramc.github.com/gitolite/doc/gitolite.conf.html#_repo_specific_git_config_commands

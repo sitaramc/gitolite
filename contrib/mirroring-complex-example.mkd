@@ -1,4 +1,4 @@
-# semi-autonomous mirroring setup example
+## semi-autonomous mirroring setup example
 
 [deldoc]: http://sitaramc.github.com/gitolite/doc/delegation.html
 [sc]: http://sitaramc.github.com/gitolite/doc/delegation.html#_the_subconf_command

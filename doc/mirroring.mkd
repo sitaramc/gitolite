@@ -1,4 +1,4 @@
-# mirroring gitolite servers
+## mirroring gitolite servers
 
 Mirroring a repo is simple in git; you just need code like this in a
 `post-receive` hook in each repo:

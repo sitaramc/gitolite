@@ -50,6 +50,11 @@ Once you've cloned it, you're ready to add users and repos.
 
 ### adding users and repos
 
+Do **NOT** add repos or users directly on the server!  You MUST manage the
+server by cloning the special 'gitolite-admin' repo on your workstation (`git
+clone git@server:gitolite-admin`), making changes, and pushing them.  This
+section tells you how to add users and repos.
+
   * ask each user who will get access to send you a public key.  See other
     sources (for example [here][genpub]) for how to do this
 
@@ -245,8 +250,9 @@ important here:
     `~/repositories`), making sure that the directory names end in ".git".
 
   * back on your workstation, add each repo (without the `.git` suffix) to
-    `conf/gitolite.conf` in your gitolite-admin repo clone.  Then add, commit,
-    push.
+    `conf/gitolite.conf` in your gitolite-admin repo clone.  Give *some* user
+    (even a non-existent one like "DUMMY" is fine) at least "R" access to
+    these repos.  Then add, commit, push.
 
 **Case 3 -- far too many repos** (or your initials are JH ;-): This is when
 you're like Case 2, except you have *so many* repos that step 3 becomes too

@@ -28,7 +28,9 @@ don't miss out on them by skipping the excellent
 [documentation][docs]!)</font>
 
   * create a user called `git`.  Login to this user.
+
   * copy your ssh pubkey from your workstation.  Rename it to `YourName.pub`.
+
   * now run these commands:
 
         git clone git://github.com/sitaramc/gitolite
@@ -36,8 +38,12 @@ don't miss out on them by skipping the excellent
         src/gl-system-install
         gl-setup ~/YourName.pub
 
-You're done.  Now run `git clone git@server:gitolite-admin` on your
-workstation and [add users and repos][aur].
+You're done.
+
+A word of caution: do **NOT** add repos or users directly on the server!  You
+MUST manage the server by cloning the special 'gitolite-admin' repo on your
+workstation (`git clone git@server:gitolite-admin`), making changes, and
+pushing them.  See [here][aur] for how to add users and repos.
 
 [aur]: http://sitaramc.github.com/gitolite/doc/2-admin.html#_adding_users_and_repos
 

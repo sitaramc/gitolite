@@ -1,4 +1,4 @@
-# brief descriptions of the shipped ADCs (admin-defined commands)
+## brief descriptions of the shipped ADCs (admin-defined commands)
 
 (...with pointers to further information where needed)
 
