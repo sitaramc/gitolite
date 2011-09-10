@@ -512,8 +512,11 @@ sub setup_gitweb_access
 
 sub report_version {
     my($user) = @_;
-    print "hello $user, the gitolite version here is ";
-    print slurp( ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION" );
+    my $gl_version = slurp( ($GL_PACKAGE_CONF || "$GL_ADMINDIR/conf") . "/VERSION" );
+    chomp($gl_version);
+    my $git_version = `git --version`;
+    $git_version =~ s/^git version //;
+    print "hello $user, this is gitolite $gl_version running on git $git_version";
 }
 
 sub perm_code {

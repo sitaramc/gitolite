@@ -35,7 +35,7 @@ do
 
         name "u1 info"
         runlocal ssh u1 info
-        expect "hello u1, the gitolite version here is"
+        expect "hello u1, this is gitolite v"
         expect " @R_ @W_.testing"
         [ "$wr" = "1" ] && [ "$bc" = "0" ] && expect    " C  R   W .foo/u1/\\.\\+"
         [ "$wr" = "1" ] && [ "$bc" = "1" ] && notexpect " C  R   W .foo/u1/\\.\\+"
@@ -44,13 +44,13 @@ do
         name "u1 expand"
         runlocal ssh u1 expand
         [ "$wr" = "0" ] && expect "wildrepos disabled, sorry"
-        [ "$wr" = "1" ] && expect "hello u1, the gitolite version here is"
+        [ "$wr" = "1" ] && expect "hello u1, this is gitolite v"
         [ "$wr" = "1" ] && expect " R   W .(u1).foo/u1/bar"
         [ "$wr" = "1" ] && expect "@R_ @W_..gitolite..testing"
 
         name "gitolite info u1"
         runlocal ssh gitolite info . u1
-        expect "hello u1, the gitolite version here is"
+        expect "hello u1, this is gitolite v"
         expect " @R_ @W_.testing"
         [ "$wr" = "1" ] && [ "$bc" = "0" ] && expect    " C  R   W .foo/u1/\\.\\+"
         [ "$wr" = "1" ] && [ "$bc" = "1" ] && notexpect " C  R   W .foo/u1/\\.\\+"
