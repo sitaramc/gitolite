@@ -268,7 +268,7 @@ sub parse_conf_line
         # substitute HOSTNAME word if GL_HOSTNAME defined, otherwise leave as is
         $include_glob =~ s/\bHOSTNAME\b/$GL_HOSTNAME/ if $GL_HOSTNAME;
 
-        for my $file (glob($include_glob =~ m(^/) ? $include_glob : "conf/$include_glob")) {
+        for my $file (glob($include_glob =~ m(^/) ? $include_glob : "$GL_ADMINDIR/conf/$include_glob")) {
             warn("$WARN included file not found: '$file'\n"), next unless -f $file;
 
             my $file_id = device_inode($file);

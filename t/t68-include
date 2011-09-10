@@ -37,9 +37,9 @@ echo "
     include \"*.conf\"
 " | ugc
 
-expect "remote:         conf/gitolite.conf already included"
-notexpect "remote:         conf/i1.conf already included"
-notexpect "remote:         conf/i2.conf already included"
+expect "remote:         .*/conf/gitolite.conf already included"
+notexpect "remote:         .*/conf/i1.conf already included"
+notexpect "remote:         .*/conf/i2.conf already included"
 expect "remote: creating bar..."
 expect "remote: Initialized empty Git repository in $TEST_BASE_FULL/bar.git/"
 expect "remote: creating baz..."
@@ -55,8 +55,8 @@ echo "
     include \"i*.conf\"
 " | ugc
 
-expect "remote:         conf/gitolite.conf already included"
-expect "remote:         conf/i1.conf already included"
-expect "remote:         conf/i2.conf already included"
+expect "remote:         .*/conf/gitolite.conf already included"
+expect "remote:         .*/conf/i1.conf already included"
+expect "remote:         .*/conf/i2.conf already included"
 
 name INTERNAL
