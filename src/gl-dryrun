@@ -1,0 +1,118 @@
+#!/bin/bash
+
+die() { echo; echo "FATAL: $@"; usage; }
+
+usage() {
+
+cat <<EOFU
+
+==== WARNING ====
+
+This is a quick hack.  It is not "production quality".  Resist the temptation
+to turn this into an update.secondary hook and put it on the server.  I WILL
+NOT BE RESPONSIBLE FOR ANY PROBLEMS IF YOU DO THAT.  (Even more so if you use
+'git checkout $3' *without* setting GIT_INDEX_FILE to something temporary, and
+eventually realise that *deleted* files don't stay deleted...!  And if you
+didn't understand that, all the more reason not to do it).
+
+Just do it on your workstation, and we'll all get along.
+
+If you've read all that, here's how to run it:
+
+  - get a copy of the gitolite sources to your workstation
+  - cd to your gitolite-admin clone (the one you're going to push and you're
+    worried might fail)
+  - run gl-dryrun from the gitolite source tree, using a full path, with one
+    argument -- the name of the person to check admin push rights of
+
+So, assuming both the gitolite software and the gitolite-admin repos are
+cloned in $HOME/myclones, and the admin username is 'sitaram':
+
+    cd $HOME/myclones/gitolite-admin
+    $HOME/myclones/gitolite/src/gl-dryrun sitaram
+
+EOFU
+exit 1;
+}
+
+[ -n "$1" ] || die "need an admin username"
+admin="$1"; shift
+
+export GL_BINDIR=${0%/*}
+
+[ -x "$GL_BINDIR/gl-compile-conf" ] ||
+    die "can't find executable gl-compile-conf in $GL_BINDIR"
+
+# we expect to be in the top level of the gitolite-admin repo
+[ -f "conf/gitolite.conf" ] || die "I can't see the main config file"
+[ -d "keydir" ] || die "I can't see 'keydir'"
+
+echo; echo "PLEASE READ WARNINGS IN SOURCE BEFORE USING!"; echo
+
+export oldhome=$HOME
+export oldpwd=$PWD
+export tmp=$(mktemp -d);
+trap "rm -rf $tmp" 0;
+cd $tmp
+
+mkdir -p .gitolite/logs
+cp -a $oldpwd/{conf,keydir} .gitolite
+echo '(dryrun)' > .gitolite/conf/VERSION
+
+# setup a minimal .gitolite.rc
+export GL_RC=$PWD/gl_rc
+cat > $GL_RC <<'EOF'
+$GL_ADMINDIR=$ENV{PWD} . "/.gitolite";
+$GL_CONF="$GL_ADMINDIR/conf/gitolite.conf";
+$GL_KEYDIR="$GL_ADMINDIR/keydir";
+$GL_CONF_COMPILED="$GL_ADMINDIR/conf/gitolite.conf-compiled.pm";
+$GL_WILDREPOS = 0;
+$PROJECTS_LIST = $ENV{PWD} . "/projects.list";
+$REPO_UMASK = 0077;
+$GL_BIG_CONFIG = 0;
+$GL_NO_DAEMON_NO_GITWEB = 1;
+$GIT_PATH="";
+$GL_GITCONFIG_KEYS = ".*";
+$GL_NO_CREATE_REPOS = 1;
+$GL_NO_SETUP_AUTHKEYS = 1;
+$HTPASSWD_FILE = "";
+$RSYNC_BASE = "";
+$SVNSERVE = "";
+$GL_WILDREPOS_PERM_CATS = "READERS WRITERS";
+$GL_LOGT="$GL_ADMINDIR/logs/gitolite-%y-%m.log";
+$REPO_BASE="repositories";
+1;
+EOF
+
+# now compile it
+echo compiling...
+$GL_BINDIR/gl-compile-conf
+echo
+
+echo "checking if $admin has push rights..."
+SSH_ORIGINAL_COMMAND=info $GL_BINDIR/gl-auth-command $admin
+echo
+
+# now find out who has admin...
+echo "checking what pubkeys (if any) have push rights..."
+for f in `find .gitolite/keydir -name "*.pub" | sort`
+do
+    f=$(basename $f)
+    u=$(perl -e '$u = shift; $u =~ s/(\@[^.]+)?\.pub$//; print $u' $f)
+    SSH_ORIGINAL_COMMAND=info $GL_BINDIR/gl-auth-command $u | grep R...W..gitolite-admin.$ > /dev/null && echo '    '$f
+done
+echo
+
+# now look for duplicate keys etc
+echo "looking for (duplicate) pubkeys; they could cause later ones to be 'hidden'..."
+cd .gitolite
+for f in `find keydir -name "*.pub" | sort`
+do
+    ssh-keygen -l -f "$f"
+done | perl -ane '
+    warn "    $F[2] is hidden by $seen{$F[1]}\n" if $seen{$F[1]};
+    $seen{$F[1]} = $F[2];
+'
+cd ..
+echo
+
