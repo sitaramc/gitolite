@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+# ------------------------------------------------------------------------------
+
+# site-local changes
+
+# the original login shell your users had.  Set this to something like
+# "/sbin/nologin" or "/bin/false" if you don't want them to have a normal
+# shell (i.e., you created these accounts *only* to provide a password
+# authentication passthru to gitolite)
+my $shell = "/bin/bash";
+
+# the gitolite hosting user you want to forward git commands to.  Typically
+# this will be 'git' or perhaps 'gitolite', but actually could be anything
+my $hosting_user = "gitolite-test";
+
+# ------------------------------------------------------------------------------
+
+# process normal logins (the ones that *don't* get forwarded to the gitolite
+# hosting user)
+
+# this is a normal login, not to be forwarded to the gitolite hosting user, if:
+# - there are no arguments
+exec($shell) unless @ARGV;
+# - the first argument is not "-c"
+exec($shell, @ARGV) unless $ARGV[0] eq '-c';
+# - the second argument does not fit what git usually sends
+exec($shell, @ARGV) unless $ARGV[1] =~ /^(git-receive-pack|git-upload-pack|git-upload-archive) '(\S+)'$/;
+# - there *is* a local directory with the same name as the second part of argument #2
+exec($shell, @ARGV) if -d $2;
+
+# ------------------------------------------------------------------------------
+
+# if all that failed, it means we have to forward this to the hosting user
+
+# this message is important in debugging and trouble shooting; see documentation
+print STDERR "[forwarding to $hosting_user\@localhost]\n";
+
+# but first we check for rsa key
+-f ".ssh/id_rsa" or die "ask your admin to add you to gitolite";
+
+shift;  # that pesky '-c'...
+exec("ssh", "$hosting_user\@localhost", @ARGV);

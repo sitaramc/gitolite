@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# WARNING 1: probably contains bashisms galore.  If you don't have bash,
+# please install it.
+
+# NOTE 1: this script is initially run as root, then it calls itself with an
+# "su" so it can run as the hosting user.
+
+# NOTE 2: if you'd rather do this manually, just do the first part as root,
+# and the second part as the hosting user, with only the name of the user
+# (alice) and her pub key (~alice/.ssh/id_rsa.pub) needing to be passed from
+# root to the hosting user id.
+
+# ------------------------------------------------------------------------------
+
+# site-local changes
+
+# the gitolite hosting user you want to forward git commands to.  Typically
+# this will be 'git' or perhaps 'gitolite', but actually could be anything
+hosting_user="gitolite-test"
+
+# absolute path of the gitolite-admin repo
+admin_repo="/home/gitolite-test/repositories/gitolite-admin.git"
+
+# the full path to the new login shell to replace these users' existing shell
+new_shell="/usr/local/bin/gl-shell"
+
+my_chsh() {
+    # please replace with appropriate command for your OS/distro.  This one is
+    # suitable at least for Fedora, maybe others also
+    chsh -s $new_shell $1
+}
+
+# remove these 2 lines after you have done your customisation
+[ -f /tmp/done.gl-shell-setup ] || { echo please customise $0 before using; exit 1; }
+
+# ------------------------------------------------------------------------------
+
+die() { echo "FATAL: $@" >&2; exit 1; }
+
+# ------------------------------------------------------------------------------
+
+euid=$(perl -e 'print $>')
+if [ "$euid" = "0" ]
+then
+
+    # --------------------------------------------------------------------------
+    # stuff to be done as root
+    # --------------------------------------------------------------------------
+
+    [ -n "$1" ] || die "need a valid username"
+    user=$1
+    id $user >/dev/null || die "need a valid username"
+
+    # now fix up the user's login shell
+    my_chsh $user
+
+    # drat... 'cd ~$user` doesn't work...
+    cd $(bash -c "echo ~$user") || die "can't cd to $user's home directory"
+
+    # now set up her rsa key, creating it if needed
+    [ -d .ssh ] || {
+        mkdir .ssh
+        chown $user .ssh
+        chmod go-w  .ssh
+    }
+    [ -f .ssh/id_rsa.pub ] || {
+        ssh-keygen -q -N "" -f .ssh/id_rsa
+        chown $user .ssh/id_rsa .ssh/id_rsa.pub
+        chmod go-rw .ssh/id_rsa
+        chmod go-w  .ssh/id_rsa.pub
+    }
+
+    # now run yourself as the hosting user, piping in the pubkey to STDIN, and
+    # passing the username whose key it is as argument 1.
+    cat .ssh/id_rsa.pub | su -l -c "$0 $user" $hosting_user
+
+    # finally, as $user (alice) ssh to the hosting_user once so that the
+    # hostkey checking gets done and you get the correct hostkey in
+    # ~user/.ssh/known_hosts
+    su -c "ssh -o StrictHostKeyChecking=no $hosting_user@localhost info" - $user
+
+    exit 0
+
+else
+
+    # --------------------------------------------------------------------------
+    # stuff to be done as the hosting user
+    # --------------------------------------------------------------------------
+
+    user=$1
+
+    # make a temp dir and switch to it
+    export tmp=$(mktemp -d)
+    cd $tmp || die "could not cd to temp dir $tmp"
+    trap "rm -rf $tmp" 0
+
+    # clone the admin repo here
+    git clone $admin_repo .
+    # copy alice's pubkey, which was sent in via STDIN.  We don't want to
+    # overwrite any *other* keys she may have, hence the @localhost part.
+    # (See "one user, many keys" in doc/3 for more on this @ part).
+    cat > keydir/$user@localhost.pub
+    # add commit push...
+    git add keydir/$user@localhost.pub
+    git diff --cached --quiet 2>/dev/null || git commit -am "$0: added/updated local key for $user"
+    gl-admin-push
+        # see doc for what/why this is
+
+fi
