@@ -75,11 +75,6 @@ then
     # passing the username whose key it is as argument 1.
     cat .ssh/id_rsa.pub | su -l -c "$0 $user" $hosting_user
 
-    # finally, as $user (alice) ssh to the hosting_user once so that the
-    # hostkey checking gets done and you get the correct hostkey in
-    # ~user/.ssh/known_hosts
-    su -c "ssh -o StrictHostKeyChecking=no $hosting_user@localhost info" - $user
-
     exit 0
 
 else
