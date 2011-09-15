@@ -2,6 +2,25 @@
 
 . $(dirname $0)/adc.common-functions
 
+# the help adc now takes some options; we need to process them first
+
+[ "$1" = "-list" ] && {
+    # the GL_ADC_PATH directory has files other than ADCs also, notably the
+    # include file for shell ADCs, and maybe a README or two.  Those should be
+    # chmod -x.
+
+    # if you want to temporarily hide any ADC from being listed, do the same
+    # thing: chmod -x
+
+    cd $($GL_BINDIR/gl-query-rc GL_ADC_PATH)
+    for i in *
+    do
+        [ -x $i ] && echo $i
+    done
+
+    exit 0
+}
+
 # the local site can have a file called gl-adc-help.txt, which will be used as
 # the *entire* help text for this site...
 

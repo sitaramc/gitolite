@@ -7,40 +7,64 @@ use warnings;
 
 # site-local changes
 
-# the original login shell your users had.  Set this to something like
-# "/sbin/nologin" or "/bin/false" if you don't want them to have a normal
-# shell (i.e., you created these accounts *only* to provide a password
-# authentication passthru to gitolite)
+# the original login shell your users had (or) the shell to forward
+# non-gitolite commands to
 my $shell = "/bin/bash";
+# suggested values if you really don't want them actually logging in:
+#   /sbin/nologin       - obvious
+#   /usr/bin/passwd     - same, but allows them to change their passwords
 
 # the gitolite hosting user you want to forward git commands to.  Typically
 # this will be 'git' or perhaps 'gitolite', but actually could be anything
 my $hosting_user = "gitolite-test";
 
+# ADCs...
+# either list all the ADCs you wish to allow forwarding to (SPACE-separated):
+my $ADC_list = "";
+# -- OR --
+# if you upgraded to the new 'help' adc with the '-list' option, set this to 1:
+my $detect_ADCs = 0;
+# if you do neither, ADCs are not forwarded
+
 # ------------------------------------------------------------------------------
 
-# process normal logins (the ones that *don't* get forwarded to the gitolite
-# hosting user)
-
-# this is a normal login, not to be forwarded to the gitolite hosting user, if:
-# - there are no arguments
+# no arguments?  nothing to forward
 exec($shell) unless @ARGV;
-# - the first argument is not "-c"
-exec($shell, @ARGV) unless $ARGV[0] eq '-c';
-# - the second argument does not fit what git usually sends
-exec($shell, @ARGV) unless $ARGV[1] =~ /^(git-receive-pack|git-upload-pack|git-upload-archive) '(\S+)'$/;
-# - there *is* a local directory with the same name as the second part of argument #2
-exec($shell, @ARGV) if -d $2;
+
+# forward normal git ops
+forward(@ARGV) if
+    $ARGV[0] eq '-c' and
+    $ARGV[1] =~ /^(git-receive-pack|git-upload-pack|git-upload-archive) '(\S+)'$/ and
+    ( not -d "$2" );
+
+# forward gitolite special commands
+forward(@ARGV) if $ARGV[0] eq '-c' and $ARGV[1] =~ /^(info|expand|((set|get)(perms|desc)))( |$)/;
+
+# forward ADCs
+if ($ADC_list or $detect_ADCs) {
+    $ADC_list ||= `ssh $hosting_user\@localhost help -list`;
+    $ADC_list =~ s/\s+/ /g;
+
+    # find the command he's running
+    my $cmd = $1 if $ARGV[1] =~ /^(\S+)/;
+    # forward if the command appears somewhere in the ADC list
+    forward(@ARGV) if $ARGV[0] eq '-c' and $cmd and $ADC_list =~ /(^| )$cmd( |$)/;
+}
+
+# at this point it's back to local processing
+exec($shell, @ARGV);
 
 # ------------------------------------------------------------------------------
 
-# if all that failed, it means we have to forward this to the hosting user
+# forward to the hosting user
+sub forward {
+    # this message is important in debugging and trouble shooting; see
+    # documentation
+    print STDERR "[forwarding to $hosting_user\@localhost]\n";
 
-# this message is important in debugging and trouble shooting; see documentation
-print STDERR "[forwarding to $hosting_user\@localhost]\n";
+    # but first we check for rsa key
+    -f ".ssh/id_rsa" or die "ask your admin to add you to gitolite";
 
-# but first we check for rsa key
--f ".ssh/id_rsa" or die "ask your admin to add you to gitolite";
-
-shift;  # that pesky '-c'...
-exec("ssh", "$hosting_user\@localhost", @ARGV);
+    shift if $_[0] eq '-c';
+    exec("ssh", "$hosting_user\@localhost", @_);
+}
