@@ -1,11 +1,11 @@
 ## admin defined commands
 
-**WARNING:  Use this feature only if you really really know what you're doing.
-If you come back to me saying this feature caused a problem, I will only
-laugh.  The worse the problem, the louder I will laugh.  You won't actually
-hear me laughing, but you'll feel it in your bones, trust me!**
+Summary: this document describes a mechanism to allow users controlled access
+to specific programs or scripts, without giving them full shell access.
 
-There may be other such **WARNING** sections below.  **Read all of them**.
+**WARNING**: careless use of this feature, including inadequate review of
+allowed commands or scripts, could compromise this security and allow users to
+grant themselves full shell access, accidentally or otherwise.
 
 ----
 
@@ -20,6 +20,7 @@ In this document:
       * <a href="#_deleting_trashing_repos">deleting/trashing repos</a>
       * <a href="#_enable_disable_push_access_temporarily">enable/disable push access temporarily</a>
       * <a href="#_bonus_restricted_admin">(bonus) restricted admin</a>
+  * <a href="#_how_this_feature_came_about">how this feature came about</a>
 
 ----
 
@@ -27,36 +28,29 @@ In this document:
 
 ### background
 
-Gitolite was named to be short for "gitosis-lite".  Someone now wants to turn
-it into a "github-lite" :-) and even had some code to start me off thinking.
+Allowing users to get a shell is a no-no if you're using gitolite, but there
+are times when you want them to be able to run specific commands or custom
+scripts that you (the admin) have pre-approved to be "safe".  Here's how to
+enable such commands.
 
-Since my first impulse on being asked for a feature is to say no, I was
-casting about for a reason when he gave me one: he first made some noises
-about perl, then said something about rewriting it all in scheme.  Nice... I
-resisted the urge to point him to [this][xkcd224], told him that's a great
-idea and he should go for it, mentally blessing him for letting me off the
-hook on coding it ;-) [Laziness][lazy] *is* the first virtue you know!
+However, as the warning at the top says, careless use could allow users to
+defeat this security and get a shell.  Every command you approve must be
+checked to be sure it cannot be compromised.
 
-And that was that.  For a couple of days.
+To help you with this, gitolite restricts ADCs arguments to only some very
+safe characters (see `$ADC_CMD_ARGS_PATT` in `src/gitolite_rc.pm`).  The code
+inside the ADC, however, is *your* responsibility.  The sample ADCs shipped
+with gitolite (in `contrib/adc`) should be OK, but an extra pair of eyes never
+hurt :-) so please review before installing them.
 
-Soon, though, I realised that there could be a pretty big bonus in this for
-tightly controlled setups, so I went and coded it all anyway.  See the section
-on "restricted admin" for what's really exciting about this for *me*.
+<font color="gray">
 
-----
+Finally, although this is a generic way to allow specific commands to be run,
+most of the examples and sample ADCs pertain to allowing users to manage their
+"own" repos.  If that's your use case, please read
+[doc/wildcard-repositories.mkd][wild] before you continue here.
 
-It may be a good idea to read [doc/wildcard-repositories.mkd][wild] before
-you continue here though, because most of the uses of this feature also need
-wildcard repos.  (This also means you must set `$GL_WILDREPOS` to "1" in the
-rc file).
-
-The wildcard repo feature is a way to create repositories matching a pattern
-(even if it as simple as `personal/CREATOR/.+`), and a way to specify two
-categories of permissions for each such user-created repo.
-
-What we want now is more than that, as you'll see in the examples below.  And
-I'm sure if you think of more uses you'll send them to me as "contrib"
-entries, right?
+</font>
 
 <a name="_setting_it_up"></a>
 
@@ -130,9 +124,10 @@ as follows (don't use this exact code yet though):
 
     perl -I$GL_BINDIR -Mgitolite -e "cli_repo_rights('reponame')"
 
-which will print two space-separated words, something like `_____R__W u1` or
-maybe `____@R_@W <gitolite>`.  (The former is the response for a wildcard repo
-created by user `u1`, the latter is for a non-wildcard repo)
+which will print two space-separated words: permissions and owner.  Something
+like `_____R__W u1` or maybe `____@R_@W <gitolite>`.  (The `u1` indicates the
+queried repo is a wildcard repo created by user `u1`; for meanings of the "@"
+see doc/report-output.mkd)
 
 But that's cumbersome.  There's a bash shell function called
 `get_rights_and_owner` in `contrib/adc/adc.common-functions` that is much more
@@ -228,3 +223,30 @@ because it's not using any wildcard repos].
 [xkcd224]: http://xkcd.com/224/
 [lazy]: http://c2.com/cgi/wiki?LazinessImpatienceHubris
 [wild]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html
+
+----
+
+<a name="_how_this_feature_came_about"></a>
+
+### how this feature came about
+
+<font color="gray">
+
+Gitolite was named to be short for "gitosis-lite".  Someone now wants to turn
+it into a "github-lite" :-) and even had some code to start me off thinking.
+
+Since my first impulse on being asked for a feature is to say no, I was
+casting about for a reason when he gave me one: he first made some noises
+about perl, then said something about rewriting it all in scheme.  Nice... I
+resisted the urge to point him to [this][xkcd224], told him that's a great
+idea and he should go for it, mentally blessing him for letting me off the
+hook on coding it ;-) [Laziness][lazy] *is* the first virtue you know!
+
+And that was that.  For a couple of days.
+
+Soon, though, I realised that there could be a pretty big bonus in this for
+tightly controlled setups, so I went and coded it all anyway.  See the section
+on "restricted admin" for what's really exciting about this for *me*.
+
+</font>
+
