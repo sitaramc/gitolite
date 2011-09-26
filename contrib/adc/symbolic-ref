@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# allow 'git symbolic-ref' over a gitolite connection
+
+# replaces and obsoletes the 'set-head' ADC, which was too specific
+
+# Security: remember all arguments to ADCs must match a very conservative
+# pattern; see doc/admin-defined-commands.mkd.  Once that is assured, the
+# symbolic-ref command has no security related side-effects, so we don't check
+# arguments at all -- we just pass them on.
+
+# Note: because of the restriction on allowed characters in arguments, you
+# can't supply an arbitrary string to the '-m' option.  The simplest
+# work-around is-to-just-use-join-up-words-like-this if you feel the need to
+# supply a "reason" string.  In any case this is useless by default; you'd
+# have to have core.logAllRefUpdates set for it to have any meaning.
+
+. $(dirname $0)/adc.common-functions
+
+[ -z "$GL_RC" ] && die "ENV GL_RC not set"
+
+# notice we don't check for existence of arg 3, to allow the query semantics
+# of git-symbolic-ref to also work
+[ -z "$2" ] && die "usage: symbolic-ref /path/to/repo.git <arguments to git-symbolic-ref>"
+
+get_rights_and_owner $1; to=$repo
+[ -z "$perm_write" ] && die "no write permissions on $to"
+shift
+
+# change head
+cd $GL_REPO_BASE_ABS/$to.git
+
+git symbolic-ref "$@"
