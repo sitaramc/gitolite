@@ -210,26 +210,36 @@ The following variables are also set, but are generally less useful:
 
 #### moving pre-existing repos into gitolite
 
-One simple way to add a pre-existing repo to gitolite is to let gitolite
-create it as a brand new repo as in the previous section, then do the
-following:
+It's best to split this into different use cases.
 
-    cd your-copy-of-the-repo
-    # make sure all the branches are correct and no extra stuff, "temp"
-    # branches, etc., are present
-    git push --all git@server:reponame
-    git push --tags git@server:reponame
+**Case 1 -- few repos**: This is for moving one or two repos at a time, when
+you have a copy of the repo on your workstation.  It is also the *only* way if
+you have push rights to the admin repo but no *shell* privileges on the
+server.
 
-(You could also use "git push --mirror" instead of separately doing branches
-and tags, but that will carry across *your* remote refs also, and typically
-you may not want that.  Anyway please do a `git ls-remote git@server:repo` to
-make sure all the stuff you want went through, and is named correctly).
+  * let gitolite create it as a brand new repo as described in the section on
+    "adding users and repos" at the top
 
-All this is actually very simple and easily done.  However, if you have many
-existing repos to add, this can be time-consuming and error-prone.  Here's how
-to take a bunch of existing repos and add them to gitolite:
+  * cd to the clone on your workstation.  Make sure all the branches are
+    correct and no extra stuff, "temp" branches, etc., are present
 
-  * make sure they're *bare* repos ;-)
+  * now run these two commands
+
+        git push --all git@server:reponame
+        git push --tags git@server:reponame
+
+  * (You could also use "git push --mirror" instead of separately doing
+    branches and tags, but that will carry across *your* remote refs also, and
+    typically you may not want that.  Anyway please do a `git ls-remote
+    git@server:repo` to make sure all the stuff you want went through, and is
+    named correctly).
+
+**Case 2 -- many repos**: This is when you have many existing repos to add,
+and they're all bare (as good little server repos should be) and you have
+shell access on the server.  Here's how to do it; please note the order is
+important here:
+
+  * make doubly sure they're *bare* repos ;-)
 
   * log on to the server and copy the repos to `$REPO_BASE` (which defaults to
     `~/repositories`), making sure that the directory names end in ".git".
@@ -237,6 +247,73 @@ to take a bunch of existing repos and add them to gitolite:
   * back on your workstation, add each repo (without the `.git` suffix) to
     `conf/gitolite.conf` in your gitolite-admin repo clone.  Then add, commit,
     push.
+
+**Case 3 -- far too many repos** (or your initials are JH ;-): This is when
+you're like Case 2, except you have *so many* repos that step 3 becomes too
+cumbersome (even with a script doing it for you).
+
+Assuming you can group your repo names into various patterns, and can use
+similar access control lines within each such group, you can use gitolite's
+"wildcard repos" feature.
+
+[wild]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html
+
+First read [doc/wildcard-repositories.mkd][wild], or at least skim through it,
+to understand the basic concept.  Then do this:
+
+  * do step 1 just like step 1 in Case 2 above
+
+  * ditto for step 2
+
+  * for each repo, determine who the owner should be and create files called
+    `gl-creater` (note spelling!) in each repo.  The file should contain
+    exactly one line with the owner name.
+
+  * run `gl-setup` again (you don't need to supply a pub key filename)
+
+  * finally add the repos to the conf, maybe something like this, (in this
+    example, the owner name was the second component of the repo path), and
+    add/commit/push:
+
+        repo    pub/CREATOR/..*
+                C   =   @developers
+                RW+ =   CREATOR
+                RW  =   WRITERS
+                R   =   READERS
+
+**Details**
+
+<font color="gray">
+
+  * why is the order of steps different in case 1 and case 2?
+
+    Because in case 2, the actual data is coming from an OS 'cp' (copy)
+    command, not via a normal push like in case 1.  Since that happens outside
+    gitolite, it's easier to do it first, then tell gitolite about the repo so
+    it can add hooks.  (If you tell gitolite first, it will create an empty
+    repo as soon as you push, then your 'cp' will have to overwrite those
+    files, but you'll then lose gitolite's hooks, etc.  A bit more messy).
+
+  * what's with the `gl-creater` file in case 3?
+
+    What [doc/wildcard-repositories.mkd][wild] does not explain is how
+    ownership is *recorded* in gitolite: the `gl-creater` file contains the
+    owner name.  If you want to "pretend" these repos were created by some
+    user, you need to add that in.  That user then gets whatever access you
+    gave to "CREATOR" in the access rules (in our example, that was `RW+`).
+
+  * why does case 3 need the `gl-setup` command?
+
+    An admin push only checks hooks on normal (non-wildcard) repos.  It would
+    be too timetaking otherwise.  Running `gl-setup` forces it to do this more
+    aggressively than an admin push, looking at wildcard repos as well as
+    normal ones.
+
+</font>
+
+In the end, it all boils down to (a) making sure the `update` hook is correct
+on all repos, wild or normal, and (b) making sure `gl-creater` contains the
+owner name for wild repos.  The rest of the setup is in the conf file.
 
 <a name="_moving_the_whole_thing_from_one_server_to_another"></a>
 
