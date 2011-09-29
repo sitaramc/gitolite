@@ -88,6 +88,9 @@ things happen if you change them.
     blocks repo config settings.  Please read [doc/big-config.mkd][bc] for
     more details.
 
+    **WARNING**: if your description files are maintained by some other means
+    than via the gitolite config file, make sure you set this variable to 1.
+
   * `$GL_NICE_VALUE`, boolean, default undef
 
     The nice value to run under.  Applicable only if it is greater than 0.

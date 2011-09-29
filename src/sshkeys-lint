@@ -53,6 +53,8 @@ for my $pub (@pubkeys) {
 
 print <<INFO;
 
+====
+
 Git operations using a pubkey that gets you a command line will BYPASS
 gitolite completely.  This means:
 

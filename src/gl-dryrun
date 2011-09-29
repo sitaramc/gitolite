@@ -66,7 +66,7 @@ $GL_ADMINDIR=$ENV{PWD} . "/.gitolite";
 $GL_CONF="$GL_ADMINDIR/conf/gitolite.conf";
 $GL_KEYDIR="$GL_ADMINDIR/keydir";
 $GL_CONF_COMPILED="$GL_ADMINDIR/conf/gitolite.conf-compiled.pm";
-$GL_WILDREPOS = 0;
+$GL_WILDREPOS = 1;
 $PROJECTS_LIST = $ENV{PWD} . "/projects.list";
 $REPO_UMASK = 0077;
 $GL_BIG_CONFIG = 0;
@@ -116,3 +116,4 @@ done | perl -ane '
 cd ..
 echo
 
+echo ...done

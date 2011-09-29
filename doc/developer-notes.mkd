@@ -127,6 +127,17 @@ longer is `$HOME` of the 'git' user**.  They keep it in
 already be present in `/etc/gitolite/gitolite.rc` before doing any such
 installs.
 
+There are also some other "impedance mismatches" that may show up.  For
+example, the gl-setup triggered by detecting a change in `$data_version`
+following an RPM update once caused problems.  This auto-update is designed to
+run on the next "hit" of any kind (which arguably makes things very easy in
+normal installations), but in Fedora's case it also means it runs *as that
+user*.  Who may not have "write" access to `$GL_ADMINDIR`!  So the compile
+fails, and you now have new code trying to work with old format data.
+
+The solution is to explicitly run a compile, from a properly privileged
+userid, as soon as you do an RPM upgrade.
+
 ----
 
 # **Why v2?**

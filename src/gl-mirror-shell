@@ -24,7 +24,6 @@ use warnings;
 
 # ----------------------------------------------------------------------------
 # this section of code snarfed from gl-auth-command
-# XXX add this program to 'that bindir thing' in doc/developer-notes.mkd
 BEGIN {
     $0 =~ m|^(/)?(.*)/| and $ENV{GL_BINDIR} = ($1 || "$ENV{PWD}/") . $2;
 }
