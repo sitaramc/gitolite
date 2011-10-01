@@ -260,6 +260,21 @@ on feedback from my users to find or fix issues.
     gitolite that unauthenticated HTTP users are actually authenticated as
     this user.
 
+  * `$GL_REF_OR_FILENAME_PATT`, string
+
+    Set of allowed characters in refnames (and, if you have `NAME/` rules, in
+    filenames as well).  The default pattern is almost the same as
+    `$REPONAME_PATT` with some additions.
+
+    Although the current code is not at risk in any way even if we let in
+    names containing strings like `$(command)`, and although I intend to make
+    sure things stay that way, it's probably a good idea to trap weird
+    filenames early.  Just to be safe.
+
+    You ought to be able to loosen the pattern by adding other characters to
+    it, if you really need to.  If you do, at least avoid backquotes and the
+    dollar sign!
+
 <a name="_less_used_changed_variables"></a>
 
 ### less used/changed variables

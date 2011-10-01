@@ -213,6 +213,10 @@ sub check_ref {
     # NOTE: the function DIES when access is denied, unless arg 5 is true
 
     my ($allowed_refs, $repo, $ref, $perm, $dry_run) = @_;
+
+    # sanity check the ref
+    die "invalid characters in ref or filename: $ref\n" unless $ref =~ $GL_REF_OR_FILENAME_PATT;
+
     my @allowed_refs = sort { $a->[0] <=> $b->[0] } @{$allowed_refs};
     for my $ar (@allowed_refs) {
         my $refex = $ar->[1];

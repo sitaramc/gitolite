@@ -1,0 +1,101 @@
+cd $TESTDIR
+$TESTDIR/rollback || die "rollback failed"
+# ----------
+
+# vim: syn=sh:
+# ----------
+name "setup"
+echo "
+    repo aa
+        RW+                 =   @all
+" | ugc
+
+# reasonably complex setup; we'll do everything from one repo though
+cd ~/td
+rm -rf aa
+runlocal git clone u1:aa
+cd ~/td/aa
+mdc file-1
+name "INTERNAL"
+runlocal git push origin HEAD
+expect "To u1:aa"
+expect_push_ok "\* \[new branch\]      HEAD -> master"
+
+name "push file aa,bb ok"
+mdc aa,bb
+runlocal git push origin HEAD
+expect "To u1:aa"
+expect_push_ok "HEAD -> master"
+
+name "push file aa=bb ok"
+mdc aa=bb
+runlocal git push origin HEAD
+expect "To u1:aa"
+expect_push_ok "HEAD -> master"
+
+name "push to branch dd,ee ok"
+runlocal git push origin master:dd,ee
+expect "To u1:aa"
+expect_push_ok "\* \[new branch\]      master -> dd,ee"
+
+name "push to branch dd=ee fail"
+runlocal git push origin master:dd=ee
+expect "remote: invalid characters in ref or filename: refs/heads/dd=ee"
+expect "remote: error: hook declined to update refs/heads/dd=ee"
+expect "\[remote rejected\] master -> dd=ee (hook declined)"
+expect "error: failed to push some refs to 'u1:aa'"
+
+name "INTERNAL"
+
+cd $TESTDIR
+$TESTDIR/rollback || die "rollback failed"
+# ----------
+
+name "setup"
+echo "
+    repo aa
+        RW+                 =   @all
+        RW+ NAME/           =   @all
+" | ugc -r
+
+# reasonably complex setup; we'll do everything from one repo though
+cd ~/td
+rm -rf aa
+runlocal git clone u1:aa
+cd ~/td/aa
+mdc file-1
+name "INTERNAL"
+runlocal git push origin HEAD
+expect "To u1:aa"
+expect_push_ok "\* \[new branch\]      HEAD -> master"
+
+name "push file aa,bb ok"
+mdc aa,bb
+runlocal git push origin HEAD
+expect "To u1:aa"
+expect_push_ok "HEAD -> master"
+
+name "push file aa=bb fail"
+mdc aa=bb
+runlocal git push origin HEAD
+expect "To u1:aa"
+expect "remote: invalid characters in ref or filename: NAME/aa=bb"
+expect "remote: error: hook declined to update refs/heads/master"
+expect "\[remote rejected\] HEAD -> master (hook declined)"
+expect "error: failed to push some refs to 'u1:aa'"
+
+name "push to branch dd,ee ok"
+runlocal git reset --hard HEAD^
+mdc some-file
+runlocal git push origin master:dd,ee
+expect "To u1:aa"
+expect_push_ok "\* \[new branch\]      master -> dd,ee"
+
+name "push to branch dd=ee fail"
+runlocal git push origin master:dd=ee
+expect "remote: invalid characters in ref or filename: refs/heads/dd=ee"
+expect "remote: error: hook declined to update refs/heads/dd=ee"
+expect "\[remote rejected\] master -> dd=ee (hook declined)"
+expect "error: failed to push some refs to 'u1:aa'"
+
+name "INTERNAL"

@@ -9,7 +9,7 @@ use Exporter 'import';
 @EXPORT = qw(
     $ABRT $WARN
     $R_COMMANDS $W_COMMANDS
-    $REPONAME_PATT $USERNAME_PATT $REPOPATT_PATT
+    $REPONAME_PATT $USERNAME_PATT $REPOPATT_PATT $GL_REF_OR_FILENAME_PATT
     $ADC_CMD_ARGS_PATT
     $BIG_INFO_CAP
     $current_data_version
@@ -48,6 +48,8 @@ $REPONAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@/+-]*$);
 $USERNAME_PATT=qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);
 # same as REPONAME, but used for wildcard repos, allows some common regex metas
 $REPOPATT_PATT=qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/,-]*$);
+# pattern for refnames pushed or names of files changed
+$GL_REF_OR_FILENAME_PATT=qr(^[0-9a-zA-Z][0-9a-zA-Z._\@/+ :,-]*$);
 
 # ADC commands and arguments must match this pattern
 $ADC_CMD_ARGS_PATT=qr(^[0-9a-zA-Z._\@/+:-]*$);
