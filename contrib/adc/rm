@@ -33,6 +33,7 @@ opt $ARE_YOU_SURE && {
 rm -rf $repo.git
 echo "$repo is now GONE!"
 
+# gitweb specific; code for cgit users left as an exercise for the reader
 cd $HOME
 PROJECTS_LIST=$($GL_BINDIR/gl-query-rc PROJECTS_LIST)
 export repo

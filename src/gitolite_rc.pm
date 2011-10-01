@@ -21,7 +21,7 @@ use Exporter 'import';
     $GL_NO_CREATE_REPOS $GL_NO_DAEMON_NO_GITWEB $GL_NO_SETUP_AUTHKEYS
     $GL_PACKAGE_CONF $GL_PACKAGE_HOOKS $GL_PERFLOGT $GL_SITE_INFO
     $GL_SLAVE_MODE $GL_WILDREPOS $GL_WILDREPOS_DEFPERMS
-    $GL_WILDREPOS_PERM_CATS $HTPASSWD_FILE $PROJECTS_LIST $REPO_BASE
+    $GL_WILDREPOS_PERM_CATS $HTPASSWD_FILE $PROJECTS_LIST $WEB_INTERFACE $REPO_BASE
     $REPO_UMASK $RSYNC_BASE $SVNSERVE $UPDATE_CHAINS_TO $AUTH_OPTIONS
     $GL_HOSTNAME
 
@@ -56,6 +56,9 @@ $ADC_CMD_ARGS_PATT=qr(^[0-9a-zA-Z._\@/+:-]*$);
 
 # maximum number of output lines from info under GL_BIG_CONFIG
 $BIG_INFO_CAP = 20;
+
+# default values for stuff that may be missing in the RC file
+$WEB_INTERFACE = 'gitweb';
 
 # ------------------------------------------------------------------------------
 #       bring in the rc vars and allow querying them

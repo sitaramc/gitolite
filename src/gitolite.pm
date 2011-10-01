@@ -21,6 +21,7 @@ use Exporter 'import';
     setup_daemon_access
     setup_git_configs
     setup_gitweb_access
+    setup_web_access
     shell_out
     slurp
     special_cmd
@@ -276,7 +277,7 @@ sub new_wild_repo {
     wrap_print("gl-perms", "$GL_WILDREPOS_DEFPERMS\n") if $GL_WILDREPOS_DEFPERMS;
     setup_git_configs($repo, \%git_configs);
     setup_daemon_access($repo);
-    add_del_line ("$repo.git", $PROJECTS_LIST, setup_gitweb_access($repo, '', ''));
+    add_del_web_access($repo);
     wrap_chdir($ENV{HOME});
 }
 
@@ -396,7 +397,7 @@ sub get_set_perms
         # gitweb and daemon
         setup_daemon_access($repo);
         # add or delete line (arg1) from file (arg2) depending on arg3
-        add_del_line ("$repo.git", $PROJECTS_LIST, setup_gitweb_access($repo, '', ''));
+        add_del_web_access($repo);
     }
 }
 
@@ -474,6 +475,33 @@ sub setup_daemon_access
 # ----------------------------------------------------------------------------
 #       set/unset gitweb access
 # ----------------------------------------------------------------------------
+
+sub setup_web_access {
+    if ($WEB_INTERFACE eq 'gitweb') {
+
+        my $projlist = shift;
+        my $projlist_fh = wrap_open( ">", "$PROJECTS_LIST.$$");
+        for my $proj (sort keys %{ $projlist }) {
+            print $projlist_fh "$proj\n";
+        }
+        close $projlist_fh;
+        rename "$PROJECTS_LIST.$$", $PROJECTS_LIST;
+
+    } else {
+        warn "sorry, unknown web interface $WEB_INTERFACE\n";
+    }
+}
+
+sub add_del_web_access {
+    if ($WEB_INTERFACE eq 'gitweb') {
+
+        my $repo = shift;
+        add_del_line ("$repo.git", $PROJECTS_LIST, setup_gitweb_access($repo, '', ''));
+
+    } else {
+        warn "sorry, unknown web interface $WEB_INTERFACE\n";
+    }
+}
 
 # returns 1 if gitweb access has happened; this is to allow the caller to add
 # an entry to the projects.list file
