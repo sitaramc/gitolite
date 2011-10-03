@@ -405,7 +405,7 @@ do:
     file.  "add" the change, commit, and push.
 
   * *then* remove the repo from `~/repositories` on the server (or whatever
-    you set `$GL_REPO_BASE` to in the `~/.gitolite.rc`)
+    you set `$REPO_BASE` to in the `~/.gitolite.rc`)
 
 <a name="_renaming_a_repo"></a>
 
