@@ -60,7 +60,7 @@ slaves="$*"
 # print out the job ID, then redirect all 3 FDs
 export job_id=$$        # can change to something else if needed
 echo "($job_id&) $hn ==== ($repo) ===>" $slaves >&2
-logfile=${GL_LOG/%.log/-mirror-pushes.log}
+logfile=`echo "${GL_LOG}" | sed 's/\.log$/-mirror-pushes.log/'`
 exec >>$logfile 2>&1 </dev/null
 
 # ----------
