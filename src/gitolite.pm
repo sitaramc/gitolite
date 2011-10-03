@@ -506,7 +506,7 @@ sub setup_gitweb_access
         system("git config --remove-section gitweb 2>/dev/null");
     }
 
-    return ($desc or can_read($repo, 'gitweb'));
+    return can_read($repo, 'gitweb');
         # this return value is used by the caller to write to projects.list
 }
 
