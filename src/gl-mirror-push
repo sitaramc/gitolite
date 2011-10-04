@@ -70,14 +70,14 @@ exec >>$logfile 2>&1 </dev/null
 # double fork, no zombies
 (
     (
-        echo `date +%T` $repo '===>'
+        echo `date +%F.%T` $repo '===>'
 
         for s in $slaves
         do
             [ "$s" = "$hn" ] && continue    # skip ourselves
             git push --mirror $s:$repo || echo ==== WARNING: RC=$? from git push --mirror $s:$repo ====
         done 2>&1 | sed -e "s/^/    /"
-        echo `date +%T` '===>' $slaves
+        echo `date +%F.%T` '===>' $slaves
         echo
     )  2>&1 | sed -e "s/^/$job_id:/" &        # background the whole thing
 )
