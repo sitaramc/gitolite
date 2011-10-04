@@ -32,7 +32,7 @@ gmm=`git config --get gitolite.mirror.master`
 
 # is it local? (remember, empty/undef ==> local
 gmm=${gmm:-local}
-[ "$gmm" = "local" ] && exit
+[ "$gmm" = "local" ] && die sorry but "$repo" is local
 
 # is it a slave?
 [ "$hn" = "$gmm" ] || die fatal: wrong master.  Try $gmm...
