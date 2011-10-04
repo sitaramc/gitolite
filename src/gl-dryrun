@@ -51,7 +51,7 @@ echo; echo "PLEASE READ WARNINGS IN SOURCE BEFORE USING!"; echo
 
 export oldhome=$HOME
 export oldpwd=$PWD
-export tmp=$(mktemp -d);
+export tmp=`mktemp -d`
 trap "rm -rf $tmp" 0;
 cd $tmp
 
@@ -97,8 +97,8 @@ echo
 echo "checking what pubkeys (if any) have push rights..."
 for f in `find .gitolite/keydir -name "*.pub" | sort`
 do
-    f=$(basename $f)
-    u=$(perl -e '$u = shift; $u =~ s/(\@[^.]+)?\.pub$//; print $u' $f)
+    f=`basename $f`
+    u=`perl -e '$u = shift; $u =~ s/(\@[^.]+)?\.pub$//; print $u' $f`
     SSH_ORIGINAL_COMMAND=info $GL_BINDIR/gl-auth-command $u | grep R...W..gitolite-admin.$ > /dev/null && echo '    '$f
 done
 echo

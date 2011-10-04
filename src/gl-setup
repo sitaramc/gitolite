@@ -24,7 +24,7 @@ get_rc_val() {
     ${0%/*}/gl-query-rc $1
 }
 
-TEMPDIR=$(mktemp -d -t tmp.XXXXXXXXXX)
+TEMPDIR=`mktemp -d -t tmp.XXXXXXXXXX`
 export TEMPDIR
 trap "/bin/rm -rf $TEMPDIR" 0
 
@@ -52,7 +52,7 @@ else
 fi
 
 export GL_RC
-GL_RC=$(get_rc_val GL_RC 2>/dev/null)
+GL_RC=`get_rc_val GL_RC 2>/dev/null`
 [ -z "$GL_RC" ] && GL_RC=$HOME/.gitolite.rc
 
 if [ -f $GL_RC ]
@@ -101,9 +101,9 @@ fi
 export GL_BINDIR
 export REPO_BASE
 export GL_ADMINDIR
-GL_BINDIR=$(  get_rc_val GL_BINDIR  )
-REPO_BASE=$(  get_rc_val REPO_BASE  )
-GL_ADMINDIR=$(get_rc_val GL_ADMINDIR)
+GL_BINDIR=`  get_rc_val GL_BINDIR  `
+REPO_BASE=`  get_rc_val REPO_BASE  `
+GL_ADMINDIR=`get_rc_val GL_ADMINDIR`
 
 # now we get to gitolite itself
 

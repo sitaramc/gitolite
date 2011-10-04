@@ -45,7 +45,7 @@ buildroot=$4;
 [ -n "$1" ] && [ -z "$3" ] && die "I need all 3 directories or none at all"
 # supply default values to args 1, 2, and 3 if not provided
 [ -z "$1" ] && {
-    euid=$(perl -e 'print $>')
+    euid=`perl -e 'print $>'`
     if [ "$euid" = "0" ]
     then
         set /usr/local/bin /var/gitolite/conf /var/gitolite/hooks
