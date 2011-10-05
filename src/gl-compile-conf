@@ -143,7 +143,7 @@ sub parse_conf_line
         do { $groups{$1}{$_} ||= $fragment } for ( expand_list( split(' ', $2) ) );
         # create the group hash even if empty
         $groups{$1} = {} unless $groups{$1};
-        die "$ABRT bad group $1\n" unless $1 =~ $REPONAME_PATT;
+        die "$ABRT bad group '$1'\n" unless $1 =~ $REPONAME_PATT;
     }
     # repo(s)
     elsif ($line =~ /^repo (.*)/)
@@ -155,9 +155,9 @@ sub parse_conf_line
         # ...sanity check
         for (@{ $repos_p }) {
             print STDERR "$WARN explicit '.git' extension ignored for $_.git\n" if s/\.git$//;
-            die "$ABRT bad reponame $_\n"
+            die "$ABRT bad reponame '$_'\n"
                 if ($GL_WILDREPOS and $_ !~ $REPOPATT_PATT);
-            die "$ABRT bad reponame $_ or you forgot to set \$GL_WILDREPOS\n"
+            die "$ABRT bad reponame '$_' or you forgot to set \$GL_WILDREPOS\n"
                 if (not $GL_WILDREPOS and $_ !~ $REPONAME_PATT);
         }
         s/\bCREAT[EO]R\b/\$creator/g for @{ $repos_p };
@@ -182,7 +182,7 @@ sub parse_conf_line
 
         # expand the user list, unless it is just "@all"
         @users = expand_list ( @users ) unless $GL_BIG_CONFIG;
-        do  { die "$ABRT bad username $_\n" unless $_ =~ $USERNAME_PATT } for @users;
+        do  { die "$ABRT bad username '$_'\n" unless $_ =~ $USERNAME_PATT } for @users;
 
         s/\bCREAT[EO]R\b/~\$creator/g for @users;
 
@@ -289,7 +289,7 @@ sub parse_conf_line
     elsif ($line =~ /^(\S+)(?: "(.*?)")? = "(.*)"$/)
     {
         my ($repo, $owner, $desc) = ($1, $2, $3);
-        die "$ABRT bad repo name $repo\n" unless $repo =~ $REPONAME_PATT;
+        die "$ABRT bad repo name '$repo'\n" unless $repo =~ $REPONAME_PATT;
         die "$ABRT $fragment attempting to set description for $repo\n" if check_fragment_repo_disallowed( $fragment, $repo );
         $desc{"$repo.git"} = $desc;
         $owner{"$repo.git"} = $owner || '';

@@ -11,7 +11,7 @@ echo "
 expect "To gitolite:gitolite-admin"
 expect "master -> master"
 [[ $1 == 0 ]] && expect "ABORTING"
-[[ $1 == 0 ]] && expect "bad reponame abc\*def or you forgot to set .GL_WILDREPOS"
+[[ $1 == 0 ]] && expect "bad reponame 'abc\*def' or you forgot to set .GL_WILDREPOS"
 
 name "bad user name"
 echo "
@@ -22,7 +22,7 @@ echo "
         RW = sitaram
 " | ugc -r
 expect "ABORTING"
-expect "bad username sitaram\*tester"
+expect "bad username 'sitaram\*tester'"
 
 name "NAME deny"
 echo "
