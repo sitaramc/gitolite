@@ -168,3 +168,176 @@ do
 
     done
 done
+
+for bc in 0 1
+do
+    for ais in 0 1
+    do
+        cd $TESTDIR
+        $TESTDIR/rollback || die "rollback failed"
+        editrc GL_WILDREPOS 1
+        editrc GL_BIG_CONFIG $bc
+        echo "\$GL_ALL_INCLUDES_SPECIAL = $ais;" | addrc
+        echo "\$GITWEB_URI_ESCAPE = 1;" | addrc
+
+        name "INTERNAL"
+        echo "
+            @leads = u1 u2
+            @devs = u1 u2 u3 u4
+
+            @gbar = bar/CREATOR/..*
+            repo    @gbar
+                C               =   @leads
+                RW+             =   @leads
+                RW              =   WRITERS @devs
+                R               =   READERS
+        " | ugc
+        name "nothing set yet"
+        expect_push_ok "master -> master"
+
+        runlocal git ls-remote u1:bar/u1/try1
+        runremote ls -al $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+        runremote cat projects.list
+        notexpect "bar/u1/try1.git"
+
+        runlocal git ls-remote u1:bar/u1/try2
+        runremote ls -al $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+        runremote cat projects.list
+        notexpect "bar/u1/try2.git"
+
+        name "add daemon access to try1"
+        echo R daemon | runlocal ssh u1 setperms bar/u1/try1
+        expect "READERS daemon"
+
+        runremote ls -al $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+        runremote cat projects.list
+        notexpect "bar/u1/try1.git"
+
+        name "add gitweb access to try2"
+        echo R gitweb | runlocal ssh u1 setperms bar/u1/try2
+        expect "READERS gitweb"
+
+        runremote ls -al $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 20 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 32 .* projects.list"
+        runremote cat projects.list
+        expect "bar%2Fu1%2Ftry2.git"
+
+        echo "\$GL_WILDREPOS_DEFPERMS = 'R daemon';" | addrc
+
+        name "add default daemon access"
+        runlocal git ls-remote u1:bar/u1/try3
+        runremote ls -al $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 20 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 32 .* projects.list"
+        runremote cat projects.list
+        notexpect "bar%2Fu1%2Ftry3.git"
+
+        name "add default gitweb access"
+        echo "\$GL_WILDREPOS_DEFPERMS = 'R gitweb';" | addrc
+
+        runlocal git ls-remote u1:bar/u1/try4
+        runremote ls -al $TEST_BASE/bar/u1/try4.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try4.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 40 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 52 .* projects.list"
+        runremote cat projects.list
+        expect "bar%2Fu1%2Ftry4.git"
+
+        name "add default both access"
+        echo "\$GL_WILDREPOS_DEFPERMS = 'R daemon gitweb';" | addrc
+
+        runlocal git ls-remote u1:bar/u1/try5
+        runremote ls -al $TEST_BASE/bar/u1/try5.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try5.git/git-daemon-export-ok"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 72 .* projects.list"
+        runremote cat projects.list
+        expect "bar%2Fu1%2Ftry5.git"
+
+        name "add default both access with @all also"
+        echo "\$GL_WILDREPOS_DEFPERMS = 'R @all daemon gitweb';" | addrc
+
+        runlocal git ls-remote u1:bar/u1/try6
+        runremote ls -al $TEST_BASE/bar/u1/try6.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try6.git/git-daemon-export-ok"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 80 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 92 .* projects.list"
+        runremote cat projects.list
+        expect "bar%2Fu1%2Ftry6.git"
+
+        name "remove all from u6"
+        < /dev/null runlocal ssh u1 setperms bar/u1/try6
+
+        runlocal git ls-remote u1:bar/u1/try6
+        runremote ls -al $TEST_BASE/bar/u1/try6.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try6.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 72 .* projects.list"
+        runremote cat projects.list
+        notexpect "bar%2Fu1%2Ftry6.git"
+
+        name "set default access to @all only"
+        echo "\$GL_WILDREPOS_DEFPERMS = 'R @all';" | addrc
+
+        runlocal git ls-remote u1:bar/u1/try7
+        runremote ls -al $TEST_BASE/bar/u1/try7.git/git-daemon-export-ok
+        [ "$ais" = "0" ] && expect "ls: cannot access $TEST_BASE/bar/u1/try7.git/git-daemon-export-ok: No such file or directory"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try7.git/git-daemon-export-ok"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 92 .* projects.list"
+        runremote cat projects.list
+        notexpect "bar/u1/try7.git"
+        notexpect "bar/u1/try7.git"
+        [ "$ais" = "0" ] && notexpect "bar%2Fu1%2Ftry7.git"
+        [ "$ais" = "1" ] && expect "bar%2Fu1%2Ftry7.git"
+
+        name "set default access to daemon only"
+        echo "\$GL_WILDREPOS_DEFPERMS = 'R daemon';" | addrc
+
+        runlocal git ls-remote u1:bar/u1/try8
+        runremote ls -al $TEST_BASE/bar/u1/try8.git/git-daemon-export-ok
+        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try8.git/git-daemon-export-ok"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 92 .* projects.list"
+        runremote cat projects.list
+        notexpect "bar%2Fu1%2Ftry8.git"
+
+        name "set default access to gitweb only"
+        echo "\$GL_WILDREPOS_DEFPERMS = 'R gitweb';" | addrc
+
+        runlocal git ls-remote u1:bar/u1/try9
+        runremote ls -al $TEST_BASE/bar/u1/try9.git/git-daemon-export-ok
+        expect "ls: cannot access $TEST_BASE/bar/u1/try9.git/git-daemon-export-ok: No such file or directory"
+        runremote ls -al projects.list
+        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 80 .* projects.list"
+        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 112 .* projects.list"
+        runremote cat projects.list
+        expect "bar%2Fu1%2Ftry9.git"
+
+        name "INTERNAL"
+
+    done
+done

@@ -46,6 +46,12 @@ things happen if you change them.
     `$projects_list` (please see gitweb docs for more on this).  Set this to
     the same value as that one.
 
+  * `$GITWEB_URI_ESCAPE`, boolean, default undef
+
+    Apparently gitweb expects project names to be URI-escaped (but seems to
+    work fine even if you don't).  If you need strict compatibility with
+    gitweb, add/uncomment this variable and set it to 1.
+
   * `$REPO_UMASK`, octal, default `0077`
 
     The default UMASK that gitolite uses makes all the repos and their

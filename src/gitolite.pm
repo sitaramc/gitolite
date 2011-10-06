@@ -48,6 +48,8 @@ use Data::Dumper;
 $Data::Dumper::Deepcopy = 1;
 $|++;
 
+use CGI::Util qw(escape);
+
 # ----------------------------------------------------------------------------
 #       find the rc file, then pull the libraries
 # ----------------------------------------------------------------------------
@@ -123,20 +125,23 @@ sub slurp {
 }
 
 sub add_del_line {
-    my ($line, $file, $flag) = @_;
+    my ($line, $file, $op, $escape) = @_;
+        # $op is true for add operation, false for delete
+        # $escape is true if the lines needs to be URI escaped
     my $contents;
+    $line = escape($line) if $escape;
 
     local $/ = undef;
     my $fh = wrap_open("<", $file);
     $contents = <$fh>;
     $contents =~ s/\s+$/\n/;
 
-    if ($flag and $contents !~ /^\Q$line\E$/m) {
+    if ($op and $contents !~ /^\Q$line\E$/m) {
         # add line if it doesn't exist
         $contents .= "$line\n";
         wrap_print($file, $contents);
     }
-    if (not $flag and $contents =~ /^\Q$line\E$/m) {
+    if (not $op and $contents =~ /^\Q$line\E$/m) {
         $contents =~ s/^\Q$line\E(\n|$)//m;
         wrap_print($file, $contents);
     }
@@ -477,12 +482,13 @@ sub setup_daemon_access
 # ----------------------------------------------------------------------------
 
 sub setup_web_access {
+    # input is a hashref; keys are project names
     if ($WEB_INTERFACE eq 'gitweb') {
 
         my $projlist = shift;
         my $projlist_fh = wrap_open( ">", "$PROJECTS_LIST.$$");
         for my $proj (sort keys %{ $projlist }) {
-            print $projlist_fh "$proj\n";
+            print $projlist_fh "" . ( $GITWEB_URI_ESCAPE ? escape($proj) : $proj ) . "\n";
         }
         close $projlist_fh;
         rename "$PROJECTS_LIST.$$", $PROJECTS_LIST;
@@ -493,10 +499,13 @@ sub setup_web_access {
 }
 
 sub add_del_web_access {
+    # input is a repo name.  Code could simply use `can_read($repo, 'gitweb')`
+    # to determine whether to add or delete the repo from web access.
+    # However, "desc" also factors into this so we have think about this.
     if ($WEB_INTERFACE eq 'gitweb') {
 
         my $repo = shift;
-        add_del_line ("$repo.git", $PROJECTS_LIST, setup_gitweb_access($repo, '', ''));
+        add_del_line ("$repo.git", $PROJECTS_LIST, setup_gitweb_access($repo, '', '') || 0, $GITWEB_URI_ESCAPE || 0);
 
     } else {
         warn "sorry, unknown web interface $WEB_INTERFACE\n";

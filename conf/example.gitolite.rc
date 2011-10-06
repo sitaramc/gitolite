@@ -28,6 +28,7 @@ $GL_CONF_COMPILED="$GL_ADMINDIR/conf/gitolite.conf-compiled.pm";
 $GL_WILDREPOS = 0;
 $PROJECTS_LIST = $ENV{HOME} . "/projects.list";
 # $WEB_INTERFACE = "gitweb";
+# $GITWEB_URI_ESCAPE = 0;
 $REPO_UMASK = 0077;
 
 # ------------------------------------------------------------------------------
