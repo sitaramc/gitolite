@@ -450,6 +450,7 @@ sub setup_git_configs
         # and the final step is the repo config: {"key"} = "value"
         my $rc = $rch{$seq};
         while ( my ($key, $value) = each(%{ $rc }) ) {
+            next if $key =~ /^gitolite-options\./;
             if ($value ne "") {
                 $value =~ s/^['"](.*)["']$/$1/;
                 system("git", "config", $key, $value);
@@ -852,6 +853,23 @@ sub check_repo_write_enabled {
         die $ABRT . slurp($d) if -s $d;
         die $ABRT . "writes are currently disabled\n";
     }
+}
+
+sub check_config_key {
+    my($repo, $key) = @_;
+    my @ret = ();
+
+    # look through $git_configs{$repo} and return an array of the values of
+    # all second level keys that match $key.  To understand "second level",
+    # you need to remember that %git_configs has elements like this:
+    #   $git_config{'reponame'}{sequence_number}{key} = value
+
+    for my $s (sort { $a <=> $b } keys %{ $git_configs{$repo} }) {
+        for my $k (keys %{ $git_configs{$repo}{$s} }) {
+            push @ret,     $git_configs{$repo}{$s}{$k} if $k =~ /^$key$/;
+        }
+    }
+    return @ret;
 }
 
 # ----------------------------------------------------------------------------

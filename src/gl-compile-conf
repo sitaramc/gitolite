@@ -246,6 +246,7 @@ sub parse_conf_line
     {
         my ($key, $value) = ($1, $2);
         my @validkeys = split(' ', ($GL_GITCONFIG_KEYS || '') );
+        push @validkeys, "gitolite-options\\..*";
         my @matched = grep { $key =~ /^$_$/ } @validkeys;
         die "$ABRT git config $key not allowed\ncheck GL_GITCONFIG_KEYS in the rc file for how to allow it\n" if (@matched < 1);
         for my $repo (@{ $repos_p })       # each repo in the current stanza
