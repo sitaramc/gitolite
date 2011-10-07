@@ -1,0 +1,60 @@
+# vim: syn=sh:
+for bc in 0 1
+do
+    for ais in 0 1
+    do
+        cd $TESTDIR
+        $TESTDIR/rollback || die "rollback failed"
+        editrc GL_WILDREPOS 1
+        editrc GL_BIG_CONFIG $bc
+        echo "\$GL_ALL_INCLUDES_SPECIAL = $ais;" | addrc
+
+        name "INTERNAL"
+        echo "
+            repo @all
+                R   =   @all
+            repo foo
+                RW+ =   u1
+            repo bar
+                RW+ =   u2
+            repo dev/..*
+                C   =   u3 u4
+                RW+ =   CREATOR
+        " | ugc
+        name "setup"
+        expect_push_ok "master -> master"
+
+        cd ~/td
+
+        runlocal git ls-remote u1:dev/wild1
+        expect "fatal: '$TEST_BASE_FULL/dev/wild1.git' does not appear to be a git repository"
+        expect "fatal: The remote end hung up unexpectedly"
+
+        runlocal git clone u3:dev/wild1
+        expect "Cloning into wild1..."
+        expect "Initialized empty Git repository in $TEST_BASE_FULL/dev/wild1.git/"
+        expect "warning: You appear to have cloned an empty repository."
+
+        cd wild1
+        mdc; mdc
+        runlocal git push origin master:wild1
+        expect "To u3:dev/wild1"
+        expect "* \[new branch\]      master -> wild1"
+        runlocal git push u1:foo master:br-foo
+        expect "To u1:foo"
+        expect "* \[new branch\]      master -> br-foo"
+        runlocal git push u2:bar master:br-bar
+        expect "To u2:bar"
+        expect "* \[new branch\]      master -> br-bar"
+
+        runlocal git ls-remote u6:foo
+        expect refs/heads/br-foo
+
+        runlocal git ls-remote u6:bar
+        expect refs/heads/br-bar
+
+        runlocal git ls-remote u6:dev/wild1
+        expect refs/heads/wild1
+
+    done
+done

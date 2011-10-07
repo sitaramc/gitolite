@@ -58,6 +58,7 @@ my @allowed_refs;
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$ENV{GL_USER}} || [] };
 push @allowed_refs, @ { $repos{'@all'}       {$ENV{GL_USER}} || [] };
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{'@all'} || [] };
+push @allowed_refs, @ { $repos{'@all'}       {'@all'} || [] };
 
 # prepare the list of refs to be checked
 

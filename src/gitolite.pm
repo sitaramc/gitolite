@@ -605,11 +605,13 @@ sub report_basic
         }
         # @all repos; meaning of read/write flags:
         # @R => @all users are allowed access to this repo
+        #   (Note: this now includes the rarely useful "@all users allowed
+        #   access to @all repos" case)
         # #R => you're a super user and can see @all repos
         #  R => normal access
         my $perm .= ( $repos{$r}{C}{'@all'} ? ' @C' :                                      ( $repos{$r}{C}{$user} ? '  C' : '   ' ) );
-        $perm .= perm_code( $repos{$r}{R}{'@all'}, $repos{'@all'}{R}{$user}, $repos{$r}{R}{$user}, 'R');
-        $perm .= perm_code( $repos{$r}{W}{'@all'}, $repos{'@all'}{W}{$user}, $repos{$r}{W}{$user}, 'W');
+        $perm .= perm_code( $repos{$r}{R}{'@all'} || $repos{'@all'}{R}{'@all'}, $repos{'@all'}{R}{$user}, $repos{$r}{R}{$user}, 'R');
+        $perm .= perm_code( $repos{$r}{W}{'@all'} || $repos{'@all'}{W}{'@all'}, $repos{'@all'}{W}{$user}, $repos{$r}{W}{$user}, 'W');
         print "$perm\t$r\r\n" if $perm =~ /\S/;
     }
     print "only $BIG_INFO_CAP out of $count candidate repos examined\r\nplease use a partial reponame or regex pattern to limit output\r\n" if $GL_BIG_CONFIG and $count > $BIG_INFO_CAP;
@@ -810,8 +812,8 @@ sub add_repo_conf
             delete $repos{$repo} if $perm !~ /C/ and $wild;
             $creator = "<notfound>";
         }
-        $perm .= perm_code( $repos{$repo}{R}{'@all'}, $repos{'@all'}{R}{$ENV{GL_USER}}, $repos{$repo}{R}{$ENV{GL_USER}}, 'R' );
-        $perm .= perm_code( $repos{$repo}{W}{'@all'}, $repos{'@all'}{W}{$ENV{GL_USER}}, $repos{$repo}{W}{$ENV{GL_USER}}, 'W' );
+        $perm .= perm_code( $repos{$repo}{R}{'@all'} || $repos{'@all'}{R}{'@all'}, $repos{'@all'}{R}{$ENV{GL_USER}}, $repos{$repo}{R}{$ENV{GL_USER}}, 'R' );
+        $perm .= perm_code( $repos{$repo}{W}{'@all'} || $repos{'@all'}{W}{'@all'}, $repos{'@all'}{W}{$ENV{GL_USER}}, $repos{$repo}{W}{$ENV{GL_USER}}, 'W' );
 
         # set up for caching %repos
         $last_repo = $repo;
@@ -955,6 +957,7 @@ sub check_access
     push @allowed_refs, @ { $repos{$repo}{$ENV{GL_USER}} || [] };
     push @allowed_refs, @ { $repos{'@all'}{$ENV{GL_USER}} || [] };
     push @allowed_refs, @ { $repos{$repo}{'@all'} || [] };
+    push @allowed_refs, @ { $repos{'@all'}{'@all'} || [] };
 
     if ($dry_run) {
         return check_ref(\@allowed_refs, $repo, $ref, $aa, $dry_run);
