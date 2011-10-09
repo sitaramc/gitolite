@@ -1,0 +1,227 @@
+# vim: syn=sh:
+# can_read        cannot_read     has_export_ok               is_in_projects_list
+# can_push        cannot_push     does_not_have_export_ok     is_not_in_projects_list
+
+can_read() {
+    # args: user, repo
+    runlocal git ls-remote $1:$2
+    expect refs/heads
+    notexpect DENIED
+}
+
+can_push() {
+    cd ~/td
+    rm -rf clone
+    runlocal git clone $1:$2 clone
+    expect Cloning into
+    notexpect DENIED
+    notexpect fatal
+    cd clone
+    mdc
+    runlocal git push origin HEAD:${3:-master}
+    expect_push_ok "HEAD -> ${3:-master}"
+}
+
+cannot_read() {
+    # args: user, repo
+    runlocal git ls-remote $1:$2
+    notexpect refs/heads
+    expect DENIED
+}
+
+cannot_push() {
+    cd ~/td
+    rm -rf clone
+    runlocal git clone $1:$2 clone
+    expect Cloning into
+    notexpect DENIED
+    notexpect fatal
+    cd clone
+    mdc
+    runlocal git push origin HEAD:${3:-master}
+    expect DENIED
+}
+
+has_export_ok() {
+    runremote ls -al $TEST_BASE_FULL/$1.git/git-daemon-export-ok
+    expect "gitolite-test gitolite-test .* $TEST_BASE_FULL/$1.git/git-daemon-export-ok"
+}
+
+does_not_have_export_ok() {
+    runremote ls -al $TEST_BASE_FULL/$1.git/git-daemon-export-ok
+    expect "ls: cannot access $TEST_BASE_FULL/$1.git/git-daemon-export-ok: No such file or directory"
+}
+
+is_in_projects_list() {
+    runremote cat projects.list
+    expect "^$1.git$"
+}
+
+is_not_in_projects_list() {
+    runremote cat projects.list
+    notexpect "^$1.git$"
+}
+
+for bc in 0 1
+do
+    for ais in 0 1
+    do
+        cd $TESTDIR
+        $TESTDIR/rollback || die "rollback failed"
+        editrc GL_WILDREPOS 1
+        editrc GL_BIG_CONFIG $bc
+        echo "\$GL_ALL_INCLUDES_SPECIAL = $ais;" | addrc
+
+        name "set 1"
+        REPO=one
+        echo "
+            repo $REPO
+                RW+ =   u1
+                R   =   u2
+                -   =   u2 u3
+                R   =   @all
+
+        " | ugc
+
+        can_push u1 $REPO
+
+        can_read u2 $REPO
+        cannot_push u2 $REPO
+
+        can_read u3 $REPO
+        cannot_push u3 $REPO
+
+        can_read u6 $REPO
+        cannot_push u6 $REPO
+
+        [ "$ais" = "0" ] && does_not_have_export_ok $REPO
+        [ "$ais" = "0" ] && is_not_in_projects_list $REPO
+
+        [ "$ais" = "1" ] && has_export_ok $REPO
+        [ "$ais" = "1" ] && is_in_projects_list $REPO
+
+        name "set 1a -- add the deny-repo flag"
+        echo "
+            config gitolite-options.deny-repo = 1
+        " | ugc
+
+        can_push u1 $REPO
+
+        can_read u2 $REPO
+        cannot_push u2 $REPO
+
+        cannot_read u3 $REPO
+
+        can_read u6 $REPO
+        cannot_push u6 $REPO
+
+        [ "$ais" = "0" ] && does_not_have_export_ok $REPO
+        [ "$ais" = "0" ] && is_not_in_projects_list $REPO
+
+        [ "$ais" = "1" ] && has_export_ok $REPO
+        [ "$ais" = "1" ] && is_in_projects_list $REPO
+
+        name "set 2 -- add gitweb and daemon"
+        REPO=two
+        echo "
+            repo $REPO
+                RW+ =   u1
+                R   =   u2
+                -   =   u2 u3 gitweb daemon
+                R   =   @all
+
+        " | ugc
+
+        [ "$ais" = "0" ] && does_not_have_export_ok $REPO
+        [ "$ais" = "0" ] && is_not_in_projects_list $REPO
+
+        [ "$ais" = "1" ] && has_export_ok $REPO
+        [ "$ais" = "1" ] && is_in_projects_list $REPO
+
+        name "set 2a -- add the deny-repo flag"
+        echo "
+            config gitolite-options.deny-repo = 1
+        " | ugc
+
+        does_not_have_export_ok $REPO
+        is_not_in_projects_list $REPO
+
+        name "set 3 -- allow gitweb to all but admin repo"
+        REPO=three
+        echo "
+            repo gitolite-admin
+                -   =   gitweb daemon
+            config gitolite-options.deny-repo = 1
+
+            repo $REPO
+                RW+ =   u3
+                R   =   gitweb daemon
+
+        " | ugc
+
+        has_export_ok $REPO
+        is_in_projects_list $REPO
+        does_not_have_export_ok gitolite-admin
+        is_not_in_projects_list gitolite-admin
+
+        name "set 4 -- allow gitweb to all but admin repo"
+        REPO=four
+        echo "
+            repo $REPO
+                RW+ =   u4
+                -   =   gitweb daemon
+
+            repo @all
+                R   =   @all
+
+        " | ugc
+
+        [ "$ais" = "0" ] && {
+            does_not_have_export_ok $REPO
+            is_not_in_projects_list $REPO
+            does_not_have_export_ok gitolite-admin
+            is_not_in_projects_list gitolite-admin
+        }
+
+        [ "$ais" = "1" ] && {
+            has_export_ok $REPO
+            is_in_projects_list $REPO
+            does_not_have_export_ok gitolite-admin
+            is_not_in_projects_list gitolite-admin
+        }
+
+        name "set 5 -- go wild"
+        echo "
+            repo foo/..*
+                C   =   u1
+                RW+ =   CREATOR
+                -   =   gitweb daemon
+                R   =   @all
+
+            repo bar/..*
+                C   =   u2
+                RW+ =   CREATOR
+                -   =   gitweb daemon
+                R   =   @all
+            config gitolite-options.deny-repo = 1
+        " | ugc -r
+
+        can_push u1 foo/one
+        can_push u2 bar/two
+
+        [ "$ais" = "0" ] && {
+            does_not_have_export_ok foo/one
+            is_not_in_projects_list foo/one
+            does_not_have_export_ok bar/two
+            is_not_in_projects_list bar/two
+        }
+
+        [ "$ais" = "1" ] && {
+            has_export_ok foo/one
+            is_in_projects_list foo/one
+            does_not_have_export_ok bar/two
+            is_not_in_projects_list bar/two
+        }
+
+    done
+done

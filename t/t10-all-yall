@@ -1,4 +1,24 @@
 # vim: syn=sh:
+has_export_ok() {
+    runremote ls -al $TEST_BASE_FULL/$1.git/git-daemon-export-ok
+    expect "gitolite-test gitolite-test .* $TEST_BASE_FULL/$1.git/git-daemon-export-ok"
+}
+
+does_not_have_export_ok() {
+    runremote ls -al $TEST_BASE_FULL/$1.git/git-daemon-export-ok
+    expect "ls: cannot access $TEST_BASE_FULL/$1.git/git-daemon-export-ok: No such file or directory"
+}
+
+is_in_projects_list() {
+    runremote cat projects.list
+    expect "^$1.git$"
+}
+
+is_not_in_projects_list() {
+    runremote cat projects.list
+    notexpect "^$1.git$"
+}
+
 for bc in 0 1
 do
     for ais in 0 1
@@ -55,6 +75,17 @@ do
 
         runlocal git ls-remote u6:dev/wild1
         expect refs/heads/wild1
+
+        name "gitweb and daemon"
+
+        for REPO in foo bar dev/wild1
+        do
+            [ "$ais" = "0" ] && does_not_have_export_ok $REPO
+            [ "$ais" = "0" ] && is_not_in_projects_list $REPO
+
+            [ "$ais" = "1" ] && has_export_ok $REPO
+            [ "$ais" = "1" ] && is_in_projects_list $REPO
+        done
 
     done
 done

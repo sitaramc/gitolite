@@ -13,7 +13,9 @@ In this document:
   * <a href="#_advanced_access_control">advanced access control</a>
       * <a href="#_creating_and_deleting_branches">creating and deleting branches</a>
       * <a href="#_deny_rules">"deny" rules</a>
-          * <a href="#_IMPORTANT_NOTES_ABOUT_DENY_RULES_">***IMPORTANT NOTES ABOUT "DENY" RULES***:</a>
+          * <a href="#_warnings_and_required_reading">warnings and required reading</a>
+          * <a href="#_deny_rules_for_refs_in_a_repo">"deny" rules for refs in a repo</a>
+          * <a href="#_deny_rules_for_the_entire_repo">"deny" rules for the entire repo</a>
   * <a href="#_summary_permissions">summary: permissions</a>
   * <a href="#_virtual_ref_types">virtual "ref"-types</a>
   * <a href="#_other_tips">other tips</a>
@@ -198,13 +200,14 @@ looks like "refs/heads/foo", while a tag ref looks like "refs/tags/bar")
 
   * a **refex** is a *perl regex* that matches a ref.  When you try to push a
     commit to a branch or a tag, that "ref" is matched against the refex part
-    of each rule
+    of each rule.
 
   * if the refex does not start with `refs/`, gitolite assumes a prefix of
     `refs/heads/`.  This is useful because *branch* matching is the most
     common case, as you can see this applies to lines 1 through 5 here.
 
-  * if no refex appears, the rule applies to all refs in that repo
+  * if no refex appears, the rule applies to all refs in that repo (as if you
+    had specified `refs/.*` as the refex).
 
   * refexes are prefix-matched (they are internally anchored with `^` before
     being used).  This means only the beginning of the actual ref needs to
@@ -330,6 +333,30 @@ Some usage hints:
 
 #### "deny" rules
 
+<a name="_warnings_and_required_reading"></a>
+
+##### warnings and required reading
+
+Gitolite performs access checks at 2 levels.  The first check is performed for
+both read *and* write operations, while the second one happens only for write
+operations.
+
+**Required reading**: [this section][two_l] of the documentation.
+
+[two_l]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_two_levels_of_access_rights_checking
+
+**Warning**: When using deny rules, the order of your rules matters, where
+earlier it did not.  If you're just starting to add a deny rule to an existing
+ruleset, it's a good idea to review the entire ruleset once, to make sure
+you're doing it right.
+
+<a name="_deny_rules_for_refs_in_a_repo"></a>
+
+##### "deny" rules for refs in a repo
+
+You can use "deny" rules for the second check, to prevent people pushing
+branches or tags that they should not be allowed to.
+
 Take a look at the following snippet, which *seems* to say that "bruce" can
 write versioned tags (anything containing `refs/tags/v[0-9]`), but the other
 staffers can't:
@@ -376,16 +403,43 @@ And here's how it works:
     before the third one, and it has a `-` as the permission, so the push
     fails
 
-<a name="_IMPORTANT_NOTES_ABOUT_DENY_RULES_"></a>
+<a name="_deny_rules_for_the_entire_repo"></a>
 
-##### ***IMPORTANT NOTES ABOUT "DENY" RULES***:
+##### "deny" rules for the entire repo
 
-  * deny rules do NOT affect read access.  They only apply to write access.
+The previous section described deny rules for the second check, which is a
+fairly common need.  However, gitolite does not process deny rules for the
+first check -- it's usually simple enough to make sure your config file does
+not allow the particular user/repo combindation at all.
 
-  * when using deny rules, the order of your rules starts to matter, where
-    earlier it did not.  If you're just starting to add a deny rule to an
-    existing ruleset, it's a good idea to review the entire ruleset once, to
-    make sure you're doing it right.
+But there's one case where this becomes cumbersome: when you want to create
+exceptions to uses of `@all`.
+
+For example, if you want gitweb to show `@all` repos except the special
+'gitolite-admin' repo, you must manually (and laboriously) maintain a list of
+all your repos (except gitolite-admin) and use that in place of `@all`.  Oh
+joy...
+
+But now you can do this:
+
+    repo gitolite-admin
+        -   =   gitweb daemon
+        [... other access rules ...]
+        config gitolite-options.deny-repo = 1
+
+    repo @all
+        R   =   gitweb daemon
+
+Here are some notes on how/why this works:
+
+  * The order is important -- the deny rule must come first.
+
+  * The 'config' line is what tells git to behave differently, i.e., apply
+    deny rules for the first check also.
+
+  * Since there is no "ref" to match against the refexes in the rules,
+    gitolite just ignores the refexes, and simply looks at the permission (R,
+    RW, "-", etc) and the user list.
 
 <a name="_summary_permissions"></a>
 

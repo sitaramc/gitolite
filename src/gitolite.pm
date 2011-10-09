@@ -227,7 +227,8 @@ sub check_ref {
     for my $ar (@allowed_refs) {
         my $refex = $ar->[1];
         # refex?  sure -- a regex to match a ref against :)
-        next unless $ref =~ /^$refex/;
+        next unless $ref =~ /^$refex/ or $ref eq 'joker';
+            # joker matches any refex; it will only ever be sent internally
         return "DENIED by $refex" if $ar->[2] eq '-' and $dry_run;
         die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->[2] eq '-';
 
@@ -613,7 +614,7 @@ sub report_basic
         my $perm .= ( $repos{$r}{C}{'@all'} ? ' @C' :                                      ( $repos{$r}{C}{$user} ? '  C' : '   ' ) );
         $perm .= perm_code( $repos{$r}{R}{'@all'} || $repos{'@all'}{R}{'@all'}, $repos{'@all'}{R}{$user}, $repos{$r}{R}{$user}, 'R');
         $perm .= perm_code( $repos{$r}{W}{'@all'} || $repos{'@all'}{W}{'@all'}, $repos{'@all'}{W}{$user}, $repos{$r}{W}{$user}, 'W');
-        print "$perm\t$r\r\n" if $perm =~ /\S/;
+        print "$perm\t$r\r\n" if $perm =~ /\S/ and not check_deny_repo($r);
     }
     print "only $BIG_INFO_CAP out of $count candidate repos examined\r\nplease use a partial reponame or regex pattern to limit output\r\n" if $GL_BIG_CONFIG and $count > $BIG_INFO_CAP;
     print "$GL_SITE_INFO\n" if $GL_SITE_INFO;
@@ -815,6 +816,7 @@ sub add_repo_conf
         }
         $perm .= perm_code( $repos{$repo}{R}{'@all'} || $repos{'@all'}{R}{'@all'}, $repos{'@all'}{R}{$ENV{GL_USER}}, $repos{$repo}{R}{$ENV{GL_USER}}, 'R' );
         $perm .= perm_code( $repos{$repo}{W}{'@all'} || $repos{'@all'}{W}{'@all'}, $repos{'@all'}{W}{$ENV{GL_USER}}, $repos{$repo}{W}{$ENV{GL_USER}}, 'W' );
+        $perm =~ s/./ /g if check_deny_repo($repo);
 
         # set up for caching %repos
         $last_repo = $repo;
@@ -853,6 +855,19 @@ sub check_repo_write_enabled {
         die $ABRT . slurp($d) if -s $d;
         die $ABRT . "writes are currently disabled\n";
     }
+}
+
+sub check_deny_repo {
+    my $repo = shift;
+
+    return 0 unless check_config_key($repo, "gitolite-options.deny-repo");
+        # there are no 'gitolite-options.deny-repo' keys
+
+    # the 'joker' ref matches any refex.  Think of it like a ".*" in reverse.
+    # A pattern of ".*" matches any string.  Similarly a string called 'joker'
+    # matches any pattern :-)  See check_ref() for implementation.
+    return 1 if ( check_access($repo, 'joker', 'R', 1) ) =~ /DENIED by/;
+    return 0;
 }
 
 sub check_config_key {
@@ -960,10 +975,19 @@ sub check_access
     my ($repo, $ref, $aa, $dry_run) = @_;
     # aa = attempted access
 
-    my ($perm, $creator, $wild) = repo_rights($repo);
-    $perm =~ s/ /_/g;
-    $creator =~ s/^\(|\)$//g;
-    return ($perm, $creator) unless $ref;
+    my ($perm, $creator, $wild);
+    unless ($ref) {
+        ($perm, $creator, $wild) = repo_rights($repo);
+        $perm =~ s/ /_/g;
+        $creator =~ s/^\(|\)$//g;
+        return ($perm, $creator);
+    }
+
+    ($perm, $creator, $wild) = repo_rights($repo) unless $ref eq 'joker';
+        # calling it when ref eq joker is infinitely recursive!  check_access
+        # will only be called with ref eq joker only when repo_rights has
+        # already been called and %repos populated already.  (See comments
+        # elsewhere for what 'joker' is and why it is called that).
 
     # until I do some major refactoring (which will bloat the update hook a
     # bit, sadly), this code duplicates stuff in the current update hook.

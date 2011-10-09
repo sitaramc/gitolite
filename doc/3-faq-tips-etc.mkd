@@ -168,8 +168,9 @@ Note that at this point no git program has entered the picture, and we have no
 way of knowing what **ref** (branch, tag, etc) he is trying to update, even if
 it is a "write" operation.
 
-For a "read" operation to pass this check, the username (or `@all`) must have
-read permission (i.e., R, RW, or RW+) on at least one branch of the repo.
+For a "read" operation to pass this check, the username (or `@all` users) must
+have read permission (i.e., R, RW, RW+, etc.) on at least one branch of the
+repo (or `@all` repos).
 
 For a "write" operation, there is an additional restriction: lines specifying
 only `R` (read access) don't count.  *The user must have write access to

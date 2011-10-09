@@ -72,12 +72,6 @@ review stuff :)
     matter; they're probably equivalent except perhaps in some far-fetched
     scenarios.
 
-  * One big difference is that gitolite does not process "deny" rules ("-1 no
-    Access" in gerrit terms) for *read* access -- we only support those for
-    write access.  Gerrit uses this to "hide a handful of projects on an
-    otherwise public server"; in gitolite you'd better avoid giving `R = @all`
-    in the first place :)
-
   * Update 2010-10-24: as per [this][gitlog1] Gerrit now has *read* access
     control at the branch level -- they can afford to do that because they
     have a full jgit stack to play with.  Even then it was not easy -- they
