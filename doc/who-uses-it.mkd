@@ -57,3 +57,25 @@ users as well.
 specific code (see [contrib/ldap][ldap] directory for details).
 
 [ldap]: http://github.com/sitaramc/gitolite/blob/pu/contrib/ldap
+
+**kernel.org**, the official distribution point for the Linux kernel, is the
+latest (as of 2011-10) high-visibility installation.  According to [this
+email][ko-ann] to the lkml, kernel.org decided to use gitolite for access
+controlling their git repos.
+
+This move also prompted the first ever security audit of gitolite by an
+outside party.  Gitolite did great; see [here][audit] for details.
+
+In addition, kernel.org was responsible for a serious rethink of a few rough
+edges in gitolite, and smoothing them out was fun (the "playing with gitolite"
+stuff, making the test suite simpler, "deny" rules for the entire repo).
+
+[ko-ann]: http://lkml.org/lkml/2011/9/23/357
+[audit]: http://groups.google.com/group/gitolite/browse_thread/thread/8dc5242052b16d0f
+
+----
+
+A general note: if you see the list of high-profile users above, you will see
+that gitolite benefits as much as they do; possibly more.
+
+color me happy...
