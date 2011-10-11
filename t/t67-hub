@@ -57,7 +57,7 @@ do
     cd ~/td
     runlocal ssh u2 fork r1 child/u2/myr1
     runremote ls -al $TEST_BASE/child/u2/myr1.git/gl-forked-from
-    expect "gitolite-test gitolite-test 3 .* $TEST_BASE/child/u2/myr1.git/gl-forked-from"
+    expect "$USER $USER 3 .* $TEST_BASE/child/u2/myr1.git/gl-forked-from"
     runremote cat $TEST_BASE/child/u2/myr1.git/gl-forked-from
     expect r1
     runlocal git clone u2:child/u2/myr1
