@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# some defines
+export ADC_PATH="$HOME/glt-adc"
+
 # are we in the right place
 cd ${0%/*}
 git rev-parse --show-toplevel || die should run t/test-driver.sh from a clone of gitolite

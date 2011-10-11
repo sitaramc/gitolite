@@ -6,10 +6,10 @@ do
     editrc GL_BIG_CONFIG $bc
     editrc GL_WILDREPOS 1
 
-    rm -rf /tmp/glt-adc
-    mkdir  /tmp/glt-adc || die "mkdir /tmp/glt-adc failed"
-    cp ../contrib/adc/* /tmp/glt-adc
-    echo "\$GL_ADC_PATH = '/tmp/glt-adc';" | addrc
+    rm -rf $ADC_PATH
+    mkdir  $ADC_PATH || die "mkdir $ADC_PATH failed"
+    cp ../contrib/adc/* $ADC_PATH
+    echo "\$GL_ADC_PATH = '$ADC_PATH';" | addrc
     runremote rm -f .gitolite.down
 
     # ----------
