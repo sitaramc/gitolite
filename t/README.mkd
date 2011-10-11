@@ -1,10 +1,14 @@
 ## notes on the testing setup
 
+**WARNING: PLEASE use a dedicated user for doing this**.  Various files and
+directories get overwritten and it's much simpler this way.
+
 In this document:
 
   * <a href="#_terminology">terminology</a>
   * <a href="#_notes_and_background">notes and background</a>
-  * <a href="#_quick_instructions_for_running_the_test_suite">quick instructions for running the test suite</a>
+  * <a href="#_playing_with_gitolite">playing with gitolite</a>
+  * <a href="#_testing_gitolite">testing gitolite</a>
   * <a href="#_instructions_for_adding_new_tests">instructions for adding new tests</a>
 
 <a name="_terminology"></a>
@@ -18,67 +22,83 @@ In this document:
 
 ### notes and background
 
-  * all testing is done on one machine, using 2 userids
+All testing is done on one **brand new** userid.  We use ssh host alias tricks
+to simulate multiple gitolite users within this, so `ssh gitolite info` gets
+you different results than `ssh u1 info`.
 
-  * test driver exits on the *first* failed test; no fancy counting here.
-    (PW).
+The test suite is mainly meant for testing **the core (access control)
+functionality**.  It doesn't test anything else, like say the install or
+upgrade operations.  Other big features NOT covered by the test suite are
+mirroring, smart http, and password-based access.
 
-  * installs are done using "gl-easy-install".  As such, this test suite is
-    mainly meant for testing **the core (access control) functionality**, and
-    will not help you test the install/upgrade parts themselves.  Those are a
-    lot more difficult to test in an automated fashion, but luckily they also
-    change infrequently and can easily be tested manually when they do.
-    Errors in those are much more visible too.  (PW).
+Note that the test driver has evolved as new scripts were added; you will see
+that older scripts are a little less sophisticated.
 
-  * the test driver has evolved as new scripts were added; you will see that
-    older scripts are a little less sophisticated.
+<a name="_playing_with_gitolite"></a>
 
-<a name="_quick_instructions_for_running_the_test_suite"></a>
+### playing with gitolite
 
-### quick instructions for running the test suite
+(Please heed the warning at the top of this document and use a dedicated user
+for this).
 
-  * create two brand new user IDs: tester and gitolite-test
-      * these are hard-coded, sorry.  (PW)
-      * give them some passwords
-      * allow ssh into gitolite-test in `/etc/ssh/sshd_config`; preferably use
-        a line like `AllowUsers gitolite-test@127.0.0.1` so that no one can
-        ssh in from outside
+Playing with gitolite is easy.
 
-  * prepare/push a bare clone of gitolite itself on /tmp so that the "tester"
-    userid can grab it painlessly
+  * Create a userid (doesn't matter what it's called; we'll pretend it's
+    "gl-test" in this document).
 
-        cd your-gitolite-working-repo
-        git clone --bare $PWD /tmp/gitolite                 # first time
-        git push -f --all /tmp/gitolite                     # subsequent times
+  * Make sure sshd allows incoming ssh to this userid at least from localhost.
+    (Out of scope for this document: sshd config, 'AllowUsers', etc...)
 
-  * "su" to "tester" and clone/fetch the gitolite source:
+  * Now log in as this user (doesn't matter how), and run the following
+    commands:
 
-        cd $HOME; git clone /tmp/gitolite                   # first time
-        cd gitolite; git fetch origin                       # subsequent times
+        cd $HOME        # if not already in $HOME
+        git clone git://github.com/sitaramc/gitolite
+        gitolite/t/install
 
-  * checkout and "install" the branch you want to test (install from "tester"
-    userid to "gitolite-test" userid).  Example, if you want to test "pu"
-    branch:
+    This installs the "testbed" in the userid you chose.  No other user is
+    affected in any way.
 
-        git checkout -t origin/pu                           # if needed
-        git checkout -f pu; git reset --hard origin/pu      # subsequent times
-        cd t        # THIS IS IMPORTANT (patches welcome, or will be fixed eventually!)
-        ./install-gitolite
+This is what you get when you do this:
 
-  * run all or some of the tests
+  * A gitolite user called "tester", tied to an ssh host alias called
+    "gitolite".  This user has RW+ rights to the admin repo; running `ssh
+    gitolite info` should get you the expected results.
 
-        ./test-driver.sh
-        # or
-        ./test-driver.sh t51
+  * Six gitolite users called "u1" through "u6", all done through ssh host
+    aliases.  Running `ssh u1 info` etc. should show you only the "testing"
+    repo accessible to them.
 
-  * you can also run them through "prove", although to make it work easier
-    with prove, I ended up making the "subtest" numbers be the actual test
-    numbers, making it look like I have over 2000 tests, when in reality I
-    have about 600:
+  * A clone of the admin repo in `~/gitolite-admin`, created by `git clone
+    gitolite:gitolite-admin`.  If you `cd ~/gitolite-admin`, you will see the
+    keys for the users mentioned above (tester, u1, ..., u6).
 
-        prove ./test-driver.sh
-        # or
-        prove ./test-driver.sh :: t51
+  * The rest of a gitolite installation, such as the rc file in `~/.gitolite.rc` etc.
+
+Don't forget that the client and the server are all on the same user on the
+same machine.
+
+And don't forget, too, that we are simulating 7 gitolite users using ssh keys!
+(How?  Maybe `~/.ssh/config` will give you a hint).  You can now use those 7
+users in any way you please in the config file and test out different user's
+access simply using a different URL.  For example, `git clone u1:testing` and
+`git clone u2:testing` may give you different results depending on what rights
+you gave users "u1" and "u2" in your config.
+
+<a name="_testing_gitolite"></a>
+
+### testing gitolite
+
+First, do what the "playing with gitolite" section says.  That is a
+pre-requisite.
+
+Once that is done, run this command (still in `$HOME` of the gl-test userid):
+
+    prove gitolite/t/test-driver.sh
+
+(note: to make it work easier with prove, I ended up making the "subtest"
+numbers be the actual test numbers, making it look like I have over 2000
+tests, when in reality I have about 600)
 
 <a name="_instructions_for_adding_new_tests"></a>
 
