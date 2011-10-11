@@ -1,15 +1,6 @@
 #!/bin/bash
 
-cd
+cd $HOME
 rm -rf .ssh .gitolite .gitolite.rc repositories gitolite-install /tmp/glrb bin share
-tar xf rollback.tar
-( cd /tmp; tar xf ~/rollback2.tar )
-
-# if arg1 is a directory, we have to overwrite sources from there (see commit
-# message for details)
-if [ -d "$1" ]
-then
-    cd .gitolite
-    /bin/cp -a $1/{src,hooks} .
-    cd
-fi
+tar xf server-rollback.tar
+( cd /tmp; tar xf ~/server-rollback2.tar )

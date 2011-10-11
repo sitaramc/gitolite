@@ -27,8 +27,8 @@ do
         runremote ls -al $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok
         expect "ls: cannot access $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok: No such file or directory"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 12 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -39,18 +39,18 @@ do
                 R               =   daemon
         " | ugc
         runremote ls -al $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok"
+        expect "$USER $USER .* $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 12 .* projects.list"
 
         name "add one more repo"
         runlocal git ls-remote u1:bar/u1/try2
         runremote ls -al $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok"
+        expect "$USER $USER .* $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 12 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -63,8 +63,8 @@ do
             bar/u1/try3 = \"this is bar/u1/try3\"
         " | ugc
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 16 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 28 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 16 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 28 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -77,10 +77,10 @@ do
         name "add try3 project"
         runlocal git ls-remote u1:bar/u1/try3
         runremote ls -al $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok"
+        expect "$USER $USER .* $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 16 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 28 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 16 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 28 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -96,10 +96,10 @@ do
         echo "
         " | ugc
         runremote ls -al $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok"
+        expect "$USER $USER .* $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 32 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 44 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 32 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 44 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -119,8 +119,8 @@ do
         expect "\[gitweb\]"
         expect "owner = owner2"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 48 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 48 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 60 .* projects.list"
         runremote cat projects.list
         expect "bar/u1/try2.git"
 
@@ -131,8 +131,8 @@ do
         " | ugc
         expect_push_ok "master -> master"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 48 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 48 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 60 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -143,8 +143,8 @@ do
         name "add try4 project"
         runlocal git ls-remote u1:bar/u1/try4
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 64 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 76 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 64 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 76 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -188,8 +188,8 @@ do
         runremote ls -al $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok
         expect "ls: cannot access $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok: No such file or directory"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 12 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -200,18 +200,18 @@ do
                 R               =   daemon
         " | ugc
         runremote ls -al $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok"
+        expect "$USER $USER .* $TEST_BASE/bar/u1/try1.git/git-daemon-export-ok"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 12 .* projects.list"
 
         name "add one more repo"
         runlocal git ls-remote u1:bar/u1/try2
         runremote ls -al $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok"
+        expect "$USER $USER .* $TEST_BASE/bar/u1/try2.git/git-daemon-export-ok"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 0 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 12 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 0 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 12 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -224,8 +224,8 @@ do
             bar/u1/try3 = \"this is bar/u1/try3\"
         " | ugc
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 20 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 32 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 20 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 32 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -241,10 +241,10 @@ do
         name "add try3 project"
         runlocal git ls-remote u1:bar/u1/try3
         runremote ls -al $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok"
+        expect "$USER $USER .* $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 20 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 32 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 20 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 32 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -263,10 +263,10 @@ do
         echo "
         " | ugc
         runremote ls -al $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok
-        expect "gitolite-test gitolite-test .* $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok"
+        expect "$USER $USER .* $TEST_BASE/bar/u1/try3.git/git-daemon-export-ok"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 40 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 52 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 40 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 52 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -289,8 +289,8 @@ do
         expect "\[gitweb\]"
         expect "owner = owner2"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 72 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 60 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 72 .* projects.list"
         runremote cat projects.list
         expect "bar%2Fu1%2Ftry2.git"
 
@@ -301,8 +301,8 @@ do
         " | ugc
         expect_push_ok "master -> master"
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 60 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 72 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 60 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 72 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"
@@ -313,8 +313,8 @@ do
         name "add try4 project"
         runlocal git ls-remote u1:bar/u1/try4
         runremote ls -al projects.list
-        [ "$ais" = "0" ] && expect "gitolite-test gitolite-test 80 .* projects.list"
-        [ "$ais" = "1" ] && expect "gitolite-test gitolite-test 92 .* projects.list"
+        [ "$ais" = "0" ] && expect "$USER $USER 80 .* projects.list"
+        [ "$ais" = "1" ] && expect "$USER $USER 92 .* projects.list"
         runremote cat projects.list
         [ "$ais" = "0" ] && notexpect "testing.git"
         [ "$ais" = "1" ] && expect "testing.git"

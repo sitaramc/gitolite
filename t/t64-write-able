@@ -6,10 +6,10 @@ do
     editrc GL_BIG_CONFIG $bc
     editrc GL_WILDREPOS 1
 
-    rm -rf /tmp/glt-adc
-    mkdir  /tmp/glt-adc || die "mkdir /tmp/glt-adc failed"
-    cp ../contrib/adc/* /tmp/glt-adc
-    echo "\$GL_ADC_PATH = '/tmp/glt-adc';" | addrc
+    rm -rf $ADC_PATH
+    mkdir  $ADC_PATH || die "mkdir $ADC_PATH failed"
+    cp ../contrib/adc/* $ADC_PATH
+    echo "\$GL_ADC_PATH = '$ADC_PATH';" | addrc
     runremote rm -f .gitolite.down
 
     # ----------
@@ -59,9 +59,9 @@ do
     expect "disabling following locations with message:"
     expect "first line"
     expect "^second line"
-    expect "/home/gitolite-test"
+    expect "/home/$USER"
     runremote ls -al .gitolite.down
-    expect "^.rw------- 1 gitolite-test gitolite-test .. ... .. ..:.. .gitolite.down"
+    expect "^.rw------- 1 $USER $USER .. ... .. ..:.. .gitolite.down"
 
     name "u1 push foo fail"
     cd ~/td/foo
@@ -85,7 +85,7 @@ do
     runlocal ssh gitolite able en
     expect "give me '@all' or some reponame"
     runlocal ssh gitolite able en @all
-    expect "removed ./home/gitolite-test/.gitolite.down."
+    expect "removed ./home/$USER/.gitolite.down."
     runremote ls -al .gitolite.down
     expect "ls: cannot access .gitolite.down: No such file or directory"
 
@@ -109,7 +109,7 @@ do
     expect "foo down"
     expect "$TEST_BASE/foo.git"
     runremote ls -al $TEST_BASE/foo.git/.gitolite.down
-    expect ".rw------- 1 gitolite-test gitolite-test .* ..:.. $TEST_BASE/foo.git/.gitolite.down"
+    expect ".rw------- 1 $USER $USER .* ..:.. $TEST_BASE/foo.git/.gitolite.down"
 
     name "u1 push foo fail"
     cd ~/td/foo
@@ -137,7 +137,7 @@ do
     expect "bar/u2/r1 down"
     expect "$TEST_BASE/bar/u2/r1.git"
     runremote ls -al $TEST_BASE/bar/u2/r1.git/.gitolite.down
-    expect ".rw------- 1 gitolite-test gitolite-test .. ... .. ..:.. $TEST_BASE/bar/u2/r1.git/.gitolite.down"
+    expect ".rw------- 1 $USER $USER .. ... .. ..:.. $TEST_BASE/bar/u2/r1.git/.gitolite.down"
 
     name "u1 push foo"
     cd ~/td/foo

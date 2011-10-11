@@ -44,7 +44,7 @@ cannot_push() {
 
 has_export_ok() {
     runremote ls -al $TEST_BASE_FULL/$1.git/git-daemon-export-ok
-    expect "gitolite-test gitolite-test .* $TEST_BASE_FULL/$1.git/git-daemon-export-ok"
+    expect "$USER $USER .* $TEST_BASE_FULL/$1.git/git-daemon-export-ok"
 }
 
 does_not_have_export_ok() {
