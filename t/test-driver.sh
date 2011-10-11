@@ -12,29 +12,30 @@ export TESTDIR=$PWD
 export TEST_BASE=$(gl-query-rc REPO_BASE)
 [ -z "$TEST_BASE" ] && { echo TEST_BASE not set >&2; exit 1; }
 TEST_BASE_FULL=$TEST_BASE
-[ "$TEST_BASE" = "repositories" ] && TEST_BASE_FULL=/home/gitolite-test/repositories
+[ "$TEST_BASE" = "repositories" ] && TEST_BASE_FULL=/home/$USER/repositories
 
 testnum=0
 
 # remote local command
 runlocal() { "$@" > ~/1 2> ~/2; }
 # remote run command
-runremote() { ssh gitolite-test@localhost "$@" > ~/1 2> ~/2; }
+runremote() ( cd $HOME; "$@" > ~/1 2> ~/2; )
 # remote list repositories
-listrepos() { ssh gitolite-test@localhost "cd $TEST_BASE; find . -type d -name '*.git'" | sort > ~/1 2> ~/2; }
+listrepos() ( cd $HOME; cd $TEST_BASE; find . -type d -name '*.git' | sort > ~/1 2> ~/2; )
 # remote cat compiled pm
-catconf() { ssh gitolite-test@localhost cat .gitolite/conf/gitolite.conf-compiled.pm > ~/1 2> ~/2; }
+catconf() ( cat ~/.gitolite/conf/gitolite.conf-compiled.pm > ~/1 2> ~/2; )
 catconfs() {
     (
-        ssh gitolite-test@localhost cat .gitolite/conf/gitolite.conf-compiled.pm
-        ssh gitolite-test@localhost "cd $TEST_BASE; find . -name gl-conf | sort"
-        ssh gitolite-test@localhost "cd $TEST_BASE; find . -name gl-conf | sort | xargs cat"
+        cd $HOME
+        cat .gitolite/conf/gitolite.conf-compiled.pm
+        cd $TEST_BASE; find . -name gl-conf | sort
+        cd $TEST_BASE; find . -name gl-conf | sort | xargs cat
     ) > ~/1 2> ~/2
 }
 # remote cat ~/.gitolite.rc
-catrc() { ssh gitolite-test@localhost cat .gitolite.rc > ~/1 2> ~/2; }
+catrc() ( cat ~/.gitolite.rc > ~/1 2> ~/2; )
 # tail gitolite logfile
-taillog() { ssh gitolite-test@localhost tail $1 .gitolite/logs/gitolite-????-??.log > ~/1 2> ~/2; }
+taillog() ( cd $HOME; tail $1 .gitolite/logs/gitolite-????-??.log > ~/1 2> ~/2; )
 hl() {  # highlight function
     normal=`tput sgr0`
     red=`tput sgr0; tput setaf 1; tput bold`
@@ -52,16 +53,12 @@ hl() {  # highlight function
 capture() { cf=$1; shift; "$@" >& $TESTDIR/$cf; }
 
 editrc() {
-    scp gitolite-test@localhost:.gitolite.rc ~/junk >/dev/null
-    perl -pi -e "print STDERR if not /^#/ and /$1\b/ and s/=.*/= $2;/" ~/junk 2> >(sed -e 's/^/# /')
-    scp ~/junk gitolite-test@localhost:.gitolite.rc >/dev/null
+    perl -pi -e "print STDERR if not /^#/ and /$1\b/ and s/=.*/= $2;/" ~/.gitolite.rc 2> >(sed -e 's/^/# /')
 }
 
 addrc() {
-    ssh gitolite-test@localhost cat .gitolite.rc < /dev/null > ~/junk
-    tee -a ~/junk
-    echo '1;' >> ~/junk
-    scp ~/junk gitolite-test@localhost:.gitolite.rc >/dev/null
+    tee -a ~/.gitolite.rc
+    echo '1;' >> ~/.gitolite.rc
 }
 
 ugc ()
