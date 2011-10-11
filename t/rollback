@@ -1,11 +1,8 @@
 #!/bin/bash
 
-export TESTDIR=$PWD
-
-cd
+cd $HOME
 rm -rf gitolite-admin td
-tar xf rollback.tar
+tar xf client-rollback.tar
 mkdir td
 
-scp -q $TESTDIR/rollback.server gitolite-test@localhost:rollback || { echo scp failed; exit 1; }
-ssh gitolite-test@localhost ./rollback $GQT
+$TESTDIR/rollback.server

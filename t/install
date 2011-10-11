@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# note: all the /tmp and /tmp/glrb stuff is for testing with a non-default
+# REPO_BASE.  I don't use it a lot so expect some glitches.  Just ignore it if
+# you're trying to understand this code...
+
+# ----
+
+die() { echo "$@"; exit 1; }
+
+cd ${0%/*}
+
+git rev-parse --show-toplevel || die should run t/install from a clone of gitolite
+export TESTDIR=$PWD
+
+cd $HOME
+# prepare and save local ssh
+mkdir -p .ssh; chmod go-w .ssh
+
+echo -n generating keys...
+for i in tester u1 u2 u3 u4 u5 u6
+do
+    ssh-keygen -q -N "" -f .ssh/$i
+done
+echo done
+
+sed -e "s/gitolite-test/$USER/" < $TESTDIR/keys/config > .ssh/config
+chmod go-w .ssh/config
+
+tar cf .ssh.save .ssh
+
+# blank out the client side
+rm -rf gitolite-admin .ssh
+tar xf .ssh.save
+
+# blank out the server side
+rm -rf .gitolite .gitolite.rc repositories /tmp/glrb bin share
+
+# set up our identity (impacts some tests; don't change this!)
+git config --global user.name "gitolite tester"
+git config --global user.email "tester@example.com"
+
+# install it
+cd gitolite
+git describe --tags --long HEAD > conf/VERSION
+    # in case it is dirty
+src/gl-system-install
+cd $HOME
+gl-setup -q .ssh/tester.pub
+
+# add 6 keys
+rm -rf ~/gitolite-admin
+git clone gitolite:gitolite-admin
+cd gitolite-admin
+cp ~/.ssh/u*.pub keydir
+git add keydir; git commit -m 'added 6 keys'
+git push
+
+# make the rollback.tar files on both sides
+cd $HOME
+tar cf client-rollback.tar gitolite-admin
+mkdir -p repositories /tmp/glrb
+tar cf server-rollback.tar .ssh .gitolite .gitolite.rc repositories bin share
+tar -C /tmp -cf $HOME/server-rollback2.tar glrb

@@ -1,10 +1,15 @@
 #!/bin/bash
 
+# are we in the right place
+cd ${0%/*}
+git rev-parse --show-toplevel || die should run t/test-driver.sh from a clone of gitolite
+export TESTDIR=$PWD
+
 # see some sample tests for how to use these functions; there is no
 # documentation
 
 # REPO_BASE has 2 manifestations in the output of various commands
-export TEST_BASE=$(perl -e 'do "../conf/example.gitolite.rc"; print $REPO_BASE')
+export TEST_BASE=$(gl-query-rc REPO_BASE)
 [ -z "$TEST_BASE" ] && { echo TEST_BASE not set >&2; exit 1; }
 TEST_BASE_FULL=$TEST_BASE
 [ "$TEST_BASE" = "repositories" ] && TEST_BASE_FULL=/home/gitolite-test/repositories
