@@ -87,6 +87,11 @@ Here's an example snippet:
         RW  =   WRITERS @TAs
         R   =   READERS @prof
 
+Note the "C" permission.  This is a standalone "C", which gives the named
+users the right to *create a repo*.  <font color="gray">This is not to be
+confused with the "RWC" or its variants described elsewhere, which are about
+*branches*, not *repos*.</font>
+
 For now, ignore the special usernames READERS and WRITERS, and just create a
 new repo, as user "u4" (a student):
 
@@ -204,9 +209,11 @@ use 'getperms' to check:
 
 The following points are important:
 
-  * note the syntax of the commands; it's not a "git" command, and there's no
-    `:` like in a repo URL.  The first space-separated word is READERS or
-    WRITERS, and the rest are simple usernames.
+  * note the syntax of the command; it's not a "git" command, and there's no
+    `:` like in a repo URL.
+  * for the actual text being sent in via STDIN, the first space-separated
+    word is the role (in this example, READERS or WRITERS), and the rest
+    are simple usernames.
 
 <a name="_admin_adding_other_roles_than_READERS_and_WRITERS"></a>
 

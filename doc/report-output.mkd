@@ -33,21 +33,21 @@ Here is a sample output of the info command.  There are 3 columns of
 permissions (create, read, and write) in the output, although the first column
 is often blank.
 
-        $ ssh git@server info
-        hello sitaram, the gitolite version here is v1.5.5-24-g2b066fc
-        the gitolite config gives you the following access:
-             R   W 	SecureBrowse
-             R   W 	anu-wsd
-             R   W 	entrans
-            @R   W 	git-notes
-            @R   W 	gitolite
-             R   W 	gitolite-admin
-             R   W 	indic_web_input
-         @C  R   W 	private/sitaram/[\w.-]+
-             R   W 	proxy
-         @C @R   W 	public/sitaram/[\w.-]+
-            @R_ @W_	testing
-             R   W 	vkc
+    $ ssh git@server info
+    hello sitaram, this is gitolite v2.1-29-g5a125fa running on git 1.7.4.4
+    the gitolite config gives you the following access:
+         R     	SecureBrowse
+         R   W 	anu-wsd
+         R   W 	entrans
+        @R   W 	git-notes
+        @R   W 	gitolite
+         R   W 	gitolite-admin
+         R   W 	indic_web_input
+     @C  R   W 	private/sitaram/[\w.-]+
+         R   W 	proxy
+     @C @R   W 	public/sitaram/[\w.-]+
+        @R_ @W_	testing
+         R   W 	vkc
 
 <a name="_interpreting_the_output"></a>
 
@@ -80,17 +80,17 @@ to one of the `@all` uses), but no explicit access.
 
 Here are a couple of samples with optional patterns:
 
-        $ ssh git@server info git
-        hello sitaram, the gitolite version here is v1.5.5-24-g2b066fc
-        the gitolite config gives you the following access:
-            @R   W 	git-notes
-            @R   W 	gitolite
-             R   W 	gitolite-admin
+    $ ssh git@server info git
+    hello sitaram, this is gitolite v2.1-29-g5a125fa running on git 1.7.4.4
+    the gitolite config gives you the following access:
+        @R   W 	git-notes
+        @R   W 	gitolite
+         R   W 	gitolite-admin
 
-        $ ssh git@server info admin
-        hello sitaram, the gitolite version here is v1.5.5-24-g2b066fc
-        the gitolite config gives you the following access:
-             R   W 	gitolite-admin
+    $ ssh git@server info admin
+    hello sitaram, this is gitolite v2.1-29-g5a125fa running on git 1.7.4.4
+    the gitolite config gives you the following access:
+         R   W 	gitolite-admin
 
 In "big-config" mode (i.e., when `GL_BIG_CONFIG` is set) the pattern is
 **mandatory**.  You can try and cheat the system by passing in a "." but

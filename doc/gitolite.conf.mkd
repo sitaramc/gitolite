@@ -306,9 +306,9 @@ We'll look at the delete/rewind case in detail first:
   * if, however, *any* of the rules for a repo contains a `D` (example: `RWD`,
     `RW+D`, etc) then `RW+` by itself will permit only a rewind, not a delete
 
-The same thing applies to create/push, where if you have a permissions like
-`RWC` or `RW+C` anywhere, a simple `RW` or `RW+` can no longer *create* a new
-ref.
+The same thing applies to create/push, where if you have permissions like
+`RWC` or `RW+C` anywhere in that repo, a simple `RW` or `RW+` can no longer
+*create* a new ref.
 
 You can combine the `C` and `D` also.  Thus, the set of permissions you now
 know about are, in regex syntax: `R|RW+?C?D?`.  See a later section for the
@@ -596,17 +596,5 @@ later to override the generic settings.
 #### repo owner/description line for gitweb
 
 You can include owner/description information in the conf file, and gitolite
-will put it in places where gitweb will pick it up.  For example, suppose this
-software (gitolite) itself was being hosted on a gitolite server and intended
-to be shown on gitweb, I'd use a line like this:
-
-    gitolite "Sitaram Chamarty" = "fast, secure, access control for git"
-
-The general syntax is very simple, just use one of:
-
-    reponame = "some description string in double quotes"
-    reponame "owner name" = "some description string in double quotes"
-
-Note: setting a description also gives gitweb access; you do not have to give
-gitweb access explicitly (as described or linked above) if you're specifying a
-description.
+will put it in places where gitweb will pick it up.  See [here][gwd] for more
+on this.

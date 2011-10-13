@@ -294,18 +294,6 @@ on feedback from my users to find or fix issues.
     does *not* include the special users "gitweb" and "daemon".  If you want
     @all to include these two users, set this variable.
 
-  * mirroring setup
-
-    These two variables enable mirroring support; see
-    [doc/mirroring.mkd][mirr] for details.  The two variables are
-    `$GL_SLAVE_MODE`, (boolean, default undef), and `$ENV{GL_SLAVES}`,
-    (environment variable, string, default undef)
-
-    Note on the second variable above: you must use single quotes to give it
-    its value, not double quotes, (like `$ENV{GL_SLAVES} = 'gitolite@server2
-    gitolite@server3';`).  Also note that this is an environment variable, not
-    a regular perl variable, so mind the syntax if you're not a perl guy :-)
-
   * `$GL_WILDREPOS_PERM_CATS`, string, default "READERS WRITERS"
 
     Originally, we only allowed "R" and "RW" in the setperms command.  Now we

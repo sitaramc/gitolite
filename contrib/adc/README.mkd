@@ -25,7 +25,7 @@ this ADC are [here][dbsha]; details on RWC/RWD/RWCD etc are [here][rwcd].
 sample of how to write an ADC in perl.
 
 **git-annex-shell**: allows git-annex to store and retrieve annexed file content in
-repositories. To use, install in $GL_ADC_PATH/ua/git-annex-shell
+repositories. To use, install in `$GL_ADC_PATH/ua/git-annex-shell`
 
 **gl-reflog**: show a fake "reflog" from the server, and allow recovery from
 deleted branches and bad force pushes; details in source.
@@ -44,12 +44,6 @@ itself.  This ADC displays site-local help, if the site admin enabled it.
 >   two families of repo deletion commands; details [here][rddoc]
 
 [rddoc]: http://sitaramc.github.com/gitolite/contrib/adc/repo-deletion.html
-
-**restrict-admin**: sample program to show how you can allow the admin to run
-pre-specified shell commands (without actually having full shell access).
-Details [here][ra].
-
-[ra]: http://sitaramc.github.com/gitolite/doc/admin-defined-commands.html#_bonus_restricted_admin
 
 **sudo**: allow admin to run ADCs on behalf of a user.  Useful in support
 situations I guess.  Details in source.

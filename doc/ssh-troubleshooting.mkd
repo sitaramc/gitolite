@@ -207,7 +207,7 @@ single key to allow both gitolite access *and* shell access.
 This is done by copying the pubkey (to which you want to give shell access) to
 the server and running
 
-    gl-tool shell-add ~/foo.pub
+    gl-tool add-shell-user ~/foo.pub
 
 **IMPORTANT UPGRADE NOTE**: previous implementations of this feature were
 crap.  There was no easy/elegant way to ensure that someone who had repo admin

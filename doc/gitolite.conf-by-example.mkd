@@ -63,12 +63,11 @@ end of the string respectively.
     ^foo$   matches exact string 'foo'.
 
 To be precise, the last one is "any string starting and ending with *the same*
-'foo'".  (Without the italicised phrase, it could mean "foofoo" would also
-match, but it doesn't).
+'foo'".  "foofoo" does not match.
 
-`[0-9]` is an example of a character class; this one matches any single digit.
-`[a-z]` matches any lower case alpha.  For example, `[0-9a-f]` is the range of
-hex characters.  You can guess what `[a-zA-Z0-9_]` does, then.
+`[0-9]` is an example of a character class; it matches any single digit.
+`[a-z]` matches any lower case alpha, and `[0-9a-f]` is the range of hex
+characters.  You should now guess what `[a-zA-Z0-9_]` does.
 
 `.` (the period) is special -- it matches any character.  If you want to match
 an actual period, you need to say `\.`.
@@ -107,11 +106,11 @@ branch or tag on it.
 Wally can only read the repo.  Alice and Ashok can push but not rewind; only
 Sitaram and Dilbert can do that.
 
-            R master    =   wally       # MEANINGLESS!  WONT DO WHAT YOU THINK IT DOES!!
+            R master    =   wally       # MEANINGLESS!  WILL NOT DO WHAT YOU THINK IT DOES!!
 
-This won't work.  You can only restrict "read" access at the repo level not
-the branch level.  This is a git issue, not a gitolite issue.  Go bother them,
-or switch to gerrit.
+This won't work.  You can only restrict "read" access at the repo level, not
+at the branch level.  This is a git issue, not a gitolite issue.  Go bother
+them, or switch to gerrit.
 
     repo    foo
             RW      master$             =   dilbert alice
@@ -119,9 +118,10 @@ or switch to gerrit.
             RW      refs/heads/master$  =   dilbert alice
 
 The reason for treating "master$" as "refs/heads/master$" is that  matching
-branches is the most common use so we made it convenient to use.  Anything
-*not* starting with `refs/` (or `NAME/`, but that is out of scope of this
-document), is implicitly prefixed with `refs/heads/`).
+branches is the most common use so the syntax is optimised to make that
+simpler to write and easier to read.  Anything *not* starting with `refs/`
+(<font color="gray">or `NAME/`, but that is out of scope for this
+document</font>), is implicitly prefixed with `refs/heads/`.
 
 The `master$` is called a "refex" (a regex that matches a ref).
 
@@ -129,9 +129,13 @@ Dilbert and Alice can push to the "master" branch.  Unless some other rule
 allows it, they cannot push to, say, "master1", "masterfull" etc., due to the
 `$` at the end of the refex.
 
-This rule does not match "headmaster"; refexes are treated as if they have a
-`^` at the start.  (This means `^refs/heads/master` in this case, not
-`^master`, in case you forgot!)
+Refexes are *prefix matched*; i.e., treated as if they have a `^` at the
+start.  (This means `^refs/heads/master` in this case, not `^master`, in case
+you forgot!)
+
+This rule therefore does not match "headmaster", or even
+"refs/heads/refs/heads/master" (<font color="gray">yes, it is possible to
+confuse yourself by pushing a branch like that in git</font>).
 
             RW+     pu                  =   dilbert
             # again, remember this is equivalent to:
@@ -181,8 +185,8 @@ earlier.
 
   * for non-version tags, only the 3rd rule matches, so anyone on staff can
     push them
-  * for version tags by bruce, the first rule matches so he can push them
-  * for version tags by staffers *other than bruce*, the second rule matches
+  * for version tags by ashok, the first rule matches so he can push them
+  * for version tags by staffers *other than ashok*, the second rule matches
     before the third one, and it has a `-` as the permission, so the push
     fails
 

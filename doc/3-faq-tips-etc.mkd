@@ -430,8 +430,8 @@ Although gitweb is a completely separate program, gitolite can do quite a
 lot to help you manage gitweb access as well; once the initial setup is
 complete, you can do it all from within the gitolite config file!
 
-If you just want gitweb to show some repositories, see [gwd] for how to
-specify which repos to show.  Other advanced uses are described here.
+If you just want gitweb to show some repositories, see [here][gwd] for how to
+specify which repos to show.
 
 [gwd]: http://sitaramc.github.com/gitolite/doc/2-admin.html#gwd
 
