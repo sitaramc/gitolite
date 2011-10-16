@@ -1,0 +1,64 @@
+#!/usr/bin/perl
+# This ADC requires unrestricted arguments, so you either need to
+# install it into $GL_ADC_PATH/ua/git-annex-shell (once gitolite
+# has that feature), or disable gitolite's ADC safety net by configuring
+# $ADC_CMD_ARGS_PATT=".*"
+#
+# This requires git-annex version 20111016 or newer. Older versions won't
+# be secure.
+
+use strict;
+use warnings;
+
+# pull in modules we need
+BEGIN {
+	die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+	die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+	unshift @INC, $ENV{GL_BINDIR};
+}
+use gitolite_rc;
+use gitolite;
+
+# ignore @ARGV and look at the original unmodified command
+my $cmd=$ENV{SSH_ORIGINAL_COMMAND};
+
+# Expect commands like:
+#   git-annex-shell 'configlist' '/~/repo'
+#   git-annex-shell 'sendkey' '/~/repo' 'key'
+# The parameters are always single quoted, and the repo path is always
+# the second parameter.
+# Further parameters are not validated here (see below).
+die "bad git-annex-shell command: $cmd"
+    unless $cmd =~ m#^(git-annex-shell '\w+' ')/\~/([0-9a-zA-Z][0-9a-zA-Z._\@/+-]*)('( .*|))$#;
+my $start = $1;
+my $repo = $2;
+my $end = $3;
+die "I dont like some of the characters in $repo\n" unless $repo =~ $REPONAME_PATT;
+die "I dont like absolute paths in $cmd\n" if $repo =~ /^\//;
+die "I dont like '..' paths in $cmd\n" if $repo =~ /\.\./;
+
+# Modify $cmd, fixing up the path to the repo to include REPO_BASE.
+my $newcmd="$start$REPO_BASE/$repo$end";
+
+# Rather than keeping track of which git-annex-shell commands
+# require write access and which are readonly, we tell it
+# when readonly access is needed.
+my ($perm, $creator) = check_access($repo);
+if ($perm =~ /W/) {
+}
+elsif ($perm =~ /R/) {
+    $ENV{GIT_ANNEX_SHELL_READONLY}=1;
+}
+else {
+    die "$perm $repo $ENV{GL_USER} DENIED\n";
+}
+# Further limit git-annex-shell to safe commands (avoid it passing
+# unknown commands on to git-shell)
+$ENV{GIT_ANNEX_SHELL_LIMITED}=1;
+
+# Note that $newcmd does *not* get evaluated by the unix shell.
+# Instead it is passed as a single parameter to git-annex-shell for
+# it to parse and handle the command. This is why we do not need to
+# fully validate $cmd above.
+log_it();
+exec "git-annex-shell", "-c", $newcmd;

@@ -23,6 +23,9 @@ this ADC are [here][dbsha]; details on RWC/RWD/RWCD etc are [here][rwcd].
 **get-rights-and-owner.in-perl**:  Most of the ADCs are in shell, so this is a
 sample of how to write an ADC in perl.
 
+**git-annex-shell**: allows git-annex to store and retrieve annexed file content in
+repositories. (This ADC requires unrestricted arguments.)
+
 **gl-reflog**: show a fake "reflog" from the server, and allow recovery from
 deleted branches and bad force pushes; details in source.
 
