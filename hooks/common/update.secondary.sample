@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # driver script to run multiple update "hooklets".  Each "hooklet" performs a
 # specific (possibly site-local) check, and they *all* have to succeed for the

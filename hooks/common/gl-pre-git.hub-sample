@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # sample pre-git hook to print pending hub requests
 

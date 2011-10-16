@@ -9,7 +9,7 @@
 # if list of slaves not given, get it from '...slaves' config
 
 die() { echo gl-mirror-push${hn:+ on $hn}: "$@" >&2; exit 1; }
-get_rc_val() { ${0%/*}/gl-query-rc $1; }
+get_rc_val() { `dirname $0`/gl-query-rc $1; }
 
 # ----------
 

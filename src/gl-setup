@@ -21,7 +21,7 @@ GL_PACKAGE_CONF=/tmp/share/gitolite/conf
 die() { echo "$@"; exit 1; } >&2
 
 get_rc_val() {
-    ${0%/*}/gl-query-rc $1
+    `dirname $0`/gl-query-rc $1
 }
 
 TEMPDIR=`mktemp -d -t tmp.XXXXXXXXXX`
