@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+
+# 'rsync' helper ADC.  See bottom of this file for more info
+
+use strict;
+use warnings;
+
+BEGIN {
+    die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+    die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+    unshift @INC, $ENV{GL_BINDIR};
+}
+use gitolite_rc;
+use gitolite;
+
+my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
+
+# test the command patterns; reject if they don't fit.  Rsync sends
+# commands that looks like one of these to the server (the first one is
+# for a read, the second for a write)
+#   rsync --server --sender -some.flags . some/path
+#   rsync --server -some.flags . some/path
+
+die "bad rsync command: $cmd"
+    unless $cmd =~ /^rsync --server( --sender)? -[\w.]+(?: --(?:delete|partial))* \. (\S+)$/;
+my $perm = "W";
+$perm = "R" if $1;
+my $path = $2;
+die "I dont like some of the characters in $path\n" unless $path =~ $REPONAME_PATT;
+    # XXX make a better pattern for this if people complain ;-)
+die "I dont like absolute paths in $cmd\n" if $path =~ /^\//;
+die "I dont like '..' paths in $cmd\n" if $path =~ /\.\./;
+
+# ok now check if we're permitted to execute a $perm action on $path
+# (taken as a refex) using rsync.
+
+check_access('EXTCMD/rsync', "NAME/$path", $perm);
+    # that should "die" if there's a problem
+
+wrap_chdir($RSYNC_BASE);
+log_it();
+exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND};
+
+__END__
+
+This is an rsync helper ADC.  It is an example of using gitolite's config
+language, combined with the 'check_access()' function, to implement access
+control for non-git software using a "fake" repo.  For historical reasons,
+fake repos start with "EXTCMD/".  Gitolite does not auto-create fake repos, so
+you can use those as namespaces to hold collections of rules for various
+purposes.
+
+So here's a fake git repository to collect rsync rules in one place.  It grant
+permissions to files/dirs within the $RSYNC_BASE tree.  A leading NAME/ is
+required as a prefix; the actual path starts after that.  Matching follows the
+same rules as given in "FILE/DIR NAME BASED RESTRICTIONS" elsewhere in the
+gitolite documentation.
+
+    repo    EXTCMD/rsync
+        RW  NAME/                       =   sitaram
+        RW  NAME/foo/                   =   user1
+        R   NAME/bar/                   =   user2
+        RW  NAME/baz/.*/.*\.c$          =   user3

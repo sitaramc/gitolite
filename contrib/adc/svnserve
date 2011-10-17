@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+BEGIN {
+    die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+    die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+    unshift @INC, $ENV{GL_BINDIR};
+}
+use gitolite_rc;
+use gitolite;
+
+my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
+
+die "expecting 'svnserve -t', got '$cmd'\n" unless $cmd eq 'svnserve -t';
+
+$SVNSERVE =~ s/%u/$ENV{GL_USER}/g;
+exec $SVNSERVE;
+die "svnserve exec failed\n";

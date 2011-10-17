@@ -2,6 +2,11 @@
 cd $TESTDIR
 $TESTDIR/rollback || die "rollback failed"
 
+rm -rf $ADC_PATH
+mkdir  $ADC_PATH || die "mkdir $ADC_PATH failed"
+cp ../contrib/adc/* $ADC_PATH
+echo "\$GL_ADC_PATH = '$ADC_PATH';" | addrc
+
 runremote rm -rf /tmp/rsyncbase
 runremote mkdir  /tmp/rsyncbase
 editrc REPO_UMASK 0022

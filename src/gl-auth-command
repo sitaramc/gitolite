@@ -8,7 +8,6 @@
 # - one env var, SSH_ORIGINAL_COMMAND, containing the command
 # - command typically: git-(receive|upload)-pack 'reponame(.git)?'
 # - special gitolite commands: info, expand, (get|set)(perms|desc)
-# - special non-gitolite commands: rsync, svnserve, htpasswd
 # - other commands: anything in $GL_ADC_PATH if defined (see rc file)
 #
 # (smart) http mode

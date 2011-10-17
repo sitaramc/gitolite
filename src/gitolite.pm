@@ -1160,12 +1160,6 @@ sub special_cmd
             warn("ignoring illegal username $otheruser\n"), next unless $otheruser =~ $USERNAME_PATT;
             report_basic($repo, $otheruser);
         }
-    } elsif ($HTPASSWD_FILE and $cmd eq 'htpasswd') {
-        ext_cmd_htpasswd($HTPASSWD_FILE);
-    } elsif ($RSYNC_BASE and $cmd =~ /^rsync /) {
-        ext_cmd_rsync($GL_CONF_COMPILED, $RSYNC_BASE, $cmd);
-    } elsif ($SVNSERVE and $cmd eq 'svnserve -t') {
-        ext_cmd_svnserve($SVNSERVE);
     } else {
         # if the user is allowed a shell, just run the command
         log_it();
@@ -1208,88 +1202,21 @@ sub shell_out {
 
 sub try_adc {
     my ($cmd, @args) = split ' ', $ENV{SSH_ORIGINAL_COMMAND};
+    die "I don't like $cmd\n" if $cmd =~ /\.\./;
+
+    # try the default (strict arguments) version first
     if (-x "$GL_ADC_PATH/$cmd") {
-        die "I don't like $cmd\n" if $cmd =~ /\.\./;
         # yes this is rather strict, sorry.
         do { die "I don't like $_\n" unless $_ =~ $ADC_CMD_ARGS_PATT and $_ !~ m(\.\./) } for ($cmd, @args);
         log_it("$GL_ADC_PATH/$ENV{SSH_ORIGINAL_COMMAND}");
         exec("$GL_ADC_PATH/$cmd", @args);
     }
-}
 
-# ----------------------------------------------------------------------------
-#       external command helper: rsync
-# ----------------------------------------------------------------------------
-
-sub ext_cmd_rsync
-{
-    my ($GL_CONF_COMPILED, $RSYNC_BASE, $cmd) = @_;
-
-    # test the command patterns; reject if they don't fit.  Rsync sends
-    # commands that looks like one of these to the server (the first one is
-    # for a read, the second for a write)
-    #   rsync --server --sender -some.flags . some/path
-    #   rsync --server -some.flags . some/path
-
-    die "bad rsync command: $cmd"
-        unless $cmd =~ /^rsync --server( --sender)? -[\w.]+(?: --(?:delete|partial))* \. (\S+)$/;
-    my $perm = "W";
-    $perm = "R" if $1;
-    my $path = $2;
-    die "I dont like some of the characters in $path\n" unless $path =~ $REPONAME_PATT;
-        # XXX make a better pattern for this if people complain ;-)
-    die "I dont like absolute paths in $cmd\n" if $path =~ /^\//;
-    die "I dont like '..' paths in $cmd\n" if $path =~ /\.\./;
-
-    # ok now check if we're permitted to execute a $perm action on $path
-    # (taken as a refex) using rsync.
-
-    check_access('EXTCMD/rsync', "NAME/$path", $perm);
-        # that should "die" if there's a problem
-
-    wrap_chdir($RSYNC_BASE);
-    log_it();
-    exec $ENV{SHELL}, "-c", $ENV{SSH_ORIGINAL_COMMAND};
-}
-
-# ----------------------------------------------------------------------------
-#       external command helper: htpasswd
-# ----------------------------------------------------------------------------
-
-sub ext_cmd_htpasswd
-{
-    my $HTPASSWD_FILE = shift;
-
-    die "$HTPASSWD_FILE doesn't exist or is not writable\n" unless -w $HTPASSWD_FILE;
-    $|++;
-    print <<EOFhtp;
-Please type in your new htpasswd at the prompt.  You only have to type it once.
-
-NOTE THAT THE PASSWORD WILL BE ECHOED, so please make sure no one is
-shoulder-surfing, and make sure you clear your screen as well as scrollback
-history after you're done (or close your terminal instance).
-
-EOFhtp
-    print "new htpasswd:";
-
-    my $password = <>;
-    $password =~ s/[\n\r]*$//;
-    die "empty passwords are not allowed\n" unless $password;
-    my $rc = system("htpasswd", "-mb", $HTPASSWD_FILE, $ENV{GL_USER}, $password);
-    die "htpasswd command seems to have failed with $rc return code...\n" if $rc;
-}
-
-# ----------------------------------------------------------------------------
-#       external command helper: svnserve
-# ----------------------------------------------------------------------------
-
-sub ext_cmd_svnserve
-{
-    my $SVNSERVE = shift;
-
-    $SVNSERVE =~ s/%u/$ENV{GL_USER}/g;
-    exec $SVNSERVE;
-    die "svnserve exec failed\n";
+    # now the "ua" (unrestricted/unchecked arguments) version
+    if (-x "$GL_ADC_PATH/ua/$cmd") {
+        log_it("$GL_ADC_PATH/ua/$ENV{SSH_ORIGINAL_COMMAND}");
+        exec("$GL_ADC_PATH/ua/$cmd", @args);
+    }
 }
 
 # ----------------------------------------------------------------------------
