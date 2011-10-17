@@ -34,8 +34,8 @@ die "I dont like '..' paths in $cmd\n" if $path =~ /\.\./;
 # ok now check if we're permitted to execute a $perm action on $path
 # (taken as a refex) using rsync.
 
-check_access('EXTCMD/rsync', "NAME/$path", $perm);
-    # that should "die" if there's a problem
+my $ret = check_access('EXTCMD/rsync', "NAME/$path", $perm, 1);
+die "$perm NAME/$path $ENV{GL_USER} $ret\n" if $ret =~ /DENIED/;
 
 wrap_chdir($RSYNC_BASE);
 log_it();

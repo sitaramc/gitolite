@@ -83,6 +83,6 @@ expect "total size is"
 name "u3 rsync to bar"
 cd ~/gitolite-admin
 runlocal rsync -avP conf u3:bar
-expect "W NAME/bar EXTCMD/rsync u3 DENIED by fallthru"
+expect "W NAME/bar u3 DENIED by fallthru"
 
 name "INTERNAL"
