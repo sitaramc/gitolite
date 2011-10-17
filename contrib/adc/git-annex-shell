@@ -1,8 +1,7 @@
 #!/usr/bin/perl
-# This ADC requires unrestricted arguments, so you either need to
-# install it into $GL_ADC_PATH/ua/git-annex-shell (once gitolite
-# has that feature), or disable gitolite's ADC safety net by configuring
-# $ADC_CMD_ARGS_PATT=".*"
+# This ADC requires unrestricted arguments, so you need to
+# install it into $GL_ADC_PATH/ua/git-annex-shell, instead of
+# directly into $GL_ADC_PATH/
 #
 # This requires git-annex version 20111016 or newer. Older versions won't
 # be secure.

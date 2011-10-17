@@ -24,7 +24,7 @@ this ADC are [here][dbsha]; details on RWC/RWD/RWCD etc are [here][rwcd].
 sample of how to write an ADC in perl.
 
 **git-annex-shell**: allows git-annex to store and retrieve annexed file content in
-repositories. (This ADC requires unrestricted arguments.)
+repositories. To use, install in $GL_ADC_PATH/ua/git-annex-shell
 
 **gl-reflog**: show a fake "reflog" from the server, and allow recovery from
 deleted branches and bad force pushes; details in source.
