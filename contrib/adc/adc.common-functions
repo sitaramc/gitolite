@@ -21,6 +21,7 @@ BASE_FETCH_URL="git://gl.example.com"
 GL_FORKED_FROM="gl-forked-from"
     # KDE may set this to kde-cloned-from for historical reasons
 
+# Change to 1 to make -list the default action for the 'help' command
 HELP_LIST_DEFAULT=0
 
 # ------------------------------------------------------------------------------
