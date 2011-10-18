@@ -92,7 +92,7 @@ do
     name "WRITERS cannot push a tag"
     git tag t2 HEAD^^
     runlocal git push u2:foo/u1/u1r1 t2
-    expect "remote: W refs/tags/t2 u2 DENIED by refs/tags/"
+    expect "remote: W refs/tags/t2 foo/u1/u1r1 u2 DENIED by refs/tags/"
     expect "remote: error: hook declined to update refs/tags/t2"
     expect "\[remote rejected\] t2 -> t2 (hook declined)"
     expect "error: failed to push some refs to 'u2:foo/u1/u1r1'"

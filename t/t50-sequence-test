@@ -89,7 +89,7 @@ do
     cd u2bar
     mdc u2file1
     runlocal git push
-    expect "remote: W refs/heads/master u2 DENIED by refs/.\*"
+    expect "remote: W refs/heads/master foo/u1/bar u2 DENIED by refs/.\*"
 
     name INTERNAL
 done

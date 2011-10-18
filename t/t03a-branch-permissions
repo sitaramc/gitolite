@@ -82,7 +82,7 @@ runlocal git push -f origin master dev foo
 name "u5 push master fail"
 mdc
 runlocal git push u5:aa master
-expect "remote: W refs/heads/master u5 DENIED by refs/heads/master"
+expect "remote: W refs/heads/master aa u5 DENIED by refs/heads/master"
 
 # u5 tries to rewind dev; succeeds
 name "u5 rewind dev succeed"
@@ -175,6 +175,6 @@ expect "\* \[new branch\]      HEAD -> master"
 runlocal git branch v1
 runlocal git push origin v1
 name "deny rules -- push v1 fails"
-expect "remote: W refs/heads/v1 tester DENIED by refs/heads/v\[0-9\]"
+expect "remote: W refs/heads/v1 r2 tester DENIED by refs/heads/v\[0-9\]"
 
 name "INTERNAL"

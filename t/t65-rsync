@@ -55,7 +55,7 @@ expect /tmp/rsyncbase/nitz/conf/gitolite.conf
 name "u2 rsync to spl"
 cd ~/gitolite-admin
 runlocal rsync -avP conf u2:spl
-expect "W NAME/spl u2 DENIED by NAME/spl"
+expect "W NAME/spl EXTCMD/rsync u2 DENIED by NAME/spl"
 
 name "u1 rsync to spl"
 cd ~/gitolite-admin
@@ -66,7 +66,7 @@ expect "total size is"
 name "u2 rsync from spl"
 cd ~/td
 runlocal rsync -avP u2:spl splhere
-expect "R NAME/spl u2 DENIED by NAME/spl"
+expect "R NAME/spl EXTCMD/rsync u2 DENIED by NAME/spl"
 
 name "u1 rsync from spl"
 cd ~/td
@@ -83,6 +83,6 @@ expect "total size is"
 name "u3 rsync to bar"
 cd ~/gitolite-admin
 runlocal rsync -avP conf u3:bar
-expect "W NAME/bar u3 DENIED by fallthru"
+expect "W NAME/bar EXTCMD/rsync u3 DENIED by fallthru"
 
 name "INTERNAL"

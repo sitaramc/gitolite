@@ -45,6 +45,6 @@ mdc ufile; runlocal git push origin master
 expect "To u1:abc"
 expect "master -> master"
 mdc ifile; runlocal git push origin master
-expect "remote: W NAME/ifile u1 DENIED by NAME/i"
+expect "remote: W NAME/ifile abc u1 DENIED by NAME/i"
 
 name INTERNAL

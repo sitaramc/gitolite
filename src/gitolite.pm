@@ -229,14 +229,14 @@ sub check_ref {
         # refex?  sure -- a regex to match a ref against :)
         next unless $ref =~ /^$refex/ or $ref eq 'joker';
             # joker matches any refex; it will only ever be sent internally
-        return "DENIED by $refex" if $ar->[2] eq '-' and $dry_run;
-        die "$perm $ref $ENV{GL_USER} DENIED by $refex\n" if $ar->[2] eq '-';
+        return "$perm $ref $repo $ENV{GL_USER} DENIED by $refex" if $ar->[2] eq '-' and $dry_run;
+        die    "$perm $ref $repo $ENV{GL_USER} DENIED by $refex\n" if $ar->[2] eq '-';
 
         # as far as *this* ref is concerned we're ok
         return $refex if ($ar->[2] =~ /\Q$perm/);
     }
-    return "DENIED by fallthru" if $dry_run;
-    die "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n";
+    return "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru" if $dry_run;
+    die    "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n";
 }
 
 # ----------------------------------------------------------------------------

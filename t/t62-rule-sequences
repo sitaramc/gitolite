@@ -42,7 +42,7 @@ do
     runlocal git reset --hard HEAD^
     mdc r1file4
     runlocal git push origin +br1
-    expect "remote: + refs/heads/br1 u1 DENIED by refs/"
+    expect "remote: + refs/heads/br1 u1/r1 u1 DENIED by refs/"
     expect "remote: error: hook declined to update refs/heads/br1"
 
     name "u1 delete branch"
