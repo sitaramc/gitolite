@@ -27,7 +27,7 @@ my $perm = "W";
 $perm = "R" if $1;
 my $path = $2;
 die "I dont like some of the characters in $path\n" unless $path =~ $REPONAME_PATT;
-    # XXX make a better pattern for this if people complain ;-)
+    # please see notes below on replacing this line if needed
 die "I dont like absolute paths in $cmd\n" if $path =~ /^\//;
 die "I dont like '..' paths in $cmd\n" if $path =~ /\.\./;
 
@@ -50,10 +50,10 @@ fake repos start with "EXTCMD/".  Gitolite does not auto-create fake repos, so
 you can use those as namespaces to hold collections of rules for various
 purposes.
 
-So here's a fake git repository to collect rsync rules in one place.  It grant
-permissions to files/dirs within the $RSYNC_BASE tree.  A leading NAME/ is
-required as a prefix; the actual path starts after that.  Matching follows the
-same rules as given in "FILE/DIR NAME BASED RESTRICTIONS" elsewhere in the
+So here's a fake git repository to collect rsync rules in one place.  It
+grants permissions to files/dirs within the $RSYNC_BASE tree.  A leading NAME/
+is required as a prefix; the actual path starts after that.  Matching follows
+the same rules as given in "FILE/DIR NAME BASED RESTRICTIONS" elsewhere in the
 gitolite documentation.
 
     repo    EXTCMD/rsync
@@ -61,3 +61,16 @@ gitolite documentation.
         RW  NAME/foo/                   =   user1
         R   NAME/bar/                   =   user2
         RW  NAME/baz/.*/.*\.c$          =   user3
+
+Finally, if the filepaths your users are reading/writing have names that fall
+outside ADC_CMD_ARGS_PATT, see the "passing unchecked arguments" section in
+doc/admin-defined-commands.mkd (online at [1]).
+
+[1]: http://sitaramc.github.com/gitolite/doc/admin-defined-commands.html#_passing_unchecked_arguments
+
+If you do this, you will also need to replace the line above (where $path is
+being matched against $REPONAME_PATT) with an equivalent check of your own.
+Remember that whole command is being sent off to be executed by the *SHELL*.
+
+It may be best to split it into arguments and call rsync directly, preventing
+issues with shell metas.  Patches welcome ;-)
