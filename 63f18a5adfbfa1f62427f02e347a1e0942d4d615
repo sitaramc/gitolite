@@ -1,8 +1,8 @@
 Oh I forgot to add that most people won't see this error...
 
 In normal usage, you should only see this error if you have include files in
-your config setup (very few people do) *and* you want to add a new hook on the
-server (for which the only way is to run gl-setup).
+your config setup (very few people do) *and* you run gl-setup for some reason
+(for example to add a new hook on the server).
 
 Even if you cannot upgrade, the workaround for this bug is, after gl-setup
 runs (complaining about included files not found), you immediately make a
