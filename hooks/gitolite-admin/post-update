@@ -1,6 +1,6 @@
 #!/bin/sh
 
-die() { echo "$@"; exit 1; } >&2
+die() { echo "$@" >&2; exit 1; }
 
 [ -z "$GL_RC" ] && die "ENV GL_RC not set"
 [ -z "$GL_BINDIR" ] && die "ENV GL_BINDIR not set"
