@@ -7,20 +7,23 @@ usage() { echo "
     Usage:
         $0 [shared-bin-dir shared-conf-dir shared-hooks-dir]
 
+    Installs the gitolite software (just the software, not keys or repos)
+    within \$HOME when invoked by a user, or system-wide when invoked by root.
+
+    Takes 0 or 3 absolute paths.  The first one must be part of \$PATH.
+
     Examples:
         # as root
         $0
+
         # this defaults to:
         $0 /usr/local/bin /var/gitolite/conf /var/gitolite/hooks
 
         # as a normal user
         $0
-        # this defaults to:
-        $0 $HOME/bin $HOME/share/gitolite/conf $HOME/share/gitolite/hooks
 
-    In this example, all the binaries go to /usr/local/bin, and the shared
-    conf and hooks files/directories go to the other 2 directories given.  All
-    the 3 paths supplied MUST be absolute.
+        # this defaults to:
+        $0 \$HOME/bin \$HOME/share/gitolite/conf \$HOME/share/gitolite/hooks
 
     [RPM packagers: you can supply a 4th argument to specify a 'buildroot'
     directory.  DEB folks would call this a 'DESTDIR', I believe.  In this
@@ -29,7 +32,9 @@ usage() { echo "
     exit 1;
 }
 
-die() { echo "$@" >&2; echo >&2; usage >&2; exit 1; }
+die() { echo >&2; echo "$@" >&2; echo >&2; echo Run "$0 -h" for a detailed usage message. >&2; exit 1; }
+
+[ "$1" = "-h" ] && usage
 
 validate_dir() {
     echo $1 | grep '^/' >/dev/null || die "$1 should be an absolute path"
@@ -52,7 +57,7 @@ buildroot=$4;
     else
         set $HOME/bin $HOME/share/gitolite/conf $HOME/share/gitolite/hooks
     fi
-    echo "using default value for EUID=$euid:" >&2
+    echo "using default values for EUID=$euid:" >&2
     echo "$@" >&2
 }
 
@@ -83,3 +88,28 @@ perl -lpi \
         $buildroot$gl_conf_dir/example.gitolite.rc
 
 cp -R hooks/* $buildroot$gl_hooks_dir || die "cp hooks/* to $buildroot$gl_hooks_dir failed"
+
+# ----
+
+# check if $gl_bin_dir is in $PATH and advise the user if needed
+which=`which gl-setup 2>/dev/null`
+
+path_advice="
+Since gl-setup MUST be run from the PATH (and not as src/gl-setup or such),
+you must fix this before running gl-setup.  The simplest way is to add
+
+    PATH=$gl_bin_dir:\$PATH
+
+to the end of your bashrc or similar file.  You can even simply run that
+command manually each time you log in and want to run a gitolite command."
+
+[ -z "$which" ] && die "                ***** WARNING *****
+gl-setup is not in your \$PATH.
+$path_advice"
+
+which=`dirname $which`
+[ "$which" != "$gl_bin_dir" ] && die "                ***** WARNING *****
+$which precedes $gl_bin_dir in your \$PATH,
+and it *also* contains gl-setup.  This is almost certainly going to confuse
+you or me later.
+$path_advice"
