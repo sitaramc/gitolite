@@ -48,8 +48,6 @@ use Data::Dumper;
 $Data::Dumper::Deepcopy = 1;
 $|++;
 
-use CGI::Util qw(escape);
-
 # ----------------------------------------------------------------------------
 #       find the rc file, then pull the libraries
 # ----------------------------------------------------------------------------
@@ -79,6 +77,9 @@ BEGIN {
 
 use lib $ENV{GL_BINDIR};
 use gitolite_rc;
+
+# silently disable URI escaping if the module is not found
+$GITWEB_URI_ESCAPE &&= eval "use CGI::Util qw(escape); 1";
 
 # ----------------------------------------------------------------------------
 #       the big data structures we care about
