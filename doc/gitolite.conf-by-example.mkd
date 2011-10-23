@@ -1,0 +1,238 @@
+# gitolite.conf -- by example
+
+I hate people who make statements like "I dont have time to learn".  People
+with that sort of attitude shouldn't use gitolite at all, and I refuse to
+spoon-feed them or be their personal tutor.
+
+However, it's possible that even with the right attitude and willingness to
+learn, some people just get a mental block about something, and so I figure
+this might help.
+
+(Side note: followup questions not welcome from people in the former category;
+you know who you are).
+
+**WARNING 1**: in case of conflict between this document and reality, reality
+wins.  For conflict between this document and the [main document][conf], the
+main document wins.  In any case, please bring such issues to my notice.
+
+**WARNING 2**: this document has examples only for the most commonly used
+features.  If you don't find a feature here, look in the main document before
+asking me.
+
+**WARNING 3**: Read the WHOLE document.  I can't keep saying, for instance,
+that "rewind" actually means any of 3 different things so I'll say it only
+once.  It's upto you to have read that part also.
+
+[conf]: http://sitaramc.github.com/gitolite/doc/gitolite.conf.html
+
+----
+
+[[TOC]]
+
+----
+
+### general notes
+
+Git branch/tag name **recap**: branches look like refs/heads/something, tags
+look like refs/tags/something.  When there is no ambiguity, we leave out the
+refs/heads/ and the refs/tags/.
+
+A "rewind" means any of 3 things: force-push a branch (make it go backward,
+using 'git push -f' or equivalent), delete a branch, or update a tag.  The
+first two are clearly information-losing operations so it is wise to require
+special rights to do them.  The third is in the same category because tags are
+supposed to be "write once" so **re**-writing a tag is considered abnormal.
+
+These examples are only for the more complex parts of the conf file.  We're
+not going to discuss things like what characters are allowed in a username or
+reponame, how to write a comment line, how to write continuation lines (you
+can't), include files, and all such *lexical* issues.
+
+### extremely brief regex overview
+
+Regexes are powerful.  Gitolite uses that power as much as it can.  If you
+can't handle that power, hire someone who can and become a manager.
+
+That said, here's a very quick overview of the highlights.
+
+`^` and `$` are called "anchors".  They anchor the match to the beginning and
+end of the string respectively.
+
+    ^foo    matches any string starting with 'foo'
+    foo$    matches any string ending with 'foo'
+    ^foo$   matches exact string 'foo'.
+
+To be precise, the last one is "any string starting and ending with *the same*
+'foo'".  (Without the italicised phrase, it could mean "foofoo" would also
+match, but it doesn't).
+
+`[0-9]` is an example of a character class; this one matches any single digit.
+`[a-z]` matches any lower case alpha.  For example, `[0-9a-f]` is the range of
+hex characters.  You can guess what `[a-zA-Z0-9_]` does, then.
+
+`.` (the period) is special -- it matches any character.  If you want to match
+an actual period, you need to say `\.`.
+
+`*`, `?`, and `+` are quantifiers.  They apply to the previous token.  `a*`
+means "zero or more 'a' characters".  Similarly `a+` means "one or more", and
+`a?` means "zero or one".
+
+As a result, `.*` means "any number (including zero) of any character".
+
+The previous token need not be a single character; you can use parens to make
+it longer.  `(foo)+` matches one or more "foo", (like "foo", "foofoo",
+"foofoofoo", etc.)
+
+### basic access control
+
+    repo    gitolite-admin
+            RW+                 =   sitaram
+            # this is equivalent to:
+            RW+     refs/.*     =   sitaram
+
+Sitaram is the only admin.  He can push, create, delete, or rewind any branch
+or tag in the gitolite-admin repo.
+
+    repo    testing
+            RW+     =   @all
+
+The 'testing' repo is a play area for everyone.  Anyone can do anything to any
+branch or tag on it.
+
+    repo    foo
+            RW+     =   sitaram dilbert
+            RW      =   alice ashok
+            R       =   wally
+
+Wally can only read the repo.  Alice and Ashok can push but not rewind; only
+Sitaram and Dilbert can do that.
+
+            R master    =   wally       # MEANINGLESS!  WONT DO WHAT YOU THINK IT DOES!!
+
+This won't work.  You can only restrict "read" access at the repo level not
+the branch level.  This is a git issue, not a gitolite issue.  Go bother them,
+or switch to gerrit.
+
+    repo    foo
+            RW      master$             =   dilbert alice
+            # this is equivalent to:
+            RW      refs/heads/master$  =   dilbert alice
+
+The reason for treating "master$" as "refs/heads/master$" is that  matching
+branches is the most common use so we made it convenient to use.  Anything
+*not* starting with `refs/` (or `NAME/`, but that is out of scope of this
+document), is implicitly prefixed with `refs/heads/`).
+
+The `master$` is called a "refex" (a regex that matches a ref).
+
+Dilbert and Alice can push to the "master" branch.  Unless some other rule
+allows it, they cannot push to, say, "master1", "masterfull" etc., due to the
+`$` at the end of the refex.
+
+This rule does not match "headmaster"; refexes are treated as if they have a
+`^` at the start.  (This means `^refs/heads/master` in this case, not
+`^master`, in case you forgot!)
+
+            RW+     pu                  =   dilbert
+            # again, remember this is equivalent to:
+            RW+     refs/heads/pu       =   dilbert
+
+Dilbert can push any branch whose name starts with "pu".  This includes "pu1",
+"pupu", "pu/up", and so on, not just "pu".  This is because there is no `$` at
+the end.
+
+            RW      junk/               =   wally
+
+Wally can push any branch under "junk/", which means "junk/foo", "junk/bar",
+are ok but not "junk1" or even "junk".
+
+            RW      tmp/                =   @all
+
+Similar to above, but for *any* authenticated user.
+
+            RW      refs/tags/v[0-9]    =   ashok   # the QA guy
+
+Ashok is allowed to push version tags.  He can push any tag whose name starts
+with a "v", then a digit, like "v1", "v1.0", "v2.0rc1", etc., but not "v-1",
+"ver1".
+
+### advanced access control
+
+#### "deny" rules
+
+**Warning**: When using deny rules, the order of your rules matters, where
+earlier it did not.
+
+PROCESSING LOGIC:
+
+>   The first matching refex that has the permission you're looking for (`W`
+>   or `+`) **or a minus (`-`)**, results in success **or failure,
+>   respectively**.  A fallthrough **also** results in failure.
+
+        RW refs/tags/v[0-9]     = ashok
+        -  refs/tags/v[0-9]     = @staff
+        RW refs/tags            = @staff
+
+This allows only Ashok to write "version tags" (see rule for Ashok the QA guy
+somewhere above).  The others can write any tags they want, *except* version
+tags.  To understand this, try and match each rule *in sequence* with the name
+of the tag being pushed, and the user doing it, applying the logic described
+earlier.
+
+  * for non-version tags, only the 3rd rule matches, so anyone on staff can
+    push them
+  * for version tags by bruce, the first rule matches so he can push them
+  * for version tags by staffers *other than bruce*, the second rule matches
+    before the third one, and it has a `-` as the permission, so the push
+    fails
+
+#### personal branches
+
+Personal branches exist **in a namespace** of their own.  The syntax is
+
+        RW  personal/USER/  =   @staff
+
+where the "personal" can be anything you like (but cannot be empty), and the
+"/USER/" part is **necessary**.  A user "alice" can then push any branches
+inside `personal/alice/`.  Which means she can push `personal/alice/foo` and
+`personal/alice/bar`, but NOT `personal/alice`.
+
+#### splitting up rules into rulesets
+
+Rules accumulate.  Even when separated by rules for other repos.  They
+accumulate intuitively.  For example:
+
+    repo foo
+        RW+             =   alice
+
+    repo bar
+        RW+             =   dilbert
+
+    repo @all
+        RW  dev/USER/   =   @staff
+
+    repo foo
+        RW+ tmp/        =   @staff
+
+has the **effective** ruleset, for repo foo, of
+
+    repo foo
+        RW+             =   alice
+        RW  dev/USER/   =   @staff
+        RW+ tmp/        =   @staff
+
+Just remember that if you use [deny rules][dr] anywhere then the *order of the
+rules matters*!
+
+[dr]: http://sitaramc.github.com/gitolite/doc/gitolite.conf.html#_deny_rules
+
+#### gitweb and daemon
+
+Gitolite does NOT do anything for gitweb and daemon access **except**
+
+  * for daemon, create the file `git-daemon-export-ok` in the repository
+  * for gitweb, add the repo (plus owner name, if given) to the list of
+    projects to be served by gitweb (see the config file variable
+    `$PROJECTS_LIST`, which should have the same value you specified for
+    `$projects_list` when setting up gitweb)
+  * put the description, if given, in `$repo/description`
