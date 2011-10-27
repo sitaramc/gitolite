@@ -1,0 +1,287 @@
+# ...not a gitolite problem!
+
+Subtitle: Unix, ssh, git, and gitolite -- recognising the boundaries
+
+**Warning**: Most of this is technical, but some of it is definitely
+subjective opinion.
+
+----
+
+In this document:
+
+  * <a href="#_background">background</a>
+  * <a href="#_ssh">ssh</a>
+  * <a href="#_git">git</a>
+  * <a href="#_windows">windows</a>
+  * <a href="#_apple">apple</a>
+  * <a href="#_just_say_NO_">just say NO!</a>
+      * <a href="#_behind_my_back">behind my back</a>
+  * <a href="#_that_s_outrageous">that's outrageous</a>
+
+----
+
+<a name="_background"></a>
+
+### background
+
+More and more people are being tasked with creating a "server" environment for
+git, (and thus being forcibly introduced to gitolite), before they've had a
+chance to know git (or even Unix) well enough.  As a result, I often get
+questions that have **nothing** to do with gitolite, because people don't know
+where the boundaries are.
+
+Here're some facts about gitolite:
+
+  * gitolite runs on the server.  To the client it looks just like any other
+    ssh-based URL that is using public keys.
+
+  * once you connect, it looks just like any other [bare repo][bare] on a
+    server for normal git operations (clone, fetch, push).  Users won't even
+    *know* it exists if they do only what they're allowed to.  (I.e., it
+    becomes visible only when it has to deny access for some operation)
+
+  * even "on disk", except for reserving the `update` hook for its own
+    purposes and possibly a couple of extra files, the contents of a
+    gitolite-managed bare repo are the same as a normal bare repo.
+
+A good short term measure is to read this [simple git session][sgs] for
+insights into the relationship between the "server" and the "client" in git.
+That might help with some of the problems described in this document.
+
+[bare]: http://sitaramc.github.com/concepts/0-terminology.html#working_tree_repository_bare_repository
+[sgs]: http://sitaramc.github.com/1-basic-usage/simple-git-session.html
+
+<a name="_ssh"></a>
+
+### ssh
+
+Let's get this out of the way first.  The *superstar* of the "not a gitolite
+problem" category is actually ssh.
+
+Surprised?  It is so common that it has [its own document][aa] to tell you why
+it is *not* a gitolite problem, while [another one][sts] tries to help you
+anyway!
+
+[aa]: http://sitaramc.github.com/gitolite/doc/authentication-vs-authorisation.html
+[sts]: http://sitaramc.github.com/gitolite/doc/ssh-troubleshooting.html
+[hc]: http://sitaramc.github.com/gitolite/doc/2-admin.html#_hook_chaining
+
+<a name="_git"></a>
+
+### git
+
+  * first push to a new repo
+
+    Even if the error message said "the remote end hung up unexpectedly", this
+    is not a gitolite problem.  If you read the full message, it will probably
+    be something like this:
+
+        No refs in common and none specified; doing nothing.
+        Perhaps you should specify a branch such as 'master'.
+        fatal: The remote end hung up unexpectedly
+        error: failed to push some refs to '/tmp/tmp-repos/bare.git'
+
+    (To be fair, this message is still not clear enough; even a careful reader
+    might end up trying `git push master` instead of `git push origin
+    master`.)
+
+  * client-side versus server-side hooks
+
+    Just because you saw something in gitolite's docs about hooks, it doesn't
+    mean gitolite can make a "post-checkout" hook work!
+
+    You need to read man githooks again to understand the difference between
+    hooks that run on your local repo in response to local commands (like
+    commit, checkout), and remote hooks that run on the server in response to
+    a client-initiated operation (like push).
+
+    An equally wrong expectation is that a clone or a pull will also bring
+    along hooks from the server!  Sorry, but there is nothing in git that
+    allows the *server* to do something on the *client* -- if there were, it
+    would be a huge security issue.
+
+    What you can do in gitolite is to write yourself a hook that checks every
+    commit in a push for compliance and rejects the push (*all* the commits in
+    the push, mind!) if it doesn't comply.  However, other than telling you
+    how to get your hook to trigger, the actual code in that hook is out of
+    scope for me.
+
+  * Jenkins integration
+
+    I don't know much about CI systems, but I'm pretty sure they run off of
+    some hook or other, but gitolite may already be using those hooks.  The
+    section on hook chaining [here][hc] shows you how to run your own hooks.
+
+    In short, CI integration is no more a gitolite problem than any other
+    purpose for which git's hooks can be used.
+
+<a name="_windows"></a>
+
+### windows
+
+I'm *interested* in making sure it works fine with Windows, simply because I
+have colleagues at work who use it.  But that doesn't mean I can help you; I
+just don't know enough to help you.  (And if you even breathe the words
+"putty" or "plink" I will totally tune you out!)
+
+I do have people using it happily on Windows with Eclipse, Visual Studio, and
+God alone knows what else, so I know it *can* (be made to) work.
+
+So, hang in there... it'll all work out eventually.
+
+<a name="_apple"></a>
+
+### apple
+
+Weirdly enough, this is the one thing that Steve Ballmer and I probably agree
+on, so I won't elaborate on that ;-)
+
+It seems to me though, that many recent reports of "weird" behaviour reported
+have come from Macs.  Yet another reason for me to back off with an apology.
+
+<a name="_just_say_NO_"></a>
+
+### just say NO!
+
+These are the things I won't do, for various reasons, mostly technical, with a
+smattering of some subjective stuff.  If you've been hit by one of these, and
+disagree with me -- well that's why gitolite is GPL.  As long as you satisfy
+the GPL, you can simply "fork off" ;-)
+
+  * using a database backend
+
+    Someone wanted help rewriting gitolite to use a database instead of a perl
+    hash.
+
+    I think that's a very bad idea.  Show me an install where gitolite does
+    not scale and I'll fix it without using a damn database.  I *chose* the
+    perl hash very deliberately and for very specific reasons; using a DB
+    would kill all that.
+
+  * symlinks within `REPO_BASE`
+
+    Someone wanted to put the actual repos somewhere else and create a symlink
+    to them inside gitolite's `REPO_BASE`.
+
+    No.  Gitolite assumes all of `REPO_BASE` is in its control, and nothing
+    else outside is (barring the admin directory `~/.gitolite` and the rc file
+    `~/.gitolite.rc`).
+
+    You could argue that this is secure enough if the admin knows what he is
+    doing, but I'm not buying that.  Some odd screwup involving symlinks will
+    show up some day and gitolite will get blamed.
+
+  * deleting environment variables copied from client session
+
+    This same guy wanted me to add code to delete certain environment
+    variables at startup because "the openssh servers in the linux
+    distribution that [he] use[s], are configured to copy `GIT_*` variables to
+    the remote session".
+
+    This is wrong on so many levels it's almost plonk-able!
+
+  * using `cp` instead of `ln`
+
+    Guy has an NTFS file system mounted on Linux.  So... no symlinks (an NTFS
+    file system on Windows works fine because msysgit/cygwin manage to
+    *simulate* them.  NTFS mounted on Linux won't do that!)
+
+    He wanted all the symlink stuff to be replaced by copies.
+
+    No. Way.
+
+  * non-bare repos on the server
+
+    Some guy gave me a complicated spiel about git-svn not liking bare repos
+    or whatever.  I tuned off at the first mention of those 3 letters so I
+    don't really know what the actual problem was.
+
+    But it doesn't matter.  Even if someone (Ralf H) had not chipped in with a
+    workable solution, I still would not do it.  A server repo should be bare.
+    Period.
+
+<a name="_behind_my_back"></a>
+
+#### behind my back
+
+Some of the "Just say NO" items are from situations where someone or something
+changes stuff behind gitolite's back.  I am particularly unsympathetic to this
+sort of thing.
+
+  * incomplete ownership of `REPO_BASE`
+
+    This guy had a repo-base directory where not all of the files were owned
+    by the git user.  As a result, some of the hooks did not get created.  He
+    claimed my code should detect OS-permissions issues while it's doing its
+    stuff.
+
+    No.  I refuse to have the code constantly look over its shoulder making
+    sure fundamental assumptions are being met.
+
+  * empty template directory
+
+    (See man git-init for what a template directory is).
+
+    The same guy with the symlinks and the environment variables (so this is
+    his third appearance in this list!) had an empty template directory
+    because he "does not like to have sample hooks in every repository".  So
+    naturally, the hooks directory does not get created when you run a `git
+    init`.  He expects gitolite to compensate for it.
+
+    Granted, it's only a 1-line change.  But again, this falls under
+    "constantly looking over your shoulder to double check fundamental
+    assumptions".  Where does it end?
+
+  * per-repo umask setting
+
+    Some people believe that gitolite should have code to compensate for a
+    "potential" failure of gitweb or httpd to restrict access as designed.
+
+    Sorry.  Not in "core" at least.  This is yet another of those "constantly
+    looking over your shoulder" examples.  Why should it be gitolite's problem
+    to compensate if gitweb or httpd misbehave?  Yes, I know all about layers
+    of security and defense in depth, thank you but no.
+
+    <font color="gray">
+
+    >   I gave them a solution that involves adding `config
+    >   core.sharedRepository = 0750` in the gitolite.conf file for those
+    >   repos, then doing a one-time fixup for newly created repos.  But they
+    >   decided they needed to patch gitolite and they're going with it.
+
+    >   I'm not too worried.  These guys ran a HEAVILY patched gitosis for
+    >   years; they're probably used to it.
+
+    </font>
+
+<a name="_that_s_outrageous"></a>
+
+### that's outrageous
+
+This section is for really outrageous stuff.
+
+  * clearing out a repo the long/wrong way
+
+    This guy tells me he often needs to clear out a repo.  How?  He first
+    manually deletes the repo on the server, then pushes a dummy commit to the
+    admin repo to let gitolite re-create it.
+
+    Of course, this second step is "annoying" so he mailed me and told me
+    there has to be a better way!
+
+    I asked him why he didn't try `git push -f` and he said he didn't know he
+    could do that.  I'm NOT joking.  I wish I were!  (Yes, we all know that
+    `git push -f` is not the same as delete/re-create, but the point is that
+    he really didn't need it; he just assumed that's the only way to force his
+    commits to the remote.)
+
+  * can connect to github, can't connect to gitolite
+
+    So this mac-fan went on about his great IDE (CodeX or something) and how
+    it works with github but no luck with gitolite.  Therefore he comes and
+    asks on \#gitolite.  (I give him bonus points for telling people on TWO
+    channels that it is "THE best ide").
+
+    The actual error?  "host unreachable".
+
+    In usenet terms... `*PLONK*`!
