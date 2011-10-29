@@ -21,7 +21,7 @@ In this document:
   * <a href="#_side_note_line_anchored_regexes">side-note: line-anchored regexes</a>
       * <a href="#_contrast_with_refexes">contrast with refexes</a>
   * <a href="#_handing_out_rights_to_wildcard_matched_repos">handing out rights to wildcard-matched repos</a>
-  * <a href="#_admin_adding_other_categories_than_READERS_and_WRITERS">(admin) adding other categories than READERS and WRITERS</a>
+  * <a href="#_admin_adding_other_roles_than_READERS_and_WRITERS">(admin) adding other roles than READERS and WRITERS</a>
       * <a href="#_IMPORTANT_WARNING_ABOUT_THIS_FEATURE_">**IMPORTANT WARNING ABOUT THIS FEATURE**</a>
   * <a href="#_setting_a_gitweb_description_for_a_wildcard_matched_repo">setting a gitweb description for a wildcard-matched repo</a>
   * <a href="#_reporting">reporting</a>
@@ -175,10 +175,10 @@ part of this list*** is controlled by the person who created the repository.
 The use case is that, although our toy example has only 3 students, in reality
 there will be a few dozen, but each assignment will be worked on only by a
 handful from among those.  This allows the creator to take ad hoc sets of
-users from among the actual users in the system, and place them into one of
-two categories (in this example, READERS and WRITERS respectively).  In theory
-you could do the same thing by creating lots of little "assignment-NN" groups
-in the config file but that may be a little too cumbersome for non-secret
+users from among the actual users in the system, and give them one of two
+roles (in this example, READERS and WRITERS respectively).  In theory you
+could do the same thing by creating lots of little "assignment-NN" groups in
+the config file but that may be a little too cumbersome for non-secret
 environments.
 
 Create a small text file that contains the permissions you desire:
@@ -208,13 +208,13 @@ The following points are important:
     `:` like in a repo URL.  The first space-separated word is READERS or
     WRITERS, and the rest are simple usernames.
 
-<a name="_admin_adding_other_categories_than_READERS_and_WRITERS"></a>
+<a name="_admin_adding_other_roles_than_READERS_and_WRITERS"></a>
 
-### (admin) adding other categories than READERS and WRITERS
+### (admin) adding other roles than READERS and WRITERS
 
-Let's say your needs are more complex and you need more categories of users.
-For example, you might like to have a setup where only a tester can update
-tags, and only a manager can delete branches:
+Let's say your needs are more complex and you need more roles.  For example,
+you might like to have a setup where only a tester can update tags, and only a
+manager can delete branches:
 
     repo foo/..*
       C                 =   u1
@@ -241,14 +241,13 @@ file.  The rc file documentation (`doc/gitolite.rc.mkd`) explains how.
 
 #### **IMPORTANT WARNING ABOUT THIS FEATURE**
 
-Please make sure that none of the category names conflict with any of the
+Please make sure that none of the role names conflict with any of the
 **usernames** in the system.  For example, if you have a user called "foo",
-make sure you do not include "foo" as a valid category in
+make sure you do not include "foo" as a valid role in
 `$GL_WILDREPOS_PERM_CATS`.
 
-You can keep things sane by using UPPERCASE names for categories, while
-keeping all your usernames lowercase; then you don't have to worry about this
-problem.
+You can keep things sane by using UPPERCASE names for roles, while keeping all
+your usernames lowercase; then you don't have to worry about this problem.
 
 <a name="_setting_a_gitweb_description_for_a_wildcard_matched_repo"></a>
 
@@ -309,7 +308,7 @@ Now find a repo pattern that matches the actual reponame being pushed -- this
 tells you which set of rules to apply.  There can be multiple matches; if so,
 they will all be applied in the sequence they appear in the config file.
 
-If the invoking user has been put in the "WRITERS" category using `setperms`, all
+If the invoking user has been given the "WRITERS" role using `setperms`, all
 permissions for the the user WRITERS are given to the invoking username (and
 similarly for READERS).
 
@@ -330,8 +329,8 @@ Assuming user "u4" trying to push-create a new repo called
         RW  =   @TAs
         R   =   @prof
 
-If u4 puts u5 in the "WRITERS" category using `setperms`, and u5 tries to
-access that repo, the ruleset looks like:
+If u4 gives u5 the "WRITERS" role using `setperms`, and u5 tries to access
+that repo, the ruleset looks like:
 
     repo    assignments/u4/a23
         C   =   @students

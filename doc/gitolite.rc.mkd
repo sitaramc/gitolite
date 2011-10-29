@@ -162,7 +162,7 @@ on feedback from my users to find or fix issues.
     NOTE that due to some quoting and interpolation issues I have not been
     able to look at, a literal "." needs to be specified in this string as
     `\\.` (two backslashes and a dot).  So this is how you'd allow any keys in
-    the "foo" category: `$GL_GITCONFIG_KEYS = "foo\\..*";`
+    the "foo" section: `$GL_GITCONFIG_KEYS = "foo\\..*";`
 
   * `$GL_NO_CREATE_REPOS`, boolean, default 0
 
@@ -309,10 +309,10 @@ on feedback from my users to find or fix issues.
   * `$GL_WILDREPOS_PERM_CATS`, string, default "READERS WRITERS"
 
     Originally, we only allowed "R" and "RW" in the setperms command.  Now we
-    allow the admin to define other categories as she wishes (example:
-    MANAGERS, TESTERS, etc).
+    allow the admin to define other roles as she wishes (example: MANAGERS,
+    TESTERS, etc).
 
-    This variable is a space-separated list of the allowed categories.
+    This variable is a space-separated list of the allowed roles.
 
     PLEASE, *PLEASE*, read the section in
     [doc/wildcard-repositories.mkd][wild] for caveats and warnings.  This is a
@@ -324,8 +324,8 @@ on feedback from my users to find or fix issues.
 
         $GL_WILDREPOS_PERM_CATS = "READERS WRITERS";
 
-    You can use your own categories in addition to the standard ones; I
-    suggest you include READERS and WRITERS for backward compatbility though:
+    You can use your own roles in addition to the standard ones; I suggest you
+    include READERS and WRITERS for backward compatbility though:
 
         $GL_WILDREPOS_PERM_CATS = "READERS WRITERS MANAGERS TESTERS";
 
