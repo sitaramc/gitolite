@@ -5,7 +5,8 @@
 ----
 
 **able**: enable/disable push access temporarily (such as for taking backups
-or other admin chores); details [here][able].
+or other admin chores); details [here][able].  This ADC is meant only for
+admins.
 
 [able]: http://sitaramc.github.com/gitolite/doc/admin-defined-commands.html#_enable_disable_push_access_temporarily
 

@@ -11,6 +11,7 @@ In this document:
 
   * <a href="#_quick_install">quick install</a>
   * <a href="#_what">what</a>
+      * <a href="#_documentation">documentation</a>
   * <a href="#_why">why</a>
   * <a href="#_main_features">main features</a>
   * <a href="#_security">security</a>
@@ -69,8 +70,15 @@ summary":
   * several other neat features described below and elsewhere in the
     [doc/][docs] directory.
 
-Gitolite comes with a **huge** amount of documentation.  If you're absolutely
-new, the suggested reading order is this:
+<a name="_documentation"></a>
+
+#### documentation
+
+Gitolite comes with a **huge** amount of documentation.  Almost all of it is
+for the *administrator* of a gitolite server.  If you're a *user*, you only
+need [this][user].
+
+Otherwise, the suggested reading order is this:
 
   * the README (this document) for a quick intro
   * the [INSTALL][install] document
@@ -210,3 +218,4 @@ Gitolite is released under GPL v2.  See COPYING for details.
 [who]: http://sitaramc.github.com/gitolite/doc/who-uses-it.html
 [tut]: http://sites.google.com/site/senawario/home/gitolite-tutorial
 [docs]: http://sitaramc.github.com/gitolite
+[user]: http://sitaramc.github.com/gitolite/doc/user-manual.html
