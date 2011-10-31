@@ -353,6 +353,9 @@ if things are not clear -- you can help me fine tune this document :-)
         mv repositories/gitolite-admin.git $HOME/old-gitolite-admin.git
         find repositories -name gitolite-hooked | xargs rm
 
+    Don't forget chown repositories if git UID changed. Otherwise gitolite
+    will not grant access anyone but admin added by `gl-setup YourName.pub`.
+
   * (workstation, new server) **install** gitolite normally on your new
     server.  Use whatever install method suits you, but you must use the
     **same** name for the admin ("YourName" in the install instructions).  You
