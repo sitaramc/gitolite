@@ -1,4 +1,4 @@
-# gitolite in pictures
+# F=pictures gitolite in pictures
 
 Well, they say a picture speaks a thousand words, so here're a few!
 
@@ -9,9 +9,7 @@ had to use Unicode 2010 for it.  I expect that I will have to resort to
 similar tricks for colon, equals, and many others like it if and when I need
 those in text within a ditaa diagram.
 
-<a name="_installation_and_setup"></a>
-
-### installation and setup
+## installation and setup
 
 Here's a picture showing the "non-root" install.  We assume Alice is the
 gitolite admin, and "git" is the hosting user on the server.
@@ -56,9 +54,7 @@ Note also that you only need ONE real user on the server.  In our example it
 is git.  In particular, you do NOT create Unix userids for your gitolite
 users.
 
-<a name="_adding_users_to_gitolite"></a>
-
-### adding users to gitolite
+## adding users to gitolite
 
 Once you've done the install, here's how you add users.
 
@@ -103,7 +99,7 @@ You do NOT need to add Carol or Bob as *real* (Unix) users.  You do NOT add
 their keys directly anywhere on the server; you do it by cloning, adding keys,
 and pushing.
 
-### adding repos to gitolite
+## adding repos to gitolite
 
 Adding a repo is even easier.  It's so easy that you don't really need a
 picture.  OK maybe a small one:

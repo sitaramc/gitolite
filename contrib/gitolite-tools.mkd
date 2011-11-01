@@ -1,4 +1,4 @@
-## gitolite-tools
+# F=_gitolite_tools gitolite-tools
 
 gitolite-tools is a collection of external git commands to work with
 gitolite server and repositories:

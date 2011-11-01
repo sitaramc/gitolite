@@ -1,13 +1,9 @@
-# authentication versus authorisation
+# F=auth authentication versus authorisation
 
 This document will explain why an "ssh issue" is almost never a "gitolite
 issue", and, indirectly, why I dont get too excited about the former.
 
-Note: for actual ssh troubleshooting see [this][glsts].
-
-[glsts]: http://sitaramc.github.com/gitolite/doc/ssh-troubleshooting.html
-
-----
+Note: for actual ssh troubleshooting see [this][sts].
 
 Here is a fundamental point: <font color="red">**Gitolite does not do
 authentication.  It only does authorisation**.</font>
@@ -22,7 +18,7 @@ So first, let's loosely define these words:
 >   **Authorisation** is the process of asking what you want to do and
 >   deciding if you're allowed to do it or not.
 
-Now, if you managed to read [doc/gitolite-and-ssh.mkd][gas], you know that
+Now, if you managed to read about [gitolite and ssh][gl_ssh], you know that
 gitolite is meant to be invoked as:
 
     /full/path/to/gl-auth-command some-authenticated-gitolite-username
@@ -32,26 +28,18 @@ be, and usually *isn't*, an actual *unix* username).
 
 As you can see, authentication happens before gitolite is called.
 
-[gas]: http://sitaramc.github.com/gitolite/doc/gitolite-and-ssh.html
-
-<a name="_but_but_you_have_all_that_ssh_stuff_in_there_"></a>
-
-### but... but... you have all that ssh stuff in there!
+## but... but... you have all that ssh stuff in there!
 
 The default mode of using gitolite does use ssh keys, but all it's doing is
 helping you **setup** ssh-based authentication **as a convenience to you**.
 
 You don't have to use it, though.  And many people don't.  The examples I know
-are [smart http][sh], and ldap-backed sshd.  In both cases, gitolite has no
+are [smart http][http], and ldap-backed sshd.  In both cases, gitolite has no
 role to play in creating users, setting up their passwords/keys, etc.  There's
 even a `GL_NO_SETUP_AUTHKEYS` option to make sure gitolite doesn't meddle with
 the authkeys file in such installations.
 
-[sh]: http://sitaramc.github.com/gitolite/doc/http-backend.html
-
-<a name="_so_you_re_basically_saying_you_won_t_support_X_"></a>
-
-### so you're basically saying you won't support "X"
+## so you're basically saying you won't support "X"
 
 (where "X" is some ssh related behaviour change or feature)
 
@@ -64,9 +52,7 @@ Even if you locked yourself (the admin) out, the docs tell you how to recover
 from such errors.  You do need some password based method to get a shell
 command line on the server, of course.
 
-<a name="_appendix_how_to_use_other_authentication_systems_with_gitolite"></a>
-
-### appendix: how to use other authentication systems with gitolite
+## appendix: how to use other authentication systems with gitolite
 
 The bottom line in terms of how to invoke gitolite has been described above,
 and as long as you manage to do that gitolite won't even know how the
@@ -75,7 +61,7 @@ authentication scheme you want.
 
 It also expects the `SSH_ORIGINAL_COMMAND` environment variable to contain the
 full command (typically starting with git-receive-pack or git-upload-pack)
-that the client sent.  Also, when using [smart http][sh], things are somewhat
+that the client sent.  Also, when using [smart http][http], things are somewhat
 different: gitolite uses certain environment variables that it expects httpd
 to have set up.  Even the user name comes from the `REMOTE_USER` environment
 variable instead of as a command line argument in this case.
@@ -101,4 +87,3 @@ which can be useful.
 Finally, gitolite allows you to store *group* information externally too.  See
 [here][ldap] for more on this.
 
-[ldap]: http://sitaramc.github.com/gitolite/doc/big-config.html#_storing_usergroup_information_outside_gitolite_like_in_LDAP_

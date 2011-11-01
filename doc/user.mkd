@@ -1,4 +1,4 @@
-# what users (not admins) need to know about gitolite
+# F=user what users (not admins) need to know about gitolite
 
 ...written for the one guy in the world no one will think of as "just a normal
 user" ;-)
@@ -7,22 +7,7 @@ This document has some text, and a lot of links.  Most of this info *is*
 available in the rest of the documentation, but it's scattered and sparse.
 Collecting all of it, or at least links to it, in one place sounds useful.
 
-In this document:
-
-  * <a href="#_accessing_gitolite">accessing gitolite</a>
-  * <a href="#_always_available_commands">always available commands</a>
-  * <a href="#_digression_two_kinds_of_repos">digression: two kinds of repos</a>
-  * <a href="#_commands_only_available_with_wildrepos_on">commands only available with "wildrepos" on</a>
-      * <a href="#_listing_repos_you_created">listing repos you created</a>
-      * <a href="#_set_get_additional_permissions_for_repos_you_created">set/get additional permissions for repos you created</a>
-      * <a href="#_adding_a_description_to_repos_you_created">adding a description to repos you created</a>
-  * <a href="#_site_local_commands">"site-local" commands</a>
-
-----
-
-<a name="_accessing_gitolite"></a>
-
-### accessing gitolite
+## accessing gitolite
 
 The most common setup is based on ssh, where your admin asks you to send him
 your public key, and uses that to setup your access.
@@ -34,9 +19,7 @@ document), or an ssh command (like `ssh git@server info`).
 Note that you do *not* get a shell on the server -- the whole point of
 gitolite is to prevent that!
 
-<a name="_always_available_commands"></a>
-
-### always available commands
+## always available commands
 
 The only command that is *always* available to every user is the [`info`
 command][info], which tells you what version of gitolite and git are on the
@@ -44,48 +27,36 @@ server, and what repositories you have access to.  The list of repos is very
 useful if you have doubts about the spelling of some new repo that you know
 was setup.
 
-[info]: http://sitaramc.github.com/gitolite/doc/report-output.html#_the_info_command
-
-<a name="_digression_two_kinds_of_repos"></a>
-
-### digression: two kinds of repos
+## digression: two kinds of repos
 
 Gitolite has two kinds of repos.  Normal repos are specified by their full
 names in the config file.  "Wildcard" repos are specified by a regex in the
-config file.  If you look at the documentation on the [`info` command][info]
-you will see there are a couple of lines that look like regex patterns,
-against which you see an additional "C" permission not available with the
-others.
+config file.  Try the [`info` command][info] and see if it shows any lines
+that look like regex patterns, (with a "C" permission in addition to the "R"
+and the "W").
 
-This means you are allowed to create brand new repos whose names fit that
-pattern.  When you create such a repo, your "ownership" of it (as far as
-gitolite is concerned) is noted by creating a 1-line file called "gl-creater"
-(note spelling!) in the repo directory, with just your gitolite userid in it.
+If you see any, it means you are allowed to create brand new repos whose names
+fit that pattern.  When you create such a repo, your "ownership" of it (as far
+as gitolite is concerned) is *automatically* recorded by creating a 1-line
+file called "gl-creater" (note spelling!) in the repo directory, with just
+your gitolite userid in it.
 
-This happens automatically.  But for repos that were migrated into gitolite
-and whose names fit a pattern, the admin has to manually create those files,
-otherwise you won't be able to execute certain commands that you otherwise
-might have access to.
+This is for new repos you create.  But for repos that already existed and were
+migrated into gitolite by the admin, the admin has to manually create that
+"gl-creater" file, otherwise you won't be able to execute certain commands
+that you otherwise might have access to.
 
-"Wildrepos" is an optional feature of gitolite that the admin has to "turn
-on".
+"Wildrepos" is an optional feature of gitolite that the admin has to
+explicitly enable.
 
-<a name="_commands_only_available_with_wildrepos_on"></a>
+## commands only available with "wildrepos" on
 
-### commands only available with "wildrepos" on
-
-<a name="_listing_repos_you_created"></a>
-
-#### listing repos you created
+### listing repos you created
 
 The info command will not show you your own wildcard repos.  To get that list,
 try the [`expand` command][expand].
 
-[expand]: http://sitaramc.github.com/gitolite/doc/report-output.html#_the_expand_command
-
-<a name="_set_get_additional_permissions_for_repos_you_created"></a>
-
-#### set/get additional permissions for repos you created
+### set/get additional permissions for repos you created
 
 The gitolite config may have several permissions lines for your repo, like so:
 
@@ -120,11 +91,7 @@ given read access to the special 'gitolite-admin' repo.  Sorry.  The idea is
 that your admin will tell you what "roles" he added into rules for your repos,
 and what permissions those roles have.
 
-[setperms]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html#_handing_out_rights_to_wildcard_matched_repos
-
-<a name="_adding_a_description_to_repos_you_created"></a>
-
-#### adding a description to repos you created
+### #setdesc adding a description to repos you created
 
 The `setdesc` and `getdesc` commands work similarly to the `setperms` and
 `getperms` commands.  You just say
@@ -135,9 +102,7 @@ and if you want to check you just say
 
     ssh git@server getdesc pub/<yourname>/<your_reponame>
 
-<a name="_site_local_commands"></a>
-
-### "site-local" commands
+## "site-local" commands
 
 The main purpose of gitolite is to prevent you from getting a shell.  But
 there are commands that you often need to run on the server (i.e., cannot be
@@ -151,10 +116,9 @@ starting point for his own, if he chooses.
 Think of these commands as equivalent to those in `COMMAND_DIR` in `man
 git-shell`.
 
-Most of the shipped ADCs are briefly described [here][ADCs], with links to
-more details if available.  However, **please understand** that these commands
-may not be available, or their behaviour may have been changed to suit local
-requirements, and of course new ones may have been added.  You'll have to ask
-your local admin for answers, not me!
+Most of the shipped ADCs are briefly described [here][shipped_ADCs], with links
+to more details if available.  However, **please understand** that these
+commands may not be available, or their behaviour may have been changed to
+suit local requirements, and of course new ones may have been added.  You'll
+have to ask your local admin for answers, not me!
 
-[ADCs]: http://sitaramc.github.com/gitolite/contrib/adc/README.html

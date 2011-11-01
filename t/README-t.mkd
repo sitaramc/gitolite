@@ -1,26 +1,14 @@
-## notes on the testing setup
+# F=_t notes on the testing setup
 
 **WARNING: PLEASE use a dedicated user for doing this**.  Various files and
 directories get overwritten and it's much simpler this way.
 
-In this document:
-
-  * <a href="#_terminology">terminology</a>
-  * <a href="#_notes_and_background">notes and background</a>
-  * <a href="#_playing_with_gitolite">playing with gitolite</a>
-  * <a href="#_testing_gitolite">testing gitolite</a>
-  * <a href="#_instructions_for_adding_new_tests">instructions for adding new tests</a>
-
-<a name="_terminology"></a>
-
-### terminology
+## terminology
 
     #define PW "patches welcome!"
     #define TODO PW
 
-<a name="_notes_and_background"></a>
-
-### notes and background
+## notes and background
 
 All testing is done on one **brand new** userid.  We use ssh host alias tricks
 to simulate multiple gitolite users within this, so `ssh gitolite info` gets
@@ -34,9 +22,7 @@ mirroring, smart http, and password-based access.
 Note that the test driver has evolved as new scripts were added; you will see
 that older scripts are a little less sophisticated.
 
-<a name="_playing_with_gitolite"></a>
-
-### playing with gitolite
+## playing with gitolite
 
 (Please heed the warning at the top of this document and use a dedicated user
 for this).
@@ -85,9 +71,7 @@ access simply using a different URL.  For example, `git clone u1:testing` and
 `git clone u2:testing` may give you different results depending on what rights
 you gave users "u1" and "u2" in your config.
 
-<a name="_testing_gitolite"></a>
-
-### testing gitolite
+## testing gitolite
 
 First, do what the "playing with gitolite" section says.  That is a
 pre-requisite.
@@ -100,9 +84,7 @@ Once that is done, run this command (still in `$HOME` of the gl-test userid):
 numbers be the actual test numbers, making it look like I have over 2000
 tests, when in reality I have about 600)
 
-<a name="_instructions_for_adding_new_tests"></a>
-
-### instructions for adding new tests
+## instructions for adding new tests
 
 (TODO)
 

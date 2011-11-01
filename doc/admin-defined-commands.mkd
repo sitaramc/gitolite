@@ -1,29 +1,6 @@
-## admin defined commands
+# F=ADCs admin defined commands
 
-----
-
-In this document:
-
-  * <a href="#_background">background</a>
-  * <a href="#_details">details</a>
-      * <a href="#_installing_ADCs">installing ADCs</a>
-      * <a href="#_user_invocation">user invocation</a>
-      * <a href="#_checking_authorisation">checking authorisation</a>
-      * <a href="#_checking_arguments">checking arguments</a>
-      * <a href="#_passing_unchecked_arguments">passing unchecked arguments</a>
-  * <a href="#_fake_repos_and_access_control_for_non_git_programs">"fake" repos and access control for non-git programs</a>
-  * <a href="#_anatomy_of_a_command">anatomy of a command</a>
-  * <a href="#_example_uses_and_sample_commands_in_contrib_adc_">example uses and sample commands in `contrib/adc`</a>
-      * <a href="#_fork">fork</a>
-      * <a href="#_deleting_trashing_repos">deleting/trashing repos</a>
-      * <a href="#_enable_disable_push_access_temporarily">enable/disable push access temporarily</a>
-  * <a href="#_how_this_feature_came_about">how this feature came about</a>
-
-----
-
-<a name="_background"></a>
-
-### background
+## ADC background
 
 The admin-defined commands (ADCs) feature allows controlled access to
 specific, "safe", programs or scripts, without giving users full shell access.
@@ -36,17 +13,11 @@ but an extra pair of eyes never hurt, so please review before use.
 <font color="gray">Although this is a generic way to allow pretty much any
 command to be run, most of the examples and sample ADCs pertain to allowing
 users to manage their "own" repos.  If that's your use case, please read
-[doc/wildcard-repositories.mkd][wild] before you continue here.</font>
+the [wildcard repositories][wild] doc before you continue here.</font>
 
-[wild]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html
+## ADC details
 
-<a name="_details"></a>
-
-### details
-
-<a name="_installing_ADCs"></a>
-
-#### installing ADCs
+### installing ADCs
 
 ADCs can only be installed by someone with shell access to the server; merely
 having push rights to the admin repo is not enough.
@@ -63,18 +34,14 @@ This is by design.  So be careful what you name your scripts.
 However, it is perfectly ok, and may even be necessary in some cases, to name
 them after system executables (like 'rsync').
 
-<a name="_user_invocation"></a>
-
-#### user invocation
+### user invocation
 
 If you have a command called "foo" in that directory, then a user can invoke
 it by saying:
 
     ssh git@server foo argument list
 
-<a name="_checking_authorisation"></a>
-
-#### checking authorisation
+### checking authorisation inside an ADC
 
 Once an ADC is installed, *all* users can run it.  But sometimes you want only
 some people to be able to do so.
@@ -87,17 +54,13 @@ repo, which is an easy way of making sure an ADC is only run by admins.
 See the section on "the anatomy of a command" later for this and many more
 details.
 
-<a name="_checking_arguments"></a>
-
-#### checking arguments
+### checking arguments
 
 Gitolite will call an ADC only if the arguments passed to it match a very
 strict pattern (see `$ADC_CMD_ARGS_PATT` in `src/gitolite_rc.pm`).  This
 reduces the risk of various kinds of shell-meta related compromises.
 
-<a name="_passing_unchecked_arguments"></a>
-
-#### passing unchecked arguments
+### passing unchecked arguments
 
 Some commands need arguments with a broader range of characters than
 `$ADC_CMD_ARGS_PATT` will allow.  As long as you are sure those commands are
@@ -107,9 +70,7 @@ arguments**.
 
 The "ua" stand for "unchecked arguments".  Consider this your last warning ;-)
 
-<a name="_fake_repos_and_access_control_for_non_git_programs"></a>
-
-### "fake" repos and access control for non-git programs
+## "fake" repos and access control for non-git programs
 
 A "fake" repo is a repo that exists in the config file but is specially named
 (starts with "EXTCMD/") so that gitolite will not create an actual repo on
@@ -126,9 +87,7 @@ server has sufficient information to decide.  Protocols where the command line
 is just one word and everything else happens in the conversation later cannot
 be helped by this mechanism.</font>
 
-<a name="_anatomy_of_a_command"></a>
-
-### anatomy of a command
+## anatomy of a command
 
 You can do whatever you want in an ADC!  It's upto you to check the
 permissions of *each* repo that the user is manipulating using your ADC --
@@ -176,13 +135,9 @@ convenient.  See any of the other samples for how to use it.
 If you prefer perl, there is a nicely commented example in
 `contrib/adc/get-rights-and-owner.in-perl`.
 
-<a name="_example_uses_and_sample_commands_in_contrib_adc_"></a>
+## example uses and sample commands in `contrib/adc`
 
-### example uses and sample commands in `contrib/adc`
-
-<a name="_fork"></a>
-
-#### fork
+### #fork the 'fork' ADC
 
 A user would use the fork command like this:
 
@@ -206,19 +161,11 @@ the client side:
 
 or some such incantation.
 
-<a name="rmrepo"></a>
+### deleting/trashing repos
 
-<a name="_deleting_trashing_repos"></a>
+See the [repo-deletion document][wild_repodel] for details about this.
 
-#### deleting/trashing repos
-
-See the [repo-deletion document][rdR] for details about this.
-
-[rdR]: http://sitaramc.github.com/gitolite/contrib/adc/repo-deletion.html
-
-<a name="_enable_disable_push_access_temporarily"></a>
-
-#### enable/disable push access temporarily
+### #able enable/disable push access temporarily
 
 If you want to disable push access to gitolite temporarily (maybe for
 maintenance), anyone with write access to the gitolite-admin repo can do this:
@@ -233,15 +180,9 @@ You can also do this for one or more individual repos; in place of `@all`,
 just use a space separated list of reponames (exactly as they would appear in
 the config file).  Wildcards are not supported; patches welcome ;-)
 
-Note: please see [this][diswr] for more on this.
+Note: please see [this][disable] for more on this.
 
-[diswr]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_disabling_write_access_to_take_backups
-
-----
-
-<a name="_how_this_feature_came_about"></a>
-
-### how this feature came about
+## how the ADC feature came about
 
 <font color="gray">
 

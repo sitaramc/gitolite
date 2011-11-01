@@ -1,4 +1,4 @@
-# how to setup gitolite to use smart http mode
+# F=http how to setup gitolite to use smart http mode
 
 **Note**: "smart http" refers to the feature that came with git 1.6.6, late
 2009 or so.  The base documentation for this is `man git-http-backend`.  Do
@@ -6,22 +6,7 @@
 that is the same or even relevant -- that is from 2006 and is quite different
 (and arguably obsolete).
 
-In this document:
-
-  * <a href="#_WARNINGS_plus_stuff_I_need_help_with">WARNINGS, plus stuff I need help with</a>
-  * <a href="#_additional_requirements">additional requirements</a>
-  * <a href="#_detailed_instructions">detailed instructions</a>
-      * <a href="#_install_gitolite_under_apache_">install gitolite under "apache"</a>
-      * <a href="#_setup_apache">setup apache</a>
-  * <a href="#_usage">usage</a>
-  * <a href="#_allowing_anonymous_access">allowing anonymous access</a>
-  * <a href="#_ssh_http_access_and_the_GIT_HTTP_EXPORT_ALL_variable">ssh + http access and the `GIT_HTTP_EXPORT_ALL` variable</a>
-
-----
-
-<a name="_WARNINGS_plus_stuff_I_need_help_with"></a>
-
-### WARNINGS, plus stuff I need help with
+## WARNINGS, plus stuff I need help with
 
   * I have NOT converted the test suite to use this mode.  Volunteers to
     convert it to http access are welcome :-)
@@ -47,32 +32,24 @@ In this document:
     and given a proper $HOME and `~/.ssh/authorized_keys` and all that).  If
     anyone has the energy to try that please let me know how that went.
 
-<a name="_additional_requirements"></a>
-
-### additional requirements
+## additional requirements
 
   * requires `GIT_PROJECT_ROOT` (see "man git-http-backend" for what this is)
     set explicitly (i.e., it is no longer optional).  Please set it to some
     place outside apache's `DOCUMENT_ROOT`.
 
-<a name="_detailed_instructions"></a>
-
-### detailed instructions
+## detailed instructions
 
 I assume you've installed apache 2.x and git on the server.
 
 I assume your httpd runs under the "apache" userid; adjust instructions below
 if it does not.  Similarly for "/var/www" and other file names/locations.
 
-I assume you have read the "[please read this first][1rtf]" section of the
+I assume you have read the "[please read this first][insttrouble]" section of the
 main install document to get an idea of the general concepts and terminology
 (just ignore anything that is specific to ssh).
 
-[1rtf]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html#_please_read_this_first
-
-<a name="_install_gitolite_under_apache_"></a>
-
-#### install gitolite under "apache"
+### install gitolite under "apache"
 
 Follow the "non-root" method, but since you can't even "su - apache", make the
 following variations when doing this as root:
@@ -116,9 +93,7 @@ following variations when doing this as root:
 
         chown -R apache.apache $GITOLITE_HTTP_HOME
 
-<a name="_setup_apache"></a>
-
-#### setup apache
+### setup apache
 
 You will need to setup certain values in the httpd conf, as given in `man
 git-http-backend`.  You can put all them into, for instance,
@@ -144,9 +119,7 @@ from those in the manpage cited above, plus we have one extra variable:
 Now create/update the password file in `/path/to/some/passwdfile` using the
 `htpasswd` command, and you're all done for the setup!
 
-<a name="_usage"></a>
-
-### usage
+## usage
 
 Git URLs look like `http://user:password@server/git/reponame.git`.
 
@@ -171,9 +144,7 @@ following works and I'm leaving it at that:
 With a few nice shell aliases, you won't even notice the horrible convolutions
 here ;-)
 
-<a name="_allowing_anonymous_access"></a>
-
-### allowing anonymous access
+## allowing anonymous access
 
 Like [mob branches][mob] with ssh, you can allow completely
 **un**-authenticated users to still have some rights specified in gitolite.
@@ -192,9 +163,7 @@ Briefly, here's how:
 URLs (in this example) will then look like `http://server/gitmob/reponame.git`
 -- we lose the userid:passwd part and change 'git' to 'gitmob'.
 
-<a name="_ssh_http_access_and_the_GIT_HTTP_EXPORT_ALL_variable"></a>
-
-### ssh + http access and the `GIT_HTTP_EXPORT_ALL` variable
+## ssh + http access and the `GIT_HTTP_EXPORT_ALL` variable
 
 This document only talks about setting up access to a set of git repositories
 purely via smart http.  The `GIT_HTTP_EXPORT_ALL` variable must be set for
@@ -222,6 +191,3 @@ repo.
 ----
 
 Enjoy!
-
-[mob]: http://sitaramc.github.com/gitolite/doc/mob-branches.html
-

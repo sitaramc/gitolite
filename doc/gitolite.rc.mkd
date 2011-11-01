@@ -1,4 +1,4 @@
-# configuring gitolite's advanced features -- the `.gitolite.rc` file
+# F=rc configuring gitolite's advanced features -- the `.gitolite.rc` file
 
 This is the documentation for the contents of the "rc" file
 (`$HOME/.gitolite.rc`) on the server.  Until now this documentation was
@@ -8,37 +8,23 @@ and too difficult to grok for people new to gitolite.
 The documentation follows approximately the same order as the sample variables
 in the (now reorganised) example "rc" file.
 
-In this document:
-
-  * <a href="#_variables_that_should_not_be_touched_at_all">variables that should not be touched at all</a>
-  * <a href="#_most_often_used_changed_variables">most often used/changed variables</a>
-  * <a href="#_variables_with_an_efficiency_performance_impact">variables with an efficiency/performance impact</a>
-  * <a href="#_variables_with_a_security_impact">variables with a security impact</a>
-  * <a href="#_less_used_changed_variables">less used/changed variables</a>
-  * <a href="#_rarely_changed_variables">rarely changed variables</a>
-  * <a href="#_constants_that_aren_t_">constants that aren't!</a>
-
 [Note: in perl, there is no actual boolean.  The undefined value, the number
 '0', and the empty string, are all 'false'.  Everything else is 'true'.  It is
 thus common to use just 0/1 for false/true].
 
-<a name="_variables_that_should_not_be_touched_at_all"></a>
-
-### variables that should not be touched at all
+## variables that should not be touched at all
 
 The first section does not need too much elaboration.  Let's just say bad
 things happen if you change them.
 
-<a name="_most_often_used_changed_variables"></a>
-
-### most often used/changed variables
+## most often used/changed variables
 
   * `$GL_WILDREPOS`, boolean, default 0
 
     Setting this variable lets your users create repositories based on wild
     cards, hand out R and RW permissions to other users to collaborate, etc.
 
-    See [doc/wildcard-repositories.mkd][wild] for lots of info on this.
+    See [this][wild] for lots of info on this.
 
   * `$PROJECTS_LIST`, filename, default `~/projects.list`
 
@@ -68,15 +54,13 @@ things happen if you change them.
     This is because umask only affects permissions on newly created files, not
     existing ones.
 
-<a name="_variables_with_an_efficiency_performance_impact"></a>
-
-### variables with an efficiency/performance impact
+## variables with an efficiency/performance impact
 
   * `$GL_BIG_CONFIG`, boolean, default 0
 
     This is the most common setting for efficiency in handling large repo/user
-    groups.  This is a very powerful setting; please read
-    [doc/big-config.mkd][bc] for all the details you might need.
+    groups.  This is a very powerful setting; please read [this][bc] if you
+    need details.
 
     There are 3 other settings related to big configs.  They are changed only
     in rare cases, however, so are described later.
@@ -85,8 +69,7 @@ things happen if you change them.
 
     If you have *lots* of repos, and you're *not* using gitweb or daemon, you
     should probably set this on for efficiency.  Despite the name, it also
-    blocks repo config settings.  Please read [doc/big-config.mkd][bc] for
-    more details.
+    blocks repo config settings.  Please read [this][bc] for more details.
 
     **WARNING**: if your description files are maintained by some other means
     than via the gitolite config file, make sure you set this variable to 1.
@@ -99,11 +82,9 @@ things happen if you change them.
 
   * `$BIG_INFO_CAP`, number, default 20
 
-    See [using patterns to limit output][limit] for details.
+    See [using patterns to limit output][limitoutput] for details.
 
-<a name="_variables_with_a_security_impact"></a>
-
-### variables with a security impact
+## #rcsecurity variables with a security impact
 
 **IMPORTANT NOTE**
 
@@ -136,8 +117,8 @@ on feedback from my users to find or fix issues.
     This setting allows the repo admin to define acceptable gitconfig keys.
 
     Gitolite allows you to set git repo options using the "config" keyword;
-    see the section on "repo specific git config commands" in
-    [doc/gitolite.conf.mkd][gitconf] for details and syntax.
+    see the section on "repo specific git config commands" in the
+    [gitolite.conf][conf] documentation for details and syntax.
 
     However, if you are in an installation where the repo admin does not (and
     should not) have shell access to the server, then allowing him to set
@@ -196,9 +177,8 @@ on feedback from my users to find or fix issues.
     enable this, give the variable the absolute path to whatever file apache
     (etc) expect to find the passwords in.
 
-    Look in [doc/3-faq-tips-etc.mkd][faq] ("easier to link gitweb
-    authorisation with gitolite" section) for more details on using this
-    feature.
+    Look in the docs for [linking gitweb authorisation with
+    gitolite][gitwebauth] for more details on using this feature.
 
   * `$RSYNC_BASE`, string, default empty
 
@@ -245,9 +225,9 @@ on feedback from my users to find or fix issues.
 
     **WARNING**: Use this feature only if (a) you really know what you're
     doing and (b) you really, **really**, know what you're doing!  Please read
-    [doc/admin-defined-commands.mkd][adc] for details.  This is an extremely
-    powerful and flexible feature, and naturally anything that flexible can be
-    a security risk!
+    the [admin defined commands][ADCs] document for details.  This is an
+    extremely powerful and flexible feature, and naturally anything that
+    flexible can be a security risk!
 
   * `$GL_GET_MEMBERSHIPS_PGM`, string, default undef
 
@@ -257,17 +237,16 @@ on feedback from my users to find or fix issues.
 
     Set the following variable to the name of a script that, given a username
     as argument, will return a list of groups that she is a member of.  See
-    [doc/big-config.mkd][bc] for more details.
+    the [big config][bc] doc for more details.
 
     Example: `$GL_GET_MEMBERSHIPS_PGM = "/usr/local/bin/expand-ldap-user-to-groups"`
 
   * `$GL_HTTP_ANON_USER`, string, default undef
 
-    Analogous to running mob branches over ssh (as described in
-    [doc/mob-branches.mkd][mob], this variable -- combined with appropriate
-    setup described in [doc/http-backend.mkd][smart] -- lets you pretend to
-    gitolite that unauthenticated HTTP users are actually authenticated as
-    this user.
+    Analogous to running mob branches over ssh (as described in the [mob
+    branches][mob]), this variable -- combined with appropriate setup
+    described in [doc/http-backend.mkd][http] -- lets you pretend to gitolite
+    that unauthenticated HTTP users are actually authenticated as this user.
 
   * `$GL_REF_OR_FILENAME_PATT`, string
 
@@ -284,9 +263,7 @@ on feedback from my users to find or fix issues.
     it, if you really need to.  If you do, at least avoid backquotes and the
     dollar sign!
 
-<a name="_less_used_changed_variables"></a>
-
-### less used/changed variables
+## less used/changed variables
 
   * `$GL_ALL_INCLUDES_SPECIAL`, boolean, default undef
 
@@ -302,10 +279,9 @@ on feedback from my users to find or fix issues.
 
     This variable is a space-separated list of the allowed roles.
 
-    PLEASE, *PLEASE*, read the section in
-    [doc/wildcard-repositories.mkd][wild] for caveats and warnings.  This is a
-    VERY powerful feature and if you're not careful you could mess up the ACLs
-    nicely.
+    Please read the **[warning][rolenamewarn]** in the [wild][] document
+    before using this feature.  This is a VERY powerful feature and if you're
+    not careful you could mess up the ACLs nicely.
 
     This is the internal default if you don't set it (like if you didn't
     update your ~/.gitolite.rc with new variables when you upgraded gitolite):
@@ -317,9 +293,7 @@ on feedback from my users to find or fix issues.
 
         $GL_WILDREPOS_PERM_CATS = "READERS WRITERS MANAGERS TESTERS";
 
-<a name="_rarely_changed_variables"></a>
-
-### rarely changed variables
+## rarely changed variables
 
   * `$GL_LOGT`, string, default `$GL_ADMINDIR/logs/gitolite-%y-%m.log`
 
@@ -351,12 +325,10 @@ on feedback from my users to find or fix issues.
 
     This is where all the repos go.  If it's not an absolute path, it is
     considered to be relative to $HOME.  Moving all the repositories after the
-    install has completed is doable: just [disable writes][dwr] to gitolite,
+    install has completed is doable: just [disable writes][disable] to gitolite,
     move `~/repositories/*`, change this variable, then re-enable writes.
 
-<a name="_constants_that_aren_t_"></a>
-
-### constants that aren't!
+## constants that aren't!
 
 The source file `src/gitolite_rc.pm` defines a few "constants", for example:
 
@@ -371,13 +343,6 @@ defining a new value for any or all of them in your `~/.gitolite.rc` file.
 If you use this to relax some of the patterns involved (for example, the value
 of `ADC_CMD_ARGS_PATT`), please be sure you know what you're doing.
 
-[wild]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html
-[bc]: http://sitaramc.github.com/gitolite/doc/big-config.html
-[faq]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html
-[adc]: http://sitaramc.github.com/gitolite/doc/admin-defined-commands.html
-[mirr]: http://sitaramc.github.com/gitolite/doc/mirroring.html
-[mob]: http://sitaramc.github.com/gitolite/doc/mob-branches.html
-[smart]: http://sitaramc.github.com/gitolite/doc/http-backend.html
 [dwr]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_disabling_write_access_to_take_backups
 [limit]: http://sitaramc.github.com/gitolite/doc/report-output.html#_using_patterns_to_limit_output
 [gitconf]: http://sitaramc.github.com/gitolite/doc/gitolite.conf.html#_repo_specific_git_config_commands

@@ -1,11 +1,8 @@
-## deleting repos safely
+# F=wild_repodel deleting repos safely
 
-**NOTE**: this page is about deleting [user-created repos][wcr].  It is
+**NOTE**: this page is about deleting [user-created repos][wild].  It is
 **not** about deleting "normal" repos (the kind that are specified in the
-gitolite.conf file itself) -- to delete those read [here][dnr].
-
-[wcr]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html
-[dnr]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_deleting_a_repo
+gitolite.conf file itself) -- to delete those read [here][repodel].
 
 (see [this thread][thr] on the gitolite mailing list)
 

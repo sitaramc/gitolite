@@ -1,38 +1,16 @@
-## changing keys -- self service key management
+# F=sskm changing keys -- self service key management
 
 Follow this guide to add keys to or remove keys from your account. Note that you cannot use this method to add your *first* key to the account; you must still email your initial key to your admin.
 
 The key management is done using an ADC (admin-defined command) called `sskm`.
 
-In this document:
-
-  * <a href="#_Important_">Important!</a>
-      * <a href="#_Key_fingerprints">Key fingerprints</a>
-      * <a href="#_Active_keys">Active keys</a>
-      * <a href="#_Selecting_which_key_to_use">Selecting which key to use</a>
-      * <a href="#_Public_vs_private_keys">Public vs. private keys</a>
-  * <a href="#_Listing_your_existing_keys">Listing your existing keys</a>
-  * <a href="#_Adding_or_Replacing_a_key">Adding or Replacing a key</a>
-      * <a href="#_Step_1_Adding_the_Key">Step 1: Adding the Key</a>
-      * <a href="#_Step_2_Confirming_the_addition">Step 2: Confirming the addition</a>
-      * <a href="#_Optional_Undoing_a_mistaken_add_before_confirmation_">Optional: Undoing a mistaken add (before confirmation)</a>
-  * <a href="#_Removing_a_key">Removing a key</a>
-      * <a href="#_Step_1_Mark_the_key_for_deletion">Step 1: Mark the key for deletion</a>
-      * <a href="#_Step_2_Confirming_the_deletion">Step 2: Confirming the deletion</a>
-      * <a href="#_Optional_Undoing_a_mistaken_delete_before_confirmation_">Optional: Undoing a mistaken delete (before confirmation)</a>
-  * <a href="#_important_notes_for_the_admin">important notes for the admin</a>
-
 ----
 
-<a name="_Important_"></a>
-
-### Important!
+## Important!
 
 There are a few things that you should know before using the key management system. Please do not ignore this section!
 
-<a name="_Key_fingerprints"></a>
-
-#### Key fingerprints
+### Key fingerprints
 
 Keys are identified in some of these subcommands by their fingerprints. To see the fingerprint for a public key on your computer, use the following syntax:
 
@@ -43,18 +21,13 @@ You'll get output like:
     jeff@baklava ~  $  ssh-keygen -l -f .ssh/jeffskey.pub 
     2048 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44 .ssh/jeffskey.pub (RSA)
 
-
-<a name="_Active_keys"></a>
-
-#### Active keys
+### Active keys
 
 Any keys that you can use to interact with the system are active keys. (Inactive keys are keys that are, for instance, scheduled to be added or removed.) Keys are identified with their `keyid`; see the section below on listing keys.
 
 If you have no current active keys, you will be locked out of the system (in which case email your admin for help). Therefore, be sure that you are never removing your only active key!
 
-<a name="_Selecting_which_key_to_use"></a>
-
-#### Selecting which key to use
+### Selecting which key to use
 
 Although you can identify yourself to the Gitolite system with any of your active keys on the server, at times it is necessary to specifically pick which key you are identifying with. To pick the key to use, pass the `-i` flag into `ssh`:
 
@@ -75,15 +48,11 @@ disable the agent, using one of these commands:
 * If using `keychain`, run `keychain --clear` to remove identities
 * Unset the `SSH_AUTH_SOCK` and `SSH_AGENT_PID` variables in the current shell
 
-<a name="_Public_vs_private_keys"></a>
-
-#### Public vs. private keys
+### Public vs. private keys
 
 In this guide, all keys are using their full suffix. In other words, if you see a `.pub` at the end of a key, it's the public key; if you don't, it's the private key. For instance, when using the `-i` flag with `ssh`, you are specifying private keys to use. When you are submitting a key for addition to the system, you are using the public key.
 
-<a name="_Listing_your_existing_keys"></a>
-
-### Listing your existing keys
+## Listing your existing keys
 
 To see a list of your existing keys, use the `list` argument to `sskm`:
 
@@ -103,13 +72,9 @@ use any keyid you wish when adding keys (like `@home`, `@laptop`, ...); the
 only rules are that it must start with the `@` character and after that
 contain only digits, letters, or underscores.
 
-<a name="_Adding_or_Replacing_a_key"></a>
+## Adding or Replacing a key
 
-### Adding or Replacing a key
-
-<a name="_Step_1_Adding_the_Key"></a>
-
-#### Step 1: Adding the Key
+### Step 1: Adding the Key
 
 Adding and replacing a key is the same process. What matters is the `keyid`. When adding a new key, use a new `keyid`; when replacing a key, pass in the `keyid` of the key you want to replace, as found by using the `list` subcommand. Pretty simple!
 
@@ -132,9 +97,7 @@ If you now run the `list` command you'll see that it's scheduled for addition:
     == keys marked for addition/replacement ==
     1: ff:92:a2:20:6d:42:6b:cf:20:e8:a2:4a:3b:b0:32:3a  : jeff@key4.pub
 
-<a name="_Step_2_Confirming_the_addition"></a>
-
-#### Step 2: Confirming the addition
+### Step 2: Confirming the addition
 
 Gitolite uses Git internally to store the keys. Just like with Git, where you commit locally before `push`-ing up to the server, you need to confirm the key addition (see the next section if you made a mistake). We use the `confirm-add` subcommand to do this, *but*: to verify that you truly have ownership of the corresponding private key, you *must* use the key you are adding itself to do the confirmation! (Inconvenient like most security, but very necessary from a security perspective.) This is where using the `-i` flag of `ssh` comes in handy:
 
@@ -152,9 +115,7 @@ Listing keys again shows that all four keys are now active:
     3: 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44  : jeff@key3.pub
     4: ff:92:a2:20:6d:42:6b:cf:20:e8:a2:4a:3b:b0:32:3a  : jeff@key4.pub
 
-<a name="_Optional_Undoing_a_mistaken_add_before_confirmation_"></a>
-
-#### Optional: Undoing a mistaken add (before confirmation)
+### Optional: Undoing a mistaken add (before confirmation)
 
 Another advantage of Gitolite using Git internally is that that if we mistakenly add the wrong key, we can undo it before it's confirmed by passing in the `keyid` we want to remove into the `undo-add` subcommand:
 
@@ -171,13 +132,9 @@ Listing the keys shows that that new key has been removed:
     2: 61:38:a7:9f:ba:cb:99:81:4f:49:2c:8b:c8:63:8e:33  : jeff@key2.pub
     3: 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44  : jeff@key3.pub
 
-<a name="_Removing_a_key"></a>
+## Removing a key
 
-### Removing a key
-
-<a name="_Step_1_Mark_the_key_for_deletion"></a>
-
-#### Step 1: Mark the key for deletion
+### Step 1: Mark the key for deletion
 
 Deleting a key works very similarly to adding a key, with `del` substituted for `add`.
 
@@ -211,9 +168,7 @@ Listing the keys now shows that it is marked for deletion:
     == keys marked for deletion ==
     1: ff:92:a2:20:6d:42:6b:cf:20:e8:a2:4a:3b:b0:32:3a  : jeff@key4.pub
 
-<a name="_Step_2_Confirming_the_deletion"></a>
-
-#### Step 2: Confirming the deletion
+### Step 2: Confirming the deletion
 
 Just like with Git, where you commit locally before `push`-ing up to the server, you need to confirm the key addition (see the next section if you made a mistake). We use the `confirm-del` subcommand to do this, *but*: unlike the `confirm-add` subcommand, you *must* use a *different* key than the key you are deleting to do the confirmation! This prevents you from accidentally locking yourself out of the system by removing all active keys:
 
@@ -230,9 +185,7 @@ Listing keys again shows that the fourth key has been removed:
     2: 61:38:a7:9f:ba:cb:99:81:4f:49:2c:8b:c8:63:8e:33  : jeff@key2.pub
     3: 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44  : jeff@key3.pub
 
-<a name="_Optional_Undoing_a_mistaken_delete_before_confirmation_"></a>
-
-#### Optional: Undoing a mistaken delete (before confirmation)
+### Optional: Undoing a mistaken delete (before confirmation)
 
 Another advantage of Gitolite using Git internally is that that if we mistakenly delete the wrong key, we can undo it before it's confirmed by passing in the `keyid` we want to keep into the `undo-del` subcommand. Note that this operation *must* be performed using the private key that corresponds to the key you are trying to keep! (Security reasons, similar to the reason that you must confirm an addition this way; it prevents anyone from undoing a deletion, and therefore keeping in the system, a key that they cannot prove (by having the corresponding private key) should stay in the system):
 
@@ -260,9 +213,7 @@ Listing the keys shows that that new key is now marked active again:
 
 ----
 
-<a name="_important_notes_for_the_admin"></a>
-
-### important notes for the admin
+## important notes for the admin
 
 These are the things that can break if you enable this ADC for your users:
 
@@ -279,10 +230,8 @@ These are the things that can break if you enable this ADC for your users:
     So, if you have the same *filename* in different subdirectories of
     `keydir`, you can't use this tool.
 
-  * keys placed in specific folders (perhaps to do [this][optak], or for
+  * keys placed in specific folders (perhaps to do [this][authkeyopt], or for
     whatever other reasons), will probably not stay in those folders if this
     ADC is used.  Even a key delete, followed by undoing the delete, will
     cause the key to effectively move to the root of the key store (i.e., the
     `keydir` directory in the gitolite-admin repo).
-
-[optak]: http://sitaramc.github.com/gitolite/doc/big-config.html#_optimising_the_authkeys_file

@@ -1,20 +1,17 @@
-## ldap helper programs
+# F=ldap_helpers ldap helper programs
 
 These programs were contributed by the Nokia MeeGo folks.
 
 The first 2 are perl and shell verisions of programs meant to be used as
 `$GL_GET_MEMBERSHIPS_PGM` (see [this][ldap] for more).
 
-
   * ldap-query-example.pl
   * ldap-query-example.sh
 
 The third program is meant to be installed as an adc (admin-defined command,
-see [here][adc]), and helps users change their LDAP passwords.
+see [here][ADCs]), and helps users change their LDAP passwords.
 
   * passwd
 
 Enjoy!
 
-[ldap]: http://sitaramc.github.com/gitolite/doc/big-config.html#_storing_usergroup_information_outside_gitolite_like_in_LDAP_
-[adc]: http://sitaramc.github.com/gitolite/doc/admin-defined-commands.html

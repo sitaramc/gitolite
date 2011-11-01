@@ -1,28 +1,9 @@
-# ...not a gitolite problem!
+# F=nagp ...not a gitolite problem!
 
 Subtitle: Unix, ssh, git, and gitolite -- recognising the boundaries
 
 **Warning**: Most of this is technical, but some of it is definitely
 subjective opinion.
-
-----
-
-In this document:
-
-  * <a href="#_background">background</a>
-  * <a href="#_ssh">ssh</a>
-  * <a href="#_git">git</a>
-  * <a href="#_windows">windows</a>
-  * <a href="#_apple">apple</a>
-  * <a href="#_just_say_NO_">just say NO!</a>
-      * <a href="#_behind_my_back">behind my back</a>
-  * <a href="#_that_s_outrageous">that's outrageous</a>
-
-----
-
-<a name="_background"></a>
-
-### background
 
 More and more people are being tasked with creating a "server" environment for
 git, (and thus being forcibly introduced to gitolite), before they've had a
@@ -51,24 +32,16 @@ That might help with some of the problems described in this document.
 [bare]: http://sitaramc.github.com/concepts/0-terminology.html#working_tree_repository_bare_repository
 [sgs]: http://sitaramc.github.com/1-basic-usage/simple-git-session.html
 
-<a name="_ssh"></a>
-
-### ssh
+## ssh
 
 Let's get this out of the way first.  The *superstar* of the "not a gitolite
 problem" category is actually ssh.
 
-Surprised?  It is so common that it has [its own document][aa] to tell you why
-it is *not* a gitolite problem, while [another one][sts] tries to help you
-anyway!
+Surprised?  It is so common that it has [its own document][auth] to tell
+you why it is *not* a gitolite problem, while [another one][sts] tries to
+help you anyway!
 
-[aa]: http://sitaramc.github.com/gitolite/doc/authentication-vs-authorisation.html
-[sts]: http://sitaramc.github.com/gitolite/doc/ssh-troubleshooting.html
-[hc]: http://sitaramc.github.com/gitolite/doc/2-admin.html#_hook_chaining
-
-<a name="_git"></a>
-
-### git
+## git
 
   * first push to a new repo
 
@@ -110,14 +83,13 @@ anyway!
 
     I don't know much about CI systems, but I'm pretty sure they run off of
     some hook or other, but gitolite may already be using those hooks.  The
-    section on hook chaining [here][hc] shows you how to run your own hooks.
+    section on hook chaining [here][hookchaining] shows you how to run your own
+    hooks.
 
     In short, CI integration is no more a gitolite problem than any other
     purpose for which git's hooks can be used.
 
-<a name="_windows"></a>
-
-### windows
+## windows
 
 I'm *interested* in making sure it works fine with Windows, simply because I
 have colleagues at work who use it.  But that doesn't mean I can help you; I
@@ -129,9 +101,7 @@ God alone knows what else, so I know it *can* (be made to) work.
 
 So, hang in there... it'll all work out eventually.
 
-<a name="_apple"></a>
-
-### apple
+## apple
 
 Weirdly enough, this is the one thing that Steve Ballmer and I probably agree
 on, so I won't elaborate on that ;-)
@@ -139,9 +109,7 @@ on, so I won't elaborate on that ;-)
 It seems to me though, that many recent reports of "weird" behaviour reported
 have come from Macs.  Yet another reason for me to back off with an apology.
 
-<a name="_just_say_NO_"></a>
-
-### just say NO!
+## just say NO!
 
 These are the things I won't do, for various reasons, mostly technical, with a
 smattering of some subjective stuff.  If you've been hit by one of these, and
@@ -200,9 +168,7 @@ the GPL, you can simply "fork off" ;-)
     workable solution, I still would not do it.  A server repo should be bare.
     Period.
 
-<a name="_behind_my_back"></a>
-
-#### behind my back
+### behind my back
 
 Some of the "Just say NO" items are from situations where someone or something
 changes stuff behind gitolite's back.  I am particularly unsympathetic to this
@@ -254,9 +220,7 @@ sort of thing.
 
     </font>
 
-<a name="_that_s_outrageous"></a>
-
-### that's outrageous
+## that's outrageous
 
 This section is for really outrageous stuff.
 

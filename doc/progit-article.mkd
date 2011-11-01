@@ -1,16 +1,12 @@
-# (master copy of progit chapter on gitolite)
+# F=progit (master copy of progit chapter on gitolite)
 
 ## Gitolite ##
 
-Note: the latest copy of this section of the ProGit book is always available within the [gitolite documentation][gldpg].  The author would also like to humbly state that, while this section is accurate, and *can* (and often *has*) been used to install gitolite without reading any other documentation, it is of necessity not complete, and cannot completely replace the enormous amount of documentation that gitolite comes with.
-
-[gldpg]: http://sitaramc.github.com/gitolite/doc/progit-article.html
+Note: the latest copy of this section of the ProGit book is always available within the [gitolite documentation][progit].  The author would also like to humbly state that, while this section is accurate, and *can* (and often *has*) been used to install gitolite without reading any other documentation, it is of necessity not complete, and cannot completely replace the enormous amount of documentation that gitolite comes with.
 
 Git has started to become very popular in corporate environments, which tend to have some additional requirements in terms of access control.  Gitolite was originally created to help with those requirements, but it turns out that it's equally useful in the open source world: the Fedora Project controls access to their package management repositories (over 10,000 of them!) using gitolite, and this is probably the largest gitolite installation anywhere too.
 
 Gitolite allows you to specify permissions not just by repository, but also by branch or tag names within each repository.  That is, you can specify that certain people (or groups of people) can only push certain "refs" (branches or tags) but not others.
-
-<a name="_Installing_"></a>
 
 ### Installing ###
 
@@ -25,24 +21,17 @@ We will describe this last method in this article; for the other methods please 
 To begin, create a user called `git` on your server and login to this user.  Copy your ssh pubkey (a file called `~/.ssh/id_rsa.pub` if you did a plain `ssh-keygen` with all the defaults) from your workstation, renaiming it to `YourName.pub`.  Then run these commands:
 
     git clone git://github.com/sitaramc/gitolite
-    cd gitolite
-    src/gl-system-install
+    gitolite/src/gl-system-install
     gl-setup -q ~/YourName.pub
         # for example, I would run 'gl-setup -q ~/sitaram.pub'
 
 Finally, back on your workstation, run `git clone git@server:gitolite-admin`.
 
-And you're done!  Gitolite has now been installed on the server, and you now have a brand new repository called `gitolite-admin` in your workstation.  You administer your gitolite setup by making changes to this repository and pushing.  See [adding users and repos][aur] to start with.
-
-[aur]: http://sitaramc.github.com/gitolite/doc/2-admin.html#_adding_users_and_repos
-
-<a name="_Customising_the_Install_"></a>
+And you're done!  Gitolite has now been installed on the server, and you now have a brand new repository called `gitolite-admin` in your workstation.  You administer your gitolite setup by making changes to this repository and pushing.  See [adding users and repos][add] to start with.
 
 ### Customising the Install ###
 
-While the default, quick, install works for most people, there are some ways to customise the install if you need to.  If you omit the `-q` argument, an editor pops up with a file for you to edit, so you can change certain server-side parameters, such as the location of the actual repositories.  This "rc" file is documented in [doc/gitolite.rc.mkd][rcdoc] so you should be able to make any changes you need quite easily, save it, and continue.
-
-<a name="_Config_File_and_Access_Control_Rules_"></a>
+While the default, quick, install works for most people, there are some ways to customise the install if you need to.  If you omit the `-q` argument, an editor pops up with a file for you to edit, so you can change certain server-side parameters, such as the location of the actual repositories.  This "rc" file is documented in [doc/gitolite.rc.mkd][rc] so you should be able to make any changes you need quite easily, save it, and continue.
 
 ### Config File and Access Control Rules ###
 
@@ -58,7 +47,6 @@ Once the install is done, you switch to the `gitolite-admin` repository (placed 
 	#gitolite conf
 	# please see doc/gitolite.conf.mkd for details on syntax and features
 
-
 	repo gitolite-admin
 	    RW+                 = sitaram
 
@@ -67,7 +55,7 @@ Once the install is done, you switch to the `gitolite-admin` repository (placed 
 
 Notice that "sitaram" (the name of the pubkey in the gl-setup command you used earlier) has read-write permissions on the `gitolite-admin` repository as well as a public key file of the same name.
 
-The config file syntax for gitolite is documented in [doc/gitolite.conf.mkd][confdoc] so we'll only mention some highlights here.
+The config file syntax for gitolite is documented in [doc/gitolite.conf.mkd][conf] so we'll only mention some highlights here.
 
 You can group users or repos for convenience.  The group names are just like macros; when defining them, it doesn't even matter whether they are projects or users; that distinction is only made when you *use* the "macro".
 
@@ -104,8 +92,6 @@ There are two levels of access control in gitolite.  The first is at the reposit
 
 The second level, applicable only to "write" access, is by branch or tag within a repository.  The username, the access being attempted (`W` or `+`), and the refname being updated are known.  The access rules are checked in order of appearance in the config file, looking for a match for this combination (but remember that the refname is regex-matched, not merely string-matched).  If a match is found, the push succeeds.  A fallthrough results in access being denied.
 
-<a name="_Advanced_Access_Control_with_deny_rules_"></a>
-
 ### Advanced Access Control with "deny" rules ###
 
 So far, we've only seen permissions to be one or `R`, `RW`, or `RW+`.  However, gitolite allows another permission: `-`, standing for "deny".  This gives you a lot more power, at the expense of some complexity, because now fallthrough is not the *only* way for access to be denied, so the *order of the rules now matters*!
@@ -130,8 +116,6 @@ You can also use deny rules to hide specific repos from people (or gitweb, or gi
 
 See the documentation for more on this.
 
-<a name="_Restricting_pushes_by_files_changed_"></a>
-
 ### Restricting pushes by files changed ###
 
 In addition to restricting what branches a user can push changes to, you can also restrict what files they are allowed to touch.  For example, perhaps the Makefile (or some other program) is really not supposed to be changed by just anyone, because a lot of things depend on it or would break if the changes are not done *just right*.  You can tell gitolite:
@@ -145,8 +129,6 @@ In addition to restricting what branches a user can push changes to, you can als
 
 This powerful feature is documented in `conf/example.conf`.
 
-<a name="_Personal_Branches_"></a>
-
 ### Personal Branches ###
 
 Gitolite also has a feature called "personal branches" (or rather, "personal branch namespace") that can be very useful in a corporate environment.
@@ -157,13 +139,9 @@ This would normally cause the same branch name clutter as in a centralised VCS, 
 
 Gitolite lets you define a "personal" or "scratch" namespace prefix for each developer (for example, `refs/personal/<devname>/*`); see the "personal branches" section in `doc/3-faq-tips-etc.mkd` for details.
 
-<a name="_Wildcard_repositories_"></a>
-
 ### "Wildcard" repositories ###
 
 Gitolite allows you to specify repositories with wildcards (actually perl regexes), like, for example `assignments/s[0-9][0-9]/a[0-9][0-9]`, to pick a random example.  This is a *very* powerful feature, which has to be enabled by setting `$GL_WILDREPOS = 1;` in the rc file.  It allows you to assign a new permission mode ("C") which allows users to create repositories based on such wild cards, automatically assigns ownership to the specific user who created it, allows him/her to hand out R and RW permissions to other users to collaborate, etc.  This feature is documented in `doc/wildcard-repositories.mkd`.
-
-<a name="_Other_Features_"></a>
 
 ### Other Features ###
 

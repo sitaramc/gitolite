@@ -1,26 +1,21 @@
-## what is a "big-config"
+# F=bc what is a "big-config"
 
-In this document:
+This document is just background info; you don't actually need to read the
+whole thing if you don't care.  All you need to do is set `BIG_CONFIG` to 1 in
+the rc file and you're done.  If you have no use for gitweb and daemon, you
+can save even more time by setting `GL_NO_DAEMON_NO_GITWEB`.
 
-  * <a href="#_when_why_do_we_need_it_">when/why do we need it?</a>
-  * <a href="#_how_do_we_use_it_">how do we use it?</a>
-      * <a href="#_access_rules_for_groups">access rules for groups</a>
-      * <a href="#_access_rules_for_individual_repos_split_config_">access rules for individual repos (split config)</a>
-  * <a href="#_other_optimisations">other optimisations</a>
-      * <a href="#_disabling_various_defaults">disabling various defaults</a>
-      * <a href="#_optimising_the_authkeys_file">optimising the authkeys file</a>
-  * <a href="#_what_are_the_downsides_">what are the downsides?</a>
-  * <a href="#_storing_usergroup_information_outside_gitolite_like_in_LDAP_">storing usergroup information outside gitolite (like in LDAP)</a>
-      * <a href="#_why">why</a>
-      * <a href="#_how">how</a>
-  * <a href="#_implementation_notes">implementation notes</a>
+Finally, if you're *really* an expert (or your initials are "JK"), you can
+even set `GL_NO_CREATE_REPOS` and `GL_NO_SETUP_AUTHKEYS`.  However, be warned
+that if you're not sufficiently clueful, those last 2 variables could have a
+[security impact][rcsecurity].
 
-<a name="_when_why_do_we_need_it_"></a>
-
-### when/why do we need it?
+## when/why do we need it?
 
 A "big config" is anything that has a few thousand users and a few thousand
 repos, resulting in a very large 'compiled' config file.
+
+### the problem
 
 To understand the problem, consider what happens if you have something like
 this in your gitolite conf file:
@@ -40,7 +35,259 @@ Without the 'big config' setting, gitolite internally translates this to:
 
 and then generates the actual config rules once for each user-repo-ref
 combination (there are 8 combinations above); the compiled config file looks
-somewhat like this:
+somewhat like [this][_bigno].
+
+Of course, the output is the same whether you used groups (like `@wbr` and
+`@devs` in the example above) or listed the repos directly on the 'repo'
+lines.
+
+Anyway, you can imagine what that does when you have 10,000 users and 10,000
+repos.  Let's just say it's not pretty :)
+
+## how do we use it?
+
+Just set
+
+    $GL_BIG_CONFIG = 1;
+
+in the `~/.gitolite.rc` file on the server (see next section for more
+variables).  When you do that, and push this configuration, one of two things
+happens.
+
+### access rules for groups
+
+If you used group names in the 'repo' lines (as in `repo @wbr`), then the
+compiled config looks like [this][_bigyes].
+
+That's a lot smaller, and allows orders of magintude more repos and groups to
+be supported.
+
+### access rules for individual repos (split config)
+
+If, on the other hand, you had the repos listed individually, (as in `repo
+lynx firefox`), then the main config file would now look like this:
+
+    %repos = ();
+    %split_conf = (
+      'firefox' => 1,
+      'lynx' => 1
+    );
+
+And each individual repo's configuration would go its own directory.  For
+instance, `~/repositories/lynx.git/gl-conf` would look like this:
+
+    %one_repo = (
+      'lynx' => {
+        'R' => {
+          'alice' => 1,
+          'bob' => 1
+        },
+        'W' => {
+          'alice' => 1,
+          'bob' => 1
+        },
+        'alice' => [
+          [
+            0,
+            'refs/heads/next',
+            'RW+'
+          ],
+          [
+            4,
+            'refs/heads/master',
+            'RW'
+          ]
+        ],
+        'bob' => [
+          [
+            1,
+            'refs/heads/next',
+            'RW+'
+          ],
+          [
+            5,
+            'refs/heads/master',
+            'RW'
+          ]
+        ]
+      }
+    );
+
+That does not reduce the overall size of the repo config (because you did not
+group the repos), but the main repo config is now even smaller!
+
+## what are the downsides?
+
+There are some downsides.
+
+The following apply if individual ("split") conf files are written, which in
+turn only happens if you used repo names instead of group names on the `repo`
+lines:
+
+  * the compile (gitolite-admin push) is now slower, because it potentially
+    has to write a few thousand small files instead of one large one.  Since
+    the compile should be relatively infrequent compared to developer access,
+    this is ok -- the main config file is parsed much faster now, so every hit
+    to the server will benefit.
+
+  * we can no longer distinguish 'repo not found on disk' from 'you dont have
+    access'.  They both now look like 'you dont have access'.
+
+## other optimisations
+
+### disabling various defaults
+
+The default RC file contains the following lines (we've already discussed the
+first one):
+
+    $GL_BIG_CONFIG = 0;
+    $GL_NO_DAEMON_NO_GITWEB = 0;
+    $GL_NO_CREATE_REPOS = 0;
+    $GL_NO_SETUP_AUTHKEYS = 0;
+
+`GL_NO_DAEMON_NO_GITWEB` is a very useful optimisation that you *must* enable
+if you *do* have a large number of repositories, and do *not* use gitolite's
+support for gitweb or git-daemon access (see "[this][gwd]" for details).  This will save a
+lot of time when you push the gitolite-admin repo with changes.  This variable
+also controls whether "git config" lines (such as `config hooks.emailprefix =
+"[gitolite]"`) will be processed or not.
+
+You should be a lot more careful with `GL_NO_CREATE_REPOS` and
+`GL_NO_SETUP_AUTHKEYS`.  These are meant for installations where some backend
+system already exists that does all the actual repo creation, (including
+setting up the proper hooks -- very important for access control), and all the
+authentication setup (ssh auth keys), respectively.
+
+Summary: Please **leave those two variables alone** unless you're initials are
+"JK" ;-)
+
+### #authkeyopt optimising the authkeys file
+
+Sshd does a linear scan of the `~/.ssh/authorized_keys` file when an incoming
+connection shows up.  This means that keys found near the top get served
+faster than keys near the bottom.  On my laptop, it takes about 2500 keys
+before I notice the delay; on a typical server it could be double that, so
+don't worry about all this unless your user-count is in that range.
+
+One way to deal with 5000+ keys is to use customised, database-backed ssh
+daemons, but many people are uncomfortable with taking non-standard versions
+of such a critical piece of the security infrastructure.  In addition, most
+distributions do not make it painless to use them.
+
+So what do you do?
+
+The following trick uses the Pareto principle (a.k.a the "80-20 rule")
+to get an immediate boost in response for the most frequent or prolific
+developers.  It can allow you to ignore the problem until the next big
+increase in your user counts!
+
+Here's how:
+
+  * create subdirectories of keydir/ called 0, 1, (maybe 2, 3, etc., also),
+    and 9.
+  * in 0/, put in the pubkeys of the most frequent users
+  * in 1/, add the next most important set of users, and so on for 2, 3, etc.
+  * finally, put all the rest in 9/
+
+Make sure "9" contains at least 70-90% of the total number of pubkeys,
+otherwise this doesn't really help.
+
+You can easily determine who your top users are by runnning something like
+this (note the clever date command that always gets you last months log file!)
+
+    cat .gitolite/logs/gitolite-`date +%Y-%m -d -30days`.log |
+        cut -f2 | sort | uniq -c | sort -n -r
+
+## F=ldap storing usergroup information outside gitolite (like in LDAP)
+
+[Please NOTE: this is all about *user* groups, not *repo* groups]
+
+[WARNING: the earlier method of doing this has been discontinued; please see
+the commit message for details]
+
+Gitolite now allows usergroup information to be stored outside its own config
+file.  We'll see "why" first, then the "how".
+
+### #_ldapwhy why
+
+Large sites often have LDAP servers that already contain user and group
+information, including group membership details.  Such sites may prefer that
+gitolite just pick up that info instead of having to redundantly put it in
+gitolite's config file.
+
+Consider this example config for one repo:
+
+    repo foo
+        RW+ =   @lead_devs
+        RW  =   @devs
+        R   =   @interns
+
+Normally, you would also need to specify:
+
+    @lead_devs  =   dilbert alice
+    @devs       =   wally
+    @interns    =   ashok
+
+However, if the corporate LDAP server already tags these people correctly, and
+if there is some way of getting that information out **at run time**, that
+would be cool.
+
+### #_ldaphow how
+
+All you need is a script that, given a username, queries your LDAP or similar
+server, and returns a space-separated list of all the groups she is a member
+of.  If an invalid user name is sent in, or the user is valid but is not part
+of any groups, it should print nothing.
+
+This script will probably be specific to your site.  (See contrib/ldap for some
+example scripts that were contributed by the Nokia MeeGo team.)
+
+Then set the `$GL_GET_MEMBERSHIPS_PGM` variable in the rc file to the full
+path of this program, set `$GL_BIG_CONFIG` to 1, and that will be that.
+
+## implementation notes
+
+To understand how big-config works (at least when you're using grouped repos),
+we'll first look at how it works without this setting.  Think back to the
+example at the top, and assume 'alice' is accessing the 'lynx' repo.  The
+various rights are governed by the following hash elements:
+
+    # for the first level checks
+    $repos{'lynx'}{'R'}{'alice'} = 1
+    $repos{'lynx'}{'W'}{'alice'} = 1
+
+    # for the second level checks
+    $repos{'lynx'}{'alice'}{'refs/heads/master'} = 'RW';
+    $repos{'lynx'}{'alice'}{'refs/heads/next'} = 'RW+';
+
+Those elements are explicitly specified in the compiled hash, as you can see
+(you don't need to know perl too much to read a hash; just make some educated
+guesses if needed!)
+
+Now look at the compiled hash produced when `GL_BIG_CONFIG` is set.  In place
+of both 'firefox' and 'lynx' you have '@wbr', and similarly '@devs' for both
+'alice' and 'bob'.  In addition, there is a group hash at the bottom that
+lists each group and its members.
+
+When 'alice' tries to access the 'lynx' repo, gitolite collects all the group
+names that these names belong to, so '@devs' is added to the list of 'user'
+names that 'alice' inherits permissions from, and '@wbr' is added to the list
+of 'repo' names that 'lynx' inherits from.  This means that the final access
+inherits all permissions pertaining to the following combinations:
+
+    alice, lynx
+    alice, @wbr
+    @devs, lynx
+    @devs, @wbr
+
+(Actually there are 3 more... try and guess what they may be!)
+
+Anyway, all ACL rules for these combinations are clubbed together to make the
+composite set of rules that 'alice' accessing 'lynx' is subject to.
+
+## config listings
+
+### F=_bigno compiled config with big-config disabled
 
     %repos = (
       'firefox' => {
@@ -115,31 +362,7 @@ somewhat like this:
 
 Phew!
 
-Of course, the output is the same whether you used groups (like `@wbr` and
-`@devs` in the example above) or listed the repos directly on the 'repo'
-lines.
-
-Anyway, you can imagine what that does when you have 10,000 users and 10,000
-repos.  Let's just say it's not pretty :)
-
-<a name="_how_do_we_use_it_"></a>
-
-### how do we use it?
-
-Just set
-
-    $GL_BIG_CONFIG = 1;
-
-in the `~/.gitolite.rc` file on the server (see next section for more
-variables).  When you do that, and push this configuration, one of two things
-happens.
-
-<a name="_access_rules_for_groups"></a>
-
-#### access rules for groups
-
-If you used group names in the 'repo' lines (as in `repo @wbr`), then the
-compiled config looks like this:
+### F=_bigyes compiled config with big-config enabled
 
     %repos = (
       '@wbr' => {
@@ -173,249 +396,3 @@ compiled config looks like this:
         'lynx' => 'master'
       }
     );
-
-That's a lot smaller, and allows orders of magintude more repos and groups to
-be supported.
-
-<a name="_access_rules_for_individual_repos_split_config_"></a>
-
-#### access rules for individual repos (split config)
-
-If, on the other hand, you had the repos listed individually, (as in `repo
-lynx firefox`), then the main config file would now look like this:
-
-    %repos = ();
-    %split_conf = (
-      'firefox' => 1,
-      'lynx' => 1
-    );
-
-And each individual repo's configuration would go its own directory.  For
-instance, `~/repositories/lynx.git/gl-conf` would look like this:
-
-    %one_repo = (
-      'lynx' => {
-        'R' => {
-          'alice' => 1,
-          'bob' => 1
-        },
-        'W' => {
-          'alice' => 1,
-          'bob' => 1
-        },
-        'alice' => [
-          [
-            0,
-            'refs/heads/next',
-            'RW+'
-          ],
-          [
-            4,
-            'refs/heads/master',
-            'RW'
-          ]
-        ],
-        'bob' => [
-          [
-            1,
-            'refs/heads/next',
-            'RW+'
-          ],
-          [
-            5,
-            'refs/heads/master',
-            'RW'
-          ]
-        ]
-      }
-    );
-
-That does not reduce the overall size of the repo config (because you did not
-group the repos), but the main repo config is now even smaller!
-
-<a name="_other_optimisations"></a>
-
-### other optimisations
-
-<a name="_disabling_various_defaults"></a>
-
-#### disabling various defaults
-
-The default RC file contains the following lines (we've already discussed the
-first one):
-
-    $GL_BIG_CONFIG = 0;
-    $GL_NO_DAEMON_NO_GITWEB = 0;
-    $GL_NO_CREATE_REPOS = 0;
-    $GL_NO_SETUP_AUTHKEYS = 0;
-
-`GL_NO_DAEMON_NO_GITWEB` is a very useful optimisation that you *must* enable
-if you *do* have a large number of repositories, and do *not* use gitolite's
-support for gitweb or git-daemon access (see "[this][gwd]" for details).  This will save a
-lot of time when you push the gitolite-admin repo with changes.  This variable
-also controls whether "git config" lines (such as `config hooks.emailprefix =
-"[gitolite]"`) will be processed or not.
-
-You should be a lot more careful with `GL_NO_CREATE_REPOS` and
-`GL_NO_SETUP_AUTHKEYS`.  These are meant for installations where some backend
-system already exists that does all the actual repo creation, (including
-setting up the proper hooks -- very important for access control), and all the
-authentication setup (ssh auth keys), respectively.
-
-Summary: Please **leave those two variables alone** unless you're initials are
-"JK" ;-)
-
-<a name="_optimising_the_authkeys_file"></a>
-
-#### optimising the authkeys file
-
-Sshd does a linear scan of the `~/.ssh/authorized_keys` file when an incoming
-connection shows up.  This means that keys found near the top get served
-faster than keys near the bottom.  On my laptop, it takes about 2500 keys
-before I notice the delay; on a typical server it could be double that, so
-don't worry about all this unless your user-count is in that range.
-
-One way to deal with 5000+ keys is to use customised, database-backed ssh
-daemons, but many people are uncomfortable with taking non-standard versions
-of such a critical piece of the security infrastructure.  In addition, most
-distributions do not make it painless to use them.
-
-So what do you do?
-
-The following trick uses the Pareto principle (a.k.a the "80-20 rule")
-to get an immediate boost in response for the most frequent or prolific
-developers.  It can allow you to ignore the problem until the next big
-increase in your user counts!
-
-Here's how:
-
-  * create subdirectories of keydir/ called 0, 1, (maybe 2, 3, etc., also),
-    and 9.
-  * in 0/, put in the pubkeys of the most frequent users
-  * in 1/, add the next most important set of users, and so on for 2, 3, etc.
-  * finally, put all the rest in 9/
-
-Make sure "9" contains at least 70-90% of the total number of pubkeys,
-otherwise this doesn't really help.
-
-You can easily determine who your top users are by runnning something like
-this (note the clever date command that always gets you last months log file!)
-
-    cat .gitolite/logs/gitolite-`date +%Y-%m -d -30days`.log |
-        cut -f2 | sort | uniq -c | sort -n -r
-
-<a name="_what_are_the_downsides_"></a>
-
-### what are the downsides?
-
-There are some downsides.
-
-The following apply if individual ("split") conf files are written, which in
-turn only happens if you used repo names instead of group names on the `repo`
-lines:
-
-  * the compile (gitolite-admin push) is now slower, because it potentially
-    has to write a few thousand small files instead of one large one.  Since
-    the compile should be relatively infrequent compared to developer access,
-    this is ok -- the main config file is parsed much faster now, so every hit
-    to the server will benefit.
-
-  * we can no longer distinguish 'repo not found on disk' from 'you dont have
-    access'.  They both now look like 'you dont have access'.
-
-<a name="_storing_usergroup_information_outside_gitolite_like_in_LDAP_"></a>
-
-### storing usergroup information outside gitolite (like in LDAP)
-
-[Please NOTE: this is all about *user* groups, not *repo* groups]
-
-[WARNING: the earlier method of doing this has been discontinued; please see
-the commit message for details]
-
-Gitolite now allows usergroup information to be stored outside its own config
-file.  We'll see "why" first, then the "how".
-
-<a name="_why"></a>
-
-#### why
-
-Large sites often have LDAP servers that already contain user and group
-information, including group membership details.  Such sites may prefer that
-gitolite just pick up that info instead of having to redundantly put it in
-gitolite's config file.
-
-Consider this example config for one repo:
-
-    repo foo
-        RW+ =   @lead_devs
-        RW  =   @devs
-        R   =   @interns
-
-Normally, you would also need to specify:
-
-    @lead_devs  =   dilbert alice
-    @devs       =   wally
-    @interns    =   ashok
-
-However, if the corporate LDAP server already tags these people correctly, and
-if there is some way of getting that information out **at run time**, that
-would be cool.
-
-<a name="_how"></a>
-
-#### how
-
-All you need is a script that, given a username, queries your LDAP or similar
-server, and returns a space-separated list of all the groups she is a member
-of.  If an invalid user name is sent in, or the user is valid but is not part
-of any groups, it should print nothing.
-
-This script will probably be specific to your site.  (See contrib/ldap for some
-example scripts that were contributed by the Nokia MeeGo team.)
-
-Then set the `$GL_GET_MEMBERSHIPS_PGM` variable in the rc file to the full
-path of this program, set `$GL_BIG_CONFIG` to 1, and that will be that.
-
-[gwd]: http://sitaramc.github.com/gitolite/doc/2-admin.html#gwd
-
-<a name="_implementation_notes"></a>
-
-### implementation notes
-
-To understand how big-config works (at least when you're using grouped repos),
-we'll first look at how it works without this setting.  Think back to the
-example at the top, and assume 'alice' is accessing the 'lynx' repo.  The
-various rights are governed by the following hash elements:
-
-    # for the first level checks
-    $repos{'lynx'}{'R'}{'alice'} = 1
-    $repos{'lynx'}{'W'}{'alice'} = 1
-
-    # for the second level checks
-    $repos{'lynx'}{'alice'}{'refs/heads/master'} = 'RW';
-    $repos{'lynx'}{'alice'}{'refs/heads/next'} = 'RW+';
-
-Those elements are explicitly specified in the compiled hash, as you can see
-(you don't need to know perl too much to read a hash; just make some educated
-guesses if needed!)
-
-Now look at the compiled hash produced when `GL_BIG_CONFIG` is set.  In place
-of both 'firefox' and 'lynx' you have '@wbr', and similarly '@devs' for both
-'alice' and 'bob'.  In addition, there is a group hash at the bottom that
-lists each group and its members.
-
-When 'alice' tries to access the 'lynx' repo, gitolite collects all the group
-names that these names belong to, so '@devs' is added to the list of 'user'
-names that 'alice' inherits permissions from, and '@wbr' is added to the list
-of 'repo' names that 'lynx' inherits from.  This means that the final access
-inherits all permissions pertaining to the following combinations:
-
-    alice, lynx
-    alice, @wbr
-    @devs, lynx
-    @devs, @wbr
-
-(Actually there are 3 more... try and guess what they may be!)
-
-Anyway, all ACL rules for these combinations are clubbed together to make the
-composite set of rules that 'alice' accessing 'lynx' is subject to.

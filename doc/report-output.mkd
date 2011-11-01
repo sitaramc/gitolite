@@ -1,22 +1,10 @@
-# output of the "info" and "expand" commands
+# F=info_expand output of the "info" and "expand" commands
 
 Running "ssh git@server info" or "ssh git@server expand" gives you certain
 output.  This doclet describes the output; you're welcome to help me make it
 clearer :)
 
-In this document:
-
-  * <a href="#_the_info_command">the "info" command</a>
-      * <a href="#_interpreting_the_output">interpreting the output</a>
-      * <a href="#_using_patterns_to_limit_output">using patterns to limit output</a>
-      * <a href="#_side_note_openssh_5_6">side note: openssh 5.6</a>
-  * <a href="#_the_expand_command">the "expand" command</a>
-
-----
-
-<a name="_the_info_command"></a>
-
-### the "info" command
+## #info the "info" command
 
 Usage:
 
@@ -49,9 +37,7 @@ is often blank.
         @R_ @W_	testing
          R   W 	vkc
 
-<a name="_interpreting_the_output"></a>
-
-#### interpreting the output
+### interpreting the output
 
 The meaning of C, R, and W are self-explanatory, but they may be prefixed or
 suffixed by a symbol:
@@ -74,9 +60,7 @@ suffixed by a symbol:
 The `_` suffix is special.  This says the user has only implicit access (due
 to one of the `@all` uses), but no explicit access.
 
-<a name="_using_patterns_to_limit_output"></a>
-
-#### using patterns to limit output
+### #limitoutput using patterns to limit output
 
 Here are a couple of samples with optional patterns:
 
@@ -95,17 +79,14 @@ Here are a couple of samples with optional patterns:
 In "big-config" mode (i.e., when `GL_BIG_CONFIG` is set) the pattern is
 **mandatory**.  You can try and cheat the system by passing in a "." but
 gitolite truncates the output after 20 results to prevent a DOS.  (This limit
-can be changed; see `$BIG_INFO_CAP` in [doc/gitolite.rc.mkd][rcdoc]).
-
-[rcdoc]: http://sitaramc.github.com/gitolite/doc/gitolite.rc.html
+can be changed; see `$BIG_INFO_CAP` in the documentation for
+[`~/.gitolite.rc`][rc]).
 
 The pattern is also mandatory when an admin wants to find out what access some
 *other* user has, which you may have guessed from the syntax in the "usage"
 line above.
 
-<a name="_side_note_openssh_5_6"></a>
-
-#### side note: openssh 5.6
+### #openssh5.6 side note: openssh 5.6
 
 It used to be that the gitolite documentation would say "just use `ssh
 git@server`" in the past, because gitolite defaults to the "info" command if
@@ -121,9 +102,7 @@ add the `-T` option to ssh (`ssh -T git@server`).
 
 [openssh56]: http://www.openssh.org/txt/release-5.6
 
-<a name="_the_expand_command"></a>
-
-### the "expand" command
+## #expand the "expand" command
 
 Usage:
 

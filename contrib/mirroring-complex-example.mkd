@@ -1,33 +1,9 @@
-## semi-autonomous mirroring setup example
-
-[deldoc]: http://sitaramc.github.com/gitolite/doc/delegation.html
-[sc]: http://sitaramc.github.com/gitolite/doc/delegation.html#_the_subconf_command
+# F=mirr_complex_example semi-autonomous mirroring setup example
 
 This document describes one way to do this.  Gitolite is powerful so you can
 probably find other ways to suit you.
 
-In this document:
-
-  * <a href="#_overview_of_problem">overview of problem</a>
-  * <a href="#_overview_of_setup">overview of setup</a>
-      * <a href="#_gitolite_feature_recap">gitolite feature recap</a>
-  * <a href="#_pre_requisites">pre-requisites</a>
-  * <a href="#_quick_setup">quick setup</a>
-  * <a href="#_step_by_step">step by step</a>
-      * <a href="#_1_gitolite_conf_">(1) `gitolite.conf`</a>
-      * <a href="#_2_master_sam_conf_">(2) `master/sam.conf`</a>
-      * <a href="#_3_host_admins_only_master_sam_p1_conf_">(3) host admins only -- `master/sam/p1.conf`</a>
-      * <a href="#_4_mirrors_sam_p1_conf_">(4) `mirrors/sam/p1.conf`</a>
-      * <a href="#_5_slave_frodo_sam_conf_">(5) `slave/frodo/sam.conf`</a>
-      * <a href="#_6_manual_sync">(6) manual sync</a>
-  * <a href="#_next_steps">next steps</a>
-  * <a href="#_appendix_A_delegation_helper_files">appendix A: delegation helper files</a>
-
-----
-
-<a name="_overview_of_problem"></a>
-
-### overview of problem
+## overview of problem
 
 The example is from real life, with the following characteristics:
 
@@ -55,9 +31,7 @@ The following can only be done by the master admins:
   * mirroring setup -- who's the master and who're the slaves for any repo
   * allowing redirected pushes from slaves
 
-<a name="_overview_of_setup"></a>
-
-### overview of setup
+## overview of setup
 
 We will use p1 as the product, with sam as the master and frodo as a slave.
 Assume equivalent text/code for other product/master/slave combos.
@@ -67,22 +41,18 @@ name; either a product name or, for local repos, a hostname.  In our example,
 these directory names would be p1 or sam on the host sam, and frodo on the
 host frodo.
 
-<a name="_gitolite_feature_recap"></a>
+### gitolite feature recap
 
-#### gitolite feature recap
-
-We use [delegation][deldoc], to ensure that admins for sam can only write
+We use [delegation][deleg], to ensure that admins for sam can only write
 files whose names start with `master/sam/`.  The actual files they will write
 are `master/sam/p1.conf` etc., one for each product that is mastered on their
 server.
 
-We use [subconf][sc].  When you say `subconf "path/to/foo.conf`, then within
+We use [subconf][].  When you say `subconf "path/to/foo.conf`, then within
 that file (and anything included from it), access can only be defined for
 repos that regex-match one of the elements of `@foo`.
 
-<a name="_pre_requisites"></a>
-
-### pre-requisites
+## pre-requisites
 
 First, install mirroring on all servers according to the main mirroring
 document.  Set it up so that the gitolite-admin repo is mastered at one server
@@ -91,9 +61,7 @@ and everyone else slaves it.
 Also, after (or during) the normal mirroring install, edit `~/.gitolite.rc` on
 all servers and set `$GL_WILDREPOS` to 1 (from its default of 0).
 
-<a name="_quick_setup"></a>
-
-### quick setup
+## quick setup
 
   * edit your `gitolite.conf` file as given in step 1 below
       * ignore all the comments, even the ones that tell you to do something :-)
@@ -126,9 +94,7 @@ A typical sequence with that script is:
 You can then treat the detailed steps described below as extra information or
 "background reading" ;-)
 
-<a name="_step_by_step"></a>
-
-### step by step
+## F=_mirrexsteps step by step
 
 If the script is not cutting it for you and want to vary the technique for
 some reason, or you simply want to gain a better understanding of what is
@@ -139,9 +105,7 @@ script.
 only place where you have to explicitly state this is in the delegation code
 in the appendix.  The rest of the time, "conf/" is assumed.
 
-<a name="_1_gitolite_conf_"></a>
-
-#### (1) `gitolite.conf`
+### (1) `gitolite.conf`
 
 The main config file has these items in it.  **Please add them in this
 order**.
@@ -209,9 +173,7 @@ Here's what it looks like:
 
 You'll get some warnings about missing include files; ignore them.
 
-<a name="_2_master_sam_conf_"></a>
-
-#### (2) `master/sam.conf`
+### (2) `master/sam.conf`
 
 For each host sam, one file called `master/sam.conf` is needed.  This file
 contains just one line:
@@ -223,9 +185,7 @@ contains just one line:
 "master/sam.conf"`.  The only purpose of this is to setup the subconf
 restriction on the combined contents of `master/sam/*.conf`.</font>
 
-<a name="_3_host_admins_only_master_sam_p1_conf_"></a>
-
-#### (3) host admins only -- `master/sam/p1.conf`
+### (3) host admins only -- `master/sam/p1.conf`
 
 (recap: the host admins for sam can only write files in `master/sam`).
 
@@ -240,9 +200,7 @@ product.conf files.
 By default, everything is local to their server.  (Mirroring can only be setup
 by the master admins).
 
-<a name="_4_mirrors_sam_p1_conf_"></a>
-
-#### (4) `mirrors/sam/p1.conf`
+### (4) `mirrors/sam/p1.conf`
 
 For each product p1 mastered on host sam, a file called `mirrors/sam/p1.conf`
 will be created, containing mirror config lines for all repos of product p1.
@@ -254,9 +212,7 @@ In this case, it could be
 
 If this file does not exist, p1 is local to sam and not mirrored.
 
-<a name="_5_slave_frodo_sam_conf_"></a>
-
-#### (5) `slave/frodo/sam.conf`
+### (5) `slave/frodo/sam.conf`
 
 For each product that slave frodo gets from master sam, this file has the
 following lines
@@ -278,18 +234,14 @@ restriction of "sam"*.  This is important to prevent sam's admins from writing
 rules for repos they don't own and having them processed on other
 servers!</font>
 
-<a name="_6_manual_sync"></a>
-
-#### (6) manual sync
+### (6) manual sync
 
 The new repo(s) you just created would not have been synced up to frodo.  You
 can either make an empty commit and push, or log on to sam and run
 
      gl-mirror-shell request-push p1/reponame
 
-<a name="_next_steps"></a>
-
-### next steps
+## next steps
 
 Once you've done the initial setup, here's what ongoing additions will
 require.
@@ -302,9 +254,7 @@ require.
     hostname in the slaves list for the admin repo (this is in the main
     gitolite.conf file)
 
-<a name="_appendix_A_delegation_helper_files"></a>
-
-### appendix A: delegation helper files
+## F=_mirrappA appendix A: delegation helper files
 
 These two files were briefly mentioned in the delegation setup.
 

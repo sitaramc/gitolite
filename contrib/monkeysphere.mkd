@@ -1,4 +1,4 @@
-## (contributed doc: integrating gitolite with monkeysphere)
+# F=monkeysphere (contributed doc: integrating gitolite with monkeysphere)
 
 This document attempts to describe one way to integrate
 [Monkeysphere](http://web.monkeysphere.info/) authentication

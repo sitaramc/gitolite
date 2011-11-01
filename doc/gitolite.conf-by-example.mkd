@@ -1,4 +1,4 @@
-# gitolite.conf -- by example
+# F=conf_examples gitolite.conf -- by example
 
 I hate people who make statements like "I dont have time to learn".  People
 with that sort of attitude shouldn't use gitolite at all, and I refuse to
@@ -23,15 +23,7 @@ asking me.
 that "rewind" actually means any of 3 different things so I'll say it only
 once.  It's upto you to have read that part also.
 
-[conf]: http://sitaramc.github.com/gitolite/doc/gitolite.conf.html
-
-----
-
-[[TOC]]
-
-----
-
-### general notes
+## general notes
 
 Git branch/tag name **recap**: branches look like refs/heads/something, tags
 look like refs/tags/something.  When there is no ambiguity, we leave out the
@@ -48,7 +40,7 @@ not going to discuss things like what characters are allowed in a username or
 reponame, how to write a comment line, how to write continuation lines (you
 can't), include files, and all such *lexical* issues.
 
-### extremely brief regex overview
+## F=regexov extremely brief regex overview
 
 Regexes are powerful.  Gitolite uses that power as much as it can.  If you
 can't handle that power, hire someone who can and become a manager.
@@ -82,7 +74,7 @@ The previous token need not be a single character; you can use parens to make
 it longer.  `(foo)+` matches one or more "foo", (like "foo", "foofoo",
 "foofoofoo", etc.)
 
-### basic access control
+## F=exbac basic access control
 
     repo    gitolite-admin
             RW+                 =   sitaram
@@ -160,9 +152,9 @@ Ashok is allowed to push version tags.  He can push any tag whose name starts
 with a "v", then a digit, like "v1", "v1.0", "v2.0rc1", etc., but not "v-1",
 "ver1".
 
-### advanced access control
+## F=exaac advanced access control
 
-#### "deny" rules
+### "deny" rules
 
 **Warning**: When using deny rules, the order of your rules matters, where
 earlier it did not.
@@ -190,18 +182,7 @@ earlier.
     before the third one, and it has a `-` as the permission, so the push
     fails
 
-#### personal branches
-
-Personal branches exist **in a namespace** of their own.  The syntax is
-
-        RW  personal/USER/  =   @staff
-
-where the "personal" can be anything you like (but cannot be empty), and the
-"/USER/" part is **necessary**.  A user "alice" can then push any branches
-inside `personal/alice/`.  Which means she can push `personal/alice/foo` and
-`personal/alice/bar`, but NOT `personal/alice`.
-
-#### splitting up rules into rulesets
+### #ruleaccum2 rule accumulation
 
 Rules accumulate.  Even when separated by rules for other repos.  They
 accumulate intuitively.  For example:
@@ -225,12 +206,10 @@ has the **effective** ruleset, for repo foo, of
         RW  dev/USER/   =   @staff
         RW+ tmp/        =   @staff
 
-Just remember that if you use [deny rules][dr] anywhere then the *order of the
+Just remember that if you use [deny rules][deny] anywhere then the *order of the
 rules matters*!
 
-[dr]: http://sitaramc.github.com/gitolite/doc/gitolite.conf.html#_deny_rules
-
-#### gitweb and daemon
+### gitweb and daemon
 
 Gitolite does NOT do anything for gitweb and daemon access **except**
 

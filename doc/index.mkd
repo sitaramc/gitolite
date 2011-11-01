@@ -1,0 +1,205 @@
+# F=index Hosting git repositories
+
+Gitolite allows you to setup git hosting on a central server, with
+fine-grained access control and many (many!) more powerful features.
+
+## #qi quick install
+
+If you're comfortable with Unix and ssh, the following steps should work.
+
+  * create a user called `git`.  Login to this user.
+  * copy your ssh pubkey from your workstation.  Rename it to `YourName.pub`.
+  * now run these commands:
+
+        git clone git://github.com/sitaramc/gitolite
+        gitolite/src/gl-system-install
+        gl-setup ~/YourName.pub
+
+You're done.
+
+**WARNING**: do **NOT** add repos or users directly on the server!  You MUST
+manage the server by cloning the special 'gitolite-admin' repo on your
+workstation (`git clone git@server:gitolite-admin`), making changes, and
+pushing them.  Here's how to [add users and repos][add].
+
+## #rtfm what should you read?
+
+The complete online documentation for gitolite is
+[here](http://sitaramc.github.com/gitolite).  There's a lot of it, so here're
+some reading suggestions.
+
+If you're a **user** (i.e., not a gitolite admin), you only need [this][user].
+
+Otherwise, the suggested reading order is this:
+
+  * **quick intro**: this document, or at least the "[what is
+    gitolite][gl_what]" section just below this one.
+  * **installation**: if the [quick install][qi] above did not work for you,
+    then read the [INSTALL][install] document.  The "[trouble][insttrouble]"
+    section in it may be useful too.
+  * **basic** administration tasks: [adding users and repos][add].
+
+When you have to use more features, look in the master table of contents
+(there's a link to it at the top of *every* document), and use your browser's
+search function to search for stuff.
+
+### F=other_docs what do the other docs contain
+
+The master TOC (see link above) is really the only *comprehensive* list of
+what is there, but here's an attempt to give you an overview!
+
+  * understanding gitolite
+      * gitolite install and basic admin in [pictures][]
+      * gitolite.conf by [example][conf_examples]
+      * gitolite and [ssh][gl_ssh]
+
+  * normal admin tasks done on the server
+      * [admin][]: adding your own hooks, adding existing repos into gitolite, etc.
+      * [rc][]: setting gitolite behaviour options (warning: some of the
+        variables have a security impact if you're careless)
+
+  * normal admin tasks done by changing [gitolite.conf][conf]
+      * basic access control
+      * advanced access control
+      * extras: personal branches, gitweb/git-daemon access, git config settings
+
+  * advanced use (experts only; you can shoot yourself in the foot nicely!)
+      * [ADCs][]: allowing users to run specific shell commands (but not give them a shell)
+      * (also, [sample ADCs][shipped_ADCs] that come with gitolite)
+      * letting [users create][wild] their own repos and assign permissions
+      * [delegating][deleg] admin rights
+      * [mirroring][]
+
+  * special installation scenarios:
+      * using smart-[http][] instead of ssh
+      * [migrating][migr] from gitolite
+
+Finally, [tips][] has a lot of useful information.
+
+## #gl_what what is gitolite?
+
+Gitolite is an access control layer on top of git.  Here's an "executive
+summary":
+
+  * use a single unix user ("real" user) on the server
+  * provide access to many gitolite users
+      * they are not "real" users
+      * they do not get shell access
+  * control access to many git repositories
+      * read access controlled at the repo level
+      * write access controlled at the branch/tag/file/directory level,
+        including who can rewind, create, and delete branches/tags
+  * can be installed without root access, assuming git and perl are already
+    installed
+  * authentication is most commonly done using sshd, but you can also use
+    httpd if you prefer (this may require root access).
+  * several other neat features, too many to list here
+
+## F=_need why is gitolite needed?
+
+Gitolite is separate from git, and needs to be installed and configured.  So...
+why do we bother?
+
+Gitolite is useful in any server that is going to host multiple git
+repositories, each with many developers, where some sort of access control is
+required.
+
+In theory, this can be done with plain old Unix permissions: each user is a
+member of one or more groups, each group "owns" one or more repositories, and
+using unix permissions (especially the setgid bit -- `chmod g+s`) you can
+allow/disallow users access to repos.
+
+But there are several disadvantages here:
+
+  * every user needs a userid and password on the server.  This is usually a
+    killer, especially in tightly controlled environments
+  * adding/removing access rights involves complex `usermod -G ...` mumblings
+    which most admins would rather not deal with
+  * *viewing* (aka auditing) the current set of permissions requires running
+    multiple commands to list directories and their permissions/ownerships,
+    users and their group memberships, and then correlating all these manually
+  * auditing historical permissions or permission changes is pretty much
+    impossible without extraneous tools
+  * errors or omissions in setting the permissions exactly can cause problems
+    of either kind: false accepts or false rejects
+  * without going into ACLs it is not possible to give some people read-only
+    access while some others have read-write access to a repo (unless you make
+    it world-readable).  Group access just doesn't have enough granularity
+  * it is absolutely impossible to restrict pushing by branch name or tag
+    name.
+
+Gitolite does away with all this:
+
+  * it uses ssh magic to remove the need to give actual unix userids to
+    developers
+  * it uses a simple but powerful config file format to specify access rights
+  * access control changes are affected by modifying this file, adding or
+    removing user's public keys, and "compiling" the configuration
+  * this also makes auditing trivial -- all the data is in one place, and
+    changes to the configuration are also logged, so you can audit them.
+  * finally, the config file allows distinguishing between read-only and
+    read-write access, not only at the repository level, but at the branch
+    level within repositories.
+
+## why did I write it?
+
+The most important feature I needed was **per-branch permissions**.  This is
+pretty much mandatory in a corporate environment, and is almost the single
+reason I started *thinking* about writing gitolite.
+
+It's not just "read-only" versus "read-write".  Rewinding a branch (aka "non
+fast forward push") is potentially dangerous, but sometimes needed.  So is
+deleting a branch (which is really just an extreme form of rewind).  I needed
+something in between allowing anyone to do it (the default) and disabling it
+completely (`receive.denyNonFastForwards` or `receive.denyDeletes`).
+
+### F=_morefeatures some more features
+
+Here're some more features.
+
+  * simple, yet powerful, config file syntax, including specifying
+    gitweb/daemon access.  You'll need this power if you manage lots of
+    users+repos+combinations of access
+  * apart from branch-name based restrictions, you can also restrict by
+    file/dir name changed (i.e., output of `git diff --name-only`)
+  * if your requirements are still too complex, you can split up the config
+    file and delegate authority over parts of it
+  * easy to specify gitweb owner, description and gitweb/daemon access
+  * easy to sync gitweb (http) authorisation with gitolite's access config
+  * comprehensive logging [aka: management does not think "blame" is just a
+    synonym for "annotate" :-)]
+  * "personal namespace" prefix for each dev
+  * migration guide and simple converter for gitosis conf file
+  * "exclude" (or "deny") rights at the branch/tag level
+  * specify repos using patterns (patterns may include creator's name)
+  * define powerful operations on the server side, even github-like forking
+
+## security
+
+Due to the environment in which this was created and the need it fills, I
+consider this a "security" program, albeit a very modest one.
+
+The first person to find a hole that allows a non-admin user to push a change
+to a repository that he is not allowed to, will get a modest reward of 5000
+INR.  The hole should not require enabling any of the options listed as having
+a [security impact][rcsecurity] in the rc file, nor obvious things like setting
+the umask too loose, etc.
+
+## contact and license
+
+Gitolite is released under GPL v2.  See COPYING for details.
+
+  * author: sitaramc@gmail.com, sitaram@atc.tcs.com
+  * mailing list: gitolite@googlegroups.com
+  * list subscribe address : gitolite+subscribe@googlegroups.com
+
+
+
+
+
+
+
+
+
+
+

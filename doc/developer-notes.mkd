@@ -1,22 +1,6 @@
-## developer/patch maintainer notes
+# F=dev_notes developer/patch maintainer notes
 
-In this document:
-
-  * <a href="#_general_stuff">general stuff</a>
-  * <a href="#_the_rc_file">the rc file</a>
-  * <a href="#_modules">modules</a>
-  * <a href="#_that_bindir_thing">that 'bindir' thing</a>
-      * <a href="#_from_perl">from perl</a>
-      * <a href="#_from_shell">from shell</a>
-      * <a href="#_OUTLIER_">OUTLIER!</a>
-  * <a href="#_special_types_of_setups">special types of setups</a>
-      * <a href="#_Fedora">Fedora</a>
-
-----
-
-<a name="_general_stuff"></a>
-
-### general stuff
+## general stuff
 
   * all scripts and libraries must be in the same directory.  However, RPM/DEB
     packagers can put the libraries where they want, as long as they can be
@@ -36,31 +20,23 @@ In this document:
     much all of them are run via gl-auth-command or from something that was
     forked from it so the variables *will* exist during normal operation.
 
-<a name="_the_rc_file"></a>
-
-### the rc file
+## the rc file
 
 The 'rc' file has one major change from v1: any new values in the rc file need
 to be added to the @EXPORT list in `src/gitolite_rc.pm`.
 
-<a name="_modules"></a>
-
-### modules
+## modules
 
 There are 3 "modules" (`gitolite_rc`, `gitolite_env`, and `gitolite` itself).
 Their purposes should be fairly obvious.
 
-<a name="_that_bindir_thing"></a>
-
-### that 'bindir' thing
+## that 'bindir' thing
 
 The importance of `GL_BINDIR` is that the command= argument in
 `~/.ssh/authorized_keys` must be a full path, ideally, and the compile script
 gets this from `GL_BINDIR`.
 
-<a name="_from_perl"></a>
-
-#### from perl
+### from perl
 
   * for frequently run perl programs, I prefer my method
 
@@ -73,9 +49,7 @@ gets this from `GL_BINDIR`.
 
       * gl-setup-authkeys (external shim to compile keys separately from PTA)
 
-<a name="_from_shell"></a>
-
-#### from shell
+### from shell
 
   * a perl program called gl-query-rc finds its own BINDIR (using my perl
     method, not FindBin).  This is suitable for calling from shell scripts
@@ -85,22 +59,16 @@ gets this from `GL_BINDIR`.
       * gl-tool
       * gl-mirror-push
 
-<a name="_OUTLIER_"></a>
-
-#### OUTLIER!
+### OUTLIER!
 
   * gl-admin-push is an outlier.  For some silly reason I have the notion that
     even if it runs from /tmp it should get the right values, so it is the
     only one that interrogates `~/.ssh/authorized_keys` to get the actual
     BINDIR in use!
 
-<a name="_special_types_of_setups"></a>
+## special types of setups
 
-### special types of setups
-
-<a name="_Fedora"></a>
-
-#### Fedora
+### Fedora
 
 Fedora has a very special setup, as follows:
 
@@ -137,8 +105,6 @@ fails, and you now have new code trying to work with old format data.
 
 The solution is to explicitly run a compile, from a properly privileged
 userid, as soon as you do an RPM upgrade.
-
-----
 
 # **Why v2?**
 

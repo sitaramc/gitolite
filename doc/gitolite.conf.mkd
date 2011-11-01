@@ -1,29 +1,4 @@
-# the access control file `gitolite.conf`
-
-In this document:
-
-  * <a href="#_syntax">syntax</a>
-      * <a href="#_continuation_lines">continuation lines</a>
-      * <a href="#_include_files">include files</a>
-  * <a href="#_basic_access_control">basic access control</a>
-      * <a href="#_how_rules_are_matched">how rules are matched</a>
-      * <a href="#_branches_tags_and_specifying_refex_es">branches, tags, and specifying "refex"es</a>
-      * <a href="#_groups">groups</a>
-          * <a href="#_the_special_all_group">the special `@all` group</a>
-  * <a href="#_advanced_access_control">advanced access control</a>
-      * <a href="#_creating_and_deleting_branches">creating and deleting branches</a>
-      * <a href="#_deny_rules">"deny" rules</a>
-          * <a href="#_warnings_and_required_reading">warnings and required reading</a>
-          * <a href="#_deny_rules_for_refs_in_a_repo">"deny" rules for refs in a repo</a>
-          * <a href="#_deny_rules_for_the_entire_repo">"deny" rules for the entire repo</a>
-  * <a href="#_summary_permissions">summary: permissions</a>
-  * <a href="#_virtual_ref_types">virtual "ref"-types</a>
-  * <a href="#_other_tips">other tips</a>
-      * <a href="#_personal_branches">personal branches</a>
-      * <a href="#_splitting_up_rules_into_rulesets">splitting up rules into rulesets</a>
-      * <a href="#_gitweb_and_daemon">gitweb and daemon</a>
-      * <a href="#_repo_specific_git_config_commands">repo specific `git config` commands</a>
-      * <a href="#_repo_owner_description_line_for_gitweb">repo owner/description line for gitweb</a>
+# F=conf the access control file `gitolite.conf`
 
 Gitolite has an advanced access control language that is designed to be
 powerful but easy to use.  Other objectives were that it should be even easier
@@ -35,9 +10,7 @@ something as different as possible from the brain-dead, nausea-inducing
 This document describes the syntax and semantics of the access control rules
 and other configuration directives in the `gitolite.conf` file.
 
-<a name="_syntax"></a>
-
-### syntax
+## #syntax syntax
 
 In general, everything is **space separated**; there are no commas,
 semicolons, etc., in the syntax.
@@ -52,18 +25,14 @@ least one `.` (this allows you to use an email address as someone's username).
 Reponames can contain `/` characters (this allows you to put your repos in a
 tree-structure for convenience)
 
-<a name="_continuation_lines"></a>
-
-#### continuation lines
+### continuation lines
 
 There are no continuation lines -- gitolite does not process C-style
 backslash-escaped newlines as anything special.  However, the section on
 "groups" will tell you how you can break up large lists of names in a group
 definition into multiple lines.
 
-<a name="_include_files"></a>
-
-#### include files
+### include files
 
 Gitolite allows you to break up the configuration into multiple files and
 include them in the main file for convenience.
@@ -86,11 +55,7 @@ Files that have been already processed once are skipped, with a warning.
 <font color="gray">Advanced users: `subconf`, a command that is very closely
 related to `include`, is documented [here][subconf].</font>
 
-[subconf]: http://sitaramc.github.com/gitolite/doc/delegation.html#_the_subconf_command
-
-<a name="_basic_access_control"></a>
-
-### basic access control
+## F=bac basic access control
 
 Here's a very basic set of rules:
 
@@ -137,17 +102,13 @@ by Linus and currently maintained by Junio.
 
 </font>
 
-<a name="_how_rules_are_matched"></a>
-
-#### how rules are matched
+### how rules are matched
 
 It's important to understand that there're two levels at which access control
-happens.  Please see [this][l2] for details, especially about the first level
+happens.  Please see [this][2levels] for details, especially about the first level
 check.  Much of the complexity applies only to the second level check, so that
 is all we will be discussing here.  This check is done by the update hook, and
 determines whether the push succeeds or fails.
-
-[l2]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_two_levels_of_access_rights_checking
 
 For basic permissions like this, matching is simple.  Gitolite already knows:
 
@@ -160,9 +121,7 @@ Gitolite goes down the list of rules matching the user, repo, and the ref.
 The first matching rule that has the permission you're looking for (`W` or
 `+`), results in success.  A fallthrough results in failure.
 
-<a name="_branches_tags_and_specifying_refex_es"></a>
-
-#### branches, tags, and specifying "refex"es
+### branches, tags, and specifying "refex"es
 
 One of the original goals of gitolite was to allow access control at the
 branch/tag (aka "ref") level.  The git source code contains a sample update
@@ -219,9 +178,7 @@ looks like "refs/heads/foo", while a tag ref looks like "refs/tags/bar")
     "v1.0", "v2.0rc1", all match the criterion specified by `v[0-9]` because
     this is a prefix match only.
 
-<a name="_groups"></a>
-
-#### groups
+### groups
 
 Gitolite allows you to define **groups** of repos. users, or even refexes.  A
 group is semantically (but *not* syntactically) like a `#define` in C.  Here
@@ -262,97 +219,37 @@ parsed in a single-pass, so later *additions* to a group name cannot affect
 earlier *uses* of it.  If you moved line 2 to the end, "@alldevs" would only
 have 6 names in it.
 
-<a name="_the_special_all_group"></a>
-
-##### the special `@all` group
+#### the special `@all` group
 
 There's a special group called `@all` that includes all authenticated users
 when used as a username; you've seen examples of it earlier.
 
-[Advanced users: also see the entry for `GL_ALL_INCLUDES_SPECIAL` in
-[doc/gitolite.rc.mkd][rcdoc].]
+Advanced users: also see the entry for `GL_ALL_INCLUDES_SPECIAL` in the
+documentation for [`~/.gitolite.rc`][rc].
 
 When used as a reponame, it includes all repos.
 
-<a name="_advanced_access_control"></a>
-
-### advanced access control
+## F=aac advanced access control
 
 The previous section is sufficient for most common needs, but gitolite can go
 a lot further than that.
 
-<a name="_creating_and_deleting_branches"></a>
+### #deny "deny" rules
 
-#### creating and deleting branches
-
-Since the beginning of gitolite, `RW` gave the ability, not only to update,
-but to *create* a branch (that matched the refex).  Similarly, `RW+` meant
-being able to not only rewind, but also delete a ref.  Conceptually, a rewind
-is almost the same as a delete+push (the only difference I can see is if you
-had core.logAllRefUpdates set, which is *not* a default setting).
-
-However, there seem to be cases where it is useful to distinguish these cases.
-Arguments can be made on all sides if you're dealing with new users, so
-gitolite supports that.
-
-We'll look at the delete/rewind case in detail first:
-
-  * if the rules for a repo do not contain a `D` anywhere, then `RW+` will
-    allow both rewind and delete operations.  Apart from being more convenient
-    if you don't need this separation, this also ensures backward
-    compatibility for setups created before this separation feature was added
-    to gitolite).
-
-  * if, however, *any* of the rules for a repo contains a `D` (example: `RWD`,
-    `RW+D`, etc) then `RW+` by itself will permit only a rewind, not a delete
-
-The same thing applies to create/push, where if you have permissions like
-`RWC` or `RW+C` anywhere in that repo, a simple `RW` or `RW+` can no longer
-*create* a new ref.
-
-You can combine the `C` and `D` also.  Thus, the set of permissions you now
-know about are, in regex syntax: `R|RW+?C?D?`.  See a later section for the
-full set of permissions possible.
-
-Some usage hints:
-
-  * if you find that `RW+` no longer allows creation/deletion but you can't
-    see a `C`/`D` permission in the rules, remember that gitolite allows a
-    repo config to be specified in multiple places for convenience, included
-    delegated or included files.  Be sure to search everywhere :)
-
-  * a quick way to make this the default for *all* your repos is:
-
-        repo @all
-            RWCD    dummy-branch    =   foo
-
-    where foo can be either the administrator, or if you can ignore the
-    warning message when you push, a non-existant user.
-
-<a name="_deny_rules"></a>
-
-#### "deny" rules
-
-<a name="_warnings_and_required_reading"></a>
-
-##### warnings and required reading
+#### warnings and required reading
 
 Gitolite performs access checks at 2 levels.  The first check is performed for
 both read *and* write operations, while the second one happens only for write
 operations.
 
-**Required reading**: [this section][two_l] of the documentation.
-
-[two_l]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#_two_levels_of_access_rights_checking
+**Required reading**: [this section][2levels] of the documentation.
 
 **Warning**: When using deny rules, the order of your rules matters, where
 earlier it did not.  If you're just starting to add a deny rule to an existing
 ruleset, it's a good idea to review the entire ruleset once, to make sure
 you're doing it right.
 
-<a name="_deny_rules_for_refs_in_a_repo"></a>
-
-##### "deny" rules for refs in a repo
+#### "deny" rules for refs in a repo
 
 You can use "deny" rules for the second check, to prevent people pushing
 branches or tags that they should not be allowed to.
@@ -403,9 +300,7 @@ And here's how it works:
     before the third one, and it has a `-` as the permission, so the push
     fails
 
-<a name="_deny_rules_for_the_entire_repo"></a>
-
-##### "deny" rules for the entire repo
+#### "deny" rules for the entire repo
 
 The previous section described deny rules for the second check, which is a
 fairly common need.  However, gitolite does not process deny rules for the
@@ -441,9 +336,53 @@ Here are some notes on how/why this works:
     gitolite just ignores the refexes, and simply looks at the permission (R,
     RW, "-", etc) and the user list.
 
-<a name="_summary_permissions"></a>
+### #rwcd creating and deleting branches
 
-### summary: permissions
+Since the beginning of gitolite, `RW` gave the ability, not only to update,
+but to *create* a branch (that matched the refex).  Similarly, `RW+` meant
+being able to not only rewind, but also delete a ref.  Conceptually, a rewind
+is almost the same as a delete+push (the only difference I can see is if you
+had core.logAllRefUpdates set, which is *not* a default setting).
+
+However, there seem to be cases where it is useful to distinguish these cases.
+Arguments can be made on all sides if you're dealing with new users, so
+gitolite supports that.
+
+We'll look at the delete/rewind case in detail first:
+
+  * if the rules for a repo do not contain a `D` anywhere, then `RW+` will
+    allow both rewind and delete operations.  Apart from being more convenient
+    if you don't need this separation, this also ensures backward
+    compatibility for setups created before this separation feature was added
+    to gitolite).
+
+  * if, however, *any* of the rules for a repo contains a `D` (example: `RWD`,
+    `RW+D`, etc) then `RW+` by itself will permit only a rewind, not a delete
+
+The same thing applies to create/push, where if you have permissions like
+`RWC` or `RW+C` anywhere in that repo, a simple `RW` or `RW+` can no longer
+*create* a new ref.
+
+You can combine the `C` and `D` also.  Thus, the set of permissions you now
+know about are, in regex syntax: `R|RW+?C?D?`.  See a later section for the
+full set of permissions possible.
+
+Some usage hints:
+
+  * if you find that `RW+` no longer allows creation/deletion but you can't
+    see a `C`/`D` permission in the rules, remember that gitolite allows a
+    repo config to be specified in multiple places for convenience, included
+    delegated or included files.  Be sure to search everywhere :)
+
+  * a quick way to make this the default for *all* your repos is:
+
+        repo @all
+            RWCD    dummy-branch    =   foo
+
+    where foo can be either the administrator, or if you can ignore the
+    warning message when you push, a non-existant user.
+
+## summary: permissions
 
 The full set of permissions, in regex syntax: `-|R|RW+?C?D?`.  This expands to
 one of `-`, `R`, `RW`, `RW+`, `RWC`, `RW+C`, `RWD`, `RW+D`, `RWCD`, or
@@ -453,36 +392,24 @@ one of `-`, `R`, `RW`, `RW+`, `RWC`, `RW+C`, `RWD`, `RW+D`, `RWCD`, or
 the standalone `C`, which is not really a "ref" level permission and can be
 found in doc/wildcard-repositories.mkd.]
 
-<a name="_virtual_ref_types"></a>
+## F=_confother other tips
 
-### virtual "ref"-types
-
-This is a highly advanced topic; see [doc/virtualrefs-and-scoring.mkd][vs] for
-details.
-
-[vs]: http://sitaramc.github.com/gitolite/doc/virtualrefs-and-scoring.html
-
-<a name="_other_tips"></a>
-
-### other tips
-
-<a name="_personal_branches"></a>
-
-#### personal branches
+### personal branches
 
 Gitolite lets you define a "personal" or "scratch" namespace prefix for each
-developer (for example, `refs/personal/<devname>/*`); see the "personal
-branches" section in `doc/3-faq-tips-etc.mkd` for details.
+developer.  See [here][pers] for details.
 
-<a name="_splitting_up_rules_into_rulesets"></a>
+### #ruleaccum rule accumulation
 
-#### splitting up rules into rulesets
+(Also see [this][ruleaccum2] for a different example that may be more
+intuitive for some people).
 
-Gitolite lets you specify access rules for a repo in bits and pieces.  This
-can be very convenient sometimes.  Let's say you have a mix of open source and
-closed source projects, and "bosses" should have read access to all projects,
-and everyone should have read access to open source projects.  Assuming the
-appropriate group definitions, this would work:
+Gitolite lets you specify access rules for a repo in bits and pieces, and
+accumulates them in the same sequence they were given.  This is very
+convenient.  Let's say you have a mix of open source and closed source
+projects, and "bosses" should have read access to all projects, and everyone
+should have read access to open source projects.  Assuming the appropriate
+group definitions, this would work:
 
     # all bosses have read access to all projects
     repo @open @closed @topsecret
@@ -503,35 +430,77 @@ And although this example used groups, you can use reponames as well, or mix
 and match them.  You can even distribute rulesets across multiple "include"
 files if you wish.
 
-Just remember that if you use [deny rules][dr] anywhere then the *order of the
+Just remember that if you use [deny rules][deny] anywhere then the *order of the
 rules matters*!
-
-[dr]: http://sitaramc.github.com/gitolite/doc/gitolite.conf.html#_deny_rules
 
 This feature also helps people who generate their gitolite.conf itself from
 some *other* database -- it allows them much more flexibility in how they
 generate rules.
 
-<a name="_gitweb_and_daemon"></a>
+### #gwd specifying gitweb and daemon access
 
-#### gitweb and daemon
+Gitolite allows you to specify access for git-daemon and gitweb.  This is a
+feature that I personally do not use (corporate environments don't like
+unauthenticated access of any kind to any repo!), but someone wanted it, so
+here goes.
 
-Gitolite allows you to specify access for git-daemon and gitweb.  See
-[this][gwd] for more on this.
+Gitolite has two pre-defined, "special", usernames: `daemon` and `gitweb`.
 
-[gwd]: http://sitaramc.github.com/gitolite/doc/2-admin.html#gwd
+To make a repo or repo group accessible via "git daemon", just give read
+permission to the special user "daemon".  Similarly, give read permission to
+`gitweb` to allow the gitweb CGI to show the repo.  Something like this:
 
-<a name="_repo_specific_git_config_commands"></a>
+    repo    foo bar baz
+        R   =   gitweb daemon
 
-#### repo specific `git config` commands
+This gives you a quick way to offer multiple repos up for gitweb and/or daemon
+access.
+
+However, **setting a description** for the project also enables gitweb
+permissions so you can do it that way if you want.  Of course in this case you
+have to deal with each repo separately.  Add lines like this to gitolite.conf:
+
+    foo = "some description"
+    bar = "some other description"
+    baz = "yet another description"
+
+You can also **specify an owner** for gitweb to show, if you like; for example
+I might use:
+
+    gitolite "Sitaram Chamarty" = "fast, secure, fine-grained, access control for git"
+
+These lines are standalone, so you can add them anywhere in the conf file.
+
+Note that gitolite does **not** install or configure gitweb/git-daemon -- that
+is a one-time setup you must do separately.  All gitolite does is:
+
+  * for daemon, create the file `git-daemon-export-ok` in the repository
+  * for gitweb, add the repo (plus owner name, if given) to the list of
+    projects to be served by gitweb (see the config file variable
+    `$PROJECTS_LIST`, which should have the same value you specified for
+    `$projects_list` when setting up gitweb)
+  * put the description, if given, in `$repo/description`
+
+The "compile" script will keep these files consistent with the config settings
+-- this includes removing such settings/files if you remove "read" permissions
+for the special usernames or remove the description line.
+
+Please **note** that giving permissions to these special users via `@all`
+(that is, using either `repo @all` or `R = @all`), will not work unless you
+set the rc-file variable `$GL_ALL_INCLUDES_SPECIAL` to `1`.  Also, **NOTE**
+that giving them read access to `repo @all` means the `gitolite-admin` repo is
+also accessible.  **It is upto you to decide if that is OK in your
+environment**.
+
+### #rsgc repo specific `git config` commands
 
 (Thanks to teemu dot matilainen at iki dot fi)
 
 >   ----
 
 >   **Note**: this won't work unless the rc file has the right settings;
->   please see `$GL_GITCONFIG_KEYS` in [doc/gitolite.rc.mkd][rcdoc] for
->   details and security information.
+>   please see `$GL_GITCONFIG_KEYS` in the [rc file doc][rc] for details and
+>   security information.
 
 >   ----
 
@@ -588,13 +557,3 @@ The "delete config variable" syntax can also be used, if you wish:
 As you can see, the general idea is to place the most generic ones (`repo
 @all`, or repo patterns like `repo foo.*`) first, and place more specific ones
 later to override the generic settings.
-
-[rcdoc]: http://sitaramc.github.com/gitolite/doc/gitolite.rc.html
-
-<a name="_repo_owner_description_line_for_gitweb"></a>
-
-#### repo owner/description line for gitweb
-
-You can include owner/description information in the conf file, and gitolite
-will put it in places where gitweb will pick it up.  See [here][gwd] for more
-on this.

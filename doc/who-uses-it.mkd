@@ -1,4 +1,4 @@
-# who uses gitolite
+# F=who who uses gitolite
 
 >   >   If you're using gitolite and find it very useful in some way, I would
 >   >   love to describe your use of it or add a link to your own description
@@ -12,7 +12,6 @@ for them (their config file was so big that without the big-config changes
 gitolite would just run out of memory and die!).
 
 [fedora]: http://lists.fedoraproject.org/pipermail/devel-announce/2010-July/000647.html
-[bc]: http://sitaramc.github.com/gitolite/doc/big-config.html
 
 The **KDE project** [uses][kde] gitolite (in combination with redmine for
 issue tracking and reviewboard for code review).  Apart from the usual access
@@ -39,7 +38,6 @@ little one-man show!
 
 He explains his use of it [here][hiren].
 
-[wild]: http://sitaramc.github.com/gitolite/doc/wildcard-repositories.html
 [hiren]: http://ece.uwaterloo.ca/~hdpatel/uwhtml/wildrepos-in-gitolite/
 
 **Gentoo Linux** has [just moved][gentoo1] their git repositories from gitosis

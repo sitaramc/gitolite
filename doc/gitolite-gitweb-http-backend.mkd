@@ -1,30 +1,10 @@
-## how to set up gitolite+gitweb+ssh+http-backend
+# F=ggshb how to set up gitolite+gitweb+ssh+http-backend
 
-In this document:
-
-  * <a href="#_NAME">NAME</a>
-  * <a href="#_DESCRIPTION">DESCRIPTION</a>
-  * <a href="#_EXAMPLE_ENVIRONMENT">EXAMPLE ENVIRONMENT</a>
-  * <a href="#_GITOLITE_SETUP">GITOLITE SETUP</a>
-      * <a href="#_gitolite_rc">gitolite.rc</a>
-      * <a href="#_gitolite_conf">gitolite.conf</a>
-  * <a href="#_APACHE_SETUP">APACHE SETUP</a>
-      * <a href="#_suexec">suexec</a>
-      * <a href="#_Gitweb">Gitweb</a>
-      * <a href="#_Virtual_Host">Virtual Host</a>
-  * <a href="#_VALIDATION">VALIDATION</a>
-  * <a href="#_ADDITIONAL_RESOURCES">ADDITIONAL RESOURCES</a>
-  * <a href="#_AUTHOR">AUTHOR</a>
-
-<a name="_NAME"></a>
-
-### NAME
+## NAME
 
 gitolite-gitweb-http-backend
 
-<a name="_DESCRIPTION"></a>
-
-### DESCRIPTION
+## DESCRIPTION
 
 You've been tasked with rolling out gitolite and git-web in your
 corporate environment and your requirements are as follows:
@@ -37,9 +17,7 @@ corporate environment and your requirements are as follows:
 Note that these instructions are geared toward OpenSuSE 11.4.  Feel
 free to modify the examples below to your environment.
 
-<a name="_EXAMPLE_ENVIRONMENT"></a>
-
-### EXAMPLE ENVIRONMENT
+## EXAMPLE ENVIRONMENT
 
 The following assumptions are made for the purposes of example:
 
@@ -59,19 +37,13 @@ The following assumptions are made for the purposes of example:
       * engineering
       * operations
 
-<a name="_GITOLITE_SETUP"></a>
-
-### GITOLITE SETUP
+## GITOLITE SETUP
 
 Install gitolite via your package management tools.  Under OpenSuSE, this will
-install repositories in `/srv/git`.  Follow the instructions found [here][1in]
-for initial set up.
+install repositories in `/srv/git`.  Follow the instructions found
+[here][install] for initial set up.
 
-[1in]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html
-
-<a name="_gitolite_rc"></a>
-
-#### gitolite.rc
+### gitolite.rc
 
 You will need to tell gitolite.rc about some additional keys that will
 be needed for each repository.  Make sure the following config option
@@ -83,9 +55,7 @@ These options tell gitolite to allow the user to set these values in
 `gitolite.conf`, which in turn will be propagated to each
 repositories git config.
 
-<a name="_gitolite_conf"></a>
-
-#### gitolite.conf
+### gitolite.conf
 
 For the purposes of example, we assume that we have two groups accessing each repository: engineering and operations.  So, our `gitolite.conf` file will look something like this:
 
@@ -131,17 +101,11 @@ For the purposes of example, we assume that we have two groups accessing each re
 Save, commit, and push your changes to the gitolite-admin repo as
 described [here][conf].
 
-[conf]: http://sitaramc.github.com/gitolite/doc/gitolite.conf.html
-
-<a name="_APACHE_SETUP"></a>
-
-### APACHE SETUP
+## APACHE SETUP
 
 Under OpenSuSE 11.4, Apache runs as user `wwwrun` group `www` (see `/etc/apache2/uid.conf`).  But wait!  How can Apache running as `wwwrun` commit to git repositories, which are owned by `git`?
 
-<a name="_suexec"></a>
-
-#### suexec
+### suexec
 
 Enter SuExec.  This is an apache module that allows apache to run
 under the auspicious of a different user.  For this to work, we need
@@ -195,9 +159,7 @@ Finally, make sure Apache loads the suexec module.  Under OpenSuSE,
 this would mean adding "suexec" to `APACHE_MODULES` in
 `/etc/sysconfig/apache2`.
 
-<a name="_Gitweb"></a>
-
-#### Gitweb
+### Gitweb
 
 As gitweb will now be run under the `git` user, all files must be
 under `/srv/www` as well.
@@ -209,9 +171,7 @@ under `/srv/www` as well.
 Do not forget to point `$projectroot` in `/etc/gitweb.conf` to
 `/srv/git/projects`!
 
-<a name="_Virtual_Host"></a>
-
-#### Virtual Host
+### Virtual Host
 
 Configure your virtual host as follows:
 
@@ -273,9 +233,7 @@ Configure your virtual host as follows:
 
     </VirtualHost>
 
-<a name="_VALIDATION"></a>
-
-### VALIDATION
+## VALIDATION
 
 Once apache has been restarted, verify your configuration:
 
@@ -285,9 +243,7 @@ Once apache has been restarted, verify your configuration:
 - Commit over ssh git@git.example.com
 - Commit over http
 
-<a name="_ADDITIONAL_RESOURCES"></a>
-
-### ADDITIONAL RESOURCES
+## ADDITIONAL RESOURCES
 
 - [http://httpd.apache.org/docs/2.2/suexec.html](http://httpd.apache.org/docs/2.2/suexec.html) Apache suexec
 documentation
@@ -296,8 +252,6 @@ git-http-backend(1) documentation
 - [https://git.wiki.kernel.org/index.php/Gitweb](https://git.wiki.kernel.org/index.php/Gitweb) git-web documentaiton
 - [http://sitaramc.github.com/gitolite/doc/http-backend.html](http://sitaramc.github.com/gitolite/doc/http-backend.html) gitolite http backend documentation
 
-<a name="_AUTHOR"></a>
-
-### AUTHOR
+## AUTHOR
 
 Christopher M. Fuhrman << cfuhrman at panix dot com >>

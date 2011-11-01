@@ -1,10 +1,9 @@
-## Vim Syntax Highlight
+# F=_vimsyntax Vim Syntax Highlight
 
 [Vim][] Syntax highlight for `gitolite.conf` can be found from:
 
 - [vim.org script page][vim.org] (Releases)
 - [GitHub][] (Sources)
-
 
 [Vim]: http://www.vim.org/
 [vim.org]: http://www.vim.org/scripts/script.php?script_id=2900

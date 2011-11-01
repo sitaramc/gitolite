@@ -1,18 +1,6 @@
-## the 'hub' ADC
+# F=hub the 'hub' ADC
 
-In this document:
-
-  * <a href="#_a_home_grown_hub_for_git_repos">a home grown 'hub' for git repos</a>
-  * <a href="#_general_syntax">general syntax</a>
-      * <a href="#_Bob_s_commands">Bob's commands</a>
-      * <a href="#_Alice_s_just_looking_commands">Alice's "just looking" commands</a>
-      * <a href="#_Alice_s_action_commands">Alice's "action" commands</a>
-  * <a href="#_what_next_">what next?</a>
-  * <a href="#_note_to_the_admin_configuration_variables">note to the admin: configuration variables</a>
-
-<a name="_a_home_grown_hub_for_git_repos"></a>
-
-### a home grown 'hub' for git repos
+## a home grown 'hub' for git repos
 
 This ADC (admin-defined command) helps collaboration among repos.  The name is
 in honor of github, which is the primary host for gitolite itself.
@@ -51,17 +39,13 @@ do a normal `git fetch [origin]` to get it to her workstation.  This has the
 added advantage that other people, who may be watching her repo but not Bob's,
 now get to see what Bob sent her and send comments etc.
 
-<a name="_general_syntax"></a>
-
-### general syntax
+## general syntax
 
 The general syntax is
 
     ssh git@server hub <hub-command> <args>
 
-<a name="_Bob_s_commands"></a>
-
-#### Bob's commands
+### Bob's commands
 
 The following commands do not cause a fetch, and should be quite fast:
 
@@ -92,9 +76,7 @@ The following commands do not cause a fetch, and should be quite fast:
 
         ssh git@server hub request-status child [parent] request-number
 
-<a name="_Alice_s_just_looking_commands"></a>
-
-#### Alice's "just looking" commands
+### Alice's "just looking" commands
 
   * Alice lists requests waiting for her to check and possibly pull into
     parent.  For each waiting pull request, she will see a serial number, the
@@ -140,9 +122,7 @@ The following commands do not cause a fetch, and should be quite fast:
     to ADCs, you probably can't do things like `pu^` or `master~3`, and have
     to use SHAs instead.
 
-<a name="_Alice_s_action_commands"></a>
-
-#### Alice's "action" commands
+### Alice's "action" commands
 
   * Alice doesn't like what she sees and decides to reject it.  This command
     expects some text on STDIN as the rejection message:
@@ -179,9 +159,7 @@ The following commands do not cause a fetch, and should be quite fast:
 Notice the sequence of Alice's action commands: it's either 'reject', or a
 'fetch' then 'accept'.
 
-<a name="_what_next_"></a>
-
-### what next?
+## what next?
 
 At this point, you're done with the `hub` ADC.  However, all this is on the
 bare `parent.git` on the server, and nothing has hit Alice's workstation yet!
@@ -195,9 +173,7 @@ Finally, note that Alice does not actually need to use the `fetch` subcommand.
 She can do the traditional thing and fetch Bob's repo/branch directly to her
 *workstation*.
 
-<a name="_note_to_the_admin_configuration_variables"></a>
-
-### note to the admin: configuration variables
+## note to the admin: configuration variables
 
 There are 2 configuration variables.  `BASE_FETCH_URL` should be set to a
 simple "read" URL (so it doesn't even have to be ssh) that almost anyone using

@@ -1,27 +1,13 @@
-## hook propagation in gitolite
+# F=hook_prop hook propagation in gitolite
 
 Some users like to know how hooks propagate, and when, and why there appear to
 be two places to put them, and so on.  I'll try and set out the logic here.
 
 **Note**: This is **not** the document to read if you just want to install a
-new custom hook; treat it as more "theory" than "lab".  ([Here][ch] is the
+new custom hook; treat it as more "theory" than "lab".  ([Here][customhooks] is the
 "lab" version!)
 
-[ch]: http://sitaramc.github.com/gitolite/doc/2-admin.html#_custom_hooks
-
-In this document:
-
-  * <a href="#_hooks_used_by_gitolite">hooks used by gitolite</a>
-  * <a href="#_where_do_I_the_admin_put_the_hooks_">**where** do I (the admin) put the hooks?</a>
-      * <a href="#_the_GL_PACKAGE_HOOKS_directory">the `GL_PACKAGE_HOOKS` directory</a>
-      * <a href="#_the_HOME_gitolite_directory">the `$HOME/.gitolite` directory</a>
-      * <a href="#_why_two_places_">why two places?</a>
-      * <a href="#_special_case_the_non_root_method">special case: the "non-root" method</a>
-  * <a href="#_when_do_hooks_propagate_">**when** do hooks propagate?</a>
-
-<a name="_hooks_used_by_gitolite"></a>
-
-### hooks used by gitolite
+## hooks used by gitolite
 
 Gitolite uses only 2 hooks.  **All** repos have an `update` hook, without
 which there is no write-level access control (per-branch permissions).  The
@@ -35,9 +21,7 @@ In addition there is a "sentinel file" -- an empty file called
 The final objective of all this is that each repo's `hooks/` directory should
 get all the hooks that it is meant to get.
 
-<a name="_where_do_I_the_admin_put_the_hooks_"></a>
-
-### **where** do I (the admin) put the hooks?
+## **where** do I (the admin) put the hooks?
 
 In general, **all** hooks go into the `hooks/common` directory.  Only the
 special `post-update` hook meant for the admin repo goes into
@@ -47,11 +31,9 @@ Now we'll discuss the locations of these `hooks/common` and
 `hooks/gitolite-admin` directories.  This depends on which install method you
 used.
 
-(Please refer to [doc/1-INSTALL.mkd][0inst] for what these "methods" are).
+(Please refer to [doc/1-INSTALL.mkd][install] for what these "methods" are).
 
-<a name="_the_GL_PACKAGE_HOOKS_directory"></a>
-
-#### the `GL_PACKAGE_HOOKS` directory
+### the `GL_PACKAGE_HOOKS` directory
 
 You might recall that the "root", and "non-root" methods run a command called
 `gl-system-install`, the third argument of which is some directory of your
@@ -68,9 +50,7 @@ process does the equivalent of `gl-system-install`.
 So now we know there's a location called `$GL_PACKAGE_HOOKS` where you can
 place your hooks.
 
-<a name="_the_HOME_gitolite_directory"></a>
-
-#### the `$HOME/.gitolite` directory
+### the `$HOME/.gitolite` directory
 
 You might also recall that, in these three methods, each **hosting user** has
 to run `gl-setup`.  This sets up, among other things, `$HOME/.gitolite`
@@ -78,9 +58,7 @@ directory, which also contains a `hooks/` directory.
 
 So now there are two places you can put your hooks, apparently.
 
-<a name="_why_two_places_"></a>
-
-#### why two places?
+### why two places?
 
 Just think of the "package" and "root" methods for now, even if you're using
 the "non-root" method.
@@ -104,18 +82,14 @@ get copied to `$HOME/.gitolite/hooks` when you "install".  I need to fix and
 thoroughly test this later; for now, just ignore the extra files you see in
 there; they're harmless/redundant (TODO)]
 
-<a name="_special_case_the_non_root_method"></a>
-
-#### special case: the "non-root" method
+### special case: the "non-root" method
 
 This method was created later, just piggy-backing on everything that already
 existed to cater to the "package" and "root" methods.  In this method, the
 `$GL_PACKAGE_HOOKS` is as accessible or under your control as
 `$HOME/.gitolite`, so it doesn't matter where you put your hooks.
 
-<a name="_when_do_hooks_propagate_"></a>
-
-### **when** do hooks propagate?
+## **when** do hooks propagate?
 
 First: realise that gitolite *wants to make sure* that all the hooks in your
 `hooks/common` directory get copied (symlinked, actually) to *every* repo that
@@ -156,6 +130,4 @@ Here's how/when hooks are created/propagated:
 For people who do not want certain hooks to run for certain repos, one simple
 solution that will work right now is to check the value of `$GL_REPO` at the
 start of the hook, and `exit 0` based on what it contains/matches.
-
-[0inst]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html
 

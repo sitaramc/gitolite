@@ -1,20 +1,8 @@
-## delegating access control responsibilities
-
-In this document:
-
-  * <a href="#_lots_of_repos_lots_of_users">lots of repos, lots of users</a>
-  * <a href="#_how_to_use_delegation">how to use delegation</a>
-      * <a href="#_the_subconf_command">the subconf command</a>
-      * <a href="#_backward_compatibility">backward compatibility</a>
-  * <a href="#_security_notes">security notes</a>
-      * <a href="#_group_names">group names</a>
-      * <a href="#_delegating_pubkeys">delegating pubkeys</a>
+# F=deleg delegating access control responsibilities
 
 ----
 
-<a name="_lots_of_repos_lots_of_users"></a>
-
-### lots of repos, lots of users
+## lots of repos, lots of users
 
 Gitolite tries to make it easy to manage access to lots of users and repos,
 exploiting commonalities wherever possible.  It lets you specify bits and
@@ -39,9 +27,7 @@ for a set of repos to be specified in a **subconf** file and allow someone (a
 **sub-admin**) to make changes within that file.  (Note: sub-admins cannot
 create or remove users).
 
-<a name="_how_to_use_delegation"></a>
-
-### how to use delegation
+## how to use delegation
 
 First, you group your repos however you want.  In the example below, I'm
 considering firefox and lynx (projects at the root of the gitolite server) as
@@ -89,9 +75,7 @@ commit and push.
 
 And that's really all there is to it.
 
-<a name="_the_subconf_command"></a>
-
-#### the subconf command
+### #subconf the subconf command
 
 This command is much like the "include" command, but in addition it checks
 that a subconf does not contain ACL rules for repos that are outside its
@@ -112,9 +96,7 @@ In more precise terms:
 (Additional notes: it can also contain lines for an actual repo called
 `webbrowsers`, or, in big-config mode, for a group called `@webbrowsers`).
 
-<a name="_backward_compatibility"></a>
-
-#### backward compatibility
+### backward compatibility
 
 For backward compatibility, if no `subconf` commands have been seen at the end
 of processing the main config file, gitolite pretends you appended
@@ -123,13 +105,9 @@ of processing the main config file, gitolite pretends you appended
 
 to the end of the file.
 
-<a name="_security_notes"></a>
+## security notes
 
-### security notes
-
-<a name="_group_names"></a>
-
-#### group names
+### group names
 
 You can use "@group"s defined in the main config file but do not attempt to
 redefine or extend them in your own subconf file.  If you must extend a group
@@ -141,9 +119,7 @@ redefine or extend them in your own subconf file.  If you must extend a group
 Group names you define in your subconf will not clash even if the exact same
 name is used in another subconf file, so you need not worry about that.
 
-<a name="_delegating_pubkeys"></a>
-
-#### delegating pubkeys
+### delegating pubkeys
 
 Short answer: not gonna happen.
 

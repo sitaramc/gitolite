@@ -1,4 +1,4 @@
-## mob branches in gitolite
+# F=mob mob branches in gitolite
 
 WARNING: This is hairy stuff.  But what's life without a little danger?
 

@@ -1,4 +1,4 @@
-# migrating from gitosis to gitolite
+# F=migr migrating from gitosis to gitolite
 
 HELP WANTED: these instructions have been revamped a bit recently
 [2011-07-18], so if something doesn't work let me know.
@@ -39,7 +39,7 @@ Here are the steps on the server:
         chown -R git.git /home/git/repositories
 
   * (as 'root' and/or 'git' on the server) Follow instructions to install
-    gitolite; see the [install document][inst].  Make sure that you **don't**
+    gitolite; see the [install document][install].  Make sure that you **don't**
     change the default path for `$REPO_BASE` if you edit the config file!
 
     This will give you a gitolite config that has the required entries for the
@@ -80,7 +80,7 @@ instructions are to be read as "on gitolite admin's workstation".
   * **IMPORTANT**: if you have any users with names like `user@foo`, where the
     part after the `@` does *not* have a `.` in it (i.e., does not look like
     an email address), you need to change them, because gitolite uses that
-    syntax for enabling multi keys.
+    syntax for [enabling multi keys][oldmultikeys].
 
     You have two choices in how to fix this.  You can change the gitolite
     config so that all mention of `user@foo` is changed to just `user`.
@@ -92,9 +92,10 @@ instructions are to be read as "on gitolite admin's workstation".
     `user@foo.bar`, i.e., the part after the `@` had a `.` in it, because then
     it looks like an email address.
 
-    [This][mk] will tell you more about these nuances.
+    [This][multikey] will tell you more about these nuances.  If you can
+    understand it.
 
-  * **IMPORTANT: expand any multi-key files you may have**.  [Here][mk]'s an
+  * **IMPORTANT: expand any multi-key files you may have**.  [Here][multikey]'s an
     explanation of what multi-keys are, how gitosis does them and how gitolite
     does it differently.
 
@@ -123,5 +124,3 @@ instructions are to be read as "on gitolite admin's workstation".
 
   * Check all your changes to your gitolite-admin clone, commit, and push
 
-[mk]: http://sitaramc.github.com/gitolite/doc/3-faq-tips-etc.html#multikeys
-[inst]: http://sitaramc.github.com/gitolite/doc/1-INSTALL.html
