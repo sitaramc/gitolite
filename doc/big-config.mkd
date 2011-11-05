@@ -35,7 +35,7 @@ Without the 'big config' setting, gitolite internally translates this to:
 
 and then generates the actual config rules once for each user-repo-ref
 combination (there are 8 combinations above); the compiled config file looks
-somewhat like [this][_bigno].
+somewhat like [this][bigno__].
 
 Of course, the output is the same whether you used groups (like `@wbr` and
 `@devs` in the example above) or listed the repos directly on the 'repo'
@@ -57,7 +57,7 @@ happens.
 ### access rules for groups
 
 If you used group names in the 'repo' lines (as in `repo @wbr`), then the
-compiled config looks like [this][_bigyes].
+compiled config looks like [this][bigyes__].
 
 That's a lot smaller, and allows orders of magintude more repos and groups to
 be supported.
@@ -287,7 +287,7 @@ composite set of rules that 'alice' accessing 'lynx' is subject to.
 
 ## config listings
 
-### F=_bigno compiled config with big-config disabled
+### F=bigno__ compiled config with big-config disabled
 
     %repos = (
       'firefox' => {
@@ -362,7 +362,7 @@ composite set of rules that 'alice' accessing 'lynx' is subject to.
 
 Phew!
 
-### F=_bigyes compiled config with big-config enabled
+### F=bigyes__ compiled config with big-config enabled
 
     %repos = (
       '@wbr' => {

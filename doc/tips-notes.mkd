@@ -92,7 +92,7 @@ and the corresponding derived usernames:
         sitaramc@gmail.com@laptop.pub           sitaramc@gmail.com
         sitaramc@gmail.com@desktop.pub          sitaramc@gmail.com
 
-### F=_tipssec security, access control, and auditing
+### F=tipssec__ security, access control, and auditing
 
 #### #2levels two levels of access rights checking
 
@@ -160,7 +160,7 @@ that matched, in case you need to debug the config file itself.
 You can now split up the config file and delegate the authority to specify
 access control for their own pieces.  See [delegation][deleg] for details.
 
-### F=_tnconv convenience features
+### F=tnconv__ convenience features
 
 #### what repos do I have access to?
 

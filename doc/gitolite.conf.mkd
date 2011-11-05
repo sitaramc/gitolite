@@ -392,7 +392,7 @@ one of `-`, `R`, `RW`, `RW+`, `RWC`, `RW+C`, `RWD`, `RW+D`, `RWCD`, or
 the standalone `C`, which is not really a "ref" level permission and can be
 found in doc/wildcard-repositories.mkd.]
 
-## F=_confother other tips
+## F=confother__ other tips
 
 ### personal branches
 

@@ -95,7 +95,7 @@ summary":
     httpd if you prefer (this may require root access).
   * several other neat features, too many to list here
 
-## F=_need why is gitolite needed?
+## F=need__ why is gitolite needed?
 
 Gitolite is separate from git, and needs to be installed and configured.  So...
 why do we bother?
@@ -153,7 +153,7 @@ deleting a branch (which is really just an extreme form of rewind).  I needed
 something in between allowing anyone to do it (the default) and disabling it
 completely (`receive.denyNonFastForwards` or `receive.denyDeletes`).
 
-### F=_morefeatures some more features
+### F=morefeatures__ some more features
 
 Here're some more features.
 
