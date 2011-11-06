@@ -1,4 +1,4 @@
-# F=_t notes on the testing setup
+# F=t_ notes on the testing setup
 
 **WARNING: PLEASE use a dedicated user for doing this**.  Various files and
 directories get overwritten and it's much simpler this way.

@@ -11,7 +11,7 @@ Mirroring a repo is simple in git; you just need code like this in a
 For a lot of people, though, mirroring is more than just 'backup', and their
 needs are complex enough that setup is hard.
 
-## #_mirrwhy why
+## #mirrwhy_ why
 
 Gitolite's mirroring used to be very rigid -- one master, any number of
 slaves, but the slaves are identical copies of the master. No variations

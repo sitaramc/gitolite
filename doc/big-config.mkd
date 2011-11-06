@@ -35,7 +35,7 @@ Without the 'big config' setting, gitolite internally translates this to:
 
 and then generates the actual config rules once for each user-repo-ref
 combination (there are 8 combinations above); the compiled config file looks
-somewhat like [this][bigno__].
+somewhat like [this][bigno_].
 
 Of course, the output is the same whether you used groups (like `@wbr` and
 `@devs` in the example above) or listed the repos directly on the 'repo'
@@ -57,7 +57,7 @@ happens.
 ### access rules for groups
 
 If you used group names in the 'repo' lines (as in `repo @wbr`), then the
-compiled config looks like [this][bigyes__].
+compiled config looks like [this][bigyes_].
 
 That's a lot smaller, and allows orders of magintude more repos and groups to
 be supported.
@@ -208,7 +208,7 @@ the commit message for details]
 Gitolite now allows usergroup information to be stored outside its own config
 file.  We'll see "why" first, then the "how".
 
-### #_ldapwhy why
+### #ldapwhy_ why
 
 Large sites often have LDAP servers that already contain user and group
 information, including group membership details.  Such sites may prefer that
@@ -232,7 +232,7 @@ However, if the corporate LDAP server already tags these people correctly, and
 if there is some way of getting that information out **at run time**, that
 would be cool.
 
-### #_ldaphow how
+### #ldaphow_ how
 
 All you need is a script that, given a username, queries your LDAP or similar
 server, and returns a space-separated list of all the groups she is a member
@@ -287,7 +287,7 @@ composite set of rules that 'alice' accessing 'lynx' is subject to.
 
 ## config listings
 
-### F=bigno__ compiled config with big-config disabled
+### F=bigno_ compiled config with big-config disabled
 
     %repos = (
       'firefox' => {
@@ -362,7 +362,7 @@ composite set of rules that 'alice' accessing 'lynx' is subject to.
 
 Phew!
 
-### F=bigyes__ compiled config with big-config enabled
+### F=bigyes_ compiled config with big-config enabled
 
     %repos = (
       '@wbr' => {

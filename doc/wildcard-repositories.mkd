@@ -237,7 +237,7 @@ to install/setup "adc"s (admin defined commands).  See
 Enjoy, and please use with care.  This is pretty powerful stuff.  As they say:
 if you break it, you get to keep both pieces :)
 
-## F=wildhow__ how it actually works
+## F=wildhow_ how it actually works
 
 This section tells you what is happening inside gitolite so you can understand
 this feature better.  Let's use the config example at the beginning of this

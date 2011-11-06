@@ -275,7 +275,7 @@ don't know ssh it'll be a nightmare to support you.
   * regular expressions are a big part of gitolite in many places but
     familiarity is not necessary to do basic access control.
 
-### F=getgl__ getting the gitolite software
+### F=getgl_ getting the gitolite software
 
 You can get the latest version of gitolite from github or google code using
 the 'git clone' command:
@@ -301,7 +301,7 @@ Please use the make command as shown, not a plain "git archive", because the
 Makefile adds a file called `.GITOLITE-VERSION` that will help you identify
 which version you are using.
 
-## #_instappendices appendixes
+## #instappendices_ appendixes
 
 The following sections have some miscellaneous information that does not
 cleanly to fit anywhere else.
@@ -351,7 +351,7 @@ here's how to clean the slate.
         delete `/var/gitolite/conf` and `/var/gitolite/hooks` or
         `$HOME/share/gitolite/conf` and `$HOME/share/gitolite/hooks`
 
-### F=uninstall__ appendix c: uninstalling gitolite completely
+### F=uninstall_ appendix c: uninstalling gitolite completely
 
 (There's some duplication between this and the previous section).
 

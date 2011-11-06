@@ -94,7 +94,7 @@ A typical sequence with that script is:
 You can then treat the detailed steps described below as extra information or
 "background reading" ;-)
 
-## F=_mirrexsteps step by step
+## F=mirrexsteps_ step by step
 
 If the script is not cutting it for you and want to vary the technique for
 some reason, or you simply want to gain a better understanding of what is
@@ -254,7 +254,7 @@ require.
     hostname in the slaves list for the admin repo (this is in the main
     gitolite.conf file)
 
-## F=_mirrappA appendix A: delegation helper files
+## F=mirrappA_ appendix A: delegation helper files
 
 These two files were briefly mentioned in the delegation setup.
 
