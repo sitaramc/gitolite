@@ -295,6 +295,10 @@ There are many ways of doing this, but the most *generic* set of steps are
 given below.  Please follow all the steps; do not skip or improvise!  Ask me
 if things are not clear -- you can help me fine tune this document :-)
 
+  * (workstation, old server) **pull** the latest changes to the
+    `gitolite-admin` repo to your workstation, if you don't have them
+    already. You'll need them later on.
+    
   * (old server) **disable** the old server so your users will not push any
     changes to it.  There are several ways to do this, but the simplest is to
     insert this line at the top of `~/.gitolite.rc` on the old server:
@@ -345,7 +349,7 @@ if things are not clear -- you can help me fine tune this document :-)
 
       * set the URL for the new server
 
-            git remote --set-url origin git@newserver:gitolite-admin
+            git remote set-url origin git@newserver:gitolite-admin
 
       * push the config, including past history
 
