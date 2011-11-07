@@ -148,3 +148,80 @@ lines for whatever repo you want too add.
 
 You do NOT add the repos directly anywhere on the server; you do it by
 cloning, adding keys, and pushing.
+
+## #flow gitolite flow
+
+This is the overall flow of gitolite, showing how the various parts fit
+together.  This is particularly useful for an admin to see where his
+site-local hooks fit, how they get called, and what stages of the process they
+affect.
+
+Legend: diamonds are decision boxes whose results can abort the operation.
+Arrows are calls/invocations.  Dashed lines just point to sub-parts of the
+process on the left side.  Blue processes are external to gitolite.  Green is
+gitolite code.  Yellow is site-local code that you (the admin of your site)
+can add, to influence gitolite's behaviour.
+
+Authentication (**AUTHN**) is typically done by sshd, but could also be httpd
+etc.  This step invokes `gl-auth-command` (**GLAC**), which is the main entry
+point for gitolite, passing it a username and a command.  The most common
+commands look like one of these:
+
+    git-upload-pack 'repo'
+    git-receive-pack 'repo'
+
+GLAC first checks the command to see if it is a read or a write (**RW**)
+operation (upload-pack is a read, receive-pack is a write).
+
+At this point, GLAC knows the username, the reponame, and the type of
+operation.  It executes the first [level][2levels] access check (**AC1**),
+which passes if the user has at least one ref for which the operation is
+allowed.
+
+<font color="gray">Note that neither "deny" rules nor the rule sequences are
+taken into account for this step.  For instance, user "alice" will pass this
+step even with this configuration:
+
+    repo foo
+        -   =   alice
+        RW  =   alice
+
+although some other user, say "bob", will not.</font>
+
+    .gv
+    "Gitolite Flow"
+    rankdir=LR
+    edge[dir=forward]
+    [b] AUTHN
+    [g] GLAC
+    [g] RW
+    <> [g] AC1
+    <> [y] PGH
+    [b] Git
+    [g] UP
+    <> [g] AC2
+    AUTHN .. GLAC
+    GLAC -- RW
+    GLAC -- AC1
+    GLAC .. PGH
+    GLAC .. Git .. UP
+    UP -- AC2
+    <> [y] SEC
+    UP .. SEC
+
+Once AC1 has passed, GLAC calls the [`gl-pre-git`][pre-git] hook (**PGH**), if
+it is present.  This hook allows the admin to add his own checks at this first
+stage and even abort the operation if needed.
+
+If PGH passes, GLAC now invokes git itself, which runs the command specified.
+If the command is `git-upload-pack`, nothing else happens and the process
+completes.
+
+However, if it is a push operation (`git-receive-pack`) then git calls the
+update hook (**UP**), per `man githooks`.  The update hook executes the second
+[level][2levels] access check (**AC2**), and depending on its success, the
+operation succeeds or fails.
+
+The update hook calls a secondary hook, [`update.secondary`][hookchaining]
+(**SEC**) if it exists.  Similar to PGH, this allows the admin to add
+site-local checks before allowing the update to complete.

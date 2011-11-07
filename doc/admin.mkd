@@ -148,7 +148,7 @@ Sometimes it is necessary to do something whenever a new repo is created.  If
 you need this functionality, just supply a hook called "gl-post-init" with
 whatever code you want in it.
 
-### "gl-pre-git" hook
+### #pre-git "gl-pre-git" hook
 
 Although git has lots of nice hooks you can tap into, they all run only on a
 push.  There's nothing that runs on a fetch or a clone, and there's no way to
