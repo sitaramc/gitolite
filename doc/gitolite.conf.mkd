@@ -86,22 +86,6 @@ tag with a new value.
 
 In a later section you'll see some more advanced permissions.
 
-<font color="gray">
-
-Side note: apparently it needs to be spelled out that "R" permissions can only
-apply to the entire repo and not to individual branches/tags.  Mention was
-made of a certain popular Linux distribution named after animals with
-adjectives, chosen merely for alliterative purposes, prefixed to their names,
-and of their users not being clueful enough to know that this (the "read"
-thing, not the alliterative adjective thing, in case you lost track) is an
-inherent git characteristic.
-
-Meanwhile, people who *desperately* need this are directed to gerrit, which
-can do this because they have their own git stack and dont use the one written
-by Linus and currently maintained by Junio.
-
-</font>
-
 ### how rules are matched
 
 It's important to understand that there're two levels at which access control
@@ -228,6 +212,34 @@ Advanced users: also see the entry for `GL_ALL_INCLUDES_SPECIAL` in the
 documentation for [`~/.gitolite.rc`][rc].
 
 When used as a reponame, it includes all repos.
+
+### F=rpr_ side note: "R" permissions for refs
+
+You can control "read" access only at the repo level, not at the branch level.
+For example, this **won't** limit Wally to reading only the master branch:
+
+    repo foo
+        R master    =   wally       # WILL NOT DO WHAT YOU THINK IT DOES!!
+
+and this **won't** prevent him from reading it:
+
+    repo foo
+        - master    =   wally       # WILL NOT DO WHAT YOU THINK IT DOES!!
+        R           =   wally
+
+This (inability to distinguish one ref from another during a read operation)
+is a git issue, not a gitolite issue.
+
+There are 3 ways around this, though:
+
+  * switch to gerrit, which has its own git stack, its own sshd, and God knows
+    what else.  All written in Java, the COBOL of the internet era ;-)
+  * bug the git people to add this feature in ;-)
+  * use a separate repo for Wally.
+
+Using separate repos is not that hard with gitolite.  Here's how to maintain a
+[partial copy][partialcopy] of the main repo and keep it synced (while not
+allowing the secret branches into it).
 
 ## F=aac advanced access control
 

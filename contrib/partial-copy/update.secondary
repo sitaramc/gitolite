@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# called from gitolite before any git operations are run
+
+# "we", "our repo"  =>  the partial copy
+# "main", "pco"     =>  the one which we are a "partial copy of"
+
+my $main=`git config --file $ENV{GL_REPO_BASE_ABS}/$ENV{GL_REPO}.git/config --get gitolite.partialCopyOf`;
+chomp ($main);
+
+exit 0 unless $main;
+
+die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+
+unshift @INC, $ENV{GL_BINDIR};
+require gitolite or die "parse gitolite.pm failed\n";
+gitolite->import;
+
+my ($ref, $old, $new) = @ARGV;
+my $rand = int(rand(100000000));
+
+$ENV{GL_BYPASS_UPDATE_HOOK} = 1;
+system("git", "push", "-f", "$ENV{GL_REPO_BASE_ABS}/$main.git", "$new:refs/heads/br-$rand") and die "FATAL: failed to send $new\n";
+
+wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$main.git");
+system("git", "update-ref", "-d", "refs//heads/br-$rand");
+system("git", "update-ref", $ref, $new, $old) and die "FATAL: update-ref for $ref failed\n";
+
+exit 0;

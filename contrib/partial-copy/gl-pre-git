@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# called from gitolite before any git operations are run
+
+# "we", "our repo"  =>  the partial copy
+# "main", "pco"     =>  the one which we are a "partial copy of"
+
+my $main=`git config --file $ENV{GL_REPO_BASE_ABS}/$ENV{GL_REPO}.git/config --get gitolite.partialCopyOf`;
+chomp ($main);
+
+exit 0 unless $main;
+
+die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+
+unshift @INC, $ENV{GL_BINDIR};
+require gitolite or die "parse gitolite.pm failed\n";
+gitolite->import;
+
+# go to the main repo.  Find a list of all the refs it has, and for each one,
+# check if this user is allowed to read that ref from our repo.  If he is, add
+# it to a list.
+
+my %allowed;
+wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$main.git");
+for my $ref (`git for-each-ref refs/heads '--format=%(refname)'`) {
+    chomp($ref);
+    my $ret = check_access($ENV{GL_REPO}, $ref, 'R', 1);
+    $allowed{$ref} = 1 unless $ret =~ /DENIED/;
+}
+
+# now go to our repo and...
+wrap_chdir("$ENV{GL_REPO_BASE_ABS}/$ENV{GL_REPO}.git");
+
+# delete all existing refs that are not "allowed" (e.g., refs that were
+# previously allowed but now are not, due to config file/rules change)
+for my $ref (`git for-each-ref refs '--format=%(refname)'`) {
+    chomp($ref);
+    next if $allowed{$ref};
+    system("git", "update-ref", "-d", $ref);
+}
+
+# now copy all allowed branches (and their tags, implicitly)
+for my $ref (sort keys %allowed) {
+    system("git", "fetch", "-f", "$ENV{GL_REPO_BASE_ABS}/$main.git", "$ref:$ref");
+}
+
+# now allow the git operation to proceed
+exit 0

@@ -98,11 +98,11 @@ branch or tag on it.
 Wally can only read the repo.  Alice and Ashok can push but not rewind; only
 Sitaram and Dilbert can do that.
 
-            R master    =   wally       # MEANINGLESS!  WILL NOT DO WHAT YOU THINK IT DOES!!
+And now, a common misunderstanding:
 
-This won't work.  You can only restrict "read" access at the repo level, not
-at the branch level.  This is a git issue, not a gitolite issue.  Go bother
-them, or switch to gerrit.
+            R master    =   wally       # WILL NOT DO WHAT YOU THINK IT DOES!!
+
+This won't work.  Please see [here][rpr_] for more on this.
 
     repo    foo
             RW      master$             =   dilbert alice
