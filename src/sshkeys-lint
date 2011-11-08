@@ -38,7 +38,7 @@ print "\n";
 my @pubkeys = sort glob("*.pub");
 die "no *.pub files here\n" unless @pubkeys;
 for my $pub (@pubkeys) {
-    my @lines = filelines($pub);
+    my @lines = grep { ! /^\s*#/ } filelines($pub);
     die "$pub has more than one line\n" if @lines > 1;
     die "$pub does not start with ssh-rsa or ssh-dss\n" unless $lines[0] =~ /^(?:ssh-rsa|ssh-dss) (\S+)/;
     my $key = $1;

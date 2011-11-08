@@ -1077,6 +1077,7 @@ sub setup_authkeys
             local $/ = undef;
             local @ARGV = ($pubkey);
             $pubkey_content = <>;
+            $pubkey_content =~ s/^\s*#.*\n//gm;
         }
         $pubkey_content =~ s/\s*$/\n/;
         # don't trust files with multiple lines (i.e., something after a newline)
