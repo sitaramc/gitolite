@@ -1,0 +1,33 @@
+# F=support support for gitolite
+
+Email addresses etc are in the "contact and license" section at the bottom of
+the [main](http://sitaramc.github.com/gitolite/) document.
+
+If you're willing to read, you will only need support for the most obscure
+issues.  I often don't bother responding for silly issues that are already in
+the docs.  Seriously, folks, troubleshooting involves reading; do I really
+need to *say* that?
+
+  * For install/setup issues see the [if you run into trouble][insttrouble]
+    section of the [install][] document.
+
+    In particular, that section has two links for ssh issues.  I've yet to see
+    a problem that is not already covered by those.
+
+  * For usage issues after install, check out the [suggested reading
+    list][rtfm] and the [other docs][other_docs] section.
+
+  * If you still can't find what you need, try the [**master index/table of
+    contents**](http://sitaramc.github.com/gitolite/master-toc.html) and use
+    your browser's search function.
+
+----
+
+**Note on the online docs**: the online docs break up longer documents by
+putting less "central" concepts into subdocuments (replacing the text with a
+link so you know it's there).  I did this because the most frequent complaint
+was "TL;DR" (your documentation is too long); I do believe it is now easier to
+find things/navigate.
+
+<font color="gray">Of course, now someone complained that it took him "4
+middle-of-text clicks" to reach some section... sigh!</font>

@@ -5,7 +5,8 @@ fine-grained access control and many (many!) more powerful features.
 
 ## #qi quick install
 
-If you're comfortable with Unix and ssh, the following steps should work.
+**If** you're comfortable with Unix and ssh, **and** you have a relatively
+sane setup, the following steps should work:
 
   * create a user called `git`.  Login to this user.
   * copy your ssh pubkey from your workstation.  Rename it to `YourName.pub`.
@@ -15,7 +16,8 @@ If you're comfortable with Unix and ssh, the following steps should work.
         gitolite/src/gl-system-install
         gl-setup ~/YourName.pub
 
-You're done.
+You're done.  If it didn't work, well that's what the [install][] doc is for,
+especially the [if you run into trouble][insttrouble] section.
 
 **WARNING**: do **NOT** add repos or users directly on the server!  You MUST
 manage the server by cloning the special 'gitolite-admin' repo on your
@@ -192,6 +194,8 @@ Gitolite is released under GPL v2.  See COPYING for details.
   * author: sitaramc@gmail.com, sitaram@atc.tcs.com
   * mailing list: gitolite@googlegroups.com
   * list subscribe address : gitolite+subscribe@googlegroups.com
+  * IRC: #git and #gitolite on freenode.  Note that I live in India (UTC+0530
+    time zone).
 
 
 

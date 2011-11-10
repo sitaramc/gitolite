@@ -158,9 +158,7 @@ filename as an argument.
 
 ## #insttrouble if you run into trouble...
 
-If you run into trouble, please read the following sections.  They have
-background information that may help you, or additional steps you can take to
-troubleshoot or fix the problem.
+If you run into trouble, please read the following sections.
 
 ### common install problems
 
