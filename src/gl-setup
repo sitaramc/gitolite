@@ -136,3 +136,9 @@ gl-compile-conf -q
 # now that the admin repo is created, you have to set the hooks properly; best
 # do it by running install again
 gl-install -q
+
+# ----
+
+# the never-ending quest to help with bloody ssh issues...
+cd $GL_ADMINDIR/keydir
+[ -n "$pubkey_file" ] && $GL_BINDIR/sshkeys-lint < $HOME/.ssh/authorized_keys -q -a $admin_name
