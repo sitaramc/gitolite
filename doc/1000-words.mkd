@@ -156,7 +156,7 @@ together.  This is particularly useful for an admin to see where his
 site-local hooks fit, how they get called, and what stages of the process they
 affect.
 
-Legend: diamonds are decision boxes whose results can abort the operation.
+**Legend**: diamonds are decision boxes whose results can abort the operation.
 Arrows are calls/invocations.  Dashed lines just point to sub-parts of the
 process on the left side.  Blue processes are external to gitolite.  Green is
 gitolite code.  Yellow is site-local code that you (the admin of your site)

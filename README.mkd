@@ -6,7 +6,9 @@ instructions.
 
 But if you want to do anything meaningful with gitolite you have to spend some
 time cuddling up to the docs.  **The complete online documentation starts
-[here](http://sitaramc.github.com/gitolite)**.
+[here](http://sitaramc.github.com/gitolite)** -- this is the best starting
+point for general questions about git, such as what it is, why you would need
+it, features, contact/mailing list info, and so on.
 
 For convenience, here is a link to the [master table of
 contents](http://sitaramc.github.com/gitolite/master-toc.html), which is very

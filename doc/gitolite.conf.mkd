@@ -7,10 +7,48 @@ and users.  There was also, in the author's mind, a desperate need to create
 something as different as possible from the brain-dead, nausea-inducing
 "Windows INI" style syntax that some other popular tools seem to favour.
 
-This document describes the syntax and semantics of the access control rules
-and other configuration directives in the `gitolite.conf` file.
+## #confrecap a quick summary of the conf file
 
-## #syntax syntax
+This is a quick *recap* of the *most common* elements in a typical config
+file.  (In the following description, the angle brackets are not part of the
+syntax).
+
+  * (optional) [group][groups] definitions
+
+        @<groupname> = <list of users and groups>
+
+  * repo access rules
+
+        repo <reponame>
+            # one or more access rules like
+            <permission> <optional refex> = <list of users and groups>
+
+    The [most common][bac] permissions are:
+
+      * R, for read only
+      * RW, for push existing ref or create new ref
+      * RW+, for  "push -f" or ref deletion allowed (i.e., destroy
+        information)
+      * `-` (the minus sign), to [deny][] access
+
+    If no [refex][] is supplied, the access rule applies to all refs.
+
+    Later, gitolite [acquired][rwcd]
+
+      * RWC and RW+C, for ref creation.  Once you use this in a repo, a normal
+        RW/RW+ can no longer create a ref; it can only push existing refs
+        (<font color="gray">Note also that a standalone "C" permission is
+        something [completely different][wild]</font>)
+      * RWD and RW+D, for ref deletion.  Once you use this in a repo, a normal
+        RW+ can no longer delete a ref; it can only rewind
+      * (RWCD and RW+CD, which is just a combination of these two)
+
+The following sections dig deeper into the syntax and semantics of the access
+control rules and other configuration directives in the `gitolite.conf` file.
+If narrative descriptions scare you, or your English is not upto scratch, try
+[gitolite config by example][conf_examples] also.
+
+## F=syntax lexical syntax
 
 In general, everything is **space separated**; there are no commas,
 semicolons, etc., in the syntax.
@@ -39,18 +77,20 @@ include them in the main file for convenience.
 
     include     "foo.conf"
 
-will include the contents of the file "foo.conf" from the same directory as
-the main config file.  You can also use an absolute path if you like, although
-in the interests of cloning the admin-repo sanely you should avoid doing this!
+will include the contents of the file "foo.conf".
 
-You can also use a glob, as in:
+Details:
 
-    include     "*.conf"
+  * You can also use a glob (`include "*.conf"`), or put your include files
+    into subdirectories of "conf" (`include "foo/bar.conf"`), or both
+    (`include "repos/*.conf"`).
 
-which will include all the ".conf" files from the directory in which the main
-config file exists.
+  * Included files are always searched from the gitolite-admin repo's "conf/"
+    directory, unless you supplied an absolute path.  (Note: in the interests
+    of cloning the admin-repo sanely you should avoid absolute paths!)
 
-Files that have been already processed once are skipped, with a warning.
+  * If you ended up recursing, files that have been already processed once are
+    skipped, with a warning.
 
 <font color="gray">Advanced users: `subconf`, a command that is very closely
 related to `include`, is documented [here][subconf].</font>
@@ -105,7 +145,7 @@ Gitolite goes down the list of rules matching the user, repo, and the ref.
 The first matching rule that has the permission you're looking for (`W` or
 `+`), results in success.  A fallthrough results in failure.
 
-### branches, tags, and specifying "refex"es
+### #refex branches, tags, and specifying "refex"es
 
 One of the original goals of gitolite was to allow access control at the
 branch/tag (aka "ref") level.  The git source code contains a sample update
@@ -162,7 +202,7 @@ looks like "refs/heads/foo", while a tag ref looks like "refs/tags/bar")
     "v1.0", "v2.0rc1", all match the criterion specified by `v[0-9]` because
     this is a prefix match only.
 
-### groups
+### #groups groups
 
 Gitolite allows you to define **groups** of repos. users, or even refexes.  A
 group is semantically (but *not* syntactically) like a `#define` in C.  Here
@@ -211,7 +251,8 @@ when used as a username; you've seen examples of it earlier.
 Advanced users: also see the entry for `GL_ALL_INCLUDES_SPECIAL` in the
 documentation for [`~/.gitolite.rc`][rc].
 
-When used as a reponame, it includes all repos.
+When used as a reponame, it includes all repos physically present in
+`~/repositories` (or whatever is the value of `$REPO_BASE`).
 
 ### F=rpr_ side note: "R" permissions for refs
 
@@ -358,7 +399,7 @@ had core.logAllRefUpdates set, which is *not* a default setting).
 
 However, there seem to be cases where it is useful to distinguish these cases.
 Arguments can be made on all sides if you're dealing with new users, so
-gitolite supports that.
+gitolite now supports that (in a backward compatible way).
 
 We'll look at the delete/rewind case in detail first:
 

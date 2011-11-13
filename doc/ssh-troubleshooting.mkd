@@ -94,15 +94,15 @@ you there again.  Especially the first bullet.
 Done?  OK, read on...
 
 The following problem(s) indicate that pubkey access is not working at all, so
-you should start with appendix 1.  If that doesn't fix the problem, continue
+you should start with [appendix 1][stsapp1_].  If that doesn't fix the problem, continue
 with the other appendices in sequence.
 
   * running any git clone/fetch/ls-remote or just `ssh git@server info` asks
     you for a password.
 
 The following problem(s) indicate that your pubkey is bypassing gitolite and
-going straight to a shell.  You should start with appendix 2 and continue with
-the rest in sequence.  Appendix 5 has some background info.
+going straight to a shell.  You should start with [appendix 2][stsapp2_] and continue with
+the rest in sequence.  [Appendix 5][stsapp5_] has some background info.
 
   * running `ssh git@server info` gets you the output of the GNU 'info'
     command instead of gitolite's version and access info.
@@ -136,16 +136,16 @@ Done?  OK, now the general outline for ssh troubleshooting is this:
   * make sure the server's overall setup even *allows* pubkey based login.
     I.e., check that git fetch/clone/ls-remote commands or a plain `ssh
     git@server info` do NOT ask for a password.  If you do get asked for a
-    password, see appendix 1.
+    password, see [appendix 1][stsapp1_].
 
   * match client-side pubkeys (`~/.ssh/*.pub`) with the server's authkeys
     file.  To do this, run `sshkeys-lint`, which tells you in detail what key
-    has what access.  See appendix 2.
+    has what access.  See [appendix 2][stsapp2_].
 
   * at this point, we know that we have the right key, and that if sshd
     receives that key, things will work.  But we're not done yet.  We still
     need to make sure that this specific key is being offered/sent by the
-    client, instead of the default key.  See appendix 3 and 4.
+    client, instead of the default key.  See [appendix 3][stsapp3_] and [appendix 4][sshhostaliases].
 
 ## random tips, tricks, and notes
 
@@ -220,7 +220,7 @@ putty/plink, including environment variables, etc., and then try again.
 
 Thankfully, someone contributed [contrib/putty.mkd][contrib_putty].
 
-## appendix 1: ssh daemon asks for a password
+## #stsapp1_ appendix 1: ssh daemon asks for a password
 
 >   **NOTE**: This section should be useful to anyone trying to get
 >   password-less access working.  It is not necessarily specific to gitolite,
@@ -288,7 +288,7 @@ This is a quick checklist:
     this file for messages matching the approximate time of your last attempt
     to login, to see if they tell you what is the problem.
 
-## appendix 2: which key is which -- running sshkeys-lint
+## #stsapp2_ appendix 2: which key is which -- running sshkeys-lint
 
 Follow these steps on the client:
 
@@ -339,7 +339,7 @@ as YourName.pub, then run `gl-setup YourName.pub` on the server.  Remember to
 adjust your agent identities using ssh-add -D and ssh-add if you're using
 ssh-agent, otherwise these new keys may not work.
 
-## appendix 3: ssh client may not be offering the right key
+## #stsapp3_ appendix 3: ssh client may not be offering the right key
 
   * make sure the right private key is being offered.  Run ssh in very
     verbose mode and look for the word "Offering", like so:
@@ -348,7 +348,7 @@ ssh-agent, otherwise these new keys may not work.
 
     If some keys *are* being offered, but not the key that was supposed to be
     used, you may be using ssh-agent (next bullet).  You may also need to
-    create some host aliases in `~/.ssh/config` (appendix 4).
+    create some host aliases in `~/.ssh/config` ([appendix 4][sshhostaliases]).
 
   * (ssh-agent issues) If `ssh-add -l` responds with either "The agent has no
     identities." or "Could not open a connection to your authentication
@@ -397,7 +397,7 @@ way to do this, as far as I know.
 
 [tut]: http://sites.google.com/site/senawario/home/gitolite-tutorial
 
-## appendix 5: why bypassing gitolite causes a problem
+## #stsapp5_ appendix 5: why bypassing gitolite causes a problem
 
 When you bypass gitolite, you end up running your normal shell instead of the
 special gitolite entry point script `gl-auth-command`.

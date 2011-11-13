@@ -24,57 +24,47 @@ manage the server by cloning the special 'gitolite-admin' repo on your
 workstation (`git clone git@server:gitolite-admin`), making changes, and
 pushing them.  Here's how to [add users and repos][add].
 
-## #rtfm what should you read?
+## #rtfm what to read...
 
-The complete online documentation for gitolite is
-[here](http://sitaramc.github.com/gitolite).  There's a lot of it, so here're
-some reading suggestions.
-
-If you're a **user** (i.e., not a gitolite admin), you only need [this][user].
-
-Otherwise, the suggested reading order is this:
-
-  * **quick intro**: this document, or at least the "[what is
-    gitolite][gl_what]" section just below this one.
-  * **installation**: if the [quick install][qi] above did not work for you,
-    then read the [INSTALL][install] document.  The "[trouble][insttrouble]"
-    section in it may be useful too.
-  * **basic** administration tasks: [adding users and repos][add].
-
-When you have to use more features, look in the master table of contents
-(there's a link to it at the top of *every* document), and use your browser's
-search function to search for stuff.
-
-### F=other_docs what do the other docs contain
-
-The master TOC (see link above) is really the only *comprehensive* list of
-what is there, but here's an attempt to give you an overview!
+Gitolite comes with a *lot* of documentation.  The master TOC (see link above)
+is the *only* comprehensive list of what is there, but here's an overview.
 
   * understanding gitolite
+      * [what is gitolite][gl_what], and the rest of this document
       * gitolite install and basic admin in [pictures][]
-      * gitolite.conf by [example][conf_examples]
       * gitolite and [ssh][gl_ssh]
 
+  * explaining gitolite to your *users*
+      * the [user][] document is all they need
+
+  * install and setup
+      * the "[install trouble?][insttrouble]" section, which links, among
+        other things, to arguably the most useful doc for a newbie: [ssh
+        troubleshooting][sts]!
+      * maybe even the complete [install][] document
+
   * normal admin tasks done on the server
-      * [admin][]: adding your own hooks, adding existing repos into gitolite, etc.
-      * [rc][]: setting gitolite behaviour options (warning: some of the
+      * [adding users and repos][add]
+      * [admin][]: add your own hooks, add existing repos into gitolite, etc.
+      * [rc][]: sett gitolite behaviour options (warning: some of the
         variables have a security impact if you're careless)
 
   * normal admin tasks done by changing [gitolite.conf][conf]
       * basic access control
       * advanced access control
       * extras: personal branches, gitweb/git-daemon access, git config settings
+      * [gitolite.conf by example][conf_examples] may also help
 
   * advanced use (experts only; you can shoot yourself in the foot nicely!)
-      * [ADCs][]: allowing users to run specific shell commands (but not give them a shell)
+      * [ADCs][]: allow users to run specific shell commands (but not give them a shell)
       * (also, [sample ADCs][shipped_ADCs] that come with gitolite)
-      * letting [users create][wild] their own repos and assign permissions
-      * [delegating][deleg] admin rights
-      * [mirroring][]
+      * let [users create][wild] their own repos and assign permissions
+      * [delegate][deleg] admin rights
+      * [mirror][mirroring] your servers
 
   * special installation scenarios:
-      * using smart-[http][] instead of ssh
-      * [migrating][migr] from gitolite
+      * use smart-[http][] instead of ssh
+      * [migrate][migr] from gitosis
 
 Finally, [tips][] has a lot of useful information.
 

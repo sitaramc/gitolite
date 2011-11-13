@@ -150,13 +150,13 @@ On your *workstation*:
 ### #upgrade upgrading
 
 Upgrading is easy; you just re-run some of the same commands used for install.
-These commands are clearly noted in the install instructions below.
+These commands are clearly noted in the install instructions above.
 
 However, if you've added any new hooks, you must also run the next step (the
 `gl-setup` command), although this time you don't need to supply a pubkey
 filename as an argument.
 
-## #insttrouble if you run into trouble...
+## #insttrouble install trouble?
 
 If you run into trouble, please read the following sections.
 
@@ -248,10 +248,10 @@ don't know ssh it'll be a nightmare to support you.
   * any Unix system with a posix compatible "sh".
       * people using "csh" or derivatives please don't ask me for help -- tell
         your admin csh is not posix compatible
-  * git version 1.6.6 or greater
+  * git version 1.6.6 or later
       * can be in a non-PATH location if you are unable to install it
         normally; see the `$GIT_PATH` variable in the "rc" file
-  * perl (but since git requires it anyway, you probably have it)
+  * perl 5.8 or later
   * openssh or any ssh that can understand the `authorized_keys` file format
     (probably optional if you're using the http backend)
   * a Unix userid to be the hosting user, usually "git" but it can be any
@@ -332,74 +332,81 @@ Good luck.
 ### #clean appendix b: cleaning out a botched install
 
 When people have trouble installing gitolite, they often try to change a bunch
-of things manually on the server.  This usually makes things worse ;-) so
-here's how to clean the slate.
+of things manually on the server.  Or sometimes they'll upgrade from one
+install method to another without checking some things over properly.  Or
+they'll follow instructions meant for a much newer version of gitolite and
+make a royal mess of the whole thing.
 
-  * client-side
-      * edit `~/.ssh/config` and delete the paragraph starting with `host
-        gitolite`, if present.
-      * remove `~/gitolite-admin`
-  * server-side
+Here's how to clean up, without losing your actual repositories.
+
+All this is on the server.  Note that the instructions are so long because
+they're generic enough to fit any situation.
+
+  * Clean out the existing install
+
       * edit `~/.ssh/authorized_keys` and delete all lines between `# gitolite
         start` and `# gitolite end` inclusive.
-      * remove `~/.gitolite`, `~/.gitolite.rc` and
-        `~/repositories/gitolite-admin.git`
-      * depending on which install method you used, you may also need to clean
-        out all gitolite files from `/usr/local/bin` or `$HOME/bin`, and then
-        delete `/var/gitolite/conf` and `/var/gitolite/hooks` or
-        `$HOME/share/gitolite/conf` and `$HOME/share/gitolite/hooks`
 
-### F=uninstall_ appendix c: uninstalling gitolite completely
+      * look in `~/.gitolite.rc` for 2 variables starting with `GL_PACKAGE_`.
+        If they are defined (and not just commented out), you need to clean
+        out all gitolite related files and directories from those two paths.
 
-(There's some duplication between this and the previous section).
+        Just for reference, the defaults for a non-root install are 'conf' and
+        'hooks' in `$HOME/share/gitolite`, while for an RPM/DEB or root
+        install they should be in `/var/gitolite/` or some such.
 
-Uninstalling gitolite is fairly easy, although it is manual.  (We'll assume
-`$REPO_BASE` in the rc file was left at its default of `~/repositories`; if
-not, adjust accordingly):
+        If those variables don't exist or are commented out, ignore this step.
 
-**server side tasks**
+      * look in `$PATH` for any gitolite programs and delete them also.  A
+        good way to hunt them down is `which gl-auth-command`, and in the path
+        you find, delete all "gl-*" programs (perhaps after checking the list,
+        if the path you find happens to be /usr/bin or such!!)
 
-  * edit `~/.ssh/authorized_keys` and delete the `# gitolite start` and `#
-    gitolite end` markers and all the lines between them.  This will prevent
-    any of your users from attempting a push while you are doing this.
+        Repeat this step until there are no more.  I know of people who mixed
+        different install methods and had two, or even three, versions lying
+        around.
 
-    If you are the only user, and/or *need* one or more of those keys to
-    continue to access this account (like if one of them is your laptop or
-    your home desktop etc.) then instead of deleting the line you can just
-    delete everything upto but not including the words "ssh-rsa" or "ssh-dss".
+      * make some temp directory (say "old"), and **move** the following
+        files/directories into it: `~/.gitolite`, `~/.gitolite.rc` and
+        `~/repositories/gitolite-admin.git`.  If there's nothing you need to
+        salvage from them you can delete them too.
 
-  * Now remove (or move aside or rename to something else if you're paranoid)
-    the following files and directories.
+      * if you used an RPM/DEB install, remove the package also.
 
-        ~/.gitolite
-        ~/.gitolite.rc
-        ~/repositories/gitolite-admin.git
+  * Now install a fresh copy of gitolite using whatever method you prefer.
+    (If you used a different method earlier and did not clean things out
+    properly per the instructions given above, expect trouble).
 
-  * You can remove all of `~/repositories` if you have not really started
-    using gitolite properly yet; that's your choice.
+  * You now have a brand new "rc" file.  If your old rc file had any
+    non-default settings you should **manually** pull them in to the new one.
+    However, **do NOT** change the two variables starting with `GL_PACKAGE_`
+    in the new rc file; even if the old one had something different leave them
+    alone.
 
-    If you *do* need to preserve the other repos and continue to use them,
-    remove all the `update` hooks that git installs on each repository.  The
-    easiest way is:
+  * You also have a brand new gitolite-admin repo.  Clone this to your
+    workstation, then use the saved copy of the old admin repo to salvage
+    whatever you need (entire revision history, or just the conf/key files,
+    whatever floats your boat).
 
-        find ~/repositories -wholename "*.git/hooks/update" | xargs rm -f
+    Once you've got your admin repo looking how you want it, including 'repo'
+    statements for all your existing repos, just add/commit/push it.
 
-    but you can do it manually if you want to be careful.
+  * Go back to the server and run `gl-setup` once again (no arguments needed).
 
-**client side tasks**
+That should do it.
 
-  * Any remote users that still have access must update their clone's remote
-    URLs (edit `.git/config` in the repo) to prefix `repositories/` before the
-    actual path used, in order for the remote to still work.  This is because
-    you'll now be accessing it through plain ssh, which means you have to give
-    it the full path.
+### #uninstall_ appendix c: uninstalling gitolite completely
 
-  * Finally, you as the gitolite admin *nay* have a host stanza for "gitolite"
-    in your *client*'s `~/.ssh/config`.  Find and delete lines that look like
-    this:
+To uninstall gitolite completely, first follow the "clean out..." steps in the
+previous section.
 
-        host gitolite
-            user git
-            hostname your.server
-            port 22
-            identityfile ~/.ssh/your-gitolite-admin-username
+If you have not really started using gitolite properly yet, you can remove all
+of `~/repositories` also and be done.
+
+But if you *do* need to preserve the other repos and wish to continue to use
+them, remove all the `update` hooks that gitolite installs in each repository.
+The easiest way is:
+
+    find ~/repositories -wholename "*.git/hooks/update" | xargs rm -f
+
+but you can do it manually if you want to be careful.

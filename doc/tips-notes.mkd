@@ -259,8 +259,12 @@ will work for all the repos managed by gitolite, **except** for the special
 is also a `post-update` hook that runs here, and this needs additional
 information which is NOT available if you bypass gitolite.
 
-Use the `gl-admin-push` program to make changes to the admin repo directly on
-the server.  Here's how:
+(Note: If your gitolite is too old to have the `gl-admin-push` program, try
+`gl-dont-panic`; run it without arguments for usage info.  If you don't even
+have that, it may be best to [clean][] things out more thoroughly!)
+
+Use the `gl-admin-push` program to make changes to the admin repo *directly on
+the server*.  Here's how:
 
   * clone the repo to some safe location and cd to it:
 
@@ -274,9 +278,7 @@ the server.  Here's how:
     fix up some config problem that may have lost you your access.
 
   * when done, instead of `git push <push arguments>`, use this program
-    instead, like so:
-
-        gl-admin-push <push arguments>
+    instead.  For example, instead of `git push -f`, use `gl-admin-push -f`.
 
 Note that this method will work for *any* repo, not just the special admin
 repo.

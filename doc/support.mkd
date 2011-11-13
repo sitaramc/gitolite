@@ -8,14 +8,17 @@ issues.  I often don't bother responding for silly issues that are already in
 the docs.  Seriously, folks, troubleshooting involves reading; do I really
 need to *say* that?
 
-  * For install/setup issues see the [if you run into trouble][insttrouble]
-    section of the [install][] document.
+  * Lost your admin key?  Try [gl-admin-push][adminpush].
 
-    In particular, that section has two links for ssh issues.  I've yet to see
-    a problem that is not already covered by those.
+  * For install/setup issues see the [install trouble?][insttrouble] section
+    of the [install][] document.
 
-  * For usage issues after install, check out the [suggested reading
-    list][rtfm] and the [other docs][other_docs] section.
+    In particular, that section has two links for ssh issues.  **I've yet to
+    see an ssh problem that is not already covered by those** (but please tell
+    me if you find one!)
+
+  * The [suggested reading list][rtfm] section is a quick overview of the
+    documentation.
 
   * If you still can't find what you need, try the [**master index/table of
     contents**](http://sitaramc.github.com/gitolite/master-toc.html) and use
