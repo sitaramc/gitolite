@@ -128,8 +128,8 @@ gl-compile-conf -q
     cd $HOME; cd $REPO_BASE/gitolite-admin.git
     GIT_WORK_TREE=$GL_ADMINDIR; export GIT_WORK_TREE
     git add conf/gitolite.conf keydir
-    git config --get user.email || git config user.email $USER@`hostname`
-    git config --get user.name  || git config user.name  "$USER on `hostname`"
+    git config --get user.email >/dev/null || git config user.email $USER@`hostname`
+    git config --get user.name  >/dev/null || git config user.name  "$USER on `hostname`"
     git diff --cached --quiet 2>/dev/null || git commit -am start
 )
 
