@@ -6,14 +6,14 @@
 
 # HOW TO USE:
 
-# (1) clone gitolite as you would for an upgrade (or install)
-# (2) rename this file to remove the .sample extension
-# (3) make the renamed file executable (chmod +x)
-# (4) create a directory called update.secondary.d in hooks/common
+# (1) rename this file to remove the .sample extension
+# (2) make the renamed file executable (chmod +x)
+# (3) put it in ~/.gitolite/hooks/common on the server
+# (4) create a directory called update.secondary.d in the same place
 # (5) copy all the update "hooklets" you want (like update.detect-dup-pubkeys)
 #     from contrib or wherever, to that directory
 # (6) make them also executable (chmod +x)
-# (7) install/upgrade gitolite as normal so all these files go to the server
+# (7) run gl-setup
 
 # rules for writing a hooklet are in the sample hooklet called
 # "update.detect-dup-pubkeys" in contrib
