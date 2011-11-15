@@ -115,7 +115,7 @@ sub user {
 }
 
 sub ak_comment {
-    my $_ = shift;
+    local $_ = shift;
     $in_gl_section = 1 if /^# gitolite start/;
     $in_gl_section = 0 if /^# gitolite end/;
     die "gitosis?  what's that?\n" if /^#.*gitosis/;
@@ -123,7 +123,7 @@ sub ak_comment {
 }
 
 sub fprint {
-    my $_ = shift;
+    local $_ = shift;
     my ($fh, $tempfn, $in);
     if (/ssh-(dss|rsa) /) {
         # an actual key was passed.  Since ssh-keygen requires an actual file,
