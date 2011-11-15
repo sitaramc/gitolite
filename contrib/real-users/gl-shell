@@ -5,31 +5,49 @@ use warnings;
 
 # ------------------------------------------------------------------------------
 
-# site-local changes
+# BEGIN site-local changes
 
-# the original login shell your users had (or) the shell to forward
-# non-gitolite commands to
-my $shell = "/bin/bash";
-# suggested values if you really don't want them actually logging in:
-#   /sbin/nologin       - obvious
-#   /usr/bin/passwd     - same, but allows them to change their passwords
+    # the original login shell your users had (or) the shell to forward
+    # non-gitolite commands to
+    my $shell = "/usr/bin/passwd";
 
-# the gitolite hosting user you want to forward git commands to.  Typically
-# this will be 'git' or perhaps 'gitolite', but actually could be anything
-my $hosting_user = "gitolite-test";
+    # exceptions...
+    my %shells = (
+        'some.one'      =>  '/bin/bash',
+    );
 
-# ADCs...
-# either list all the ADCs you wish to allow forwarding to (SPACE-separated):
-my $ADC_list = "";
-# -- OR --
-# if you upgraded to the new 'help' adc with the '-list' option, set this to 1:
-my $detect_ADCs = 0;
-# if you do neither, ADCs are not forwarded
+    # the gitolite host you want to forward git commands to.  Typically this will
+    # be 'git' or perhaps 'gitolite', but actually could be anything.  Don't
+    # forget to change the host part if needed and mind the quotes!
+    my $gl_host = 'git@server2';
+
+    # ADCs...
+    # either list all the ADCs you wish to allow forwarding to (SPACE-separated):
+    my $ADC_list = "";
+    # -- OR --
+    # if you upgraded to the new 'help' adc with the '-list' option, set this to 1:
+    my $detect_ADCs = 0;
+    # if you do neither, ADCs are not forwarded
+
+# END site-local changes
 
 # ------------------------------------------------------------------------------
 
+# change the user's default shell if he is an 'exception'
+$shell= $shells{$ENV{USER}} if $shells{$ENV{USER}};
+
 # no arguments?  nothing to forward
-exec($shell) unless @ARGV;
+exec($shell) if (not @ARGV and not $ENV{SSH_ORIGINAL_COMMAND});
+
+# note: we attempt to work the same whether invoked via 'command=' of authkeys
+# (in which case SSH_ORIGINAL_COMMAND is set) or via us being the login shell
+# (chsh).  Only the latter has been *tested* though.
+
+# massage SSHOC into @ARGV shape for ease of parsing
+@ARGV = ("-c", $ENV{SSH_ORIGINAL_COMMAND}) if $ENV{SSH_ORIGINAL_COMMAND};
+# we ignore SSHOC from now on...
+
+# ------------------------------------------------------------------------------
 
 # forward normal git ops
 forward(@ARGV) if
@@ -37,12 +55,16 @@ forward(@ARGV) if
     $ARGV[1] =~ /^(git-receive-pack|git-upload-pack|git-upload-archive) '(\S+)'$/ and
     ( not -d "$2" );
 
+# ------------------------------------------------------------------------------
+
 # forward gitolite special commands
 forward(@ARGV) if $ARGV[0] eq '-c' and $ARGV[1] =~ /^(info|expand|((set|get)(perms|desc)))( |$)/;
 
+# ------------------------------------------------------------------------------
+
 # forward ADCs
 if ($ADC_list or $detect_ADCs) {
-    $ADC_list ||= `ssh $hosting_user\@localhost help -list`;
+    $ADC_list ||= `ssh $gl_host help -list`;
     $ADC_list =~ s/\s+/ /g;
 
     # find the command he's running
@@ -51,20 +73,23 @@ if ($ADC_list or $detect_ADCs) {
     forward(@ARGV) if $ARGV[0] eq '-c' and $cmd and $ADC_list =~ /(^| )$cmd( |$)/;
 }
 
+# ------------------------------------------------------------------------------
+
 # at this point it's back to local processing
 exec($shell, @ARGV);
 
 # ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
-# forward to the hosting user
+# forward to the gitolite host
 sub forward {
     # this message is important in debugging and trouble shooting; see
     # documentation
-    print STDERR "[forwarding to $hosting_user\@localhost]\n";
+    print STDERR "[forwarding to $gl_host]\n";
 
     # but first we check for rsa key
     -f ".ssh/id_rsa" or die "ask your admin to add you to gitolite";
 
     shift if $_[0] eq '-c';
-    exec("ssh", "$hosting_user\@localhost", @_);
+    exec("ssh", "$gl_host", @_);
 }
