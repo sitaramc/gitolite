@@ -2,6 +2,24 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v2.2, gpg signed :-)
+
+  - major change to the online rendered docs to make them more readable
+
+  - (lots of nice documentation additions: gitolite in pictures, "user"
+    manual, gitolite.conf by example, ...)
+
+  - (minor backward compat breakage) if you're using svn or rsync support.
+    You can still use them but they work differently now.
+
+  - git-annex support via unrestricted ADC (i.e., whose arguments are NOT
+    checked by gitolite)
+
+  - eliminated almost all hardcoding in test suite.  This helped create a
+    "playing with gitolite" mode for "try before install" scenarios.
+
+  - deny rules for the first level access check!
+
   - v2.1
 
   - 'symbolic-ref' ADC replaces and obsoletes 'set-head'
