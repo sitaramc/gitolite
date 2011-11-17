@@ -129,7 +129,7 @@ On your *server*, as *root*:
     git clone git://github.com/sitaramc/gitolite
     gitolite/src/gl-system-install
     # defaults to being the same as:
-    # gitolite/src/gl-system-install /usr/local/bin /usr/local/share/gitolite/conf /usr/local/share/gitolite/hooks
+    # gitolite/src/gl-system-install /usr/local/bin /var/gitolite/conf /var/gitolite/hooks
 
     # to upgrade gitolite, repeat the above commands.  Make sure you use the
     # same arguments for the last command each time.
