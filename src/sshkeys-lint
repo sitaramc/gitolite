@@ -119,7 +119,7 @@ sub ak_comment {
     $in_gl_section = 1 if /^# gitolite start/;
     $in_gl_section = 0 if /^# gitolite end/;
     die "gitosis?  what's that?\n" if /^#.*gitosis/;
-    return /^\s*#/;
+    return /^\s*(#|$)/;
 }
 
 sub fprint {

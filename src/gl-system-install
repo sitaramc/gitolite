@@ -108,8 +108,10 @@ gl-setup is not in your \$PATH.
 $path_advice"
 
 which=`dirname $which`
-[ "$which" != "$gl_bin_dir" ] && die "                ***** WARNING *****
+[ "$which" = "$gl_bin_dir" ] || die "                ***** WARNING *****
 $which precedes $gl_bin_dir in your \$PATH,
 and it *also* contains gl-setup.  This is almost certainly going to confuse
 you or me later.
 $path_advice"
+
+exit 0
