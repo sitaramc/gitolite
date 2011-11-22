@@ -297,14 +297,14 @@ Follow these steps on the client:
 
   * cd to `~/.ssh`
 
-  * run `sshkeys-lint /tmp/foo`
+  * run `sshkeys-lint *.pub < /tmp/foo`
 
-This checks every `*.pub` file in your `~/.ssh`, in combination with the
-server's authkeys file.  It then tells you which key gets you what type of
-access (if any) to the server.
+This tells you, for each pubkey, what type of access (if any) it has to the
+server.
 
 Note that it is not trying to log in or anything -- it's just comparing bits
-of text (the contents of `/tmp/foo` and of each of the `*.pub` files).
+of text (the contents of STDIN taken as an authkeys file, and the contents of
+each of the `*.pub` files one by one).
 
 >   Note: It's also a stand-alone program, so even if your gitolite version is
 >   old, you can safely bring over just this program from a more recent
