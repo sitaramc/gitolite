@@ -2,6 +2,24 @@
 
 # please make sure this file is NOT chmod +x
 
+# this file contains settings for all ADCs at the top, then functions that you
+# can call from shell scripts.  Other files in this directory have examples.
+
+# all uses require you to "source" this file, like so:
+
+#       # at the top of your ADC
+#       . $(dirname $0)/adc.common-functions
+
+# then you use one of the following functions, like so:
+
+#       can_create reponame || die "you can't create reponame"
+#       can_write reponame || die "you can't write reponame"
+#       can_read reponame || die "you can't read reponame"
+#       is_admin || die "you're not an admin"
+
+# IMPORTANT NOTE: all the can_* functions set $repo to the normalised reponame
+# (i.e., with '.git' extension removed if it was supplied).
+
 # ------------------------------------------------------------------------------
 
 # settings for various ADCs, collected in one place for ease of keeping local
@@ -23,6 +41,9 @@ GL_FORKED_FROM="gl-forked-from"
 
 # Change to 1 to make -list the default action for the 'help' command
 HELP_LIST_DEFAULT=0
+
+# name of "admin" group (see is_admin() below before uncommenting)
+# ADMIN_GROUPNAME=admins
 
 # ------------------------------------------------------------------------------
 
@@ -56,4 +77,56 @@ get_rights_and_owner() {
     echo $rights | grep C >/dev/null 2>&1 && perm_create=yes  || perm_create=
     echo $rights | grep R >/dev/null 2>&1 && perm_read=yes    || perm_read=
     echo $rights | grep W >/dev/null 2>&1 && perm_write=yes   || perm_write=
+}
+
+can_create() {
+    get_rights_and_owner ${1%.git}
+    [ -z "$perm_create" ] && return 1
+    return 0
+}
+
+can_write() {
+    get_rights_and_owner ${1%.git}
+    [ -z "$perm_write" ] && return 1
+    return 0
+}
+
+can_read() {
+    get_rights_and_owner ${1%.git}
+    [ -z "$perm_read" ] && return 1
+    return 0
+}
+
+# ------------------------------------------------------------------------------
+
+# check if current user is an admin
+is_admin() {
+    # there are two ways to check if someone is an admin.  The default (if
+    # ADMIN_GROUPNAME is not defined) is to check if they have write access to
+    # the admin repo
+
+    if [ -z "$ADMIN_GROUPNAME" ]
+    then
+        can_write gitolite-admin || return 1
+        return 0
+    fi
+
+    # the alternative way is to check membership in $ADMIN_GROUPNAME; please
+    # remember this method requires GL_BIG_CONFIG to be set
+
+    # TODO, pending the code to allow an external query of a user's "group"
+    # affiliations
+    in_group $ADMIN_GROUPNAME
+}
+
+# ------------------------------------------------------------------------------
+
+grouplist() {
+    perl -I$GL_BINDIR -Mgitolite -e "cli_grouplist()"
+}
+
+in_group() {
+    local g=$1
+    grouplist | egrep "(^| )$g( |$)" >/dev/null && return 0
+    return 1
 }

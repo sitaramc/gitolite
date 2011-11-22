@@ -23,8 +23,10 @@
 # of git-symbolic-ref to also work
 [ -z "$2" ] && die "usage: symbolic-ref /path/to/repo.git <arguments to git-symbolic-ref>"
 
-get_rights_and_owner $1; to=$repo
-[ -z "$perm_write" ] && die "no write permissions on $to"
+# all the can_* functions set $repo
+can_write $1 || die "no write permissions on $repo"
+to=$repo
+
 shift
 
 # change head

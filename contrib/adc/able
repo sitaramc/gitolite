@@ -2,8 +2,7 @@
 
 . $(dirname $0)/adc.common-functions
 
-get_rights_and_owner gitolite-admin
-[ -z "$perm_write" ] && die "just *what* are you trying to pull, young man?"
+is_admin || die "just *what* are you trying to pull, young man?"
 
 op=$1
 shift

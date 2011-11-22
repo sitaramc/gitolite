@@ -8,6 +8,7 @@ use Exporter 'import';
     check_ref
     check_repo_write_enabled
     cli_repo_rights
+    cli_grouplist
     dbg
     dos2unix
     list_phy_repos
@@ -835,6 +836,15 @@ sub cli_repo_rights {
     # check_access does a lot more, so just call it.  Since it returns perms
     # and creator separately, just space-join them and print it.
     print join(" ", check_access($_[0])), "\n";
+}
+
+# helper/convenience routine to get group membership info
+sub cli_grouplist {
+    die "GL_BIG_CONFIG needs to be set\n" unless $GL_BIG_CONFIG;
+    # we may not have any data yet...
+    parse_acl() unless (%repos);
+    my @groups = grep { s/^@//; } get_memberships($ENV{GL_USER}, 0);
+    print join(" ", @groups), "\n";
 }
 
 sub can_read {

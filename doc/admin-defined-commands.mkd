@@ -128,9 +128,9 @@ like `_____R__W u1` or maybe `____@R_@W <gitolite>`.  (The `u1` indicates the
 queried repo is a wildcard repo created by user `u1`; for meanings of the "@"
 see doc/report-output.mkd)
 
-But that's cumbersome.  There's a bash shell function called
-`get_rights_and_owner` in `contrib/adc/adc.common-functions` that is much more
-convenient.  See any of the other samples for how to use it.
+But that's cumbersome.  It's much nicer to use the convenient functions
+defined in `contrib/adc/adc.common-functions`; see the comments in that file
+for details, and any of the other samples for how to use them.
 
 If you prefer perl, there is a nicely commented example in
 `contrib/adc/get-rights-and-owner.in-perl`.

@@ -5,12 +5,12 @@
 [ -z "$GL_RC" ] && die "ENV GL_RC not set"
 [ -z "$2" ] && die "Usage: fork source_repo target_repo"
 
-# get_rights_and_owner now also sets $repo; see comments in common functions
-get_rights_and_owner $1; from=$repo
-[ -z "$perm_read" ] && die "no read permissions on $from"
+# all the can_* functions set $repo
+can_read $1 || die "no read permissions on $repo"
+from=$repo
 
-get_rights_and_owner $2; to=$repo
-[ -z "$perm_create" ] && die "no create permissions on $to"
+can_create $2 || die "no create permissions on $repo"
+to=$repo
 
 # clone $from to $to
 git clone --bare -l $GL_REPO_BASE_ABS/$from.git $GL_REPO_BASE_ABS/$to.git

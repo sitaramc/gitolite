@@ -52,9 +52,8 @@
 #[ -z "$perm_write" ] && die "just *what* are you trying to pull, young man?"
 #get_rights_and_owner $1;
 
-# Comment this block if uncommenting the above block
-get_rights_and_owner $1;
-[ -z "$perm_read" ] && die "no read permissions on $repo"
+# all the can_* functions set $repo
+can_read $1 || die "no read permissions on $repo"
 
 cmd=$2
 identifier=$3

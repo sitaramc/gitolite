@@ -16,8 +16,7 @@
 
 . $(dirname $0)/adc.common-functions
 
-get_rights_and_owner gitolite-admin
-[ -z "$perm_write" ] && die "just *what* are you trying to pull here, $GL_USER?"
+is_admin || die "just *what* are you trying to pull here, $GL_USER?"
 
 # find the command name; we don't do a lot of fancy checking -- we just go
 # "safe" and assume that anything but a name of "su-setperms" runs getperms
