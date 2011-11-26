@@ -59,7 +59,7 @@ then
     }
 
     [ -f .ssh/id_rsa.pub ] || {
-        ssh-keygen -q -N "" -f .ssh/id_rsa >&2
+        ssh-keygen -q -N "" -C $user@`hostname` -f .ssh/id_rsa >&2
         chown $user .ssh/id_rsa .ssh/id_rsa.pub
         chmod go-rw .ssh/id_rsa
         chmod go-w  .ssh/id_rsa.pub
