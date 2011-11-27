@@ -144,7 +144,7 @@ repo @gr1
 notexpect ABORT
 cd ~/td
 runlocal git clone gitolite:r1
-expect "Cloning into r1..."
+expect "Cloning into 'r1'..."
 cd ~/td/r1
 mdc; mdc; mdc
 mdc; mdc; mdc
@@ -166,7 +166,7 @@ repo @gr2
 notexpect ABORT
 cd ~/td
 runlocal git clone gitolite:r2
-expect "Cloning into r2..."
+expect "Cloning into 'r2'..."
 cd ~/td/r2
 mdc; mdc; mdc
 mdc; mdc; mdc

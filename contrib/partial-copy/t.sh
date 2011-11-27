@@ -88,7 +88,7 @@ git test << FOOPC
     clone u4:foo foo4; !ok
         /R access for foo DENIED to u4/
     clone u4:foo-pc ; ok;
-        /Cloning into foo-pc/
+        /Cloning into 'foo-pc'/
         /new branch.* dev/u1/foo .* dev/u1/foo/
         /new branch.* master .* master/
         /new branch.* next .* next/

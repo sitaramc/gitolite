@@ -51,7 +51,7 @@ expect "\* \[new branch\]      master -> master"
 name "u1 clone success"
 cd ~/td
 runlocal git clone u1:foo/u4/a12 u1a12
-expect "Cloning into u1a12..."
+expect "Cloning into 'u1a12'..."
 
 name "u1 push fail"
 cd ~/td/u1a12
@@ -62,7 +62,7 @@ expect "W access for foo/u4/a12 DENIED to u1"
 name "u2 clone success"
 cd ~/td
 runlocal git clone u2:foo/u4/a12 u2a12
-expect "Cloning into u2a12..."
+expect "Cloning into 'u2a12'..."
 
 name "u2 push success"
 cd ~/td/u2a12
@@ -112,7 +112,7 @@ expect_filesame $TESTDIR/out/t04-wild1.2
 name "u5 clone success"
 cd ~/td
 runlocal git clone u5:foo/u4/a12 u5a12
-expect "Cloning into u5a12..."
+expect "Cloning into 'u5a12'..."
 
 name "u5 push fail"
 cd ~/td/u5a12
@@ -123,7 +123,7 @@ expect "W access for foo/u4/a12 DENIED to u5"
 name "u6 clone success"
 cd ~/td
 runlocal git clone u6:foo/u4/a12 u6a12
-expect "Cloning into u6a12..."
+expect "Cloning into 'u6a12'..."
 
 name "u6 push success"
 cd ~/td/u6a12

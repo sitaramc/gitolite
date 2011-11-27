@@ -24,7 +24,7 @@ do
     cd ~/td
     name "check u1 can auto-create and push"
     runlocal git clone u1:aa
-    expect "Cloning into aa..."
+    expect "Cloning into 'aa'..."
     expect "warning: You appear to have cloned an empty repository"
     cd ~/td/aa
     mdc; mdc; mdc
@@ -47,7 +47,7 @@ do
     rm -rf aa
     name "check tester can rewind"
     runlocal git clone gitolite:aa
-    expect "Cloning into aa..."
+    expect "Cloning into 'aa'..."
     cd aa
     runlocal git reset --hard HEAD^
     runlocal git push origin +master
@@ -57,7 +57,7 @@ do
     rm -rf aa
     name "check u4 can only read"
     runlocal git clone u4:aa
-    expect "Cloning into aa..."
+    expect "Cloning into 'aa'..."
     cd aa
     mdc; mdc; mdc
     runlocal git push origin master
@@ -67,7 +67,7 @@ do
     rm -rf aa
     name "check u6 cant even read"
     runlocal git clone u6:aa
-    expect "Cloning into aa..."
+    expect "Cloning into 'aa'..."
     expect "R access for aa DENIED to u6"
 
     # now the same thing with the repo-on-disk missing

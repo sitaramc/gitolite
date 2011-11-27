@@ -38,7 +38,7 @@ do
     name "push"
     cd ~/td
     runlocal git clone u2:foo/u1/bar u2bar
-    expect "Cloning into u2bar..."
+    expect "Cloning into 'u2bar'..."
     cd u2bar
     mdc u2file1
     runlocal git push
@@ -68,7 +68,7 @@ do
 
     cd ~/td
     runlocal git clone u1:foo/u1/bar
-    expect "Cloning into bar..."
+    expect "Cloning into 'bar'..."
 
     cd bar
     mdc u1file1
@@ -85,7 +85,7 @@ do
     name "push"
     cd ~/td
     runlocal git clone u2:foo/u1/bar u2bar
-    expect "Cloning into u2bar..."
+    expect "Cloning into 'u2bar'..."
     cd u2bar
     mdc u2file1
     runlocal git push
