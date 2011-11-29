@@ -14,18 +14,21 @@
 # REQUIRED 2: please make sure you copied the 2 hooks in contrib/partial-copy
 # and installed them into gitolite
 
-# REQUIRED 3: the 'git-test' command from my 'git-tools' project
+# REQUIRED 3: the 'tsh' command and associated Tsh.pm in PATH
 
 # ----
 
 set -e
 mkdir ~/td
 
+tsh "plan 83";
+
 # ----
 
 cd ~/gitolite-admin
 
 cat << EOF1 > conf/gitolite.conf
+# testing partial-copy
     repo    gitolite-admin
             RW+     =   tester
 
@@ -33,7 +36,8 @@ cat << EOF1 > conf/gitolite.conf
             RW+     =   @all
 EOF1
 
-git test '## setup base conf' 'add conf' 'commit -m start' 'commit-empty' 'ok' 'push -f' 'ok'
+tsh "## setup base conf
+    add conf; commit -m start; empty; ok; push -f; ok"
 
 cat << EOF2 >> conf/gitolite.conf
 
@@ -51,38 +55,37 @@ cat << EOF2 >> conf/gitolite.conf
 
 EOF2
 
-git test << SETUP
+tsh "
     ## setup partial-repos conf
-    add conf; commit -m partial-repos; commit-empty; ok;
+    add conf; commit -m partial-repos; empty; ok;
     # /master.*partial-repos/
     push;  ok;
         /Init.*empty.*foo\\.git/
         /Init.*empty.*foo-pc\\.git/
         /u3.*u5.*u6/; !/u1/; !/u2/; !/u4/
-
-SETUP
+"
 
 cd ~/td; rm -rf foo foo-pc
 
-git test << FOO
+tsh "
     ## populate repo foo, by user u1
     # create foo with a bunch of branches and tags
     clone u1:foo
         /appear.*cloned/
     cd foo
-    a1; a2
-    checkout -b dev/u1/foo; f1; f2
-    checkout master; m1; m2
-    checkout master; checkout -b next; n1; n2; tag nt1
-    checkout -b secret-1; s11; s12; tag s1t1
-    checkout next; checkout -b secret-2; s21; s22; tag s2t1
+    dc a1; dc a2
+    checkout -b dev/u1/foo; dc f1; dc f2
+    checkout master; dc m1; dc m2
+    checkout master; checkout -b next; dc n1; dc n2; tag nt1
+    checkout -b secret-1; dc s11; dc s12; tag s1t1
+    checkout next; checkout -b secret-2; dc s21; dc s22; tag s2t1
     push --all
         /new branch/; /secret-1/; /secret-2/
     push --tags
         /new tag/; /s1t1/; /s2t1/
-FOO
+"
 
-git test << FOOPC
+tsh "
     ## user u4 tries foo, fails, tries foo-pc
     cd $HOME/td
     clone u4:foo foo4; !ok
@@ -98,13 +101,13 @@ git test << FOOPC
         /new tag.* s2t1 .* s2t1/
         !/new tag.* s1t1 .* s1t1/
 
-FOOPC
+"
 
-git test << FOOPC2
+tsh "
     ## user u4 pushes to foo-pc
     cd $HOME/td/foo-pc
     checkout master
-    u4m1; u4m2; push; !ok
+    dc u4m1; dc u4m2; push; !ok
         /W refs/heads/master foo-pc u4 DENIED by fallthru/
         /hook declined to update refs/heads/master/
         /To u4:foo-pc/
@@ -112,7 +115,7 @@ git test << FOOPC2
         /failed to push some refs to 'u4:foo-pc'/
 
     checkout next
-    u4n1; u4n2
+    dc u4n1; dc u4n2
     push origin next; ok
         /To /home/gl-test/repositories/foo.git/
         /new branch\]      ca3787119b7e8b9914bc22c939cefc443bc308da -> br-\d+/
@@ -125,16 +128,16 @@ git test << FOOPC2
 
     checkout master
     checkout -b dev/u4/u4master
-    devu4m1; devu4m2
+    dc devu4m1; dc devu4m2
     push origin HEAD; ok
         /To /home/gl-test/repositories/foo.git/
         /new branch\]      228353950557ed1eb13679c1fce4d2b4718a2060 -> br-\d+/
         /u4:foo-pc/
         /new branch.* HEAD -> dev/u4/u4master/
 
-FOOPC2
+"
 
-git test << FOO2
+tsh "
     ## user u1 gets u4's updates, makes some more
     cd $HOME/td/foo
     git remote update
@@ -143,13 +146,13 @@ git test << FOO2
         /new branch\]      dev/u4/u4master -> origin/dev/u4/u4master/
         /new tag\]         u4/nexttag -> u4/nexttag/
         /52c7716..ca37871  next       -> origin/next/
-    checkout master; u1ma1; u1ma2;
+    checkout master; dc u1ma1; dc u1ma2;
         /\[master 8ab1ff5\] u1ma2 at Thu Jul  7 06:23:20 2011/
     tag mt2; push-om; ok
-    checkout secret-1; u1s1b1; u1s1b2
+    checkout secret-1; dc u1s1b1; dc u1s1b2
         /\[secret-1 5f96cb5\] u1s1b2 at Thu Jul  7 06:23:20 2011/
     tag s1t2; push origin HEAD; ok
-    checkout secret-2; u1s2b1; u1s2b2
+    checkout secret-2; dc u1s2b1; dc u1s2b2
         /\[secret-2 1ede682\] u1s2b2 at Thu Jul  7 06:23:20 2011/
     tag s2t2; push origin HEAD; ok
     push --tags; ok
@@ -158,9 +161,9 @@ git test << FOO2
         /8ab1ff512faf5935dc0fbff357b6f453b66bb98b\trefs/tags/mt2/
         /5f96cb5ff73c730fb040eb2d01981f7677ca6dba\trefs/tags/s1t2/
         /1ede6829ec7b75a53cd6acb7da64e5a8011e6050\trefs/tags/s2t2/
-FOO2
+"
 
-git test << FOOPC3
+tsh "
     ## u4 gets updates but without the tag in secret-1
     cd $HOME/td/foo-pc
     git ls-remote origin;
@@ -183,8 +186,10 @@ git test << FOOPC3
         /\[new tag\]         s2t2       -> s2t2/
         !/ refs/heads/secret-1/; !/s1t1/; !/s1t2/
 
-FOOPC3
+"
 
+echo DONE
+# last words...
 git ls-remote u4:foo-pc
 
 cd ~/gitolite-admin
@@ -193,10 +198,10 @@ git test 'add conf' 'commit -m erdel' 'ok' 'push -f' 'ok'
 
 git ls-remote u4:foo-pc
 
-cat <<RANT
+cat >&2 <<RANT
 
 This is where things go all screwy.  Because we still have the *objects*
-pointed to by these tags, we still get them back from the main repo.
+pointed to by tags s2t1 and s2t2, we still get them back from the main repo.
 
 <sigh>
 
