@@ -4,6 +4,8 @@
 
 # please see doc/mirroring.mkd for instructions on how to use this
 
+die() { echo post-receive.mirrorpush: "$@" >&2; exit 1; }
+
 # flush STDIN coming from git; we have no use for that info in this hook but
 # if you don't do this, git-shell sometimes dies of a signal 13 (SIGPIPE)
 [ -t 0 ] || cat >/dev/null
