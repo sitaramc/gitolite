@@ -10,14 +10,11 @@ die() { echo post-receive.mirrorpush: "$@" >&2; exit 1; }
 # if you don't do this, git-shell sometimes dies of a signal 13 (SIGPIPE)
 [ -t 0 ] || cat >/dev/null
 
-# even slaves have post-receive hooks, but due to the way the push happens, we
-# don't have GL_REPO set.  So we detect that generic situation and bail...
+# even slaves have post-receive hooks, so we bail when a mirrored push happens
 [ -n "$GL_BYPASS_UPDATE_HOOK" ] && exit 0
-# CAUTION: this means that a server-side push (bypassing gitolite) will not be
-# mirrored automatically because (a) we don't know GL_REPO (we can deduce it
-# but we won't!), and (b) we can't distinguish easily between that and this
-# case (the slave receiving a mirror push case)
 
+# CAUTION: a server-side push (bypassing gitolite) will not be mirrored
+# automatically because we don't know GL_REPO (we can deduce it but we won't!)
 [ -z "$GL_REPO" ] && die GL_REPO not set
 [ -z "$GL_BINDIR" ] && die GL_BINDIR not set
 
