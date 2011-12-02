@@ -118,6 +118,7 @@ if ($soc =~ /^git-receive-pack '(\S+)'$/) {
     print STDERR "$GL_HOSTNAME <=== ($repo) ==== $sender\n";
 
     $ENV{GL_BYPASS_UPDATE_HOOK} = 1;
+    $ENV{GL_REPO} = $repo;
     # replace the repo path with the full path and hand off to git-shell
     $soc =~ s(')('$ENV{GL_REPO_BASE_ABS}/);
     exec("git", "shell", "-c", $soc);
