@@ -1,0 +1,8 @@
+# F=_emacsmode Emacs major mode for gitolite.conf
+
+[Emacs][] major mode for `gitolite.conf` can be found here:
+
+- [GitHub][]
+
+[Emacs]: http://www.gnu.org/software/emacs
+[GitHub]: http://github.com/llloret/gitolite-emacs
