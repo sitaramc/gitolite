@@ -1107,9 +1107,9 @@ sub setup_authkeys
 
     # lint check 2 -- print less noisily
     if (@not_in_config > 10) {
-        print STDERR "$WARN You have " . scalar(@not_in_config) . " pubkeys that do not appear to be used in the config\n";
+        print STDERR "$WARN You have " . scalar(@not_in_config) . " pubkeys that do not appear to be used in any access rules\n";
     } elsif (@not_in_config) {
-        print STDERR "$WARN the following users (pubkey files in parens) do not appear in the config file:\n", join(",", sort @not_in_config), "\n";
+        print STDERR "$WARN the following users (pubkey files in parens) do not appear in any access rules:\n", join(",", sort @not_in_config), "\n";
     }
 
     # lint check 3; a little more severe than the first two I guess...
