@@ -152,21 +152,27 @@ sub fprint {
 # ------------------------------------------------------------------------
 sub usage {
     print <<EOF;
+USAGE
+	$0 <ssh key of user>.pub ... <  ~/.ssh/authorized_keys
 
-sshkeys-lint expects
-  - the contents of an authorized_keys file via STDIN
-  - one or more pubkey filenames as arguments
+DESCRIPTION
+	Check validity of authorized_keys file against supplied SSH public keys
+	given on command line. Each public key file must be named using format
+        <LOGIN>.pub
 
-sample use to check all keys on gitolite server:
-    cd ~/.gitolite/keydir
-    cat ~/.ssh/authorized_keys | sshkeys-lint `find . -name "*.pub"`
-    # or supply only one pubkey file to check only that:
-    cat ~/.ssh/authorized_keys | sshkeys-lint YourName.pub
+	Note: program runs external process "ssh-keygen -l" for each
+        given publib key file. This is slow for huge amount *.pub
+        keys.
 
-Note that it runs ssh-keygen -l for each line in the authkeys file and each
-pubkey in the argument list, so be wary of running it on something huge.  This
-is meant for troubleshooting.
+EXAMPLES
+	Check all keys on gitolite server:
 
+            su - <gitolite account name>
+	    $0 ~/.gitolite/keydir/*.pub < cat ~/.ssh/authorized_keys
+
+        Check one public key:
+
+	    $0 logname.pub < cat ~/.ssh/authorized_keys
 EOF
     exit 1;
 }
