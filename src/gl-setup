@@ -141,4 +141,4 @@ gl-install -q
 
 # the never-ending quest to help with bloody ssh issues...
 cd $GL_ADMINDIR/keydir
-[ -n "$pubkey_file" ] && $GL_BINDIR/sshkeys-lint < $HOME/.ssh/authorized_keys -q -a $admin_name
+[ -n "$pubkey_file" ] && $GL_BINDIR/sshkeys-lint -q -a $admin_name < $HOME/.ssh/authorized_keys
