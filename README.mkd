@@ -1,5 +1,8 @@
 # Gitolite README
 
+**Github users: please read the "wiki" link at the top of the page before
+submitting issues or pull requests**.
+
 If you're really impatient, and you're familiar with Unix and ssh, follow the
 [quick install](http://sitaramc.github.com/gitolite/index.html#qi)
 instructions.
