@@ -132,3 +132,32 @@ By default, the only reason you need to touch the "system" location is if you
 want to modify the 'update' hook, but why would you fiddle with the most
 important part of gitolite, huh?  You're a good admin, and will use [hook
 chaining][hookchaining] properly, right?
+
+## why not just push a hook?
+
+A question I often get is, why can't we simply push the hooks using the admin
+repo, just like we push config changes.
+
+To understand why, realise that in many sites, the "right to push the
+gitolite-admin repo" is **not** the same as "right to get a command line on
+the server and run arbitrary commands".
+
+This means, gitolite tries its best to keep these two rights separated, and to
+prevent someone who has the former right from trivially acquiring the latter.
+
+And so we don't allow adding hooks by admin push.
+
+That doesn't mean you can't do it yourself.  Here's one possible way.
+
+Using the simple instructions [here][customhooks], add a
+`post-update.secondary` hook containing this code:
+
+    #!/bin/bash
+    cp $GL_ADMINDIR/local-hooks/* $GL_ADMINDIR/hooks/common
+    gl-setup
+
+Now create a directory in your gitolite-admin clone called "local-hooks", put
+all your hooks there, and add/commit/push.
+
+That *should* do it.  Test it and send me a patch for this document when you
+do :-)

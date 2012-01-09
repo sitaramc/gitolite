@@ -59,7 +59,8 @@ specific code (see [contrib/ldap][ldap] directory for details).
 **kernel.org**, the official distribution point for the Linux kernel, is the
 latest (as of 2011-10) high-visibility installation.  According to [this
 email][ko-ann] to the lkml, kernel.org decided to use gitolite for access
-controlling their git repos.
+controlling their git repos.  Their [FAQ entry][ko-why] describes at a high
+level why they chose gitolite.
 
 This move also prompted the first ever security audit of gitolite by an
 outside party.  Gitolite did great; see [here][audit] for details.
@@ -69,6 +70,7 @@ edges in gitolite, and smoothing them out was fun (the "playing with gitolite"
 stuff, making the test suite simpler, "deny" rules for the entire repo).
 
 [ko-ann]: http://lkml.org/lkml/2011/9/23/357
+[ko-why]: http://www.kernel.org/faq/#whygitolite
 [audit]: http://groups.google.com/group/gitolite/browse_thread/thread/8dc5242052b16d0f
 
 ----

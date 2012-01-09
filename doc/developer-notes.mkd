@@ -79,7 +79,10 @@ Fedora has a very special setup, as follows:
     they want to
 
   * actual git repos are under "git" (or some such), and include the chmod g+s
-    (git init --shared) unix perms tricks for shared access
+    (git init --shared) unix perms tricks for shared access.  (<font
+    color="gray">Starting with git 1.7.something, you would also need to
+    explicitly delete the new receive.denyNonFastForwards setting that git
+    seems to default to when you use --shared</font>).
 
   * but since they're coming through gl-auth, branch-level acls are in effect
 

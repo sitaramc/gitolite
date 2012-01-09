@@ -4,8 +4,6 @@
 # the "git describe" output for that refname to the tar.  This lets you say
 # "cat .GITOLITE-VERSION" to find out which ref produced this tar
 
-# Note: I'm not sure if that "-r" is a GNU tar extension...
-
 branch := $(shell git rev-parse --abbrev-ref HEAD)
 
 $(branch):	$(branch).tar

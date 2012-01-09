@@ -290,7 +290,7 @@ allowing the secret branches into it).
 The previous section is sufficient for most common needs, but gitolite can go
 a lot further than that.
 
-### restricting pushes by dir/file name using NAME/
+### #NAME restricting pushes by dir/file name using NAME/
 
 Here's a hopefully self-explanatory example.  Assume the project has the
 following contents at the top level: a README, a "doc/" directory, and an

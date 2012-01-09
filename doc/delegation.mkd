@@ -42,9 +42,8 @@ well as *any* repo inside the `browsers` subdirectory, as members of the
 Each of these groups is called a **subconf** from here on.
 
 Then you designate a **sub-admin** to manage each subconf, and you ensure
-(using the standard gitolite feature of restricting pushes by names of changed
-files) that a sub-admin can make changes only to her subconf file and nothing
-else.
+(using [this][NAME] gitolite feature) that a sub-admin can make changes only
+to her subconf file and nothing else.
 
 For example, Alice is in charge of all web browser development projects.
 Similarly, Bob takes care of web servers, and Mallory, as [tradition][abe]

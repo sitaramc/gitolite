@@ -147,7 +147,7 @@ lines for whatever repo you want too add.
 3.  `git add conf/gitolite.conf`, then `git commit`, then `git push`
 
 You do NOT add the repos directly anywhere on the server; you do it by
-cloning, adding keys, and pushing.
+cloning, adding repo and access lines, and pushing.
 
 ## #flow gitolite flow
 
