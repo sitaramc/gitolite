@@ -36,7 +36,10 @@ Debian packages create.  Your distro/OS may vary.)
 
 On your *workstation*:
 
-  * copy your `~/.ssh/id_rsa.pub` file to `/tmp/YourName.pub` on the server
+  * copy your `~/.ssh/id_rsa.pub` file to `/tmp/YourName.pub` on the server.
+    (The name of this file determines your gitolite username, so if you leave
+    it as `id_rsa.pub`, your gitolite username will be `id_rsa`, which may not
+    be what you want).
 
 On your *server*, as *root*:
 
@@ -48,6 +51,9 @@ On your *server*, as *root*:
 
     # (now as gitolite)
     gl-setup /tmp/YourName.pub
+
+Note: if you're running non-interactively (i.e., cannot tolerate an editor
+popping up), insert a "-q" before the argument to gl-setup.
 
 On your *workstation*:
 
@@ -68,7 +74,11 @@ me to link it here).
 
 On your *workstation*:
 
-  * copy your `~/.ssh/id_rsa.pub` file to `/tmp/YourName.pub` on the server
+  * copy your `~/.ssh/id_rsa.pub` file to `/tmp/YourName.pub` on the server.
+    (The name of this file determines your gitolite username, so if you leave
+    it as `id_rsa.pub`, your gitolite username will be `id_rsa`, which may not
+    be what you want).
+
 
 On your *server*, as *git* (the "hosting user"), first check if `$HOME/bin` is
 on the default PATH.  If not, fiddle with the `.bashrc` or `.bash_profile` or
@@ -83,6 +93,9 @@ similar files and add it somehow.  Then:
     # same arguments for the last command each time.
 
     gl-setup /tmp/YourName.pub
+
+Note: if you're running non-interactively (i.e., cannot tolerate an editor
+popping up), insert a "-q" before the argument to gl-setup.
 
 On your *workstation*:
 
@@ -122,7 +135,12 @@ There are many, many ways to skin this cat; here's one way:
 
 On your *workstation*:
 
-  * copy your `~/.ssh/id_rsa.pub` file to `/tmp/YourName.pub` on the server
+  * copy your `~/.ssh/id_rsa.pub` file to `/tmp/YourName.pub` on the server.
+    (The name of this file determines your gitolite username, so if you leave
+    it as `id_rsa.pub`, your gitolite username will be `id_rsa`, which may not
+    be what you want).
+
+
 
 On your *server*, as *root*:
 
@@ -142,6 +160,9 @@ On your *server*, as *root*:
 
     # (now as git)
     gl-setup /tmp/YourName.pub
+
+Note: if you're running non-interactively (i.e., cannot tolerate an editor
+popping up), insert a "-q" before the argument to gl-setup.
 
 On your *workstation*:
 

@@ -14,7 +14,7 @@ sane setup, the following steps should work:
 
         git clone git://github.com/sitaramc/gitolite
         gitolite/src/gl-system-install
-        gl-setup ~/YourName.pub
+        gl-setup -q ~/YourName.pub
 
 You're done.  If it didn't work, well that's what the [install][] doc is for,
 especially the [if you run into trouble][insttrouble] section.

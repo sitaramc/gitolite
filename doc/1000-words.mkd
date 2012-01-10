@@ -48,7 +48,7 @@ for each step shown:
 1.  copy the admin's pubkey to the server as "alice.pub"
 2.  `git clone git://github.com/sitaramc/gitolite` or equivalent
 3.  `gitolite/src/gl-system-install`
-4.  `gl-setup alice.pub`
+4.  `gl-setup -q alice.pub`
 
 Note also that you only need ONE real user on the server.  In our example it
 is git.  In particular, you do NOT create Unix userids for your gitolite
