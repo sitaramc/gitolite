@@ -4,7 +4,7 @@
 
 # the help adc now takes some options; we need to process them first
 
-[ "$1" = "-list" -o $HELP_LIST_DEFAULT ] && {
+[ "$1" = "-list" -o "$HELP_LIST_DEFAULT" = "1" ] && {
     # the GL_ADC_PATH directory has files other than ADCs also, notably the
     # include file for shell ADCs, and maybe a README or two.  Those should be
     # chmod -x.
