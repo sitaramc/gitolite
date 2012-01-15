@@ -163,7 +163,7 @@ sub parse_conf_line
         s/\bCREAT[EO]R\b/\$creator/g for @{ $repos_p };
     }
     # actual permission line
-    elsif ($line =~ /^(-|C|R|RW\+?(?:C?D?|D?C?)) (.* )?= (.+)/)
+    elsif ($line =~ /^(-|C|R|RW\+?(?:C?D?|D?C?)M?) (.* )?= (.+)/)
     {
         my $perms = $1;
         my @refs; @refs = split( ' ', $2 ) if $2;
@@ -223,6 +223,7 @@ sub parse_conf_line
                 # to no longer permit deletes (see update hook)
                 $repos{$repo}{DELETE_IS_D} = 1 if $perms =~ /D/;
                 $repos{$repo}{CREATE_IS_C} = 1 if $perms =~ /RW.*C/;
+                $repos{$repo}{MERGE_CHECK} = 1 if $perms =~ /M/;
 
                 # for 2nd level check, store each "ref, perms" pair in order
                 for my $ref (@refs)

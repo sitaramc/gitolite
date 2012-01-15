@@ -53,6 +53,21 @@ $att_acc = 'D' if ( $repos{$ENV{GL_REPO}}{DELETE_IS_D} or $repos{'@all'}{DELETE_
 # similarly C for create a branch
 $att_acc = 'C' if ( $repos{$ENV{GL_REPO}}{CREATE_IS_C} or $repos{'@all'}{CREATE_IS_C} ) and $oldsha eq '0' x 40;
 
+# and now "M" commits.  This presents a bit of a problem.  All the other
+# accesses (W, +, C, D) were mutually exclusive in some sense.  Sure a W could
+# be a C or a + could be a D but that's by design.  A merge commit, however,
+# could still be any of the others (except a "D").
+
+# so we have to *append* 'M' to $att_acc (if the repo has MERGE_CHECK in
+# effect and this push contains a merge inside)
+if ( $repos{ $ENV{GL_REPO} }{MERGE_CHECK} or $repos{'@all'}{MERGE_CHECK} ) {
+    if ( $oldsha eq '0' x 40 or $newsha eq '0' x 40 ) {
+        warn "ref create/delete ignored for purposes of merge-check\n";
+    } else {
+        $att_acc .= 'M' if `git rev-list -n 1 --merges $oldsha..$newsha` =~ /./;
+    }
+}
+
 my @allowed_refs;
 # @all repos: see comments in similar code in check_access
 push @allowed_refs, @ { $repos{$ENV{GL_REPO}}{$ENV{GL_USER}} || [] };

@@ -234,8 +234,12 @@ sub check_ref {
         return "$perm $ref $repo $ENV{GL_USER} DENIED by $refex" if $ar->[2] eq '-' and $dry_run;
         die    "$perm $ref $repo $ENV{GL_USER} DENIED by $refex\n" if $ar->[2] eq '-';
 
+        # $ar->[2] can be RW\+?(C|D|CD|DC)?M?.  $perm can be W, +, C or
+        # D, or any of these followed by "M".
+        ( my $permq = $perm ) =~ s/\+/\\+/;
+        $permq =~ s/M/.*M/;
         # as far as *this* ref is concerned we're ok
-        return $refex if ($ar->[2] =~ /\Q$perm/);
+        return $refex if ($ar->[2] =~ /$permq/);
     }
     return "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru" if $dry_run;
     die    "$perm $ref $repo $ENV{GL_USER} DENIED by fallthru\n";
@@ -721,6 +725,7 @@ sub parse_acl
         $repos{$dr}{DELETE_IS_D} = 1 if $repos{$r}{DELETE_IS_D};
         $repos{$dr}{CREATE_IS_C} = 1 if $repos{$r}{CREATE_IS_C};
         $repos{$dr}{NAME_LIMITS} = 1 if $repos{$r}{NAME_LIMITS};
+        $repos{$dr}{MERGE_CHECK} = 1 if $repos{$r}{MERGE_CHECK};
         # this needs to copy the key-value pairs from RHS to LHS, not just
         # assign RHS to LHS!  However, we want to roll in '@all' configs also
         # into the actual $repo; there's no need to preserve the distinction
