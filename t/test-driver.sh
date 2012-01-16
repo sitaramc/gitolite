@@ -146,10 +146,6 @@ notexpect() {
     fi
 }
 
-print_summary() {
-    echo 1..$testnum
-}
-
 expect_push_ok() {
     expect "$1"
     notexpect "DENIED"
@@ -165,4 +161,5 @@ do
     cd $TESTDIR
 done
 
-print_summary
+# this keeps changing as we add tests
+echo 1..3157

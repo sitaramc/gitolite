@@ -1,0 +1,76 @@
+# vim: syn=sh:
+tsh pwd || die '## tsh not installed?'
+
+for wr in 0 1
+do
+    for bc in 0 1
+    do
+        cd $TESTDIR
+        $TESTDIR/rollback || die "rollback failed"
+        editrc GL_WILDREPOS $wr
+        editrc GL_BIG_CONFIG $bc
+
+        # ----------
+
+        name "INTERNAL"
+        echo "
+            repo  foo
+                  RW+M      =   u1
+                  RW+       =   u2
+                  RWM      .=   u3
+                  RW        =   u4
+        " | ugc
+
+        cd ~/td
+
+        name "setup a merged push"
+
+        tsh "ls -al foo; !ok; /cannot access foo: No such file or directory/
+        clone u1:foo; ok; /Cloning into/; /You appear to have cloned an empty/"
+
+        cd foo
+
+        tsh "ls -Al; ok; /\.git/
+        test-commit aa; ok; /1 files changed, 1 insertions/
+        tag start; ok
+        push-om; ok; /new branch.*master.-..master/
+            /create.delete ignored.*merge-check/
+        checkout -b new; ok; /Switched to a new branch 'new'/
+        test-commit bb cc; ok
+        checkout master; ok; /Switched to branch 'master'/
+        test-commit dd ee; ok
+        git merge new; ok; /Merge made.*recursive/
+        test-commit ff; ok
+        tag end; ok"
+
+        name "push by u4 should fail"
+        tsh "push u4:foo master
+        /WM refs/heads/master foo u4 DENIED by fallthru/
+        /To u4:foo/
+        /remote rejected.*hook declined/
+        /failed to push some refs/"
+
+        name "push by u3 should succeed"
+        tsh "push u3:foo master; ok; /To u3:foo/; /master.-..master/"
+
+        name "rewind by u3 should fail"
+        tsh "reset-h start; ok; /HEAD is now at .* aa /
+        push u3:foo +master; !ok; /rejected.*hook declined/; /failed to push some refs/"
+
+        name "rewind by u2 should succeed"
+        tsh "push u2:foo +master; ok; /To u2:foo/; /forced update/"
+
+        name "push by u2 should fail"
+        tsh "reset-h end; ok; /HEAD is now at .* ff /
+        push u2:foo master
+        /WM refs/heads/master foo u2 DENIED by fallthru/
+        /To u2:foo/
+        /remote rejected.*hook declined/
+        /failed to push some refs/"
+
+        name "push by u1 should succeed"
+        tsh "push u1:foo master; ok; /master.-..master/"
+
+        name INTERNAL
+    done
+done
