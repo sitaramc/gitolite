@@ -43,6 +43,9 @@ syntax).
         RW+ can no longer delete a ref; it can only rewind
       * (RWCD and RW+CD, which is just a combination of these two)
 
+    Even later, [gitolite acquired][mergecheck], if you want to enforce a
+    rebase-only workflow.
+
 The following sections dig deeper into the syntax and semantics of the access
 control rules and other configuration directives in the `gitolite.conf` file.
 If narrative descriptions scare you, or your English is not upto scratch, try
@@ -434,6 +437,17 @@ Some usage hints:
 
     where foo can be either the administrator, or if you can ignore the
     warning message when you push, a non-existant user.
+
+### #mergecheck enforcing a no-merges policy
+
+Some people want to enforce a no-merges policy for various reasons.  This can
+be done by suffixing an "M" to the permissions, so for instance, `RW` becomes
+`RWM`, and `RW+` becomes `RW+M`.
+
+The rules are exactly the same as for "C" and "D": once a repo has an "M"
+qualifier tied to any access rule, all rules for that repo are subject to
+merge checking, and merge commits will only be allowed when the rule has the
+"M" qualifier.
 
 ## summary: permissions
 
