@@ -440,9 +440,10 @@ Some usage hints:
 
 ### #mergecheck enforcing a no-merges policy
 
-Some people want to enforce a no-merges policy for various reasons.  This can
-be done by suffixing an "M" to the permissions, so for instance, `RW` becomes
-`RWM`, and `RW+` becomes `RW+M`.
+Some people want to enforce a no-merges policy for various reasons.  This
+behaviour can be enabled by suffixing an "M" to the end of any permission
+starting with `RW` (i.e., all of them except `R`).  So for instance, `RW`
+becomes `RWM`, and `RW+` becomes `RW+M`, etc.
 
 The rules are exactly the same as for "C" and "D": once a repo has an "M"
 qualifier tied to any access rule, all rules for that repo are subject to
@@ -451,11 +452,12 @@ merge checking, and merge commits will only be allowed when the rule has the
 
 ## summary: permissions
 
-The full set of permissions, in regex syntax: `-|R|RW+?C?D?`.  This expands to
-one of `-`, `R`, `RW`, `RW+`, `RWC`, `RW+C`, `RWD`, `RW+D`, `RWCD`, or
-`RW+CD`.  and by now you know what they all mean.
+The full set of permissions, in regex syntax: `-|R|RW+?C?D?M?`.  This expands
+to one of `-`, `R`, `RW`, `RW+`, `RWC`, `RW+C`, `RWD`, `RW+D`, `RWCD`, or
+`RW+CD`, all but the first one optionally followed by an `M`.  And by now you
+know what they all mean.
 
-[Side note: There is one more very important permissions to be dealt with --
+[Side note: There is one more very important permission to be dealt with --
 the standalone `C`, which is not really a "ref" level permission and can be
 found in doc/wildcard-repositories.mkd.]
 
