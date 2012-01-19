@@ -890,6 +890,11 @@ sub check_config_key {
     my($repo, $key) = @_;
     my @ret = ();
 
+    return () unless exists $git_configs{$repo};
+    # otherwise it auto-vivifies if you call it from new_repo() and causes
+    # harmless but annoying entries in the compiled config file.  They
+    # disappear on the next compile of course, but still...
+
     # look through $git_configs{$repo} and return an array of the values of
     # all second level keys that match $key.  To understand "second level",
     # you need to remember that %git_configs has elements like this:
