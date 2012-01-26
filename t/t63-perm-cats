@@ -1,5 +1,6 @@
-# vim: syn=sh:
+# vim: ft=sh:
 # test gl-perms categories
+tsh pwd || die '## tsh not installed?'
 
 for bc in 0 1
 do
@@ -111,15 +112,20 @@ do
     expect "W access for foo/u1/u1r1 DENIED to u2"
 
     name "add invalid category MANAGERS"
-    echo MANAGERS u2 | runlocal ssh u1 setperms foo/u1/u1r1
-    expect "invalid permission category MANAGERS"
+    tsh "
+        ( echo READERS u6\; echo MANAGERS u2 ) | ssh u1 setperms foo/u1/u1r1;
+                                !ok;    /invalid permission category MANAGERS/
+    "
 
     name "add u2 to now valid MANAGERS"
     echo "\$GL_WILDREPOS_PERM_CATS = 'READERS WRITERS MANAGERS';" | addrc
-    echo MANAGERS u2 | runlocal ssh u1 setperms foo/u1/u1r1
-    notexpect "invalid permission category MANAGERS"
-    expect "New perms are:"
-    expect "MANAGERS u2"
+    tsh "
+        ( echo READERS u6\; echo MANAGERS u2 ) | ssh u1 setperms foo/u1/u1r1;
+                                ok;     !/invalid permission category MANAGERS/
+                                        /New perms are:/
+                                        /READERS u6/
+                                        /MANAGERS u2/
+    "
 
     runlocal git fetch
     runlocal git reset --hard origin/master

@@ -400,7 +400,7 @@ sub get_set_perms
         # convert R and RW to the actual category names in the config file
         $perms =~ s/^\s*R /READERS /mg;
         $perms =~ s/^\s*RW /WRITERS /mg;
-        for my $g ($perms =~ /^\s*(\S+)/g) {
+        for my $g ($perms =~ /^\s*(\S+)/gm) {
             die "invalid permission category $g\n" unless $GL_WILDREPOS_PERM_CATS =~ /(^|\s)$g(\s|$)/;
         }
         print "New perms are:\n";
