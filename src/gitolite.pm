@@ -401,7 +401,7 @@ sub get_set_perms
         $perms =~ s/^\s*R /READERS /mg;
         $perms =~ s/^\s*RW /WRITERS /mg;
         for my $g ($perms =~ /^\s*(\S+)/gm) {
-            die "invalid permission category $g\n" unless $GL_WILDREPOS_PERM_CATS =~ /(^|\s)$g(\s|$)/;
+            die "invalid permission category $g\n" unless $g =~ /^#/ or $GL_WILDREPOS_PERM_CATS =~ /(^|\s)$g(\s|$)/;
         }
         print "New perms are:\n";
         print $perms;
