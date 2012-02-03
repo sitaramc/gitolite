@@ -443,6 +443,8 @@ sub get_set_desc
 
 sub setup_git_configs
 {
+    return if $GL_NO_DAEMON_NO_GITWEB;
+
     my ($repo, $git_configs_p) = @_;
 
     # new_wild calls us without checking!
@@ -476,6 +478,8 @@ sub setup_git_configs
 my $export_ok = "git-daemon-export-ok";
 sub setup_daemon_access
 {
+    return if $GL_NO_DAEMON_NO_GITWEB;
+
     my $repo = shift;
 
     if (can_read($repo, 'daemon')) {
@@ -507,6 +511,8 @@ sub setup_web_access {
 }
 
 sub add_del_web_access {
+    return if $GL_NO_DAEMON_NO_GITWEB;
+
     # input is a repo name.  Code could simply use `can_read($repo, 'gitweb')`
     # to determine whether to add or delete the repo from web access.
     # However, "desc" also factors into this so we have think about this.

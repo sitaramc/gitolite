@@ -2,8 +2,9 @@
 
 This document is just background info; you don't actually need to read the
 whole thing if you don't care.  All you need to do is set `BIG_CONFIG` to 1 in
-the rc file and you're done.  If you have no use for gitweb and daemon, you
-can save even more time by setting `GL_NO_DAEMON_NO_GITWEB`.
+the rc file and you're done.  If you have no use for gitweb, git-daemon, or
+[git config][rsgc], you can save even more time by setting
+`GL_NO_DAEMON_NO_GITWEB`.
 
 Finally, if you're *really* an expert (or your initials are "JK"), you can
 even set `GL_NO_CREATE_REPOS` and `GL_NO_SETUP_AUTHKEYS`.  However, be warned
@@ -147,10 +148,10 @@ first one):
 
 `GL_NO_DAEMON_NO_GITWEB` is a very useful optimisation that you *must* enable
 if you *do* have a large number of repositories, and do *not* use gitolite's
-support for gitweb or git-daemon access (see "[this][gwd]" for details).  This will save a
-lot of time when you push the gitolite-admin repo with changes.  This variable
-also controls whether "git config" lines (such as `config hooks.emailprefix =
-"[gitolite]"`) will be processed or not.
+support for gitweb or git-daemon access (see "[this][gwd]" for details).  This
+will save a lot of time when you push the gitolite-admin repo with changes.
+This variable also controls whether "git config" lines (such as `config
+hooks.emailprefix = "[gitolite]"`) will be processed or not.
 
 You should be a lot more careful with `GL_NO_CREATE_REPOS` and
 `GL_NO_SETUP_AUTHKEYS`.  These are meant for installations where some backend
