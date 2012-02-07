@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
+
+unshift @INC, $ENV{GL_BINDIR};
+require gitolite or die "parse gitolite.pm failed\n";
+gitolite->import;
+
+my $repo = shift;
+die "need a reponame\n" unless $repo;
+
+my $ret = check_access($repo, 'refs/heads/master', '+', 1);
+
+die "sorry you don't have rights to do this\n" if $ret =~ /DENIED/;
+
+wrap_chdir($ENV{GL_REPO_BASE_ABS});
+wrap_chdir("$repo.git");
+
+wrap_print("description", <>);
+print "New description is:\n";
+print slurp("description");
