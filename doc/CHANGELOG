@@ -2,6 +2,19 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v2.3
+
+  - added "M" permission to allow enforcing a "no-merges" policy.
+
+  - gl-setup is a little more puppet-friendly.  To be specific, you can now
+    manage gitolite without having gitolite-admin as a repo, such as can
+    happen with puppet and such.  The commit message for d08aca6 has details
+    and a script that may help you if you're doing this.
+
+  - v2.2.1 (caused by minor bug re not handling blank lines in authkeys file)
+
+  - ADCs gained new functions can_{read,write,create}, is_admin, and in_group.
+
   - v2.2, gpg signed :-)
 
   - major change to the online rendered docs to make them more readable
