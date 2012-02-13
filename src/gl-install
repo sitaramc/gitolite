@@ -97,6 +97,7 @@ for my $repo (`find . -type d -name "*.git" -prune`) {
     # in case of package install, GL_ADMINDIR is no longer the top cop;
     # override with the package hooks
     ln_sf("$GL_PACKAGE_HOOKS/common", "*", "$repo/hooks") if $GL_PACKAGE_HOOKS;
+    foreach(glob "$repo/hooks/*") { -l && ! -e && unlink};
     chmod 0755, "$repo/hooks/update";
 }
 
