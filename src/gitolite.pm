@@ -164,7 +164,9 @@ sub dos2unix {
 
 sub log_it {
     my ($ip, $logmsg);
-    open my $log_fh, ">>", $ENV{GL_LOG} or die "open log failed: $!\n";
+    open my $log_fh, ">>", $ENV{GL_LOG} or die
+        "open log failed: $!\n" .
+        "attempting to log: " . ( $_[0] || '(nothing)' ) . "\n";
     # first space sep field is client ip, per "man ssh"
     ($ip = $ENV{SSH_CONNECTION} || '(no-IP)') =~ s/ .*//;
     # the first part of logmsg is the actual command used; it's either passed
