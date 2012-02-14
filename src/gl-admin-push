@@ -9,7 +9,7 @@ die() { echo "$@" >&2; exit 1; }
     GL_BINDIR=`  perl -ne 'print($1), exit if /^command="(.+?)\/gl-(time|auth-command) /' < $HOME/.ssh/authorized_keys`
 # GL_BINDIR still not known?  we have a problem...
 [ -z "$GL_BINDIR" ] && {
-    cat <<EOF2
+    echo "
 
 Unable to determine correct path for gitolite scripts from the authkeys file.
 
@@ -21,7 +21,7 @@ this command.  For example (if you followed doc/http-backend.mkd precisely):
 
     GL_BINDIR=/var/www/gitolite-home/bin $0 $@
 
-EOF2
+"
     exit 1
 }
 

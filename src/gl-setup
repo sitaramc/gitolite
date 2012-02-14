@@ -110,13 +110,13 @@ GL_ADMINDIR=`get_rc_val GL_ADMINDIR`
 gl-install -q
 
 [ -f $GL_ADMINDIR/conf/gitolite.conf ] || {
-    cat <<EOF | cut -c9- > $GL_ADMINDIR/conf/gitolite.conf
+    echo "
         repo    gitolite-admin
                 RW+     =   $admin_name
 
         repo    testing
                 RW+     =   @all
-EOF
+    " | cut -c9- > $GL_ADMINDIR/conf/gitolite.conf
 }
 [ -n "$pubkey_file" ] && cp $pubkey_file $GL_ADMINDIR/keydir
 

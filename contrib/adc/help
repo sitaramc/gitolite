@@ -37,11 +37,11 @@
 [ -f $HOME/gl-adc-pre-help.txt ] && cat $HOME/gl-adc-pre-help.txt
 
 # default help text
-cat <<EOF
+echo "
 
 The following adc's (admin-defined commands) are available at this site.
 
-creating a "fork" of a repo:
+creating a 'fork' of a repo:
     the 'fork' adc forks a repo that you have read access to, to a repo that
     you have create rights to
 
@@ -51,13 +51,13 @@ deleting/trashing repos:
     repo before you can 'rm' it.
 
     A different scheme of handling this is to use 'trash' to move the repo to
-    a "trashcan" area.  You can then 'list-trash' to see what you have, and
+    a 'trashcan' area.  You can then 'list-trash' to see what you have, and
     you can then 'restore' whichever repo you need to bring back.
 
-    More details can be found at:
-    http://sitaramc.github.com/gitolite/contrib/adc/repo-deletion.html
+    More details can be found in contrib/adc/repo-deletion.mkd (or online at
+    http://sitaramc.github.com/gitolite/wild_repodel.html)
 
-EOF
+"
 
 # post
 [ -f $HOME/gl-adc-post-help.txt ] && cat $HOME/gl-adc-post-help.txt
