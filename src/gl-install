@@ -2,6 +2,8 @@
 
 # INTERNAL COMMAND.  NOT MEANT TO BE RUN BY THE USER DIRECTLY.
 
+# sets up REPO_BASE, GL_ADMINDIR.  Symlinks hooks
+
 use strict;
 use warnings;
 
@@ -10,108 +12,52 @@ use warnings;
 # ----------------------------------------------------------------------------
 
 BEGIN {
-    die "ENV GL_RC not set\n" unless $ENV{GL_RC};
+    die "ENV GL_RC not set\n"     unless $ENV{GL_RC};
     die "ENV GL_BINDIR not set\n" unless $ENV{GL_BINDIR};
 }
 
 use lib $ENV{GL_BINDIR};
+
 use gitolite_rc;
+use gitolite_env;
 use gitolite;
 
-# ----------------------------------------------------------------------------
-#       start...
-# ----------------------------------------------------------------------------
-
-# setup quiet mode if asked; please do not use this when running manually
-open STDOUT, ">", "/dev/null" if (@ARGV and shift eq '-q');
-
-# wrapper around mkdir; it's not an error if the directory exists, but it is
-# an error if it doesn't exist and we can't create it
-sub wrap_mkdir
-{
-    my $dir = shift;
-    my $perm = shift;       # optional
-    if ( -d $dir ) {
-        print "$dir already exists\n";
-        return;
-    }
-    mkdir($dir) or die "mkdir $dir failed: $!\n";
-    chmod $perm, $dir if $perm;
-    print "created $dir\n";
-}
-
-unless ($ENV{GL_RC}) {
-    # doesn't exist.  Copy it across, tell user to edit it and come back
-    my $glrc = $ENV{HOME} . "/.gitolite.rc";
-    if ($GL_PACKAGE_CONF) {
-        system("cp $GL_PACKAGE_CONF/example.gitolite.rc $glrc");
-    } else {
-        system("cp $ENV{GL_BINDIR}/../conf/example.gitolite.rc $glrc");
-    }
-    print "created $glrc\n";
-    print "please edit it, change the paths if you wish to, and RERUN THIS SCRIPT\n";
-    exit;
-}
-
-# add a custom path for git binaries, if specified
-$ENV{PATH} .= ":$GIT_PATH" if $GIT_PATH;
-
-# set the umask before creating any files/directories
-umask($REPO_UMASK);
+setup_environment();
 
 # mkdir $REPO_BASE, $GL_ADMINDIR if they don't already exist
 wrap_mkdir($REPO_BASE);
-wrap_mkdir($GL_ADMINDIR, 0700);
+wrap_mkdir( $GL_ADMINDIR, 0700 );
+
 # mkdir $GL_ADMINDIR's subdirs
-for my $dir (qw(conf doc keydir logs src hooks hooks/common hooks/gitolite-admin)) {
-    # some of them will stay empty; too lazy to fix right now ;-)
-    wrap_mkdir("$GL_ADMINDIR/$dir", 0700);
+for my $dir (qw(conf keydir logs hooks hooks/common hooks/gitolite-admin)) {
+    wrap_mkdir( "$GL_ADMINDIR/$dir", 0700 );
 }
 
-# "src" and "doc" will be overwritten on each install, but not conf
-if ($GL_PACKAGE_HOOKS) {
-    system("cp -R -p $GL_PACKAGE_HOOKS $GL_ADMINDIR");
-} else {
-    system("cp -R -p $ENV{GL_BINDIR}/../src $ENV{GL_BINDIR}/../doc $ENV{GL_BINDIR}/../hooks $GL_ADMINDIR");
-    system("cp       $ENV{GL_BINDIR}/../conf/VERSION                        $GL_ADMINDIR/conf");
-}
+# hooks must be propagated to all the repos in case they changed
 
-unless (-f $GL_CONF or $GL_PACKAGE_CONF) {
-    print <<EOF;
-    please do the following:
-    1.  create and edit $GL_CONF to contain something like this:
-            repo gitolite-admin
-                RW+     =   yourname
-    2.  copy "yourname.pub" to $GL_ADMINDIR/keydir
-    3.  run this command
-            $GL_ADMINDIR/src/gl-compile-conf
-EOF
-}
+# See http://sitaramc.github.com/gitolite/hook_prop.html if you're not sure
+# what is happening here, especially the picture toward the end.
 
-# finally, hooks must be propagated to all the repos in case they changed
+# all repos, all hooks
 chdir($REPO_BASE) or die "chdir $REPO_BASE failed: $!\n";
 for my $repo (`find . -type d -name "*.git" -prune`) {
-    chomp ($repo);
-    # propagate our own, plus any local admin-defined, hooks
-    ln_sf("$GL_ADMINDIR/hooks/common", "*", "$repo/hooks");
-    # in case of package install, GL_ADMINDIR is no longer the top cop;
-    # override with the package hooks
-    ln_sf("$GL_PACKAGE_HOOKS/common", "*", "$repo/hooks") if $GL_PACKAGE_HOOKS;
+    chomp($repo);
+    # propagate user hooks
+    ln_sf( "$GL_ADMINDIR/hooks/common", "*", "$repo/hooks" );
+    # propagate package hooks, overriding user hooks
+    ln_sf( "$GL_PACKAGE_HOOKS/common", "*", "$repo/hooks" );
     chmod 0755, "$repo/hooks/update";
 }
 
-# oh and one of those repos is a bit more special and has an extra hook :)
+# (special!) gitolite-admin repo, post-update hook, package hook only
 if ( -d "gitolite-admin.git/hooks" ) {
-    print "copying post-update hook to gitolite-admin repo...\n";
-    unlink "gitolite-admin.git/hooks/post-update";
-    symlink "$GL_ADMINDIR/hooks/gitolite-admin/post-update", "gitolite-admin.git/hooks/post-update"
-        or die "could not symlink post-update hook\n";
-    # ditto... (see previous block)
-    ln_sf("$GL_PACKAGE_HOOKS/gitolite-admin", "post-update", "gitolite-admin.git/hooks") if $GL_PACKAGE_HOOKS;
+    ln_sf( "$GL_PACKAGE_HOOKS/gitolite-admin", "post-update", "gitolite-admin.git/hooks" );
     chmod 0755, "gitolite-admin.git/hooks/post-update";
 }
 
-# fixup program renames
+# deal with old program names...
+# not needed for RPM/DEB type systems since they take care of it themselves
+# but people upgrading might appreciate this; not sure how useful it is though
 for my $oldname (qw(pta-hook.sh conf-convert.pl 00-easy-install.sh gl-easy-install 99-emergency-addkey.sh gl-emergency-addkey install.pl update-hook.pl hooks/update ga-post-update-hook VERSION)) {
     unlink "$GL_ADMINDIR/src/$oldname";
     unlink "$ENV{HOME}/gitolite-install/src/$oldname";

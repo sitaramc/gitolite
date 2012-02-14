@@ -27,6 +27,7 @@ use Exporter 'import';
     slurp
     special_cmd
     try_adc
+    wrap_mkdir
     wrap_chdir
     wrap_open
     wrap_print
@@ -99,6 +100,17 @@ our %one_git_config;    # ditto for %git_configs
 # ----------------------------------------------------------------------------
 #       convenience subs
 # ----------------------------------------------------------------------------
+
+sub wrap_mkdir
+{
+    # it's not an error if the directory exists, but it is an error if it
+    # doesn't exist and we can't create it
+    my $dir = shift;
+    my $perm = shift;       # optional
+    return if -d $dir;
+    mkdir($dir) or die "mkdir $dir failed: $!\n";
+    chmod $perm, $dir if $perm;
+}
 
 sub wrap_chdir {
     chdir($_[0]) or die "$ABRT chdir $_[0] failed: $! at ", (caller)[1], " line ", (caller)[2], "\n";
