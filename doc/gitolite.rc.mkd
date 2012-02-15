@@ -131,19 +131,28 @@ on feedback from my users to find or fix issues.
 
     The second choice is to give it a space separated list of settings you
     consider safe.  (These are actually treated as a set of perl regular
-    expression patterns, and any one of them must match).  For example:
-    `$GL_GITCONFIG_KEYS = "core\\.logAllRefUpdates core\\..*compression";`
-    allows repo admins to set one of those 3 config keys (yes, that second
-    pattern matches two settings from "man git-config", if you look).
+    expression patterns, and any one of them must match).
+
+    For example, this allows repo admins to set one of those 3 config
+    keys (yes, that second pattern matches two settings from "man
+    git-config", if you look):
+
+        $GL_GITCONFIG_KEYS = 'core\.logAllRefUpdates core\..*compression';
+
+    Each pattern should match the *whole* key (in other words, there
+    is an implicit `^` at the start of each pattern, and a `$` at the
+    end).
+
+    Note: if you don't know regex syntax, please learn, but briefly, a
+    literal period must be escaped with a backslash, as you can see in the
+    example above.  In addition, if you use double quotes instead of single
+    quotes, you will need to escape the backslash itself, like `"foo\\..*"`.
+
+    It's probably simplest to stick to single quotes.
 
     The third choice (which you may have guessed already if you're familiar
     with regular expressions) is to allow anything and everything:
-    `$GL_GITCONFIG_KEYS = ".*";`
-
-    NOTE that due to some quoting and interpolation issues I have not been
-    able to look at, a literal "." needs to be specified in this string as
-    `\\.` (two backslashes and a dot).  So this is how you'd allow any keys in
-    the "foo" section: `$GL_GITCONFIG_KEYS = "foo\\..*";`
+    `$GL_GITCONFIG_KEYS = '.*';`
 
   * `$GL_NO_CREATE_REPOS`, boolean, default 0
 
