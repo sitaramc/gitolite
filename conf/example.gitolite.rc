@@ -19,8 +19,8 @@ $GL_CONF_COMPILED="$GL_ADMINDIR/conf/gitolite.conf-compiled.pm";
 # DO NOT CHANGE THE NEXT FOUR LINES UNLESS YOU REALLY KNOW WHAT YOU'RE DOING.
 # These variables are set automatically by the install method you choose.
 #            (PACKAGE MAINTAINERS: PLEASE READ doc/packaging.mkd)
-# $GL_PACKAGE_CONF = "";
-# $GL_PACKAGE_HOOKS = "";
+$GL_PACKAGE_CONF = "/tmp/share/gitolite/conf";
+$GL_PACKAGE_HOOKS = "/tmp/share/gitolite/hooks";
 
 # ------------------------------------------------------------------------------
 # most often used/changed variables

@@ -1,117 +1,129 @@
-#!/bin/sh
+#!/usr/bin/perl
+use strict;
+use warnings;
+use English;    # so I can say $EUID instead of $>
+use File::Path qw(make_path);
 
-# install the gitolite software *system wide*.  Not too robust, fancy, etc.,
-# but does have a usage message and catches simple problems.
+# install the gitolite software *system wide*.
 
-usage() { echo "
-    Usage:
-        $0 [shared-bin-dir shared-conf-dir shared-hooks-dir]
+# This program does for a manual install (root or non-root method) what
+# doc/packaging.mkd describes is needed to be done by a packager.
 
-    Installs the gitolite software (just the software, not keys or repos)
-    within \$HOME when invoked by a user, or system-wide when invoked by root.
+# Packagers can also use this program to do the same thing if they wish.
 
-    Takes 0 or 3 absolute paths.  The first one must be part of \$PATH.
+my ( $bin_dir, $conf_dir, $hooks_dir );
 
-    Examples:
-        # as root
-        $0
+check_args();
+argv_or_defaults();
+check_dirs();
 
-        # this defaults to:
-        $0 /usr/local/bin /var/gitolite/conf /var/gitolite/hooks
+use FindBin;
+# we assume the standard gitolite source tree is here!
+chdir( $FindBin::Bin . "/.." ) or die "can't cd: $!\n";
 
-        # as a normal user
-        $0
+# notice the 'and' for failure after system() calls, because they return
+# "shell truth" not "perl truth"
 
-        # this defaults to:
-        $0 \$HOME/bin \$HOME/share/gitolite/conf \$HOME/share/gitolite/hooks
+# copy src
+system("cp src/* $bin_dir") and die "cp src/* to $bin_dir failed";
 
-    [RPM packagers: you can supply a 4th argument to specify a 'buildroot'
-    directory.  DEB folks would call this a 'DESTDIR', I believe.  In this
-    usage the first 3 arguments are NOT optional]
-"
-    exit 1;
-}
-
-die() { echo >&2; echo "$@" >&2; echo >&2; echo Run "$0 -h" for a detailed usage message. >&2; exit 1; }
-
-[ "$1" = "-h" ] && usage
-
-validate_dir() {
-    echo $1 | grep '^/' >/dev/null || die "$1 should be an absolute path"
-    [ -d $1 ] || mkdir -p $1 || die "$1 does not exist and could not be created"
-}
-
-# if we have a buildroot, set that up first
-buildroot=$4;
-[ -n "$buildroot" ] && validate_dir $buildroot
-[ -n "$buildroot" ] && buildroot=$buildroot/
-
-# either all 3 args must be supplied or none at all
-[ -n "$1" ] && [ -z "$3" ] && die "I need all 3 directories or none at all"
-# supply default values to args 1, 2, and 3 if not provided
-[ -z "$1" ] && {
-    euid=`perl -e 'print $>'`
-    if [ "$euid" = "0" ]
-    then
-        set /usr/local/bin /var/gitolite/conf /var/gitolite/hooks
-    else
-        set $HOME/bin $HOME/share/gitolite/conf $HOME/share/gitolite/hooks
-    fi
-    echo "using default values for EUID=$euid:" >&2
-    echo "$@" >&2
-}
-
-gl_bin_dir=$1; validate_dir $buildroot$gl_bin_dir
-gl_conf_dir=$2; validate_dir $buildroot$gl_conf_dir
-gl_hooks_dir=$3; validate_dir $buildroot$gl_hooks_dir
-
-bindir=`echo $0 | perl -lpe 's/^/$ENV{PWD}\// unless /^\//; s/\/[^\/]+$//;'`
-cd $bindir/..       # we assume the standard gitolite source tree is here!
-
-cp src/* $buildroot$gl_bin_dir || die "cp src/* to $buildroot$gl_bin_dir failed"
-perl -lpi -e "s(^GL_PACKAGE_CONF=.*)(GL_PACKAGE_CONF=$gl_conf_dir)" $buildroot$gl_bin_dir/gl-setup
+# fixup GL_PACKAGE_CONF in gl-setup
+replace( "/tmp/share/gitolite/conf", $conf_dir, "$bin_dir/gl-setup" );
 
 # record which version is being sent across; we assume it's HEAD
-if git rev-parse --is-inside-work-tree >/dev/null 2>&1
-then
-    git describe --tags --long --dirty=-dt 2>/dev/null > conf/VERSION || die "git describe failed -- your git is probably too old"
-else
-    [ -f conf/VERSION ] || echo '(unknown)' > conf/VERSION
-fi
+record_version();
 
-cp -R conf/* $buildroot$gl_conf_dir || die "cp conf/* to $buildroot$gl_conf_dir failed"
-perl -lpi \
-    -e "s(^#\s*\\\$GL_PACKAGE_CONF\s*=.*)(\\\$GL_PACKAGE_CONF = '$gl_conf_dir';)" \
-        $buildroot$gl_conf_dir/example.gitolite.rc
-perl -lpi \
-    -e "s(^#\s*\\\$GL_PACKAGE_HOOKS\s*=.*)(\\\$GL_PACKAGE_HOOKS = '$gl_hooks_dir';)" \
-        $buildroot$gl_conf_dir/example.gitolite.rc
+# copy conf
+system("cp -R conf/* $conf_dir") and die "cp conf/* to $conf_dir failed";
 
-cp -R hooks/* $buildroot$gl_hooks_dir || die "cp hooks/* to $buildroot$gl_hooks_dir failed"
+# fixup GL_PACKAGE_CONF and GL_PACKAGE_HOOKS in the example rc
+replace( "/tmp/share/gitolite/conf",  $conf_dir,  "$conf_dir/example.gitolite.rc" );
+replace( "/tmp/share/gitolite/hooks", $hooks_dir, "$conf_dir/example.gitolite.rc" );
 
-# ----
+# copy hooks
+system("cp -R hooks/* $hooks_dir") and die "cp hooks/* to $hooks_dir failed";
 
-# check if $gl_bin_dir is in $PATH and advise the user if needed
-which=`which gl-setup 2>/dev/null`
+# this is some extra gunk for people with crap setups
+path_advice();
 
-path_advice="
-Since gl-setup MUST be run from the PATH (and not as src/gl-setup or such),
-you must fix this before running gl-setup.  The simplest way is to add
+exit 0;
 
-    PATH=$gl_bin_dir:\$PATH
+# ----------------------------------------------------------------------
 
-to the end of your bashrc or similar file.  You can even simply run that
-command manually each time you log in and want to run a gitolite command."
+sub check_args {
+    return unless @ARGV;
+    return if @ARGV == 3;
+    die "I need all 3 directories (bin-dir, conf-dir, hooks-dir) or none\n";
+}
 
-[ -z "$which" ] && die "                ***** WARNING *****
-gl-setup is not in your \$PATH.
-$path_advice"
+sub argv_or_defaults {
+    ( $bin_dir, $conf_dir, $hooks_dir ) = @ARGV;
+    return if @ARGV;
 
-which=`dirname $which`
-[ "$which" = "$gl_bin_dir" ] || die "                ***** WARNING *****
-$which precedes $gl_bin_dir in your \$PATH,
-and it *also* contains gl-setup.  This is almost certainly going to confuse
-you or me later.
-$path_advice"
+    unless (@ARGV) {
+        my $HOME = $ENV{HOME};
+        if ( $EUID eq "0" ) {
+            ( $bin_dir, $conf_dir, $hooks_dir ) = qw(/usr/local/bin /var/gitolite/conf /var/gitolite/hooks);
+        } else {
+            ( $bin_dir, $conf_dir, $hooks_dir ) = ( "$HOME/bin", "$HOME/share/gitolite/conf", "$HOME/share/gitolite/hooks" );
+        }
+        print STDERR "using default values for EUID=$EUID:\n";
+        print STDERR join( ", ", $bin_dir, $conf_dir, $hooks_dir ), "\n";
+    }
+}
 
-exit 0
+sub check_dirs {
+    for my $dir ( $bin_dir, $conf_dir, $hooks_dir ) {
+        die "$dir should be an absolute path\n" unless $dir =~ m(^/);
+        make_path($dir);
+        -d $dir or die "$dir does not exist and could not be created\n";
+    }
+}
+
+sub replace {
+    my ( $old, $new, $file ) = @_;
+    system("perl -lpi -e 's($old)($new)' $file");
+}
+
+sub record_version {
+    # this is really much easier in plain shell :(
+    if ( system("git rev-parse --is-inside-work-tree >/dev/null 2>&1") ) {
+        # for system() calls, perl 'true/success' is shell 'false/fail', which
+        # means the command failed; we are not in a git work tree
+        -f "conf/VERSION" or system("echo '(unknown)' > conf/VERSION");
+    } else {
+        system("git describe --tags --long --dirty=-dt 2>/dev/null > conf/VERSION")
+          and die "git describe failed -- your git is probably too old";
+    }
+}
+
+sub path_advice {
+    my $path_advice = "
+    Since gl-setup MUST be run from the PATH (and not as src/gl-setup or
+    such), you must fix this before running gl-setup.  Just add
+
+        PATH=$bin_dir:\$PATH
+
+    to the end of your bashrc or similar file.  You can even simply do that
+    manually each time you log in and want to run a gitolite command.\n";
+
+    for my $p ( split( ':', $ENV{PATH} ) ) {
+        return if $p eq $bin_dir;    # all is well
+
+        if ( -x "$p/gl-setup" ) {
+            #<<<
+            die "                ***** WARNING *****\n" .
+                "    you have installed the sources into $bin_dir, but\n" .
+                "    $p in your \$PATH *also* contains gl-setup.\n" .
+                "    This is almost certainly going to confuse you or me later.\n" .
+                $path_advice;
+            #>>>
+        }
+    }
+
+    #<<<
+    die "                ***** WARNING *****\n" .
+        "    gl-setup is not in your \$PATH.\n" .
+        $path_advice;
+    #>>>
+}
