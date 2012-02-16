@@ -1,0 +1,178 @@
+#!/usr/bin/perl
+
+# test script for install side of gitolite (not part of normal test suite)
+
+use 5.10.0;
+use strict;
+use warnings;
+
+use lib "$ENV{HOME}/._s/bin";
+use Tsh;
+
+my $version_string = get_version();
+
+my $euid=$>;
+try 'cd';
+
+# invalid arguments
+
+clean();
+try "
+    ## invalid arguments
+    gitolite/src/gl-system-install bin2
+        !ok
+        /I need all 3.../
+    gitolite/src/gl-system-install bin2 share2/gitolite/conf share2/gitolite/hooks
+        !ok
+        /should be an absolute path/
+    ";
+
+# no arguments
+
+clean();
+try "
+    ## no arguments
+    gitolite/src/gl-system-install
+        ok
+        /using default values for EUID=$euid/
+        //home/gl-test/bin, /home/gl-test/share/gitolite/conf, /home/gl-test/share/gitolite/hooks/
+    ";
+
+static_checks(
+    "/home/gl-test/bin",
+    "/home/gl-test/share/gitolite/conf",
+    "/home/gl-test/share/gitolite/hooks",
+    $version_string
+);
+
+# non-default arguments
+
+clean();
+try "
+    ## non-default arguments
+    gitolite/src/gl-system-install \$PWD/bin2 \$PWD/share2/gitolite/conf \$PWD/share2/gitolite/hooks
+        !ok
+        /WARNING/
+        /gl-setup is not in your .PATH/
+    ";
+
+static_checks(
+    "/home/gl-test/bin2",
+    "/home/gl-test/share2/gitolite/conf",
+    "/home/gl-test/share2/gitolite/hooks",
+    $version_string
+);
+
+# occurs earlier in PATH
+
+clean();
+try "
+    ## occurs earlier in PATH
+    gitolite/src/gl-system-install
+    gitolite/src/gl-system-install \$PWD/bin2 \$PWD/share2/gitolite/conf \$PWD/share2/gitolite/hooks
+        !ok
+        /WARNING/
+        /in your .PATH .also. contains gl-setup/
+    " or die;
+
+static_checks(
+    "/home/gl-test/bin2",
+    "/home/gl-test/share2/gitolite/conf",
+    "/home/gl-test/share2/gitolite/hooks",
+    $version_string
+);
+
+# ----------------------------------------------------------------------
+
+sub static_checks {
+    # 3 directory names, version string
+    my ($bin_dir, $conf_dir, $hooks_dir, $verstr) = @_;
+
+    try "
+        # $bin_dir/gl-setup contains $conf_dir
+        cat $bin_dir/gl-setup
+            ok
+            /\Q$conf_dir\E/
+            !/\Q/tmp/share\E/
+    " or die;
+    try "
+        # $conf_dir/example.gitolite.rc has $conf_dir and $hooks_dir
+        cat $conf_dir/example.gitolite.rc
+            ok
+            /\Q$conf_dir\E/
+            /\Q$hooks_dir\E/
+            !/\Q/tmp/share\E/
+    " or die;
+    try "
+        # check $bin_dir got most of the sources
+        ls -al $bin_dir
+            ok
+            /gitolite_env.pm/
+            /gitolite.pm/
+            /gitolite_rc.pm/
+            /gl-auth-command/
+            /gl-compile-conf/
+            /gl-install/
+            /gl-query-rc/
+            /gl-setup/
+            /gl-system-install/
+    " or die;
+    try "
+        # check $conf_dir got the example files
+        ls -al $conf_dir
+            ok
+            /example.gitolite.rc/
+            /example.conf/
+            /VERSION/
+    " or die;
+    try "
+        # check $hooks_dir got the hooks
+        find $hooks_dir -type f
+            ok
+            /\Q$hooks_dir/common/gitolite-hooked\E/
+            /\Q$hooks_dir/common/update\E/
+            /\Q$hooks_dir/common/update.secondary.sample\E/
+            /\Q$hooks_dir/common/post-receive.mirrorpush\E/
+            /\Q$hooks_dir/common/gl-pre-git.hub-sample\E/
+            /\Q$hooks_dir/gitolite-admin/post-update\E/
+    " or die;
+    try "
+        # check version string
+        cat $conf_dir/VERSION
+            ok
+            /\Q$verstr\E/
+    " or die;
+}
+
+sub clean {
+    chdir($ENV{HOME});
+    system("rm -rf .ssh*");
+    system("rm -rf .gito* gitolite-admin projects.list repositories *back.tar share share2 bin bin2 glt-adc td");
+    mkdir "td";
+
+    system("mkdir -p .ssh; chmod go-w .ssh");
+
+    system("ssh-keygen -q -N '' -f .ssh/id_rsa");
+
+    # set up our identity (impacts some tests; don't change this!)
+    system('git config --global user.name "gitolite tester"');
+    system('git config --global user.email "tester@example.com"');
+}
+
+sub cd_g {
+    chdir($ENV{HOME});
+    chdir("gitolite");
+}
+
+sub setup {
+    chdir($ENV{HOME});
+    try "cp .ssh/id_rsa.pub tester.pub";
+    try "gl-setup -q tester.pub";
+}
+
+sub get_version {
+    chdir($ENV{HOME});
+    chdir("gitolite");
+    try "git describe --tags --long --dirty=-dt 2>/dev/null";
+    return ((lines())[0]);
+}
