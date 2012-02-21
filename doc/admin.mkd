@@ -278,84 +278,47 @@ owner name for wild repos.  The rest of the setup is in the conf file.
 
 [**NOTE**: I would appreciate help testing these instructions]
 
-Just copying everything won't work unless everything on the new server is
-exactly the same.  I suggest you don't try it unless you know what you're
-doing.
+Here's the simplest set of instructions, assuming the destination is a recent
+gitolite (has the 'gl-admin-push' command).  Unless specified, all steps are
+on the *new* server.
 
-**Assumptions**
+  * **install** gitolite.  Don't worry about the pubkey used in the gl-setup
+    step -- for example this will do fine:
 
-  * you have not changed `$REPO_BASE` on either of the servers; if you did,
-    substitute accordingly
-  * the admin's name is "YourName" -- again, substitute accordingly!
-  * the "hosting user" on both servers is "git".  Substitute whatever you're
-    actually using (for example, if you're installing using RPM/DEB, this
-    would be "gitolite")
+        ssh-keygen -q -N '' -f dummy
+        gl-setup -q dummy.pub
 
-There are many ways of doing this, but the most *generic* set of steps are
-given below.  Please follow all the steps; do not skip or improvise!  Ask me
-if things are not clear -- you can help me fine tune this document :-)
+  * **edit** the rc file to have similar settings to the old one.
 
-  * (workstation, old server) **pull** the latest changes to the
-    `gitolite-admin` repo to your workstation, if you don't have them
-    already. You'll need them later on.
-    
-  * (old server) **disable** the old server so your users will not push any
-    changes to it.  There are several ways to do this, but the simplest is to
-    insert this line at the top of `~/.gitolite.rc` on the old server:
+    Do not copy the entire file outright -- some of the variables (notably
+    `GL_PACKAGE_CONF` and `GL_PACKAGE_HOOKS`) are installation dependent and
+    should not be touched!  Do a diff or a vimdiff and copy across only what
+    you know *you* changed on the old server.
+
+  * **disable** the old server so your users will not push any changes to it.
+    There are several ways to do this, but the simplest is to insert this line
+    at the top of `~/.gitolite.rc` on the old server:
 
         exit 1;
 
-  * (new server) **copy** the repos to the new server, **except** the
-    `gitolite-admin` repo and files called `gitolite-hooked` in the `hooks`
-    directory of each repo.
+  * **copy** the contents of `$REPO_BASE` in the old server to `$REPO_BASE` on
+    the new server.  By default, as you know, these are both
+    `$HOME/repositories`.
 
-    That sounds complicated but it's not.  It's just:
+  * **`chown -R`** the files to the correct user if you copied using root.
 
-        cd $HOME
-        rsync -a olduser@oldhost:repositories .
-        mv repositories/gitolite-admin.git $HOME/old-gitolite-admin.git
-        find repositories -name gitolite-hooked | xargs rm
+  * **fix up** the hooks
 
-    Don't forget to chown repositories if git's UID changed.  Gitolite expects
-    the hosting user to own all the files and directories it manages.
+        gl-setup
 
-  * (workstation, new server) **install** gitolite normally on your new
-    server.  Use whatever install method suits you, but you must use the
-    **same** name for the admin ("YourName" in the install instructions).  You
-    may use a different keypair if you need to, or use the same one that
-    currently gets access to the old server.
+  * **trigger** a push to the admin repo
 
-  * (new server) **edit** the `~/.gitolite.rc` file to match the settings on
-    the old server, if needed.  Do not copy the entire file outright -- some
-    of the variables (notably `GL_PACKAGE_CONF` and `GL_PACKAGE_HOOKS`) are
-    installation dependent and should not be touched!  Do a diff or a vimdiff
-    and copy across only what you know *you* changed on the old server.
+        git clone repositories/gitolite-admin.git /tmp/gitolite-admin
+        cd /tmp/gitolite-admin
+        git commit --allow-empty -m 'trigger compile on new server'
+        gl-admin-push -f
 
-  * (workstation) **push** the config to the new server.  To do this, go to
-    your admin clone, and:
-
-      * if you used a different keypair when installing to the new server,
-        copy that pubkey to this clone into `keydir/Yourname.pub`, then add
-        and commit the change to the pubkey
-
-            cd gitolite-admin
-            cp path/to/new/YourName.pub keydir/YourName.pub
-            git add keydir
-            git commit -m "new server, new key"
-
-      * if you did *not* use a different keypair, just make a dummy commit
-
-            git commit -m "new server" --allow-empty
-
-      * set the URL for the new server
-
-            git remote set-url origin git@newserver:gitolite-admin
-
-      * push the config, including past history
-
-            git push -f
-
-And that should be that!
+Done.
 
 ### custom git config
 
