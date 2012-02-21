@@ -1,0 +1,49 @@
+#!/bin/bash
+
+die() { echo "$@"; exit 1; }
+
+id | grep '=0(root)' || die "you must run this as root"
+umask 0022
+
+cd ~apache
+rm -rf gitolite-home
+mkdir gitolite-home
+export GITOLITE_HTTP_HOME
+GITOLITE_HTTP_HOME=/var/www/gitolite-home
+PATH=$PATH:$GITOLITE_HTTP_HOME/bin
+
+cd gitolite-home
+git clone /tmp/gitolite.git gitolite-source
+
+cd gitolite-source
+src/gl-system-install $GITOLITE_HTTP_HOME/bin $GITOLITE_HTTP_HOME/share/gitolite/conf $GITOLITE_HTTP_HOME/share/gitolite/hooks
+
+echo '$ENV{GIT_HTTP_BACKEND} = "/usr/libexec/git-core/git-http-backend";' > 1
+echo '$ENV{PATH} .= ":$ENV{GITOLITE_HTTP_HOME}/bin";'  >> 1
+cat /var/www/gitolite-home/share/gitolite/conf/example.gitolite.rc >> 1
+\mv 1 /var/www/gitolite-home/share/gitolite/conf/example.gitolite.rc
+
+gl-setup -q tester
+
+chown -R apache.apache $GITOLITE_HTTP_HOME
+
+cat <<EOF1 > /etc/httpd/conf.d/gitolite.conf
+SetEnv GIT_PROJECT_ROOT /var/www/gitolite-home/repositories
+ScriptAlias /git/ /var/www/gitolite-home/bin/gl-auth-command/
+ScriptAlias /gitmob/ /var/www/gitolite-home/bin/gl-auth-command/
+SetEnv GITOLITE_HTTP_HOME /var/www/gitolite-home
+SetEnv GIT_HTTP_EXPORT_ALL
+
+<Location /git>
+    AuthType Basic
+    AuthName "Private Git Access"
+    Require valid-user
+    AuthUserFile /tmp/gitolite-http-authuserfile
+</Location>
+EOF1
+
+htpasswd -bc /tmp/gitolite-http-authuserfile tester tester
+map "htpasswd -b /tmp/gitolite-http-authuserfile % %" u{1..6}
+
+service httpd restart
+

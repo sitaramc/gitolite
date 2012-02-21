@@ -1,0 +1,91 @@
+#!/bin/bash
+
+die() { echo "$@"; exit 1; }
+
+# git clone `url u1 r1`
+url() {
+    echo http://$1:$1@localhost/git/$2.git
+}
+
+# `cmd sitaram info`
+cmd() {
+    c="curl http://$1:$1@localhost/git"
+    shift
+    c="$c/$1"
+    shift
+
+    if [ -n "$1" ]
+    then
+        c="$c?$1"
+        shift
+    fi
+    while [ -n "$1" ]
+    do
+        c="$c+$1"
+        shift
+    done
+
+    echo $c
+}
+
+export tmp=$(mktemp -d);
+trap "rm -rf $tmp" 0;
+cd $tmp
+
+tsh "plan 29"
+
+tsh "
+    ## ls-remote tester admin
+    git ls-remote `url tester gitolite-admin`
+        ok
+        /HEAD/
+        /refs.heads.master/
+    ## clone
+    git clone `url tester gitolite-admin`
+        ok
+        /Cloning into/
+    ls -al gitolite-admin/conf
+        /gitolite.conf/
+" || die "step 1"
+
+cd gitolite-admin
+echo repo t2 >> conf/gitolite.conf
+echo 'RW+  = u1 u2' >> conf/gitolite.conf
+
+tsh "
+    ## add, commit, push
+    git add conf/gitolite.conf
+        ok
+        !/./
+    git commit -m t2
+        ok
+        /1 file.*changed/
+    git push
+        ok
+        /creating t2/ or die run this on a fresh install please...
+        /Initialized.*var.www.gitolite-home.repositories.t2.git/
+        /To http:..tester:tester.localhost.git.gitolite-admin.git/
+        /master -. master/
+    ## various ls-remotes
+    git ls-remote `url u1 gitolite-admin`
+        !ok
+        /DENIED to u1/
+    git ls-remote `url u1 t2`
+        ok
+        !/./
+    git ls-remote `url u2 t2`
+        ok
+        !/./
+    git ls-remote `url u3 t2`
+        !ok
+        /DENIED to u3/
+    ## push to u1:t2
+    git push      `url u1 t2` master:master
+        ok
+        /To http:..u1:u1.localhost.git.t2.git/
+        /master -. master/
+    git ls-remote `url u2 t2`
+        ok
+        /HEAD/
+        /refs.heads.master/
+" || die "step 2"

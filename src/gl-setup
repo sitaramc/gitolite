@@ -124,7 +124,7 @@ touch $HOME/.ssh/authorized_keys
 gl-compile-conf -q
 
 # setup push-to-admin
-[ -n "$pubkey_file" ] && (
+[ -n "$pubkey_file" ] || [ -n "$GITOLITE_HTTP_HOME" ] && (
     cd $HOME; cd $REPO_BASE/gitolite-admin.git
     GIT_WORK_TREE=$GL_ADMINDIR; export GIT_WORK_TREE
     git add conf/gitolite.conf keydir

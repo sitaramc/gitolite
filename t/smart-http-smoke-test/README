@@ -1,0 +1,12 @@
+quick smoke test for smart http mode.
+
+  - tested on fedora 16; YDMV
+  - tests are designed for "just installed" case; running them twice will fail
+
+step 1: as root, run
+
+    t/smart-http-smoke-test/install
+
+step 2: as any normal user, run
+
+    prove t/smart-http-smoke-test/t01
