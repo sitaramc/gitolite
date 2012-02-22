@@ -475,15 +475,15 @@ Some usage hints:
 
 ### #mergecheck enforcing a no-merges policy
 
-Some people want to enforce a no-merges policy for various reasons.  This
-behaviour can be enabled by suffixing an "M" to the end of any permission
-starting with `RW` (i.e., all of them except `R`).  So for instance, `RW`
-becomes `RWM`, and `RW+` becomes `RW+M`, etc.
+Some people want to enforce a no-merges policy for various reasons.  The new
+"M" qualifier can be used to specify who is allowed to push merge commits.
+This works just like "C" and "D" in the previous section, so **please read
+that for a more detailed description** and apply the same ideas, (including
+the `@all` trick!) to "M" for "allow merge commits".
 
-The rules are exactly the same as for "C" and "D": once a repo has an "M"
-qualifier tied to any access rule, all rules for that repo are subject to
-merge checking, and merge commits will only be allowed when the rule has the
-"M" qualifier.
+The only other thing to remember is that this qualifier, if used, goes at the
+end of any permission starting with `RW` (i.e., all of them except `R`).  For
+example, `RW` becomes `RWM`, `RW+` becomes `RW+M`, `RW+CD` becomes `RW+CDM`.
 
 ## summary: permissions
 
