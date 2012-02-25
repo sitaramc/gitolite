@@ -175,9 +175,9 @@ sub parse_conf_line
         @refs = qw(refs/.*) unless @refs;
         # deprecation warning
         map { print STDERR "WARNING: old syntax 'PATH/' found; please use new syntax 'NAME/'\n" if s(^PATH/)(NAME/) } @refs;
-        # fully qualify refs that dont start with "refs/" or "NAME/";
+        # fully qualify refs that dont start with "refs/" or "NAME/" or "VREF/";
         # prefix them with "refs/heads/"
-        @refs = map { m(^(refs|NAME)/) or s(^)(refs/heads/); $_ } @refs;
+        @refs = map { m(^(refs|NAME|VREF)/) or s(^)(refs/heads/); $_ } @refs;
         @refs = map { s(/USER/)(/\$gl_user/); $_ } @refs;
 
         # expand the user list, unless it is just "@all"
