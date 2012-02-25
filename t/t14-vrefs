@@ -1,0 +1,152 @@
+# vim: ft=sh:
+tsh pwd || die '## tsh not installed?'
+
+# note 'tc' is an abbreviation for 'test-commit' in tsh lingo
+
+for wr in 0 1
+do
+    for bc in 0 1
+    do
+        cd $TESTDIR
+        $TESTDIR/rollback || die "rollback failed"
+        editrc GL_WILDREPOS $wr
+        editrc GL_BIG_CONFIG $bc
+
+        # ----------
+
+        name "INTERNAL"
+        echo "
+            @gfoo = foo
+            @lead = u1
+            @dev2 = u2
+            @dev4 = u4
+            @devs = @dev2 @dev4 u6
+            repo  @gfoo
+                  RW+                   =   @lead @devs
+                  -     VREF/COUNT/2    =   @dev2
+                  -     VREF/COUNT/4    =   @dev4
+                  -     VREF/COUNT/3/NEWFILES   =   u6
+                  -     VREF/COUNT/6            =   u6
+        " | ugc
+
+        name "setup"
+        cd ~/td
+        tsh "
+            ls -al foo;         !ok;    /cannot access foo: No such file or directory/
+            clone u1:foo;       ok;     /Cloning into/
+                                        /You appear to have cloned an empty/
+        "
+        cd foo
+        tsh "
+            ls -Al;             ok;     /\.git/
+        "
+
+        name "check VREF is not called for u1"
+        GL_BINDIR=`gl-query-rc GL_BINDIR`
+        mv $GL_BINDIR/gl-VREF-COUNT ~
+        tsh "
+            tc a1 a2 a3 a4 a5;  ok;     /aaf9e8e/
+            push-om;            ok;     /new branch.*master -. master/
+                                        !/can\'t find helper program for VREF/COUNT/
+                                        !/hook declined/
+                                        !/remote rejected/
+        "
+
+        name "check VREF is called for u2"
+        tsh "
+            tc b1;              ok;     /1f440d3/
+            git push u2:foo;    !ok;    /can\'t find helper program for VREF/COUNT/2/
+                                        /hook declined/
+                                        /remote rejected/
+        "
+
+        mv ~/gl-VREF-COUNT $GL_BINDIR
+        name "u2 adds 1 file"
+        tsh "
+            git push u2:foo;    ok;     /aaf9e8e..1f440d3.*master -. master/
+        "
+
+        name "u2 adds 2 files"
+        tsh "
+            tc b2 b3;           ok;     /c3397f7/
+            git push u2:foo;    ok;     /1f440d3..c3397f7.*master -. master/
+        "
+
+        name "u2 adds 3 files"
+        tsh "
+            tc c1 c2 c3;        ok;     /be242d7/
+            git push u2:foo;    !ok;    /W VREF/COUNT/2 foo u2 DENIED by VREF/COUNT/2/
+                                        /too many changed files in this push/
+                                        /hook declined/
+                                        /remote rejected/
+        "
+
+        name "u4 adds 3 files"
+        tsh "
+            git push u4:foo;    ok;     /c3397f7..be242d7.*master -. master/
+        "
+
+        name "u4 adds 4 files"
+        tsh "
+            tc d1 d2 d3 d4;     ok;     /88d80e2/
+            git push u4:foo;    ok;     /be242d7..88d80e2.*master -. master/
+        "
+
+        name "u4 adds 5 files"
+        tsh "
+            tc d5 d6 d7 d8 d9;  ok;     /e9c60b0/
+            git push u4:foo;    !ok;    /W VREF/COUNT/4 foo u4 DENIED by VREF/COUNT/4/
+                                        /too many changed files in this push/
+                                        /hook declined/
+                                        /remote rejected/
+        "
+
+        name "u1 pushes it all"
+        tsh "
+            git push;           ok;     /88d80e2..e9c60b0.*master -. master/
+        "
+
+        name "u6 updates 6 old files"
+        tsh "
+            test-tick
+            tc d1 d2 d3 d4 d5 d6
+                                ok;     /2773f0a/
+            git push u6:foo;    ok;     /e9c60b0..2773f0a.*master -. master/
+            tag six
+        "
+
+        name "u6 updates 7 old files"
+        tsh "
+            test-tick; test-tick
+            tc d1 d2 d3 d4 d5 d6 d7
+                                ok;     /98e01c5/
+            git push u6:foo;    !ok;    /W VREF/COUNT/6 foo u6 DENIED by VREF/COUNT/6/
+                                        /too many changed files in this push/
+                                        /hook declined/
+                                        /remote rejected/
+            reset-h six;        ok;     /HEAD is now at 2773f0a/
+        "
+
+        name "u6 creates 4 new and 2 old files"
+        tsh "
+            test-tick; test-tick
+            tc d1 d2 n1 n2 n3 n4
+                                ok;     /cf1e284/
+            git push u6:foo;    !ok;    /W VREF/COUNT/3/NEWFILES foo u6 DENIED by VREF/COUNT/3/NEWFILES/
+                                        /too many new files in this push/
+                                        /hook declined/
+                                        /remote rejected/
+            reset-h six;        ok;     /HEAD is now at 2773f0a/
+        "
+
+        name "u6 creates 3 new and 3 old files"
+        tsh "
+            test-tick; test-tick
+            tc d1 d2 d3 n1 n2 n3
+                                ok;     /7447dfe/
+            git push u6:foo;    ok;     /2773f0a..7447dfe.*master -. master/
+        "
+
+        name INTERNAL
+    done
+done

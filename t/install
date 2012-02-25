@@ -42,6 +42,7 @@ git config --global user.email "tester@example.com"
 
 # install it
 cd gitolite
+cp contrib/VREF/* src
 git describe --tags --long HEAD > conf/VERSION
     # in case it is dirty
 src/gl-system-install
