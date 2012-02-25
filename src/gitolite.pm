@@ -132,6 +132,19 @@ sub wrap_print {
     chmod $oldmode, $file if $oldmode;
 }
 
+sub wrap_system {
+    system(@_);
+
+    # straight from 'perldoc -f system' (sans the coredump part)
+    if ( $? == -1 ) {
+        print STDERR "failed to execute: $!\n";
+    } elsif ( $? & 127 ) {
+        printf STDERR "child died with signal %d\n", ( $? & 127 );
+    } else {
+        printf STDERR "child exited with value %d\n", $? >> 8;
+    }
+}
+
 sub slurp {
     local $/ = undef;
     my $fh = wrap_open("<", $_[0]);

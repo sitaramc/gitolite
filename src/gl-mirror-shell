@@ -52,6 +52,7 @@ critical for you to just run it based on a 'usage' message.\n" if not @ARGV or $
 if ( ($ARGV[0] || '') eq 'request-push' and not $ENV{SSH_ORIGINAL_COMMAND} ) {
     shift;
     my $repo = shift or die "fatal: missing reponame\n";
+    $repo =~ s/\.git$//;
     -d "$REPO_BASE/$repo.git" or die "fatal: no such repo?\n";
 
     # this is the default argument if no slave list or key is supplied
@@ -110,6 +111,7 @@ if ($soc eq 'info') {
 
 if ($soc =~ /^git-receive-pack '(\S+)'$/) {
     my $repo = $1;
+    $repo =~ s/\.git$//;
     die "fatal: invalid characters in $repo\n" unless $repo =~ $REPONAME_PATT;
     my $mm = mirror_mode($repo);
 
@@ -137,11 +139,12 @@ if ($soc =~ /^git-receive-pack '(\S+)'$/) {
 
 if ($soc =~ /^request-push (\S+)$/) {
     my $repo = $1;
+    $repo =~ s/\.git$//;
     die "fatal: invalid characters in $repo\n" unless $repo =~ $REPONAME_PATT;
     die "$ABRT fatal: $GL_HOSTNAME ==//==> $sender refused: not in slave list\n" unless mirror_listslaves($repo) =~ /(^|\s)$sender(\s|$)/;
     print STDERR "$GL_HOSTNAME ==== ($repo) ===> $sender\n";
     # just one sender, and we've checked that he is "on the list".  Foreground...
-    system("$ENV{GL_BINDIR}/gl-mirror-push", $repo, "-fg", $sender);
+    wrap_system("$ENV{GL_BINDIR}/gl-mirror-push", $repo, "-fg", $sender);
 
     exit;
 }
@@ -159,6 +162,8 @@ if ($soc =~ /^USER=(\S+) SOC=(git-receive-pack '(\S+)')$/) {
     my $user = $1;
     $ENV{SSH_ORIGINAL_COMMAND} = $2;
     my $repo = $3;
+    $repo =~ s/\.git$//;
+    $repo =~ s(^/)();
     die "fatal: invalid characters in $user\n" unless $user =~ $USERNAME_PATT;
     die "fatal: invalid characters in $repo\n" unless $repo =~ $REPONAME_PATT;
     die "$ABRT fatal: $GL_HOSTNAME <==//== $sender redirected push rejected\n" unless mirror_redirectOK($repo, $sender);

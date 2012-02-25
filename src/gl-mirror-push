@@ -25,6 +25,7 @@ hn=`get_rc_val GL_HOSTNAME`
 # get repo name then check if it's a local or slave (ie we're not the master)
 [ -z "$1" ] && die fatal: missing reponame argument
 repo=$1; shift
+repo=${repo%.git}
 
 REPO_BASE=`get_rc_val REPO_BASE`
 cd $REPO_BASE/$repo.git 2>/dev/null || die fatal: could not change directory to "$repo"
