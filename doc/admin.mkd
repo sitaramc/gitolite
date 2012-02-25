@@ -33,8 +33,8 @@ server by cloning the special 'gitolite-admin' repo on your workstation (`git
 clone git@server:gitolite-admin`), making changes, and pushing them.  This
 section tells you how to add users and repos.
 
-  * ask each user who will get access to send you a public key.  See other
-    sources (for example [here][genpub]) for how to do this
+  * ask each user who will get access to send you a public key.  (Generating a
+    keypair is described somewhere in [this][gl_ssh] page).
 
   * rename each public key according to the user's name, with a `.pub`
     extension, like `sitaram.pub` or `john-smith.pub`.  You can also use
