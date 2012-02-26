@@ -1,0 +1,66 @@
+#!/usr/bin/perl
+
+# gitolite VREF to check if all *new* commits have author == pusher
+
+#                       THIS IS NOT READY TO USE AS IS
+#                       ------------------------------
+#           you MUST change the 'email_ok()' sub to suit *YOUR* site's
+#           gitolite username -> author email mapping!
+
+# See bottom of the program for important philosophical notes.
+
+use strict;
+use warnings;
+
+# mapping between gitolite userid and correct email address is encapsulated in
+# this subroutine; change as you like
+sub email_ok {
+    my ($author_email) = shift;
+    my $expected_email = "$ENV{GL_USER}\@atc.tcs.com";
+    return $author_email eq $expected_email;
+}
+
+my ( $ref, $old, $new ) = @ARGV;
+for my $rev (`git log --format="%ae\t%h\t%s" $new --not --all`) {
+    chomp($rev);
+    my ( $author_email, $hash, $subject ) = split /\t/, $rev;
+
+    # again, we use the trick that a vref can just choose to die instead of
+    # passing back a vref, having it checked, etc., if it's more convenient
+    die "$ENV{GL_USER}, you can't push $hash authored by $author_email\n" . "\t(subject of commit was $subject)\n"
+      unless email_ok($author_email);
+}
+
+exit 0;
+
+__END__
+
+The following discussion is for people who want to enforce this check on ALL
+their developers (i.e., not just the newbies).
+
+Doing this breaks the "D" in "DVCS", forcing all your developers to work to a
+centralised model as far as pushes are concerned.  It prevents amending
+someone else's commit and pushing (this includes rebasing, cherry-picking, and
+so on, which are all impossible now).  It also makes *any* off-line
+collabaration between two developers useless, because neither of them can push
+the result to the server.
+
+PHBs should note that validating the committer ID is NOT the same as reviewing
+the code and running QA/tests on it.  If you're not reviewing/QA-ing the code,
+it's probably worthless anyway.  Conversely, if you *are* going to review the
+code and run QA/tests anyway, then you don't really need to validate the
+author email!
+
+In a DVCS, if you *pushed* a series of commits, you have -- in some sense --
+signed off on them.  The most formal way to "sign" a series is to tack on and
+push a gpg-signed tag, although most people don't go that far.  Gitolite's log
+files are designed to preserve that accountability to *some* extent, though;
+see contrib/adc/who-pushed for an admin defined command that quickly and
+easily tells you who *pushed* a particular commit.
+
+Anyway, the point is that the only purpose of this script is to
+
+  * pander to someone who still has not grokked *D*VCS
+          OR
+  * tick off an item in some stupid PHB's checklist
+
