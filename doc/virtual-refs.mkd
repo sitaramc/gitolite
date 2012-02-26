@@ -1,4 +1,4 @@
-# virtual refs
+# F=vref virtual refs
 
 The traditional method of adding additional checks to gitolite was to use [hook
 chaining][hookchaining], which basically means you put your code in a new

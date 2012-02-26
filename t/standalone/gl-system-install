@@ -131,7 +131,6 @@ sub static_checks {
             ok
             /\Q$hooks_dir/common/gitolite-hooked\E/
             /\Q$hooks_dir/common/update\E/
-            /\Q$hooks_dir/common/update.secondary.sample\E/
             /\Q$hooks_dir/common/post-receive.mirrorpush\E/
             /\Q$hooks_dir/common/gl-pre-git.hub-sample\E/
             /\Q$hooks_dir/gitolite-admin/post-update\E/

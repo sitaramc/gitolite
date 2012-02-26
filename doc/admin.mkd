@@ -106,9 +106,8 @@ received from git.
 
 <font color="gray">
 
->   In addition, gitolite now contains the basic infrastructure to support
->   multiple 'update' hooks without having to remember to chain them yourself.
->   See `hooks/common/update.secondary.sample` for instructions.
+>   Also see the document on [virtual refs][vref] for a way to add additional
+>   checks that you might need.
 
 </font>
 
