@@ -11,7 +11,7 @@ cat <<EOFU
 This is a quick hack.  It is not "production quality".  Resist the temptation
 to turn this into an update.secondary hook and put it on the server.  I WILL
 NOT BE RESPONSIBLE FOR ANY PROBLEMS IF YOU DO THAT.  (Even more so if you use
-'git checkout $3' *without* setting GIT_INDEX_FILE to something temporary, and
+'git checkout' *without* setting GIT_INDEX_FILE to something temporary, and
 eventually realise that *deleted* files don't stay deleted...!  And if you
 didn't understand that, all the more reason not to do it).
 
@@ -34,6 +34,8 @@ cloned in $HOME/myclones, and the admin username is 'sitaram':
 EOFU
 exit 1;
 }
+
+[ "$1" = "-h" ] && usage
 
 [ -n "$1" ] || die "need an admin username"
 admin="$1"; shift
@@ -69,7 +71,7 @@ $GL_CONF_COMPILED="$GL_ADMINDIR/conf/gitolite.conf-compiled.pm";
 $GL_WILDREPOS = 1;
 $PROJECTS_LIST = $ENV{PWD} . "/projects.list";
 $REPO_UMASK = 0077;
-$GL_BIG_CONFIG = 0;
+$GL_BIG_CONFIG = 1;
 $GL_NO_DAEMON_NO_GITWEB = 1;
 $GIT_PATH="";
 $GL_GITCONFIG_KEYS = ".*";
@@ -86,7 +88,7 @@ EOF
 
 # now compile it
 echo compiling...
-$GL_BINDIR/gl-compile-conf
+$GL_BINDIR/gl-compile-conf || die "compile failed; aborting rest of run"
 echo
 
 echo "checking if $admin has push rights..."
