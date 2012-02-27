@@ -18,15 +18,41 @@ GL_PACKAGE_CONF=/tmp/share/gitolite/conf
 # pubkey file if you happen to have lost all gitolite-access to the repos (but
 # do have shell access via some other means)
 
+# ----------------------------------------------------------------------
+#   local functions
+# ----------------------------------------------------------------------
+
 die() { echo "$@" >&2; exit 1; }
 
 get_rc_val() {
     `dirname $0`/gl-query-rc $1
 }
 
+# ----------------------------------------------------------------------
+#   tempdir setup
+# ----------------------------------------------------------------------
+
 TEMPDIR=`mktemp -d -t tmp.XXXXXXXXXX`
 export TEMPDIR
 trap "/bin/rm -rf $TEMPDIR" 0
+
+# ----------------------------------------------------------------------
+#   argument handling
+# ----------------------------------------------------------------------
+
+# save arguments for use in commit message later
+args="$*"
+
+if [ "$1" = "-h" ]
+then
+    echo Usage:
+    echo "  gl-setup [-q] [-q] [YourName.pub]       # ssh mode"
+    echo "  gl-setup [-q] [-q] [YourName]           # http mode"
+    echo
+    echo "Please see 'appendix d' in doc/install.mkd for more.  (Online at"
+    echo "  http://sitaramc.github.com/gitolite/install.html#gl-setup)"
+    exit 1
+fi
 
 # quiet mode; only used to suppress popping up an editor on a new rc file
 if [ "$1" = "-q" ]
@@ -34,6 +60,17 @@ then
     shift
     quiet=1
 fi
+
+# extra quiet mode (second '-q'); suppress the lint check at the end
+if [ "$1" = "-q" ]
+then
+    shift
+    nolint=1
+fi
+
+# ----------------------------------------------------------------------
+#   get the admin_name and (usually) the pubkey file name
+# ----------------------------------------------------------------------
 
 if [ -n "$GITOLITE_HTTP_HOME" ]
 then
@@ -50,6 +87,10 @@ else
         echo $admin_name | grep '@' >/dev/null && die "please don't use '@' in the initial admin name"
     fi
 fi
+
+# ----------------------------------------------------------------------
+#   report changes to rc file (for manual fixing) or setup a new rc file
+# ----------------------------------------------------------------------
 
 export GL_RC
 GL_RC=`get_rc_val GL_RC 2>/dev/null`
@@ -88,6 +129,10 @@ else
     fi
 fi
 
+# ----------------------------------------------------------------------
+#   setup ~/.ssh
+# ----------------------------------------------------------------------
+
 # setup ssh stuff.  We break our normal rule that we will not fiddle with
 # authkeys etc., because in this case it seems appropriate
 (
@@ -98,6 +143,10 @@ fi
     chmod go-w . .ssh .ssh/authorized_keys
 )
 
+# ----------------------------------------------------------------------
+#   setup gitolite's env vars
+# ----------------------------------------------------------------------
+
 export GL_BINDIR
 export REPO_BASE
 export GL_ADMINDIR
@@ -105,7 +154,9 @@ GL_BINDIR=`  get_rc_val GL_BINDIR  `
 REPO_BASE=`  get_rc_val REPO_BASE  `
 GL_ADMINDIR=`get_rc_val GL_ADMINDIR`
 
-# now we get to gitolite itself
+# ----------------------------------------------------------------------
+#   setup hooks, admindir, the admin repo
+# ----------------------------------------------------------------------
 
 gl-install -q
 
@@ -123,24 +174,30 @@ gl-install -q
 touch $HOME/.ssh/authorized_keys
 gl-compile-conf -q
 
-# setup push-to-admin
+# setup the admin repo
 [ -n "$pubkey_file" ] || [ -n "$GITOLITE_HTTP_HOME" ] && (
     cd $HOME; cd $REPO_BASE/gitolite-admin.git
     GIT_WORK_TREE=$GL_ADMINDIR; export GIT_WORK_TREE
     git add conf/gitolite.conf keydir
     git config --get user.email >/dev/null || git config user.email $USER@`hostname`
     git config --get user.name  >/dev/null || git config user.name  "$USER on `hostname`"
-    git diff --cached --quiet 2>/dev/null || git commit -am start
+    git diff --cached --quiet 2>/dev/null || git commit -am "gl-setup $args"
 )
 
 # now that the admin repo is created, you have to set the hooks properly; best
 # do it by running install again
 gl-install -q
 
-# ----
+# ----------------------------------------------------------------------
+#   lint check on ssh keys
+# ----------------------------------------------------------------------
 
-# the never-ending quest to help with bloody ssh issues...
-cd $GL_ADMINDIR/keydir
-[ -n "$pubkey_file" ] && $GL_BINDIR/sshkeys-lint -q -a $admin_name < $HOME/.ssh/authorized_keys
+[ -z "$nolint" ] && {
+    # the never-ending quest to help with bloody ssh issues...
+    cd $GL_ADMINDIR/keydir
+    [ -n "$pubkey_file" ] && $GL_BINDIR/sshkeys-lint -q -a $admin_name < $HOME/.ssh/authorized_keys
+}
+
+# ----------------------------------------------------------------------
 
 exit 0

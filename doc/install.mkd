@@ -52,8 +52,7 @@ On your *server*, as *root*:
     # (now as gitolite)
     gl-setup /tmp/YourName.pub
 
-Note: if you're running non-interactively (i.e., cannot tolerate an editor
-popping up), insert a "-q" before the argument to gl-setup.
+Note: please see appendix d for command line options for [gl-setup][].
 
 On your *workstation*:
 
@@ -94,8 +93,7 @@ similar files and add it somehow.  Then:
 
     gl-setup /tmp/YourName.pub
 
-Note: if you're running non-interactively (i.e., cannot tolerate an editor
-popping up), insert a "-q" before the argument to gl-setup.
+Note: please see appendix d for command line options for [gl-setup][].
 
 On your *workstation*:
 
@@ -161,8 +159,7 @@ On your *server*, as *root*:
     # (now as git)
     gl-setup /tmp/YourName.pub
 
-Note: if you're running non-interactively (i.e., cannot tolerate an editor
-popping up), insert a "-q" before the argument to gl-setup.
+Note: please see appendix d for command line options for [gl-setup][].
 
 On your *workstation*:
 
@@ -431,3 +428,28 @@ The easiest way is:
     find ~/repositories -wholename "*.git/hooks/update" | xargs rm -f
 
 but you can do it manually if you want to be careful.
+
+### #gl-setup appendix d: command line options for gl-setup
+
+After gl-system-install (or the RPM/DEB) have installed the *code*, gl-setup
+sets up the actual gitolite instance.  (Gitolite in [pictures][] may help
+explain this better.)
+
+In ssh mode, gl-setup expects a pubkey filename the first time it is run, and
+will complain if you don't supply it.  On subsequent runs it is optional; you
+only need to supply it if you want to quickly and easily change the admin's
+(or indeed anyone's!) pubkey without going through all the steps that
+[gl-admin-push][adminpush] requires.
+
+In http mode, gl-setup expects an "admin name" the first time it is run.  On
+subsequent runs, arguments are ignored.
+
+gl-setup accepts the following command line options, which must appear
+*before* the pubkey filename/admin name:
+
+  * `-q` -- quiet mode; suppress the editor that pops up to allow you to
+    change the rc file the first time.  Meaningless/ignored on subseqent runs.
+  * `-q -q` -- extra quiet mode; suppress the editor as well as the
+    sshkeys-lint check at the end of the run.  Old-timers who know ssh so well
+    that they still use protocol 1 keys *must* use this mode, because
+    sshkeys-lint will barf on them.  Equivalent to `-q` in http mode.
