@@ -1,6 +1,15 @@
 #!/bin/sh
 
 die() { echo "$@" >&2; exit 1; }
+if [ "$1" = "-h" ]
+then
+    echo Usage:
+    echo "  gl-admin-push [any options applicable to 'git push' command]"
+    echo
+    echo "Please see the 'gl-admin-push: ...' section in doc/tips-notes.mkd (Online at"
+    echo "  http://sitaramc.github.com/gitolite/adminpush.html)"
+    exit 1
+fi
 
 # ----------
 

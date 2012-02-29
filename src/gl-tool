@@ -13,7 +13,7 @@ use gitolite_rc;
 use gitolite;
 
 sub usage { print <DATA>; exit 1; }
-usage() unless (@ARGV);
+usage() if (not @ARGV) or $ARGV[0] eq '-h';
 
 my $cmd = shift;
 my $pub = shift;

@@ -9,6 +9,10 @@
 use strict;
 use warnings;
 
+if (not @ARGV and -t or $ARGV[0] eq '-h') {
+    print "Usage:\n    gl-conf-convert < gitosis.conf > gitolite.conf\n(please the documentation for more)\n";
+    exit 1;
+}
 
 my @comments = ();
 my $groupname;

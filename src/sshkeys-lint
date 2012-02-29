@@ -8,7 +8,8 @@ use warnings;
 use Getopt::Long;
 my $admin = 0;
 my $quiet = 0;
-GetOptions('admin|a=s' => \$admin, 'quiet|q' => \$quiet);
+my $help  = 0;
+GetOptions('admin|a=s' => \$admin, 'quiet|q' => \$quiet, 'help|h' => $help);
 
 use Data::Dumper;
 $Data::Dumper::Deepcopy = 1;
@@ -31,7 +32,7 @@ sub msg {
     print "sshkeys-lint: " . ( $warning ? "WARNING: " : "" ) . $_ for @_;
 }
 
-@ARGV or not -t or usage();
+usage() if not @ARGV and -t or $help;
 our @pubkeyfiles = @ARGV; @ARGV = ();
 
 # ------------------------------------------------------------------------

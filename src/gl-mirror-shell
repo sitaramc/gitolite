@@ -39,6 +39,11 @@ die "fatal: GL_HOSTNAME not set in rc; mirroring disabled\n" unless $GL_HOSTNAME
 
 # ----------------------------------------------------------------------------
 
+die "please read the gitolite mirroring documentation; this program is too
+critical for you to just run it based on a 'usage' message.\n" if not @ARGV or $ARGV[0] eq '-h';
+
+# ----------------------------------------------------------------------------
+
 # deal with local invocations first
 
 # on the "master", run from a shell, for one specific repo, with an optional
@@ -76,8 +81,6 @@ if ( ($ARGV[0] || '') eq 'request-push' and not $ENV{SSH_ORIGINAL_COMMAND} ) {
 
     exit 0;
 }
-
-unless (@ARGV) { print STDERR "fatal: missing command\n"; exit 1; }
 
 # ----------
 

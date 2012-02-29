@@ -53,7 +53,7 @@ exit 0;
 sub check_args {
     return unless @ARGV;
     return if @ARGV == 3;
-    die "I need all 3 directories (bin-dir, conf-dir, hooks-dir) or none\n";
+    usage();
 }
 
 sub argv_or_defaults {
@@ -127,3 +127,18 @@ sub path_advice {
         $path_advice;
     #>>>
 }
+
+sub usage {
+    print "
+Usage:
+    gl-system-install [bin-dir conf-dir hooks-dir]
+
+Requires all 3 arguments or none.  All arguments supplied must be absolute
+paths.  The following defaults are used if arguments are not supplied:
+
+    as normal user: \$HOME/bin, \$HOME/share/gitolite/conf, \$HOME/share/gitolite/hooks
+    as root:        /usr/local/bin, /var/gitolite/conf, /var/gitolite/hooks
+";
+    exit 1;
+}
+
