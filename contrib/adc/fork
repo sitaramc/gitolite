@@ -24,7 +24,15 @@ echo $GL_USER > gl-creater
 git config gitweb.owner "$GL_USER"
 ( $GL_BINDIR/gl-query-rc GL_WILDREPOS_DEFPERMS ) |
     SSH_ORIGINAL_COMMAND="setperms $to" $GL_BINDIR/gl-auth-command $GL_USER
-cp -R $GL_REPO_BASE_ABS/$from.git/hooks/* $GL_REPO_BASE_ABS/$to.git/hooks
+
+# symlink hooks
+shopt -s nullglob
+# the order is important; "package" hooks must override same-named "user" hooks
+for i in `$GL_BINDIR/gl-query-rc GL_ADMINDIR`/hooks/common/* \
+         `$GL_BINDIR/gl-query-rc GL_PACKAGE_HOOKS `/common/*
+do
+    ln -sf $i $GL_REPO_BASE_ABS/$to.git/hooks
+done
 
 if [ -n "$GL_WILDREPOS_DEFPERMS" ]; then
   echo "$GL_WILDREPOS_DEFPERMS" > gl-perms
