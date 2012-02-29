@@ -1,0 +1,207 @@
+<head>
+<title>
+setup and usage
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>setup and usage</h3>
+
+<p><a name="mirroring_server_level_setup_"></a></p>
+
+<h4>server level setup</h4>
+
+<p>To start with, assign each server a short name.  We will use 'frodo', 'sam',
+and 'gollum' as examples here.</p>
+
+<ol>
+<li><p>Generate ssh keys on each machine.  Copy the <code>.pub</code> files to all other
+machines with the appropriate names.  I.e., frodo should have sam.pub and
+gollum.pub, etc.</p>
+
+<p><strong>Warning</strong>: server keys are different from user keys.  Do NOT attempt to
+(re-)use a server key for normal gitolite operations, as if the server
+were a normal "user"; it won't work.</p></li>
+<li><p>Install gitolite on all servers, under some 'hosting user' (we'll use
+<code>git</code> in our examples here).  You need not use the same hosting user on
+all machines.</p>
+
+<p>It is not necessary to use the same "admin key" on all the machines.
+However, if you do plan to mirror the gitolite-admin repo also, they will
+eventually become the same anyway.  In our example, frodo does mirror the
+admin repo to sam, but not to gollum.  (Can you really see frodo or sam
+trusting gollum?)</p></li>
+<li><p>Now copy <code>hooks/common/post-receive.mirrorpush</code> from the gitolite source,
+and install it as a custom hook called <code>post-receive</code>; see
+<a href="hooks.html#customhooks" title="custom hooks">here</a> for instructions.</p></li>
+<li><p>Edit <code>~/.gitolite.rc</code> on each machine and add/edit the following lines.
+The <code>GL_HOSTNAME</code> variable <strong>must</strong> have the correct name for that host
+(frodo, sam, or gollum), so that will definitely be different on each
+server.  The other line can be the same, or may have additional patterns
+for other <code>git config</code> keys you have previously enabled.  See <a href="confother_.html#rsgc" title="repo specific `git config` commands">here</a>
+and the description for <code>GL_GITCONFIG_KEYS</code> in <a href="rc.html#rcsecurity" title="variables with a security impact">this</a> for details.</p>
+
+<pre><code>$GL_HOSTNAME = 'frodo';     # will be different on each server!
+$GL_GITCONFIG_KEYS = "gitolite.mirror.*";
+</code></pre>
+
+<p>(Remember the "rc" file is NOT mirrored; it is meant to be site-local).</p>
+
+<p>Note: if <code>GL_HOSTNAME</code> is undefined, you cannot push to repos which have
+the 'gitolite.mirror.master' config variable set.  (See 'details' section
+below for more info on this variable).</p>
+
+<p><font color="gray"></p>
+
+<blockquote>
+  <p>If you wish, you can also add this hostname information to the
+  <code>GL_SITE_INFO</code> variable in the rc file.  See the rc file documentation
+  for more on that.</p>
+</blockquote>
+
+<p></font></p></li>
+<li><p>On each machine, add the keys for all other machines.  For example, on
+frodo you'd run these two commands:</p>
+
+<pre><code>gl-tool add-mirroring-peer sam.pub
+gl-tool add-mirroring-peer gollum.pub
+</code></pre></li>
+<li><p>Create "host" aliases on each machine to refer to all other machines.  See
+<a href="sshhostaliases.html" title="appendix 4: host aliases">here</a> for what/why/how.</p>
+
+<p>The host alias for a host (in other machines' <code>~/.ssh/config</code> files) MUST
+be the same as the <code>GL_HOSTNAME</code> in the referred host's <code>~/.gitolite.rc</code>.
+Gitolite mirroring <strong>requires</strong> this consistency in naming; things will
+NOT work otherwise.</p>
+
+<p>For example, if machine A's <code>~/.gitolite.rc</code> says <code>$GL_HOSTNAME =
+'frodo';</code>, then all other machines must use a host alias of "frodo" in
+their <code>~/.ssh/config</code> files to refer to machine A.</p></li>
+</ol>
+
+<p>Once you've done this, each host should be able to reach the other hosts and
+get a response back.  For example, running this on sam:</p>
+
+<pre><code>ssh frodo info
+</code></pre>
+
+<p>should get you</p>
+
+<pre><code>Hello sam, I am frodo.
+</code></pre>
+
+<p>Check this command from <em>everywhere to everywhere else</em>, and make sure you get
+expected results.  <strong>Do NOT proceed otherwise.</strong></p>
+
+<p><a name="mirroring_repository_level_setup_"></a></p>
+
+<h4>repository level setup</h4>
+
+<p>Setting up mirroring at the repository level instead of at the "entire server"
+level gives you a lot of flexibility (see "discussion" section below).</p>
+
+<p>The basic idea is to use <code>git config</code> variables within each repo (gitolite
+allows you to create them from within the gitolite.conf file so that's
+convenient), and use these to specify which machine is the master and which
+machines are slaves for the repo.</p>
+
+<p>Let's say frodo and sam are internal servers, while gollum is an external (and
+therefore less trusted) server that has agreed to help us out by mirroring one
+of our high traffic repos.  We want the following setup:</p>
+
+<ul>
+<li><p>the "gitolite-admin" repo, as well as an internal project repo called
+"ip1", should be mastered on frodo and mirrored to sam.</p></li>
+<li><p>internal project "ip2" has almost all of its developers closer to sam, so
+it should be mastered there, and mirrored on frodo.</p></li>
+<li><p>an open source project we manage, "os1", should be mastered on frodo and
+mirrored on both sam and gollum.</p></li>
+</ul>
+
+<p>So here's how our example would go:</p>
+
+<ol>
+<li><p>Clone frodo's and sam's gitolite-admin repos to your workstation, then add
+the following lines to both their gitolite.conf files:</p>
+
+<pre><code>repo ip1 gitolite-admin
+    config gitolite.mirror.master   =   "frodo"
+    config gitolite.mirror.slaves   =   "sam"
+
+repo ip2
+    config gitolite.mirror.master   =   "sam"
+    config gitolite.mirror.slaves   =   "frodo"
+</code></pre>
+
+<p>You also need normal access control lines for ip1 and ip2; I'm assuming
+you already have them elsewhere, at least on frodo.  (What you have on sam
+won't matter in a few minutes, as you will see!)</p>
+
+<p>Commit and push these changes.</p></li>
+<li><p>There are a couple of quirks to keep in mind when you make changes to the
+gitolite-admin repo's config.</p>
+
+<ul>
+<li><p>the first push will create the <code>git config</code> entries required, but by
+then it is too late to <em>act</em> on them; i.e., actually do the mirroring.
+If there were any older values, like a different list of slaves
+perhaps, then those would be in effect.</p>
+
+<p>This is largely because git invokes post-receive before post-update.
+In theory I can work around this but I do not intend to.</p>
+
+<p>Anyway, this means that after the 2 pushes, you have to make a dummy
+push from frodo:</p>
+
+<pre><code>git commit --allow-empty -m empty; git push
+</code></pre>
+
+<p>which gets you something like this amidst the other messages:</p>
+
+<pre><code>remote: (25158&amp;) frodo ==== (gitolite-admin) ===&gt; sam
+</code></pre>
+
+<p>telling you that frodo is sending gitolite-admin to sam in the
+background.</p></li>
+<li><p>the second quirk is that your clone of server sam's gitolite-admin
+repo is now completely out of date, since frodo has overwritten it on
+the server.  You have to 'cd' to that clone and do this:</p>
+
+<pre><code>git fetch
+git reset --hard origin/master
+</code></pre></li>
+</ul></li>
+<li><p>That completes the setup of the gitolite-admin and the internal project
+repos.  We'll now setup things for the open source project, "os1".</p>
+
+<p>On frodo's gitolite-admin clone, add the following lines to
+<code>conf/gitolite.conf</code>, then commit and push:</p>
+
+<pre><code>repo os1
+    config gitolite.mirror.master   =   "frodo"
+    config gitolite.mirror.slaves   =   "sam gollum"
+</code></pre>
+
+<p>Also, send the same lines to gollum's administrator and ask him to add
+them into his conf/gitolite.conf file, commit, and push.</p></li>
+</ol>
+

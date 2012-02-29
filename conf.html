@@ -1,0 +1,111 @@
+<head>
+<title>
+the access control file `gitolite.conf`
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gitolite.conf">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>the access control file <code>gitolite.conf</code></h1>
+
+<p>Gitolite has an advanced access control language that is designed to be
+powerful but easy to use.  Other objectives were that it should be even easier
+to read, review and audit the rules, and it should scale to thousands of repos
+and users.  There was also, in the author's mind, a desperate need to create
+something as different as possible from the brain-dead, nausea-inducing
+"Windows INI" style syntax that some other popular tools seem to favour.</p>
+
+<p><a name="confrecap"></a></p>
+
+<h2>a quick summary of the conf file</h2>
+
+<p>This is a quick <em>recap</em> of the <em>most common</em> elements in a typical config
+file.  (In the following description, the angle brackets are not part of the
+syntax).</p>
+
+<ul>
+<li><p>(optional) <a href="bac.html#groups" title="groups">group</a> definitions</p>
+
+<pre><code>@&lt;groupname&gt; = &lt;list of users and groups&gt;
+</code></pre></li>
+<li><p>repo access rules</p>
+
+<pre><code>repo &lt;reponame&gt;
+    # one or more access rules like
+    &lt;permission&gt; &lt;optional refex&gt; = &lt;list of users and groups&gt;
+</code></pre>
+
+<p>The <a href="bac.html" title="basic access control">most common</a> permissions are:</p>
+
+<ul>
+<li>R, for read only</li>
+<li>RW, for push existing ref or create new ref</li>
+<li>RW+, for  "push -f" or ref deletion allowed (i.e., destroy
+information)</li>
+<li><code>-</code> (the minus sign), to <a href="aac.html#deny" title="&quot;deny&quot; rules">deny</a> access</li>
+</ul>
+
+<p>If no <a href="bac.html#refex" title="branches, tags, and specifying &quot;refex&quot;es">refex</a> is supplied, the access rule applies to all refs.</p>
+
+<p>Later, gitolite <a href="aac.html#rwcd" title="creating and deleting branches">acquired</a></p>
+
+<ul>
+<li>RWC and RW+C, for ref creation.  Once you use this in a repo, a normal
+RW/RW+ can no longer create a ref; it can only push existing refs
+(<font color="gray">Note also that a standalone "C" permission is
+something <a href="wild.html" title="repositories named with wildcards">completely different</a></font>)</li>
+<li>RWD and RW+D, for ref deletion.  Once you use this in a repo, a normal
+RW+ can no longer delete a ref; it can only rewind</li>
+<li>(RWCD and RW+CD, which is just a combination of these two)</li>
+</ul>
+
+<p><p>Even later, <a href="aac.html#mergecheck" title="enforcing a no-merges policy">gitolite acquired</a>, if you want to enforce a
+rebase-only workflow.</p></li>
+</ul>
+The following sections dig deeper into the syntax and semantics of the access
+control rules and other configuration directives in the <code>gitolite.conf</code> file.
+If narrative descriptions scare you, or your English is not upto scratch, try
+<a href="conf_examples.html" title="gitolite.conf -- by example">gitolite config by example</a> also.</p>
+
+<h2>lexical syntax: <a href="syntax.html" title="lexical syntax">Link</a></h2>
+
+
+<h2>basic access control: <a href="bac.html" title="basic access control">Link</a></h2>
+
+
+<h2>advanced access control: <a href="aac.html" title="advanced access control">Link</a></h2>
+
+
+<p><a name="gitolite_conf_summary_permissions_"></a></p>
+
+<h2>summary: permissions</h2>
+
+<p>The full set of permissions, in regex syntax: <code>-|R|RW+?C?D?M?</code>.  This expands
+to one of <code>-</code>, <code>R</code>, <code>RW</code>, <code>RW+</code>, <code>RWC</code>, <code>RW+C</code>, <code>RWD</code>, <code>RW+D</code>, <code>RWCD</code>, or
+<code>RW+CD</code>, all but the first one optionally followed by an <code>M</code>.  And by now you
+know what they all mean.</p>
+
+<p>[Side note: There is one more very important permission to be dealt with --
+the standalone <code>C</code>, which is not really a "ref" level permission and can be
+found in doc/wildcard-repositories.mkd.]</p>
+
+<h2>other tips: <a href="confother_.html" title="other tips">Link</a></h2>
+

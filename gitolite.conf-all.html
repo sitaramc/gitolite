@@ -1,0 +1,802 @@
+<head>
+<title>
+the access control file `gitolite.conf`
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gitolite.conf">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: conf "the access control file `gitolite.conf`" -->
+
+<h1>the access control file <code>gitolite.conf</code></h1>
+
+<p>Gitolite has an advanced access control language that is designed to be
+powerful but easy to use.  Other objectives were that it should be even easier
+to read, review and audit the rules, and it should scale to thousands of repos
+and users.  There was also, in the author's mind, a desperate need to create
+something as different as possible from the brain-dead, nausea-inducing
+"Windows INI" style syntax that some other popular tools seem to favour.</p>
+
+<p><a name="confrecap"></a></p>
+
+<h2>a quick summary of the conf file</h2>
+
+<p>This is a quick <em>recap</em> of the <em>most common</em> elements in a typical config
+file.  (In the following description, the angle brackets are not part of the
+syntax).</p>
+
+<ul>
+<li><p>(optional) <a href="bac.html#groups" title="groups">group</a> definitions</p>
+
+<pre><code>@&lt;groupname&gt; = &lt;list of users and groups&gt;
+</code></pre></li>
+<li><p>repo access rules</p>
+
+<pre><code>repo &lt;reponame&gt;
+    # one or more access rules like
+    &lt;permission&gt; &lt;optional refex&gt; = &lt;list of users and groups&gt;
+</code></pre>
+
+<p>The <a href="bac.html" title="basic access control">most common</a> permissions are:</p>
+
+<ul>
+<li>R, for read only</li>
+<li>RW, for push existing ref or create new ref</li>
+<li>RW+, for  "push -f" or ref deletion allowed (i.e., destroy
+information)</li>
+<li><code>-</code> (the minus sign), to <a href="aac.html#deny" title="&quot;deny&quot; rules">deny</a> access</li>
+</ul>
+
+<p>If no <a href="bac.html#refex" title="branches, tags, and specifying &quot;refex&quot;es">refex</a> is supplied, the access rule applies to all refs.</p>
+
+<p>Later, gitolite <a href="aac.html#rwcd" title="creating and deleting branches">acquired</a></p>
+
+<ul>
+<li>RWC and RW+C, for ref creation.  Once you use this in a repo, a normal
+RW/RW+ can no longer create a ref; it can only push existing refs
+(<font color="gray">Note also that a standalone "C" permission is
+something <a href="wild.html" title="repositories named with wildcards">completely different</a></font>)</li>
+<li>RWD and RW+D, for ref deletion.  Once you use this in a repo, a normal
+RW+ can no longer delete a ref; it can only rewind</li>
+<li>(RWCD and RW+CD, which is just a combination of these two)</li>
+</ul>
+
+<p><p>Even later, <a href="aac.html#mergecheck" title="enforcing a no-merges policy">gitolite acquired</a>, if you want to enforce a
+rebase-only workflow.</p></li>
+</ul>
+The following sections dig deeper into the syntax and semantics of the access
+control rules and other configuration directives in the <code>gitolite.conf</code> file.
+If narrative descriptions scare you, or your English is not upto scratch, try
+<a href="conf_examples.html" title="gitolite.conf -- by example">gitolite config by example</a> also.</p>
+
+<h2>lexical syntax: <a href="syntax.html" title="lexical syntax">Link</a></h2>
+
+<!-- file: syntax "lexical syntax" -->
+
+<h2>lexical syntax</h2>
+
+<p>In general, everything is <strong>space separated</strong>; there are no commas,
+semicolons, etc., in the syntax.</p>
+
+<p><strong>Comments</strong> are in the usual shell-ish style.</p>
+
+<p><strong>User names</strong> and <strong>repo names</strong> are as simple as possible; they must start
+with an alphanumeric, but after that they can also contain <code>.</code>, <code>_</code>, or <code>-</code>.</p>
+
+<p>Usernames can optionally be followed by an <code>@</code> and a domainname containing at
+least one <code>.</code> (this allows you to use an email address as someone's username).
+Reponames can contain <code>/</code> characters (this allows you to put your repos in a
+tree-structure for convenience)</p>
+
+<p><a name="gitolite_conf_continuation_lines_"></a></p>
+
+<h3>continuation lines</h3>
+
+<p>There are no continuation lines -- gitolite does not process C-style
+backslash-escaped newlines as anything special.  However, the section on
+"groups" will tell you how you can break up large lists of names in a group
+definition into multiple lines.</p>
+
+<p><a name="gitolite_conf_include_files_"></a></p>
+
+<h3>include files</h3>
+
+<p>Gitolite allows you to break up the configuration into multiple files and
+include them in the main file for convenience.</p>
+
+<pre><code>include     "foo.conf"
+</code></pre>
+
+<p>will include the contents of the file "foo.conf".</p>
+
+<p>Details:</p>
+
+<ul>
+<li><p>You can also use a glob (<code>include "*.conf"</code>), or put your include files
+into subdirectories of "conf" (<code>include "foo/bar.conf"</code>), or both
+(<code>include "repos/*.conf"</code>).</p></li>
+<li><p>Included files are always searched from the gitolite-admin repo's "conf/"
+directory, unless you supplied an absolute path.  (Note: in the interests
+of cloning the admin-repo sanely you should avoid absolute paths!)</p></li>
+<li><p>If you ended up recursing, files that have been already processed once are
+skipped, with a warning.</p></li>
+</ul>
+
+<p><font color="gray">Advanced users: <code>subconf</code>, a command that is very closely
+related to <code>include</code>, is documented <a href="deleg.html#subconf" title="the subconf command">here</a>.</font></p>
+
+<!-- file: conf "basic access control" -->
+
+<h2>basic access control: <a href="bac.html" title="basic access control">Link</a></h2>
+
+<!-- file: bac "basic access control" -->
+
+<h2>basic access control</h2>
+
+<p>Here's a very basic set of rules:</p>
+
+<pre><code>repo    gitolite-admin
+        RW+     =   sitaram
+
+repo    testing
+        RW+     =   @all
+
+repo    gitolite simplicity
+        RW+     =   sitaram dilbert
+        RW      =   alice ashok
+        R       =   wally
+</code></pre>
+
+<p>It should be easy to guess what most of this means:</p>
+
+<ul>
+<li><code>R</code> means "read" permission</li>
+<li><code>RW</code> means "read and write", but no rewind</li>
+<li><code>RW+</code> means "read and write", with rewind allowed</li>
+</ul>
+
+<p>A "rewind" is more often called a "non-fast forward push"; see git docs for
+what that is.  The <code>+</code> was chosen because it is part of the "git push" syntax
+for non-ff pushes.</p>
+
+<p>Note that <em>tags</em> are generally considered "write once", so they are treated
+specially by gitolite: you need rewind permission (<code>RW+</code>) to <em>overwrite</em> a
+tag with a new value.</p>
+
+<p>In a later section you'll see some more advanced permissions.</p>
+
+<p><a name="gitolite_conf_how_rules_are_matched_"></a></p>
+
+<h3>how rules are matched</h3>
+
+<p>It's important to understand that there're two levels at which access control
+happens.  Please see <a href="tipssec_.html#2levels" title="two levels of access rights checking">this</a> for details, especially about the first level
+check.  Much of the complexity applies only to the second level check, so that
+is all we will be discussing here.  This check is done by the update hook, and
+determines whether the push succeeds or fails.</p>
+
+<p>For basic permissions like this, matching is simple.  Gitolite already knows:</p>
+
+<ul>
+<li>the user</li>
+<li>the repo</li>
+<li>the branch or tag ("ref") being pushed</li>
+<li>whether it is a normal (ff) push or a rewind (non-ff) push.</li>
+</ul>
+
+<p>Gitolite goes down the list of rules matching the user, repo, and the ref.
+The first matching rule that has the permission you're looking for (<code>W</code> or
+<code>+</code>), results in success.  A fallthrough results in failure.</p>
+
+<p><a name="refex"></a></p>
+
+<h3>branches, tags, and specifying "refex"es</h3>
+
+<p>One of the original goals of gitolite was to allow access control at the
+branch/tag (aka "ref") level.  The git source code contains a sample update
+hook that has the following in it:</p>
+
+<pre><code># from Documentation/howto/update-hook-example.txt:
+
+refs/heads/master       junio
++refs/heads/pu          junio
+refs/heads/cogito$      pasky
+refs/heads/bw/.*        linus
+refs/heads/tmp/.*       .*
+refs/tags/v[0-9].*      junio
+</code></pre>
+
+<p>If you did this in gitolite, this is what the equivalents would be:</p>
+
+<pre><code>repo    git
+        RW      master$             =   junio   # line 1
+        RW+     pu$                 =   junio   # line 2
+        RW      cogito$             =   pasky   # line 3
+        RW      bw/                 =   linus   # line 4
+        RW      tmp/                =   @all    # line 5
+        RW      refs/tags/v[0-9]    =   junio   # line 6
+</code></pre>
+
+<p>The following points will help you understand these rules.  (Git recap:
+branches and tags together are called "ref"s in git.  A branch ref usually
+looks like "refs/heads/foo", while a tag ref looks like "refs/tags/bar")</p>
+
+<ul>
+<li><p>the general syntax of a paragraph of rules is:</p>
+
+<pre><code># start line:
+repo [one or more repos and/or repo groups]
+# followed by one or more permissions lines:
+[permission] [zero or more refexes] = [one or more users]
+</code></pre></li>
+<li><p>a <strong>refex</strong> is a <em>perl regex</em> that matches a ref.  When you try to push a
+commit to a branch or a tag, that "ref" is matched against the refex part
+of each rule.</p></li>
+<li><p>if the refex does not start with <code>refs/</code>, gitolite assumes a prefix of
+<code>refs/heads/</code>.  This is useful because <em>branch</em> matching is the most
+common case, as you can see this applies to lines 1 through 5 here.</p></li>
+<li><p>if no refex appears, the rule applies to all refs in that repo (as if you
+had specified <code>refs/.*</code> as the refex).</p></li>
+<li><p>refexes are prefix-matched (they are internally anchored with <code>^</code> before
+being used).  This means only the beginning of the actual ref needs to
+match the refex, unless the refex has an explicit <code>$</code> meta-character at
+the end (like the first 3 lines in our example do).</p>
+
+<p>Line 5, for instance, allows anyone to push a branch inside the "tmp/"
+namespace, while line 6 provides the ability to push version tags; "v1",
+"v1.0", "v2.0rc1", all match the criterion specified by <code>v[0-9]</code> because
+this is a prefix match only.</p></li>
+</ul>
+
+<p><a name="groups"></a></p>
+
+<h3>groups</h3>
+
+<p>Gitolite allows you to define <strong>groups</strong> of repos. users, or even refexes.  A
+group is semantically (but <em>not</em> syntactically) like a <code>#define</code> in C.  Here
+is an example of each kind:</p>
+
+<pre><code>@oss_repos  =   gitolite linux git perl rakudo entrans vkc
+@staff      =   sitaram some_dev another-dev
+@important  =   master$ QA_done refs/tags/v[0-9]
+</code></pre>
+
+<p>The syntax of a group definition is simply:</p>
+
+<pre><code>@groupname = [one or more names]
+</code></pre>
+
+<p>A group can <em>accumulate</em> values.  For example:</p>
+
+<pre><code>@staff      =   sitaram some_dev another-dev
+@staff      =   au.thor
+</code></pre>
+
+<p>is the same as</p>
+
+<pre><code>@staff      =   sitaram some_dev another-dev au.thor
+</code></pre>
+
+<p>This is more convenient than continuation lines, because it allows you to add
+to a group anywhere.  Many people generate their gitolite.conf itself from
+some <em>other</em> database, and it is very useful to be able to do this sort of
+thing.</p>
+
+<p>Groups can include other groups, and the included group will be expanded to
+whatever value it <em>currently</em> has:</p>
+
+<pre><code>@staff      =   sitaram some_dev another-dev    # line 1
+@staff      =   au.thor                         # line 2
+@interns    =   indy james                      # line 3
+@alldevs    =   bob @interns @staff             # line 4
+</code></pre>
+
+<p>"@alldevs" expands to 7 names now.  However, remember that the config file is
+parsed in a single-pass, so later <em>additions</em> to a group name cannot affect
+earlier <em>uses</em> of it.  If you moved line 2 to the end, "@alldevs" would only
+have 6 names in it.</p>
+
+<p><a name="gitolite_conf_the_special_all_group_"></a></p>
+
+<h4>the special <code>@all</code> group</h4>
+
+<p>There's a special group called <code>@all</code> that includes all authenticated users
+when used as a username; you've seen examples of it earlier.</p>
+
+<p>Advanced users: also see the entry for <code>GL_ALL_INCLUDES_SPECIAL</code> in the
+documentation for <a href="rc.html" title="configuring gitolite's advanced features -- the `.gitolite.rc` file"><code>~/.gitolite.rc</code></a>.</p>
+
+<p>When used as a reponame, it includes all repos physically present in
+<code>~/repositories</code> (or whatever is the value of <code>$REPO_BASE</code>).</p>
+
+<h3>side note: "R" permissions for refs: <a href="rpr_.html" title="side note: &quot;R&quot; permissions for refs">Link</a></h3>
+
+<!-- file: rpr_ "side note: "R" permissions for refs" -->
+
+<h3>side note: "R" permissions for refs</h3>
+
+<p>You can control "read" access only at the repo level, not at the branch level.
+For example, this <strong>won't</strong> limit Wally to reading only the master branch:</p>
+
+<pre><code>repo foo
+    R master    =   wally       # WILL NOT DO WHAT YOU THINK IT DOES!!
+</code></pre>
+
+<p>and this <strong>won't</strong> prevent him from reading it:</p>
+
+<pre><code>repo foo
+    - master    =   wally       # WILL NOT DO WHAT YOU THINK IT DOES!!
+    R           =   wally
+</code></pre>
+
+<p>This (inability to distinguish one ref from another during a read operation)
+is a git issue, not a gitolite issue.</p>
+
+<p>There are 3 ways around this, though:</p>
+
+<ul>
+<li>switch to gerrit, which has its own git stack, its own sshd, and God knows
+what else.  All written in Java, the COBOL of the internet era ;-)</li>
+<li>bug the git people to add this feature in ;-)</li>
+<li>use a separate repo for Wally.</li>
+</ul>
+
+<p>Using separate repos is not that hard with gitolite.  Here's how to maintain a
+<a href="partialcopy.html" title="maintaining a partial copy of a repo">partial copy</a> of the main repo and keep it synced (while not
+allowing the secret branches into it).</p>
+
+<!-- file: conf "advanced access control" -->
+
+<h2>advanced access control: <a href="aac.html" title="advanced access control">Link</a></h2>
+
+<!-- file: aac "advanced access control" -->
+
+<h2>advanced access control</h2>
+
+<p>The previous section is sufficient for most common needs, but gitolite can go
+a lot further than that.</p>
+
+<p><a name="NAME"></a></p>
+
+<h3>restricting pushes by dir/file name using NAME/</h3>
+
+<p>Here's a hopefully self-explanatory example.  Assume the project has the
+following contents at the top level: a README, a "doc/" directory, and an
+"src/" directory.</p>
+
+<pre><code>repo foo
+        RW+                             =   lead_dev                # rule 1
+        RW                              =   dev1 dev2 dev3 dev4     # rule 2
+
+        RW  NAME/                       =   lead_dev                # rule 3
+        RW  NAME/doc/                   =   dev1 dev2               # rule 4
+        RW  NAME/src/                   =   dev1 dev2 dev3 dev4     # rule 5
+</code></pre>
+
+<p>Notes:</p>
+
+<ul>
+<li><p>the "NAME/" is part of the syntax; think of it as a keyword if you like.
+The rest of it is treated as a refex to match against each file being
+touched (see "SPECIFYING AND USING A REFEX" above for details)</p></li>
+<li><p>file/dir NAME-based restrictions are <em>in addition</em> to normal (branch-name
+based) restrictions; they are not a <em>replacement</em> for them.  This is why
+rule #2 (or something like it, maybe with a more specific branch-name) is
+needed; without it, dev1/2/3/4 cannot push any branches.</p></li>
+<li><p>if a repo has <em>any</em> NAME/ rules, then NAME-based restrictions are checked
+for <em>all</em> users.  This is why rule 3 is needed, even though we don't
+actually have any NAME-based restrictions on lead_dev.  Notice the pattern
+on rule 3.</p></li>
+<li><p><em>each</em> file touched by the commits being pushed is checked against those
+rules.  So, lead_dev can push changes to any files, dev1/2 can push
+changes to files in "doc/" and "src/" (but not the top level README), and
+dev3/4 can only push changes to files in "src/".</p></li>
+</ul>
+
+<p><a name="deny"></a></p>
+
+<h3>"deny" rules</h3>
+
+<p><a name="gitolite_conf_warnings_and_required_reading_"></a></p>
+
+<h4>warnings and required reading</h4>
+
+<p>Gitolite performs access checks at 2 levels.  The first check is performed for
+both read <em>and</em> write operations, while the second one happens only for write
+operations.</p>
+
+<p><strong>Required reading</strong>: <a href="tipssec_.html#2levels" title="two levels of access rights checking">this section</a> of the documentation.</p>
+
+<p><strong>Warning</strong>: When using deny rules, the order of your rules matters, where
+earlier it did not.  If you're just starting to add a deny rule to an existing
+ruleset, it's a good idea to review the entire ruleset once, to make sure
+you're doing it right.</p>
+
+<p><a name="gitolite_conf_deny_rules_for_refs_in_a_repo_"></a></p>
+
+<h4>"deny" rules for refs in a repo</h4>
+
+<p>You can use "deny" rules for the second check, to prevent people pushing
+branches or tags that they should not be allowed to.</p>
+
+<p>Take a look at the following snippet, which <em>seems</em> to say that "bruce" can
+write versioned tags (anything containing <code>refs/tags/v[0-9]</code>), but the other
+staffers can't:</p>
+
+<pre><code>    @staff = bruce whitfield martin
+            [... and later ...]
+    RW refs/tags/v[0-9]     = bruce
+    RW refs/tags            = @staff
+</code></pre>
+
+<p>But that's not how the matching works.  As long as any refex matches the
+refname being updated, it's a "yes".  Since the second refex (which says
+"anything containing <code>refs/tags</code>") is a superset of the first one, it lets
+anyone on <code>@staff</code> create versioned tags, not just Bruce.</p>
+
+<p>So how do we say "these people can create any tags except tags that look like
+this pattern"?</p>
+
+<p>One way to fix this is to allow "deny" rules.  We make a small addition to the
+permissions syntax, and define a more rigorous, ordered, interpretation.</p>
+
+<p>Let's recap the <strong>existing semantics</strong>:</p>
+
+<blockquote>
+  <p>The first matching refex that has the permission you're looking for (<code>W</code>
+  or <code>+</code>), results in success.  A fallthrough results in failure.</p>
+</blockquote>
+
+<p>Here are the <strong>new semantics</strong>, with changes from the "main" one in bold:</p>
+
+<blockquote>
+  <p>The first matching refex that has the permission you're looking for (<code>W</code>
+  or <code>+</code>) <strong>or a minus (<code>-</code>)</strong>, results in success <strong>or failure,
+  respectively</strong>.  A fallthrough <strong>also</strong> results in failure.</p>
+</blockquote>
+
+<p>So the example we started with becomes, if you use "deny" rules:</p>
+
+<pre><code>    RW refs/tags/v[0-9]     = bruce
+    -  refs/tags/v[0-9]     = @staff
+    RW refs/tags            = @staff
+</code></pre>
+
+<p>And here's how it works:</p>
+
+<ul>
+<li>for non-version tags, only the 3rd rule matches, so anyone on staff can
+push them</li>
+<li>for version tags by bruce, the first rule matches so he can push them</li>
+<li>for version tags by staffers <em>other than bruce</em>, the second rule matches
+before the third one, and it has a <code>-</code> as the permission, so the push
+fails</li>
+</ul>
+
+<p><a name="gitolite_conf_deny_rules_for_the_entire_repo_"></a></p>
+
+<h4>"deny" rules for the entire repo</h4>
+
+<p>The previous section described deny rules for the second check, which is a
+fairly common need.  However, gitolite does not process deny rules for the
+first check -- it's usually simple enough to make sure your config file does
+not allow the particular user/repo combindation at all.</p>
+
+<p>But there's one case where this becomes cumbersome: when you want to create
+exceptions to uses of <code>@all</code>.</p>
+
+<p>For example, if you want gitweb to show <code>@all</code> repos except the special
+'gitolite-admin' repo, you must manually (and laboriously) maintain a list of
+all your repos (except gitolite-admin) and use that in place of <code>@all</code>.  Oh
+joy...</p>
+
+<p>But now you can do this:</p>
+
+<pre><code>repo gitolite-admin
+    -   =   gitweb daemon
+    [... other access rules ...]
+    config gitolite-options.deny-repo = 1
+
+repo @all
+    R   =   gitweb daemon
+</code></pre>
+
+<p>Here are some notes on how/why this works:</p>
+
+<ul>
+<li><p>The order is important -- the deny rule must come first.</p></li>
+<li><p>The 'config' line is what tells git to behave differently, i.e., apply
+deny rules for the first check also.</p></li>
+<li><p>Since there is no "ref" to match against the refexes in the rules,
+gitolite just ignores the refexes, and simply looks at the permission (R,
+RW, "-", etc) and the user list.</p></li>
+</ul>
+
+<p><a name="rwcd"></a></p>
+
+<h3>creating and deleting branches</h3>
+
+<p>Since the beginning of gitolite, <code>RW</code> gave the ability, not only to update,
+but to <em>create</em> a branch (that matched the refex).  Similarly, <code>RW+</code> meant
+being able to not only rewind, but also delete a ref.  Conceptually, a rewind
+is almost the same as a delete+push (the only difference I can see is if you
+had core.logAllRefUpdates set, which is <em>not</em> a default setting).</p>
+
+<p>However, there seem to be cases where it is useful to distinguish these cases.
+Arguments can be made on all sides if you're dealing with new users, so
+gitolite now supports that (in a backward compatible way).</p>
+
+<p>We'll look at the delete/rewind case in detail first:</p>
+
+<ul>
+<li><p>if the rules for a repo do not contain a <code>D</code> anywhere, then <code>RW+</code> will
+allow both rewind and delete operations.  Apart from being more convenient
+if you don't need this separation, this also ensures backward
+compatibility for setups created before this separation feature was added
+to gitolite).</p></li>
+<li><p>if, however, <em>any</em> of the rules for a repo contains a <code>D</code> (example: <code>RWD</code>,
+<code>RW+D</code>, etc) then <code>RW+</code> by itself will permit only a rewind, not a delete</p></li>
+</ul>
+
+<p>The same thing applies to create/push, where if you have permissions like
+<code>RWC</code> or <code>RW+C</code> anywhere in that repo, a simple <code>RW</code> or <code>RW+</code> can no longer
+<em>create</em> a new ref.</p>
+
+<p>You can combine the <code>C</code> and <code>D</code> also.  Thus, the set of permissions you now
+know about are, in regex syntax: <code>R|RW+?C?D?</code>.  See a later section for the
+full set of permissions possible.</p>
+
+<p>Some usage hints:</p>
+
+<ul>
+<li><p>if you find that <code>RW+</code> no longer allows creation/deletion but you can't
+see a <code>C</code>/<code>D</code> permission in the rules, remember that gitolite allows a
+repo config to be specified in multiple places for convenience, included
+delegated or included files.  Be sure to search everywhere :)</p></li>
+<li><p>a quick way to make this the default for <em>all</em> your repos is:</p>
+
+<pre><code>repo @all
+    RWCD    dummy-branch    =   foo
+</code></pre>
+
+<p>where foo can be either the administrator, or if you can ignore the
+warning message when you push, a non-existant user.</p></li>
+</ul>
+
+<p><a name="mergecheck"></a></p>
+
+<h3>enforcing a no-merges policy</h3>
+
+<p>Some people want to enforce a no-merges policy for various reasons.  The new
+"M" qualifier can be used to specify who is allowed to push merge commits.
+This works just like "C" and "D" in the previous section, so <strong>please read
+that for a more detailed description</strong> and apply the same ideas, (including
+the <code>@all</code> trick!) to "M" for "allow merge commits".</p>
+
+<p>The only other thing to remember is that this qualifier, if used, goes at the
+end of any permission starting with <code>RW</code> (i.e., all of them except <code>R</code>).  For
+example, <code>RW</code> becomes <code>RWM</code>, <code>RW+</code> becomes <code>RW+M</code>, <code>RW+CD</code> becomes <code>RW+CDM</code>.</p>
+
+<!-- file: conf "summary: permissions" -->
+
+<p><a name="gitolite_conf_summary_permissions_"></a></p>
+
+<h2>summary: permissions</h2>
+
+<p>The full set of permissions, in regex syntax: <code>-|R|RW+?C?D?M?</code>.  This expands
+to one of <code>-</code>, <code>R</code>, <code>RW</code>, <code>RW+</code>, <code>RWC</code>, <code>RW+C</code>, <code>RWD</code>, <code>RW+D</code>, <code>RWCD</code>, or
+<code>RW+CD</code>, all but the first one optionally followed by an <code>M</code>.  And by now you
+know what they all mean.</p>
+
+<p>[Side note: There is one more very important permission to be dealt with --
+the standalone <code>C</code>, which is not really a "ref" level permission and can be
+found in doc/wildcard-repositories.mkd.]</p>
+
+<h2>other tips: <a href="confother_.html" title="other tips">Link</a></h2>
+
+<!-- file: confother_ "other tips" -->
+
+<h2>other tips</h2>
+
+<p><a name="gitolite_conf_personal_branches_"></a></p>
+
+<h3>personal branches</h3>
+
+<p>Gitolite lets you define a "personal" or "scratch" namespace prefix for each
+developer.  See <a href="tnconv_.html#pers" title="&quot;personal&quot; branches">here</a> for details.</p>
+
+<p><a name="ruleaccum"></a></p>
+
+<h3>rule accumulation</h3>
+
+<p>(Also see <a href="exaac.html#ruleaccum2" title="rule accumulation">this</a> for a different example that may be more
+intuitive for some people).</p>
+
+<p>Gitolite lets you specify access rules for a repo in bits and pieces, and
+accumulates them in the same sequence they were given.  This is very
+convenient.  Let's say you have a mix of open source and closed source
+projects, and "bosses" should have read access to all projects, and everyone
+should have read access to open source projects.  Assuming the appropriate
+group definitions, this would work:</p>
+
+<pre><code># all bosses have read access to all projects
+repo @open @closed @topsecret
+    R   =   @bosses
+
+# everyone has read access to "open" projects
+repo @open
+    R   =   @bosses @devs @interns
+</code></pre>
+
+<p>If you notice that <code>@bosses</code> are given read access to <code>@open</code> via both rules,
+don't worry that this causes some duplication or inefficiency.  It doesn't :-)</p>
+
+<p>Elsewhere in the file, you would specify access for individual repos (like RW,
+RW+, etc).  Gitolite combines all of these access rules, maintaining the
+textual order in which they occur, when authorising a push.</p>
+
+<p>And although this example used groups, you can use reponames as well, or mix
+and match them.  You can even distribute rulesets across multiple "include"
+files if you wish.</p>
+
+<p>Just remember that if you use <a href="aac.html#deny" title="&quot;deny&quot; rules">deny rules</a> anywhere then the <em>order of the
+rules matters</em>!</p>
+
+<p>This feature also helps people who generate their gitolite.conf itself from
+some <em>other</em> database -- it allows them much more flexibility in how they
+generate rules.</p>
+
+<p><a name="gwd"></a></p>
+
+<h3>specifying gitweb and daemon access</h3>
+
+<p>Gitolite allows you to specify access for git-daemon and gitweb.  This is a
+feature that I personally do not use (corporate environments don't like
+unauthenticated access of any kind to any repo!), but someone wanted it, so
+here goes.</p>
+
+<p>Gitolite has two pre-defined, "special", usernames: <code>daemon</code> and <code>gitweb</code>.</p>
+
+<p>To make a repo or repo group accessible via "git daemon", just give read
+permission to the special user "daemon".  Similarly, give read permission to
+<code>gitweb</code> to allow the gitweb CGI to show the repo.  Something like this:</p>
+
+<pre><code>repo    foo bar baz
+    R   =   gitweb daemon
+</code></pre>
+
+<p>This gives you a quick way to offer multiple repos up for gitweb and/or daemon
+access.</p>
+
+<p>However, <strong>setting a description</strong> for the project also enables gitweb
+permissions so you can do it that way if you want.  Of course in this case you
+have to deal with each repo separately.  Add lines like this to gitolite.conf:</p>
+
+<pre><code>foo = "some description"
+bar = "some other description"
+baz = "yet another description"
+</code></pre>
+
+<p>You can also <strong>specify an owner</strong> for gitweb to show, if you like; for example
+I might use:</p>
+
+<pre><code>gitolite "Sitaram Chamarty" = "fast, secure, fine-grained, access control for git"
+</code></pre>
+
+<p>These lines are standalone, so you can add them anywhere in the conf file.</p>
+
+<p>Note that gitolite does <strong>not</strong> install or configure gitweb/git-daemon -- that
+is a one-time setup you must do separately.  All gitolite does is:</p>
+
+<ul>
+<li>for daemon, create the file <code>git-daemon-export-ok</code> in the repository</li>
+<li>for gitweb, add the repo (plus owner name, if given) to the list of
+projects to be served by gitweb (see the config file variable
+<code>$PROJECTS_LIST</code>, which should have the same value you specified for
+<code>$projects_list</code> when setting up gitweb)</li>
+<li>put the description, if given, in <code>$repo/description</code></li>
+</ul>
+
+<p>The "compile" script will keep these files consistent with the config settings
+-- this includes removing such settings/files if you remove "read" permissions
+for the special usernames or remove the description line.</p>
+
+<p>Please <strong>note</strong> that giving permissions to these special users via <code>@all</code>
+(that is, using either <code>repo @all</code> or <code>R = @all</code>), will not work unless you
+set the rc-file variable <code>$GL_ALL_INCLUDES_SPECIAL</code> to <code>1</code>.  Also, <strong>NOTE</strong>
+that giving them read access to <code>repo @all</code> means the <code>gitolite-admin</code> repo is
+also accessible.  <strong>It is upto you to decide if that is OK in your
+environment</strong>.</p>
+
+<p><a name="rsgc"></a></p>
+
+<h3>repo specific <code>git config</code> commands</h3>
+
+<p>(Thanks to teemu dot matilainen at iki dot fi)</p>
+
+<blockquote>
+  <hr />
+
+<p><strong>Note</strong>: this won't work unless the rc file has the right settings;
+  please see <code>$GL_GITCONFIG_KEYS</code> in the <a href="rc.html" title="configuring gitolite's advanced features -- the `.gitolite.rc` file">rc file doc</a> for details and
+  security information.</p>
+
+<hr />
+</blockquote>
+
+<p>Sometimes you want to specify <code>git config</code> settings for your repos.</p>
+
+<p>For example, say you have a custom post-receive hook that sends an email when
+a push happens, and this hook looks in the config for whom to send the email
+to, etc.</p>
+
+<p>You can set these git config values within a "repo" paragraph:</p>
+
+<pre><code>repo gitolite
+    config hooks.mailinglist = gitolite-commits@example.tld
+    config hooks.emailprefix = "[gitolite] "
+    config foo.bar = ""
+    config foo.baz =
+</code></pre>
+
+<p>The syntax is simple:</p>
+
+<pre><code>config sectionname.keyname = [optional value_string]
+</code></pre>
+
+<p>This does either a plain "git config section.key value" (for the first 3
+examples above) or "git config --unset-all section.key" (for the last
+example).  Other forms of the <code>git config</code> command (<code>--add</code>, the
+<code>value_regex</code>, etc) are not supported.</p>
+
+<blockquote>
+  <hr />
+
+<p><strong>WARNING</strong>: simply deleting the config line from the <code>conf/gitolite.conf</code>
+  file will <em>not</em> delete the variable from <code>repo.git/config</code>.  The syntax in
+  the last example is the <em>only</em> way to make gitolite execute a
+  <code>--unset-all</code> operation on the given key.</p>
+
+<hr />
+</blockquote>
+
+<p>You can repeat the 'config' line as many times as you like, and the last
+occurrence will be the one in effect.  This allows you to override settings
+just for one project, as in this example:</p>
+
+<pre><code>repo @all
+    config gitolite.mirror.master = "frodo"
+    config gitolite.mirror.slaves = "sam gollum"
+
+repo top-secret-project
+    # only sam, because we don't trust gollum
+    config gitolite.mirror.slaves = "sam"
+</code></pre>
+
+<p>The "delete config variable" syntax can also be used, if you wish:</p>
+
+<pre><code>repo highlander     # there can be only one!
+    config gitolite.mirror.master =
+    config gitolite.mirror.slaves =
+</code></pre>
+
+<p>As you can see, the general idea is to place the most generic ones (<code>repo
+@all</code>, or repo patterns like <code>repo foo.*</code>) first, and place more specific ones
+later to override the generic settings.</p>

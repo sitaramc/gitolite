@@ -1,0 +1,163 @@
+<head>
+<title>
+convenience features
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#tips-notes">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>convenience features</h3>
+
+<p><a name="tips_notes_what_repos_do_I_have_access_to__"></a></p>
+
+<h4>what repos do I have access to?</h4>
+
+<p>Sometimes there are too many repos, maybe even named similarly, or with the
+potential for typos, confusion about hyphens/underscores or upper/lower case,
+etc.  You'd just like a simple way to know what repos you have access to.</p>
+
+<p>Gitolite provides two commands (<a href="info_expand.html#info" title="the &quot;info&quot; command"><code>info</code></a> and <a href="info_expand.html#expand" title="the &quot;expand&quot; command"><code>expand</code></a>)
+to help you find this information.</p>
+
+<p><a name="tips_notes_support_for_git_installed_outside_default_PATH_"></a></p>
+
+<h4>support for git installed outside default PATH</h4>
+
+<p>The normal solution is to add to the system default PATH somehow, either by
+munging <code>/etc/profile</code> or by enabling <code>PermitUserEnvironment</code> in
+<code>/etc/ssh/sshd_config</code> and then setting the PATH in <code>~/.ssh/.environment</code>.
+All these are security risks because they allow a lot more than just you and
+your git install :-)</p>
+
+<p>And if you don't have root, you can't do this anyway.</p>
+
+<p>The only solution till now has been to ask every client to set the config
+parameters <code>remote.&lt;name&gt;.receivepack</code> and <code>remote.&lt;name&gt;.uploadpack</code>.  But
+telling <em>every</em> client to do so is a pain...</p>
+
+<p>Gitolite lets you specify the directory in which git binaries are to be found,
+via a new variable (<code>$GIT_PATH</code>) in the "rc" file.  If this variable is
+non-empty, it will be appended to the PATH environment variable before
+attempting to run git stuff.</p>
+
+<p>Very easy, very simple, and completely transparent to the users :-)</p>
+
+<p><strong>Note</strong>: sometimes you have a system that already has an older "git"
+installed in one of the system PATHs, but you've installed a newer git in some
+non-standard location and want that picked up.  Because of security reasons,
+gitolite will not prepend <code>GIT_PATH</code> to the PATH variable, so the older git
+comes first and it gets kinda frustrating!</p>
+
+<p>Here's a simple workaround.  Ignore the <code>GIT_PATH</code> variable, and directly set
+the full PATH in the rc file, like so:</p>
+
+<pre><code>$ENV{PATH} = "/home/sitaram/bin:$ENV{PATH}";
+</code></pre>
+
+<p><a name="pers"></a></p>
+
+<h4>"personal" branches</h4>
+
+<p>"personal" branches are great for corporate environments, where
+unauthenticated pull/clone is a no-no.  Since a dev workstation cannot do
+authentication, even work shared just between 2 devs has to go <em>via</em> the
+server.  This causes the same branch name clutter as in a centralised VCS,
+plus setting up permissions for this becomes a chore for the admin.</p>
+
+<p>Personal branches exist <strong>in a namespace</strong> of their own.  The syntax is</p>
+
+<pre><code>    RW+ personal/USER/  =   @userlist
+</code></pre>
+
+<p>where the "personal" can be anything you like (but cannot be empty), and the
+"/USER/" part is <strong>necessary (including both slashes)</strong>.  A user "alice" (if
+she's in the userlist) can then push any branches inside <code>personal/alice/</code>.
+Which means she can push <code>personal/alice/foo</code> and <code>personal/alice/bar</code>, but
+NOT <code>personal/alice</code>.</p>
+
+<p>(Background: at runtime the "USER" component will be replaced by the name of
+the invoking user.  Access is determined by the right hand side, as usual).</p>
+
+<p><a name="tips_notes_custom_hooks_and_custom_git_config_"></a></p>
+
+<h4>custom hooks and custom git config</h4>
+
+<p>You can specify hooks that you want to propagate to all repos, as well as
+per-repo "gitconfig" settings.  Please see <code>doc/2-admin.mkd</code> and
+<code>doc/gitolite.conf.mkd</code> for details.</p>
+
+<p><a name="tips_notes_bypassing_gitolite_"></a></p>
+
+<h4>bypassing gitolite</h4>
+
+<p>Sometimes you'll need to access one of the gitolite-managed repos directly on
+the server, without going through gitolite.  Reasons may be some automatic
+updates or some other ad hoc purposes you can dream up.</p>
+
+<p>Cloning a gitolite-controlled repo is easy enough -- just use the full path
+(typically <code>~/repositories/reponame.git</code>) instead of just <code>reponame</code>, to
+compensate for gitolite not sitting in between and adding those things to the
+repo path.</p>
+
+<p>But when you push, the update hook (which git will invoke anyway) will fail
+because it needs all sorts of access control info that it now doesn't have,
+because the push was invoked without going through gitolite.</p>
+
+<p>In order to bypass the update hook, just set the <code>GL_BYPASS_UPDATE_HOOK</code>
+environment variable to "1" or something, export it, and push.  I prefer not
+to set that variable permanently, preferring this mode instead:</p>
+
+<pre><code>GL_BYPASS_UPDATE_HOOK=1 git push
+</code></pre>
+
+<h4>gl-admin-push: bypassing gitolite for the gitolite-admin repo: <a href="adminpush.html" title="gl-admin-push: bypassing gitolite for the gitolite-admin repo">Link</a></h4>
+
+
+<p><a name="disable"></a></p>
+
+<h4>disabling write access to take backups</h4>
+
+<p>If you want to take normal, OS-level, backups of the system, you might want
+git to be quiescent during that time, so that the backup is clean.  The best
+way to do this is to disable write-access to the server for the duration of
+the backup.</p>
+
+<p>Here's how:</p>
+
+<pre><code>cd $HOME    # if running as "git" user, else "cd ~git" or whatever
+echo writes disabled during backup window &gt; .gitolite.down
+
+# &lt;&lt; RUN YOUR BACKUP COMMAND(s) HERE &gt;&gt;
+
+rm .gitolite.down
+</code></pre>
+
+<p>I leave it to you to</p>
+
+<ul>
+<li>make sure that if the backup script fails, the <code>.gitolite.down</code> file is
+still removed (or not; maybe your policy is that if the backup failed, no
+further writes are allowed.  Whatever...)</li>
+<li>if you're extremely paranoid (even I wouldn't worry about this!) make sure
+that no push is <em>in progress</em> by checking for any <code>git-receive-pack</code>
+processes in a <code>ps</code> output.</li>
+</ul>
+

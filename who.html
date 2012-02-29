@@ -1,0 +1,94 @@
+<head>
+<title>
+who uses gitolite
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#who-uses-it">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>who uses gitolite</h1>
+
+<blockquote>
+  <blockquote>
+  <p>If you're using gitolite and find it very useful in some way, I would
+  love to describe your use of it or add a link to your own description
+  of it here.  Of course, you can anonymise it as much as you need to.</p>
+</blockquote>
+
+<p></blockquote></p>
+
+<p>The <strong>Fedora Project</strong> controls access to over 10,000 package management
+repositories accessed by over 1,000 package maintainers <a href="http://lists.fedoraproject.org/pipermail/devel-announce/2010-July/000647.html">using
+gitolite</a>.  This is probably the largest <em>confirmed</em> gitolite
+installation anywhere.  The whole <a href="bc.html" title="what is a &quot;big-config&quot;">big-config</a> thing was initially done
+for them (their config file was so big that without the big-config changes
+gitolite would just run out of memory and die!).</p>
+
+<p>The <strong>KDE project</strong> <a href="http://community.kde.org/Sysadmin/GitKdeOrgManual">uses</a> gitolite (in combination with redmine for
+issue tracking and reviewboard for code review).  Apart from the usual access
+control, the KDE folks are heavy users of the "ad hoc repo creation" features
+enabled by wildrepos and the accompanying commands.  Several of the changes to
+the "admin defined commands" were also inspired by KDE's needs.  See <a href="http://community.kde.org/Sysadmin/GitKdeOrgManual#Server-side_commands">section
+5</a> and <a href="http://community.kde.org/Sysadmin/GitKdeOrgManual#Personal_repositories">section 6</a> of the above linked page for details.</p>
+
+<p><strong>Prof. Hiren Patel</strong> of the University of Waterloo is responsible for the
+existence of the fairly popular "<a href="wild.html" title="repositories named with wildcards">wildrepos</a>" feature.  The
+documentation was pretty much written with his use case in mind, but of course
+it turns out to be useful for a lot of people, as you can see from the
+previous para on KDE's use of gitolite.</p>
+
+<p>In fact, he surprised the heck out of me recently by saying that if it hadn't
+been for this feature, he might not have used git itself -- which is a pretty
+serious compliment if you think about the magnitude of the git project and my
+little one-man show!</p>
+
+<p>He explains his use of it <a href="http://ece.uwaterloo.ca/~hdpatel/uwhtml/wildrepos-in-gitolite/">here</a>.</p>
+
+<p><strong>Gentoo Linux</strong> has <a href="http://archives.gentoo.org/gentoo-dev/msg_2812c9b9e768f64b46360ab17b9d0024.xml">just moved</a> their git repositories from gitosis
+to gitolite. There are about 200 repositories, some of them are the so called
+<a href="http://www.gentoo.org/proj/en/overlays/">overlays</a>, official and unofficial/user overlays, plus several
+developer and project repositories, used by more than 1000 people. That number
+will be increased in the near future, as they are going to migrate some of
+their CVS/SVN repositories there, plus they are offering overlays hosting for
+users as well.</p>
+
+<p><strong>Nokia MeeGo</strong> uses Gitolite internally, and has also contributed LDAP
+specific code (see <a href="ldap.html" title="storing usergroup information outside gitolite (like in LDAP)">contrib/ldap</a> directory for details).</p>
+
+<p><strong>kernel.org</strong>, the official distribution point for the Linux kernel, is the
+latest (as of 2011-10) high-visibility installation.  According to <a href="http://lkml.org/lkml/2011/9/23/357">this
+email</a> to the lkml, kernel.org decided to use gitolite for access
+controlling their git repos.  Their <a href="http://www.kernel.org/faq/#whygitolite">FAQ entry</a> describes at a high
+level why they chose gitolite.</p>
+
+<p>This move also prompted the first ever security audit of gitolite by an
+outside party.  Gitolite did great; see <a href="http://groups.google.com/group/gitolite/browse_thread/thread/8dc5242052b16d0f">here</a> for details.</p>
+
+<p>In addition, kernel.org was responsible for a serious rethink of a few rough
+edges in gitolite, and smoothing them out was fun (the "playing with gitolite"
+stuff, making the test suite simpler, "deny" rules for the entire repo).</p>
+
+<hr />
+
+<p>A general note: if you see the list of high-profile users above, you will see
+that gitolite benefits as much as they do; possibly more.</p>
+
+<p>color me happy...</p>

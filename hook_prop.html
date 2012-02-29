@@ -1,0 +1,156 @@
+<head>
+<title>
+hook propagation in gitolite
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#hook-propagation">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>hook propagation in gitolite</h1>
+
+<p>Some users like to know how hooks propagate, and when, and why there appear to
+be two places to put them, and so on.  I'll try and set out the logic here.</p>
+
+<p><strong>Note</strong>: You don't need to read all this just to add your own hooks or your
+own functionality to a hook that gitolite uses.  See <a href="hooks.html#customhooks" title="custom hooks">here</a> and
+<a href="hooks.html#hookchaining" title="hook chaining">here</a>.</p>
+
+<p><a name="hook_propagation_what_hooks_do_repos_get__"></a></p>
+
+<h2>what hooks do repos get?</h2>
+
+<ul>
+<li><p><code>update</code>: all repos have this; it does the write-level access control
+(per-branch permissions).</p></li>
+<li><p><code>post-receive</code>: if you've enabled <a href="mirroring.html" title="mirroring gitolite servers">mirroring</a>, all repos have this.</p></li>
+<li><p><code>post-update</code>: only the special "gitolite-admin" repo has this; it acts
+upon the changes you push to the admin repo.</p></li>
+<li><p><code>gitolite-hooked</code>: not really a hook, but a special, zero-byte file; see
+below.</p></li>
+<li><p>you can add any other hooks you want (see note at the top of this doc),
+and gitolite will propagate them into all repos along with the others.</p></li>
+</ul>
+
+<p><a name="hook_propagation_when_do_repos_get_hooks__"></a></p>
+
+<h2>when do repos "get" hooks?</h2>
+
+<ul>
+<li><p>When the "compile" script runs, any repo that is named explicitly in the
+conf file, and the "gitolite-hooked" file is not present, gets hooks.</p></li>
+<li><p>When someone runs <code>gl-setup</code> on the server, then <em>all</em> repos physically
+present inside <code>$REPO_BASE</code> get them.</p>
+
+<p>A repo does not have to be defined in the config for this to happen.
+Also, this includes the initial install; if you already had some repos in
+<code>REPO_BASE</code> they get the hooks.</p></li>
+<li><p>If <code>GL_WILDREPOS</code> is set, a repo gets hooks when a user creates a repo or
+uses the "fork" command in "contrib/adc".  <font color="gray">In the
+latter case the hooks are explicitly copied from the source repo using the
+"cp" command, not using the code internal to gitolite</font>.</p></li>
+</ul>
+
+<p><a name="hook_propagation_what_exactly_does_get_hooks_mean__"></a></p>
+
+<h2>what exactly does "get hooks" mean?</h2>
+
+<p>The "hooks/" directory of the bare repo on the server will <em>forcibly</em> have
+symlinks created for each of the hooks mentioned in the "what hooks..."
+section.</p>
+
+<p>Other files are left alone, so you <em>can</em> manually add a hook file to specific
+repos, directly on the server, so long as there is no name clash.</p>
+
+<p><a name="hook_propagation_where_do_the_symlinks_point__"></a></p>
+
+<h2>where do the symlinks point?</h2>
+
+<p>There are two places the symlinks can point.</p>
+
+<ul>
+<li><p><code>$GL_PACKAGE_HOOKS/common</code> contains the "system" hooks.
+<code>GL_PACKAGE_HOOKS</code> is defined in the rc file.</p></li>
+<li><p><code>$HOME/.gitolite/hooks/common</code> has the "user" hooks.</p></li>
+</ul>
+
+<p><font color="gray">The special "post-update" hook for the equally special
+"gitolite-admin" repo is not in either of those places.  It's in
+<code>../gitolite-admin</code> relative to them.  Just don't worry about it, and don't
+fiddle with it.  <strong>There is no spoon</strong>.</font></p>
+
+<p><code>GL_PACKAGE_HOOKS</code> is "/var/gitolite/hooks" or some such path for RPM/DEB or
+"root" method, and "$HOME/share/gitolite/hooks" for the non-root method.
+(<font color="gray">Basically, it's whatever you gave as the 3rd argument to
+'gl-system-install' when you used the root or non-root methods, or whatever
+the packager decided if you used the RPM/DEB method</font>).</p>
+
+<p><a name="hook_propagation_so_where_do_I_put_my_hooks__"></a></p>
+
+<h2>so where do I put my hooks?</h2>
+
+<p>Put them in the "user" location (<code>~/.gitolite/hooks/common</code>).</p>
+
+<p>The "system" location hooks override the ones in the "user" location, as you
+can see from the picture below.  This can be useful to enforce site-wide hooks
+when using the RPM/DEB or root install methods.  (For the non-root install
+it's useless, since both locations are under the control of the user).</p>
+
+<img src="images/hook-propagation-0001" title="Figure 1" />
+
+<p>As you can see, when both locations have the same hook, the symlink points to
+the "system" hook.</p>
+
+<p>By default, the only reason you need to touch the "system" location is if you
+want to modify the 'update' hook, but why would you fiddle with the most
+important part of gitolite, huh?  You're a good admin, and will use <a href="hooks.html#hookchaining" title="hook chaining">hook
+chaining</a> properly, right?</p>
+
+<p><a name="hook_propagation_why_not_just_push_a_hook__"></a></p>
+
+<h2>why not just push a hook?</h2>
+
+<p>A question I often get is, why can't we simply push the hooks using the admin
+repo, just like we push config changes.</p>
+
+<p>To understand why, realise that in many sites, the "right to push the
+gitolite-admin repo" is <strong>not</strong> the same as "right to get a command line on
+the server and run arbitrary commands".</p>
+
+<p>This means, gitolite tries its best to keep these two rights separated, and to
+prevent someone who has the former right from trivially acquiring the latter.</p>
+
+<p>And so we don't allow adding hooks by admin push.</p>
+
+<p>That doesn't mean you can't do it yourself.  Here's one possible way.</p>
+
+<p>Using the simple instructions <a href="hooks.html#customhooks" title="custom hooks">here</a>, add a
+<code>post-update.secondary</code> hook containing this code:</p>
+
+<pre><code>#!/bin/bash
+cp $GL_ADMINDIR/local-hooks/* $GL_ADMINDIR/hooks/common
+gl-setup
+</code></pre>
+
+<p>Now create a directory in your gitolite-admin clone called "local-hooks", put
+all your hooks there, and add/commit/push.</p>
+
+<p>That <em>should</em> do it.  Test it and send me a patch for this document when you
+do :-)</p>

@@ -1,0 +1,105 @@
+<head>
+<title>
+security, access control, and auditing
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#tips-notes">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>security, access control, and auditing</h3>
+
+<p><a name="2levels"></a></p>
+
+<h4>two levels of access rights checking</h4>
+
+<p>Gitolite has two levels of access checks.  The <strong>first check</strong> is what I will
+call the <strong>pre-git</strong> level.  At this stage, the <code>gl-auth-command</code> has been
+invoked by <code>sshd</code>, and it knows just three things:</p>
+
+<ul>
+<li>who,</li>
+<li>what repository, and</li>
+<li>what type of access (R or W)</li>
+</ul>
+
+<p>Note that at this point no git program has entered the picture, and we have no
+way of knowing what <strong>ref</strong> (branch, tag, etc) he is trying to update, even if
+it is a "write" operation.</p>
+
+<p>For a "read" operation to pass this check, the username (or <code>@all</code> users) must
+have read permission (i.e., R, RW, RW+, etc.) on at least one branch of the
+repo (or <code>@all</code> repos).</p>
+
+<p>For a "write" operation, there is an additional restriction: lines specifying
+only <code>R</code> (read access) don't count.  <em>The user must have write access to
+<strong>some</strong> ref in the repo in order to pass this stage!</em></p>
+
+<p>The <strong>second check</strong> is via a git <code>update hook</code>.  This check only happens for
+write operations.  By this time we know what "ref" he is trying to update, as
+well as the old and the new SHAs of that ref (by which we can also deduce
+whether it's a rewind or not).  This is where the "per-branch" permissions
+come into play.</p>
+
+<p>Each refex that allows <code>W</code> access (or <code>+</code> if this is a rewind) for <em>this</em>
+user, on <em>this</em> repo, is matched against the actual refname being updated.  If
+any of the refexes match, the push succeeds.  If none of them match, it fails.</p>
+
+<p>Gitolite also allows "exclude" or "deny" rules.  See later in this document
+for details.</p>
+
+<p><a name="tips_notes_better_logging_"></a></p>
+
+<h4>better logging</h4>
+
+<p>If you have been too liberal with the permission to rewind, it has built-in
+logging as an emergency fallback if someone goes too far, or for audit
+purposes [<code>*</code>].  The logfile names and location are configurable, and can
+include the year/month/day etc in the filename for easy archival or further
+processing.  The log file even tells you which pattern in the config file
+matched to allow that specific access to proceed.</p>
+
+<blockquote>
+  <p>[<code>*</code>] setting <code>core.logAllRefUpdates true</code> does provide a safety net
+  against over-zealous rewinds, but it does not tell you "who".  And
+  strangely, management does not seem to share the view that "blame" is just
+  a synonym for "annotate" ;-)]</p>
+</blockquote>
+
+<p>The log lines look like this:</p>
+
+<pre><code>2009-09-19.10:24:37  +  b4e76569659939  4fb16f2a88d8b5  myrepo refs/heads/master       user2   refs/heads/master
+</code></pre>
+
+<p>The "+" at the start indicates a non-fast forward update, in this case from
+b4e76569659939 to 4fb16f2a88d8b5.  So b4e76569659939 is the one to restore!
+Can it get easier?</p>
+
+<p>The other parts of the log line are the name of the repo, the refname being
+updated, the user updating it, and the refex pattern (from the config file)
+that matched, in case you need to debug the config file itself.</p>
+
+<p><a name="tips_notes_delegating_parts_of_the_config_file_"></a></p>
+
+<h4>delegating parts of the config file</h4>
+
+<p>You can now split up the config file and delegate the authority to specify
+access control for their own pieces.  See <a href="deleg.html" title="delegating access control responsibilities">delegation</a> for details.</p>
+

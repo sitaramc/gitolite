@@ -1,0 +1,72 @@
+<head>
+<title>
+moving the whole thing from one server to another
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#admin">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>moving the whole thing from one server to another</h3>
+
+<p>[<strong>NOTE</strong>: I would appreciate help testing these instructions]</p>
+
+<p>Here's the simplest set of instructions, assuming the destination is a recent
+gitolite (has the 'gl-admin-push' command).  Unless specified, all steps are
+on the <em>new</em> server.</p>
+
+<ul>
+<li><p><strong>install</strong> gitolite.  Don't worry about the pubkey used in the gl-setup
+step -- for example this will do fine:</p>
+
+<pre><code>ssh-keygen -q -N '' -f dummy
+gl-setup -q dummy.pub
+</code></pre></li>
+<li><p><strong>edit</strong> the rc file to have similar settings to the old one.</p>
+
+<p>Do not copy the entire file outright -- some of the variables (notably
+<code>GL_PACKAGE_CONF</code> and <code>GL_PACKAGE_HOOKS</code>) are installation dependent and
+should not be touched!  Do a diff or a vimdiff and copy across only what
+you know <em>you</em> changed on the old server.</p></li>
+<li><p><strong>disable</strong> the old server so your users will not push any changes to it.
+There are several ways to do this, but the simplest is to insert this line
+at the top of <code>~/.gitolite.rc</code> on the old server:</p>
+
+<pre><code>exit 1;
+</code></pre></li>
+<li><p><strong>copy</strong> the contents of <code>$REPO_BASE</code> in the old server to <code>$REPO_BASE</code> on
+the new server.  By default, as you know, these are both
+<code>$HOME/repositories</code>.</p></li>
+<li><p><strong><code>chown -R</code></strong> the files to the correct user if you copied using root.</p></li>
+<li><p><strong>fix up</strong> the hooks</p>
+
+<pre><code>gl-setup
+</code></pre></li>
+<li><p><strong>trigger</strong> a push to the admin repo</p>
+
+<pre><code>git clone repositories/gitolite-admin.git /tmp/gitolite-admin
+cd /tmp/gitolite-admin
+git commit --allow-empty -m 'trigger compile on new server'
+gl-admin-push -f
+</code></pre></li>
+</ul>
+
+<p>Done.</p>
+

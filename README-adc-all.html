@@ -1,0 +1,79 @@
+<head>
+<title>
+brief descriptions of the shipped ADCs (admin-defined commands)
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#README-adc">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: shipped_ADCs "brief descriptions of the shipped ADCs (admin-defined commands)" -->
+
+<h1>brief descriptions of the shipped ADCs (admin-defined commands)</h1>
+
+<p>(...with pointers to further information where needed)</p>
+
+<hr />
+
+<p><strong>able</strong>: enable/disable push access temporarily (such as for taking backups
+or other admin chores); details <a href="ADCs.html#able" title="enable/disable push access temporarily">here</a>.  This ADC is meant only for
+admins.</p>
+
+<p><strong>delete-branch</strong>: allow someone to delete a branch that they themselves
+created. (i.e., when the user had RWC, but not RWCD, permissions).  Details on
+this ADC are <a href="https://github.com/sitaramc/gitolite/commit/89b68bf5ca99508caaa768c60ce910d7e0a29ccf">here</a>; details on RWC/RWD/RWCD etc are <a href="aac.html#rwcd" title="creating and deleting branches">here</a>.</p>
+
+<p><strong>fork</strong>: Think of it as a server-side clone; details <a href="ADCs.html#fork" title="the 'fork' ADC">here</a>.</p>
+
+<p><strong>get-rights-and-owner.in-perl</strong>:  Most of the ADCs are in shell, so this is a
+sample of how to write an ADC in perl.</p>
+
+<p><strong>git-annex-shell</strong>: allows git-annex to store and retrieve annexed file content in
+repositories. To use, install in <code>$GL_ADC_PATH/ua/git-annex-shell</code></p>
+
+<p><strong>gl-reflog</strong>: show a fake "reflog" from the server, and allow recovery from
+deleted branches and bad force pushes; details in source.</p>
+
+<p><strong>help</strong>: not all shipped ADCs may be enabled by the site admin.  Conversely
+the admin may create and install his own ADCs that dont ship with gitolite
+itself.  This ADC displays site-local help, if the site admin enabled it.</p>
+
+<p><strong>hub</strong>: allow "pull requests" a la github; details <a href="hub.html" title="the 'hub' ADC">here</a>.</p>
+
+<p><strong>rm</strong>, <strong>lock</strong>, and <strong>unlock</strong>:<br>
+<strong>trash</strong>, <strong>list-trash</strong>, and <strong>restore</strong>:</p>
+
+<blockquote>
+  <p>two families of repo deletion commands; details <a href="wild_repodel.html" title="deleting repos safely">here</a></p>
+</blockquote>
+
+<p><strong>sudo</strong>: allow admin to run ADCs on behalf of a user.  Useful in support
+situations I guess.  Details in source.</p>
+
+<p>Note: the Unix "sudo" and "su" programs are most often used to acquire
+<em>higher</em> privileges, although they're actually designed to go the other way
+also.  In gitolite we do not do the former, only the latter (i.e., a normal
+gitolite user cannot do admin-stuff using this ADC).</p>
+
+<p><strong>su-expand</strong>, <strong>su-getperms</strong>, <strong>su-setperms</strong>: as above, but for the
+internal commands 'expand', 'getperms', and 'setperms'.  (These commands are
+not ADCs so you cannot simply use the 'sudo' ADC described above).</p>
+
+<p><strong>who-pushed</strong>: find the last person to push a given commit; details in
+source.</p>

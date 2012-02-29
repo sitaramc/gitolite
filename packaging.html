@@ -1,0 +1,86 @@
+<head>
+<title>
+packaging gitolite
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#packaging">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>packaging gitolite</h1>
+
+<p>Here's how you'd package gitolite.  In the following description, location "X"
+can be, say, <code>/usr/share/gitolite/conf</code> or some such, and similarly location
+"Y" can be perhaps <code>/usr/share/gitolite/hooks</code>.  It's upto your distro
+policies where they are.</p>
+
+<p><strong>Step 1</strong>: Clone the gitolite repo and run the make command inside the clone</p>
+
+<pre><code>git clone git://github.com/sitaramc/gitolite.git
+cd gitolite
+make pu.tar     # or "make master.tar" or "make v1.2.tar" etc
+</code></pre>
+
+<p>Then you explode the tar file in some temporary location.</p>
+
+<p><em>Alternatively, you can <code>git checkout</code> the tag or branch you want, and run
+this command in the clone directly</em>:</p>
+
+<pre><code>git describe --tags --long &gt; conf/VERSION
+</code></pre>
+
+<p><strong>Step 2</strong>: Now make the following changes (no trailing slashes in the
+location values please):</p>
+
+<ul>
+<li><p><code>src/gl-setup</code> should have the following line:</p>
+
+<pre><code>GL_PACKAGE_CONF="X"
+</code></pre></li>
+<li><p><code>conf/example.gitolite.rc</code> should have the following lines:</p>
+
+<pre><code>$GL_PACKAGE_CONF="X";
+$GL_PACKAGE_HOOKS="Y";
+</code></pre></li>
+</ul>
+
+<p><strong>Step 3</strong>: Move (or arrange to move) the files to their proper locations as
+given below:</p>
+
+<ul>
+<li>everything in "src" goes somewhere on the PATH</li>
+<li>everything in "conf" goes to location "X"</li>
+<li>everything in "hooks" goes to location "Y"</li>
+</ul>
+
+<p><strong>Step 4</strong>: There is no step 4.  Unless you count telling your users to run
+<code>gl-setup</code> as a step :)</p>
+
+<p>On the initial install (urpmi, yum install, or apt-get install), you could
+also choose to setup a userid called "gitolite", and run "gl-setup" as that
+user; however I do not know how you would come up with the initial pubkey that
+is needed.  Anyway, the point is that the "gitolite" user is no more special
+than any other in terms of hosting gitolite.  Any user can host gitolite on
+his userid by just running "gl-setup".</p>
+
+<p>When you upgrade, just overwrite all the files; it'll all just work.  In fact,
+other than the initial "gl-setup" run, the only time a gitolite hosting user
+has to actually do anything is to edit their own <code>~/.gitolite.rc</code> file if they
+want to enable or disable specific features.</p>

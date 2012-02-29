@@ -1,0 +1,152 @@
+<head>
+<title>
+migrating from gitosis to gitolite
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#migrate">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: migr "migrating from gitosis to gitolite" -->
+
+<h1>migrating from gitosis to gitolite</h1>
+
+<p>HELP WANTED: these instructions have been revamped a bit recently
+[2011-07-18], so if something doesn't work let me know.</p>
+
+<p>[TODO: make the migration tool fix up gitweb and daemon control also...]</p>
+
+<p>Migrating from gitosis to gitolite is fairly easy, because the basic design is
+the same.</p>
+
+<p>There's only one thing that might trip up people: the userid.  Gitosis uses
+<code>gitosis</code>.  Gitolite can use any userid you want; most of the documentation
+uses <code>git</code>, while DEB/RPM packages use <code>gitolite</code>.</p>
+
+<p>Here are the steps on the server:</p>
+
+<ul>
+<li><p>(as 'gitosis' on the server) <strong>Rename</strong> <code>~/.ssh/authorized_keys</code> to
+something else so that no one can accidentally push while you're doing
+this.</p></li>
+<li><p>(as 'gitosis' on the server) For added safety, <strong>delete</strong> the post-update
+hook that gitosis-admin installed</p>
+
+<pre><code>rm ~/repositories/gitosis-admin.git/hooks/post-update
+</code></pre>
+
+<p>or at least rename it to <code>.sample</code> like all the other hooks hanging
+around, or edit it and comment out the line that calls <code>gitosis-run-hook
+post-update</code>.</p></li>
+<li><p>(as 'gitosis' on the server) If you already use the <code>update</code> hook for some
+reason, <strong>rename</strong> it (on each individual repository that has it) to
+<code>update.secondary</code>.  This is because gitolite uses the update hook for
+checking write access.</p></li>
+<li><p>(as 'root' on the server) copy all of <code>~/repositories</code> to the gitolite
+hosting user's home directory.  Something like</p>
+
+<pre><code>cp -a /home/gitosis/repositories /home/git
+chown -R git.git /home/git/repositories
+</code></pre></li>
+<li><p>(as 'root' and/or 'git' on the server) Follow instructions to install
+gitolite; see the <a href="install.html" title="gitolite installation">install document</a>.  Make sure that you <strong>don't</strong>
+change the default path for <code>$REPO_BASE</code> if you edit the config file!</p>
+
+<p>This will give you a gitolite config that has the required entries for the
+"gitolite-admin" repo.</p></li>
+</ul>
+
+<p>Now, log off the server and get back to the client.  All subsequent
+instructions are to be read as "on gitolite admin's workstation".</p>
+
+<ul>
+<li><p><strong>clone</strong> the new gitolite-admin repo to your workstation.  (You already
+have a clone of the gitosis-admin repo so now you have both).</p></li>
+<li><p><strong>convert</strong> your gitosis config file and append it to your gitolite config
+file.  Substitute the path for your gitosis-admin clone in <code>$GSAC</code> below,
+and similarly the path for your gito<strong>lite</strong>-admin clone in <code>$GLAC</code>.
+(The gl-conf-convert program is a standalone program that you can bring
+over from any gitolite clone; you don't have to install all of gitolite on
+your workstation to use this):</p>
+
+<pre><code>./gl-conf-convert &lt; $GSAC/gitosis.conf &gt;&gt; $GLAC/conf/gitolite.conf
+</code></pre>
+
+<p>Be sure to check the file to make sure it converted correctly.  Then
+remove the entry for the 'gitosis-admin' repo.  You do not need it here
+and it may cause confusion.</p></li>
+<li><p><strong>copy</strong> the keys from gitosis's keydir (same meanings for GSAC and GLAC)</p>
+
+<pre><code>cp $GSAC/keydir/* $GLAC/keydir
+</code></pre>
+
+<p>If your gitosis-admin key was <code>you@machine.pub</code>, and you supplied the same
+one to gitolite's gl-setup program as <code>you.pub</code> when you installed
+gitolite, then you should remove <code>you@machine.pub</code> from the new keydir
+now.  Otherwise you will have 2 pubkey files (<code>you.pub</code> and
+<code>you@machine.pub</code>) which are identical, which is <em>not</em> a good idea.</p>
+
+<p>Similarly, you should replace all occurrences of <code>you@machine.pub</code> with
+<code>you</code> in the <code>conf/gitolite.conf</code> file.</p></li>
+<li><p><strong>IMPORTANT</strong>: if you have any users with names like <code>user@foo</code>, where the
+part after the <code>@</code> does <em>not</em> have a <code>.</code> in it (i.e., does not look like
+an email address), you need to change them, because gitolite uses that
+syntax for <a href="oldmultikeys.html" title="old style multi keys">enabling multi keys</a>.</p>
+
+<p>You have two choices in how to fix this.  You can change the gitolite
+config so that all mention of <code>user@foo</code> is changed to just <code>user</code>.</p>
+
+<p>Or you can change each occurrence of <code>user@foo</code> to, say, <code>user_foo</code> <em>and</em>
+change the pubkey filename in keydir/ also the same way (<code>user_foo.pub</code>).</p>
+
+<p>Just to repeat, you do NOT need to do this if the username was like
+<code>user@foo.bar</code>, i.e., the part after the <code>@</code> had a <code>.</code> in it, because then
+it looks like an email address.</p>
+
+<p><a href="tips.html#multikey" title="one user, many keys">This</a> will tell you more about these nuances.  If you can
+understand it.</p></li>
+<li><p><strong>IMPORTANT: expand any multi-key files you may have</strong>.  <a href="tips.html#multikey" title="one user, many keys">Here</a>'s an
+explanation of what multi-keys are, how gitosis does them and how gitolite
+does it differently.</p>
+
+<p>You can split the keys manually, or use the following code (just
+copy-paste it into your xterm after "cd"-ing to your gitolite-admin repo
+clone):</p>
+
+<pre><code>wc -l keydir/*.pub | grep -v total | grep -v -w 1 | while read a b
+do
+    i=1
+    cat $b|while read l
+    do
+        echo "$l" &gt; ${b%.pub}@$i.pub
+        (( i++ ))
+    done
+    mv $b $b.done
+done
+</code></pre>
+
+<p>This will split each multi-key file (say "sitaram.pub") into individual
+files called "sitaram@1.pub", "sitaram@2.pub", etc., and rename the
+original to "sitaram.pub.done" so gitolite won't pick it up.</p>
+
+<p>At this point you can rename the split parts more appropriately, like
+"sitaram@laptop.pub" and "sitaram@desktop.pub" or whatever.  <em>Please check
+the files to make sure this worked properly</em></p></li>
+<li><p>Check all your changes to your gitolite-admin clone, commit, and push</p></li>
+</ul>

@@ -1,0 +1,136 @@
+<head>
+<title>
+comparing gerrit and gitolite
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gerrit">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>comparing gerrit and gitolite</h1>
+
+<p>Gerrit and gitolite have too many high level differences.  Size is most
+visible of course: 56000 lines of Java versus 1300 lines of perl+shell,
+according to David A. Wheeler's 'SLOCCount' tool.  Gerrit needs a database (it
+comes with a perfectly usable one, or I believe you can use any of the usual
+suspects),
+and even comes with its own ssh server and git server, and since the git
+engine is internal it probably has to include a lot of things that normal git
+already has; I wouldn't know for sure.</p>
+
+<p>Gerrit allows a lot more de-centralisation in managing the system, and of
+course excels at code review, and it seems geared to really large, open
+source-ish projects with lots of contributors.</p>
+
+<p>Gitolite works on a pure command-line install and a plain text file config,
+and is designed to run unobtrusively and quite transparently to all developers
+-- other than sending the admin their pubkey, nothing really changes for them
+in their workflow, toolset, etc.  The "lite" in the name still holds, despite
+all the extra features being pumped in!</p>
+
+<p>Gitolite was mainly written for a corporate environment, where we really,
+really, need branch-level ACLs.  While they would certainly love the code
+review part, things like <em>voting</em> on a change, and so on seem a bit alien, and
+it seems to me that code review itself is more likely to be a hierarchical
+thing, not a peer-to-peer, "anyone can comment" thing.  I could be wrong.</p>
+
+<hr />
+
+<p>In short, gitolite doesn't do the main thing that gerrit does, and gerrit is
+so much bigger than gitolite in so many ways, it seems really odd to compare
+them at all.</p>
+
+<p>However, it seems gerrit comes closest to gitolite in terms of flexibility of
+access control, which is gitolite's main strength, so I thought it would be
+useful to compare gitolite with just what is in the "access-control.html" in
+the gerrit war file.  Or see <a href="http://gerrit.googlecode.com/svn/documentation/2.1.2/access-control.html">this</a>.  [...and stop sniggering at the
+"svn" in the link dammit!]</p>
+
+<p>Note that I don't necessarily list something that both tools have.  (For
+example, per-user branches denoted by <code>/USER/</code> in gitolite and <code>$(username)</code>
+in gerrit, or being able to distinguish between creating a branch and pushing
+to an already created one, etc).</p>
+
+<p><strong>Administrators</strong>: anyone who has gitolite-admin push privs</p>
+
+<p><strong>Anonymous Users</strong>: gitolite doesn't do that, though the "ssh-plus" branch,
+combined with git-daemon2 (Ilari) will allow that in future.  When git-daemon2
+becomes mainstream, the supporting code in this branch will also be merged
+into "master".</p>
+
+<p><strong>Registered Users</strong>: @all</p>
+
+<p><strong>Account Groups</strong>: @groups in gitolite.  We do allow them to be nested,
+although the parsing is single-pass.  We also don't have group <code>foo-admin</code>
+managing membership to group <code>foo</code> though; all groups are managed by the eqvt
+of "Administrators".</p>
+
+<p><strong>Project ACLs</strong>: first, let's remember (again) that we don't have any of the code
+review stuff :)</p>
+
+<ul>
+<li><p>This is a subjective point, but gerrit doesn't give permissions to
+individual users, only groups.  People who have several small projects
+(only one QA, one integrator, etc.), would have to create lots of 1-man
+groups, which could be cumbersome.</p></li>
+<li><p><strong>Evaluation</strong> order and priority of access control rules are different.
+Gerrit goes by specificity, gitolite goes by sequence.  It shouldn't
+matter; they're probably equivalent except perhaps in some far-fetched
+scenarios.</p></li>
+<li><p>Update 2010-10-24: as per <a href="http://colabti.org/irclogger/irclogger_log/git?date=2010-09-17#l2710">this</a> Gerrit now has <em>read</em> access
+control at the branch level -- they can afford to do that because they
+have a full jgit stack to play with.  Even then it was not easy -- they
+had to implement a callback from jgit to gerrit for the fetch, <em>and</em> deal
+with evil clients that might try to read an object by <em>pushing</em> a supposed
+change on top of a SHA that they know but don't actually have.  (You'll
+have to think about this carefully; it may not be immediately obvious to
+people who do not know the ref-exchange in the git protocol).</p>
+
+<p>Gitolite is dependent on git itself to provide that -- it just cannot be
+done without support from git core.  I can see some corporates drooling at
+this possibility (makes no sense for open source projects IMO) ;-)</p>
+
+<p>My normal recommendation is to <strong>use separate repos</strong> if you really need
+this while continuing to use gitolite.  Much simpler and easier to audit
+and to convince auditors that "those people can't see that code".</p></li>
+</ul>
+
+<p><strong>Categories</strong>:</p>
+
+<ul>
+<li><p>gitolite doesnt have an "owner" for each project in any administrative
+sense.  Perhaps you could consider whoever has <code>RW+</code> perms to be an owner
+but it doesn't go beyond what that implies.</p></li>
+<li><p>gitolite doesnt do anything special to signed or annotated tags</p></li>
+<li><p>Force push is the same as delete by default.  However, gitolite can now
+allow these two separately if that's how you need it.</p>
+
+<p>Of course, direct pushing clashes with code review, and gerrit recommends
+that if you want code review you should not use this feature.  [Normal
+pushes in gerrit go through a temp branch that is moved to the correct one
+after a review is done; direct pushes are all that gitolite has].</p></li>
+<li><p>author/committer identity: checking these fields in pushed commits is
+likely to be important in some projects, but gitolite doesn't have any
+notion of this.  Hmm... I smell another feature in the future :)</p></li>
+</ul>
+
+<p>The rest of it is in areas that the two tools have no overlap on (again, code
+review being the main thing), or, as I said at the top, features that both
+tools have.</p>

@@ -1,0 +1,857 @@
+<head>
+<title>
+mirroring gitolite servers
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: mirroring "mirroring gitolite servers" -->
+
+<h1>mirroring gitolite servers</h1>
+
+<p>Mirroring a repo is simple in git; you just need code like this in a
+<code>post-receive</code> hook in each repo:</p>
+
+<pre><code>#!/bin/bash
+git push --mirror slave_user@mirror.host:/path/to/repo.git
+# if running gitolite, the $GL_REPO variable could be useful:
+# git push --mirror slave_user@mirror.host:/repo/base/path/$GL_REPO.git
+</code></pre>
+
+<p>For a lot of people, though, mirroring is more than just 'backup', and their
+needs are complex enough that setup is hard.</p>
+
+<p><a name="mirrwhy_"></a></p>
+
+<h2>why</h2>
+
+<p>Gitolite's mirroring used to be very rigid -- one master, any number of
+slaves, but the slaves are identical copies of the master. No variations
+allowed.</p>
+
+<p>It's now been reworked to be much more flexible, to cater to almost any kind
+of setup you need. Here're some advantages:</p>
+
+<ul>
+<li><p><strong>faster reads for everyone</strong>: host a slave in every city you have a
+sizable number of developers in, and have them access their local server
+instead of hitting the WAN, at least for 'fetch' operations.</p></li>
+<li><p><strong>faster writes for most devs</strong>: one server doesn't have to be the master
+for all repos! You can choose where a repo gets "mastered" based on where
+the majority of that repo's users are.</p>
+
+<p>This was the single biggest motivation for the re-work of gitolite's
+mirroring; the rest of the cool stuff just happened as this feature took
+shape.</p></li>
+<li><p><strong>transparent writes</strong>: if all the mirrors are in your control (i.e., you
+trust their authentication) pushes to a slave can be transparently
+redirected to the master, so developers simply access their local server
+for everything. They don't need to know where the master is, so they're
+insulated from any changes you make behind the scenes.</p>
+
+<p>This is as close to <strong>active-active</strong> mirroring as you can get without
+worrying about race conditions and similar problems.</p></li>
+<li><p><strong>partial mirroring</strong>: all repos don't have to go all mirrors.  You can
+choose not to mirror a repo at all, or mirror it only to certain servers.
+This could be due to any reason: repo too big/high-traffic for the server,
+repo has crypto code and the server is in a non-free country, repo has no
+local users at that site, or (in autonomous setups) the server admin
+simply doesn't want to mirror this specific repo.</p></li>
+<li><p><strong>late mirroring</strong>: if you're ok with the lag, you can have some mirrors
+updated only at certain times of the day, (with a simple command), instead
+of every time a push happens.</p></li>
+<li><p><strong>autonomous mirrors</strong>: finally, your mirrors don't have to be totally
+under your control. They can be owned by someone else, and you negotiate
+your mirroring with them.</p></li>
+</ul>
+
+<p>As you can see, this is a bit more than a backup solution ;-)</p>
+
+<p><a name="mirroring_RULE_NUMBER_ONE__"></a></p>
+
+<h2>RULE NUMBER ONE!</h2>
+
+<p><strong>RULE OF GIT MIRRORING: users should push directly to only one server</strong>!  All
+the other machines (the slaves) should be updated by the master server.</p>
+
+<p>If a user pushes directly to one of the slaves, those changes will get wiped
+out on the next mirror push from the real master server.</p>
+
+<p>Corollary: if the primary went down and you effected a changeover, you must
+make sure that the primary does not come up in a push-enabled mode when it
+recovers.</p>
+
+<p><strong>Getting around rule number one</strong>: see the section on "redirecting pushes"
+later.</p>
+
+<p><a name="mirroring_concepts_and_terminology_"></a></p>
+
+<h2>concepts and terminology</h2>
+
+<p>Servers can host 3 kinds of repos: master, slave, and local.</p>
+
+<ul>
+<li><p>A repo can be a <strong>master</strong> on one and only one server.  A repo on its
+"master" server is a <strong>native</strong> repo, on slaves it is "non-native".</p></li>
+<li><p>A <strong>slave</strong> repo cannot be pushed to by a user.  It will only accept
+pushes from a master server. (Exception: see the "redirecting pushes"
+section later)</p></li>
+<li><p>A <strong>local</strong> repo is not involved in mirroring at all, in either direction.</p></li>
+</ul>
+
+<p><a name="mirroring_setting_up_mirroring_"></a></p>
+
+<h2>setting up mirroring</h2>
+
+<h3>IMPORTANT cautions: <a href="mirrcautions.html" title="IMPORTANT cautions">Link</a></h3>
+
+<!-- file: mirrcautions "IMPORTANT cautions" -->
+
+<h3>IMPORTANT cautions</h3>
+
+<ul>
+<li><p>For reasons given in the 'discussion' section later, the mirroring process
+will never <em>create</em> a repo on the receiving side.  It has to exist, and be
+willing to accept pushes from the master.</p>
+
+<p>In particular, this means that repositories created by end-users ("wild"
+repos) <em>need to be explicitly created</em> on the mirror (preferably by the
+same user, assuming his ssh key works there as well).  Once the repo has
+been created on the slave, subsequent pushes will be mirrored correctly.</p></li>
+<li><p>This process will <em>only</em> mirror your git repositories, using <code>git push
+--mirror</code>.  It will <em>not</em> mirror log files, and repo-specific files like
+<code>gl-creater</code> and <code>gl-perms</code> files, or indeed anything that was manually
+created or added (for example, custom config entries added manually
+instead of via gitolite).</p>
+
+<p>None of these affect actual repo contents of course, but they could be
+important, (especially the gl-creator, although if your wildcard pattern
+had "CREATOR" in it you can recreate those files easily enough anyway).</p></li>
+<li><p>This document has been tested using a 3-server setup, all installed using
+the <em>non-root</em> method (see doc/1-INSTALL.mkd).  However, the process is
+probably not going to be very forgiving of human error -- like anything
+that is this deep in "system admin" territory, errors are likely to be
+costly.  If you're the kind who hits enter first and then thinks about
+what he typed, you're in for some fun times ;-)</p>
+
+<p>On the plus side, everything we do is done using git commands, so things
+are never <em>really</em> lost until you do a <code>git gc</code>.</p></li>
+<li><p>Mirroring has <em>not</em> been, and will not be, tested with gitolite installed
+using the deprecated 'from-client' method.  Please use one of the other
+methods.</p></li>
+<li><p>Also, this has <em>not</em> been tested with smart-http.  I'm not even sure it'll
+work; http is very fiddly to get right.  If you want mirroring, at least
+your server-to-server comms should be over ssh.</p></li>
+<li><p>Finally, this method uses repo-specific <code>git config</code> variables to store
+the mirroring information.  Please read the <strong>WARNING</strong> in the
+documentation on <a href="confother_.html#rsgc" title="repo specific `git config` commands">git config commands</a> if you wish to <strong>delete</strong> one
+of those lines.</p></li>
+</ul>
+
+<!-- file: mirroring "setup and usage" -->
+
+<h3>setup and usage: <a href="mirrsetup.html" title="setup and usage">Link</a></h3>
+
+<!-- file: mirrsetup "setup and usage" -->
+
+<h3>setup and usage</h3>
+
+<p><a name="mirroring_server_level_setup_"></a></p>
+
+<h4>server level setup</h4>
+
+<p>To start with, assign each server a short name.  We will use 'frodo', 'sam',
+and 'gollum' as examples here.</p>
+
+<ol>
+<li><p>Generate ssh keys on each machine.  Copy the <code>.pub</code> files to all other
+machines with the appropriate names.  I.e., frodo should have sam.pub and
+gollum.pub, etc.</p>
+
+<p><strong>Warning</strong>: server keys are different from user keys.  Do NOT attempt to
+(re-)use a server key for normal gitolite operations, as if the server
+were a normal "user"; it won't work.</p></li>
+<li><p>Install gitolite on all servers, under some 'hosting user' (we'll use
+<code>git</code> in our examples here).  You need not use the same hosting user on
+all machines.</p>
+
+<p>It is not necessary to use the same "admin key" on all the machines.
+However, if you do plan to mirror the gitolite-admin repo also, they will
+eventually become the same anyway.  In our example, frodo does mirror the
+admin repo to sam, but not to gollum.  (Can you really see frodo or sam
+trusting gollum?)</p></li>
+<li><p>Now copy <code>hooks/common/post-receive.mirrorpush</code> from the gitolite source,
+and install it as a custom hook called <code>post-receive</code>; see
+<a href="hooks.html#customhooks" title="custom hooks">here</a> for instructions.</p></li>
+<li><p>Edit <code>~/.gitolite.rc</code> on each machine and add/edit the following lines.
+The <code>GL_HOSTNAME</code> variable <strong>must</strong> have the correct name for that host
+(frodo, sam, or gollum), so that will definitely be different on each
+server.  The other line can be the same, or may have additional patterns
+for other <code>git config</code> keys you have previously enabled.  See <a href="confother_.html#rsgc" title="repo specific `git config` commands">here</a>
+and the description for <code>GL_GITCONFIG_KEYS</code> in <a href="rc.html#rcsecurity" title="variables with a security impact">this</a> for details.</p>
+
+<pre><code>$GL_HOSTNAME = 'frodo';     # will be different on each server!
+$GL_GITCONFIG_KEYS = "gitolite.mirror.*";
+</code></pre>
+
+<p>(Remember the "rc" file is NOT mirrored; it is meant to be site-local).</p>
+
+<p>Note: if <code>GL_HOSTNAME</code> is undefined, you cannot push to repos which have
+the 'gitolite.mirror.master' config variable set.  (See 'details' section
+below for more info on this variable).</p>
+
+<p><font color="gray"></p>
+
+<blockquote>
+  <p>If you wish, you can also add this hostname information to the
+  <code>GL_SITE_INFO</code> variable in the rc file.  See the rc file documentation
+  for more on that.</p>
+</blockquote>
+
+<p></font></p></li>
+<li><p>On each machine, add the keys for all other machines.  For example, on
+frodo you'd run these two commands:</p>
+
+<pre><code>gl-tool add-mirroring-peer sam.pub
+gl-tool add-mirroring-peer gollum.pub
+</code></pre></li>
+<li><p>Create "host" aliases on each machine to refer to all other machines.  See
+<a href="sshhostaliases.html" title="appendix 4: host aliases">here</a> for what/why/how.</p>
+
+<p>The host alias for a host (in other machines' <code>~/.ssh/config</code> files) MUST
+be the same as the <code>GL_HOSTNAME</code> in the referred host's <code>~/.gitolite.rc</code>.
+Gitolite mirroring <strong>requires</strong> this consistency in naming; things will
+NOT work otherwise.</p>
+
+<p>For example, if machine A's <code>~/.gitolite.rc</code> says <code>$GL_HOSTNAME =
+'frodo';</code>, then all other machines must use a host alias of "frodo" in
+their <code>~/.ssh/config</code> files to refer to machine A.</p></li>
+</ol>
+
+<p>Once you've done this, each host should be able to reach the other hosts and
+get a response back.  For example, running this on sam:</p>
+
+<pre><code>ssh frodo info
+</code></pre>
+
+<p>should get you</p>
+
+<pre><code>Hello sam, I am frodo.
+</code></pre>
+
+<p>Check this command from <em>everywhere to everywhere else</em>, and make sure you get
+expected results.  <strong>Do NOT proceed otherwise.</strong></p>
+
+<p><a name="mirroring_repository_level_setup_"></a></p>
+
+<h4>repository level setup</h4>
+
+<p>Setting up mirroring at the repository level instead of at the "entire server"
+level gives you a lot of flexibility (see "discussion" section below).</p>
+
+<p>The basic idea is to use <code>git config</code> variables within each repo (gitolite
+allows you to create them from within the gitolite.conf file so that's
+convenient), and use these to specify which machine is the master and which
+machines are slaves for the repo.</p>
+
+<p>Let's say frodo and sam are internal servers, while gollum is an external (and
+therefore less trusted) server that has agreed to help us out by mirroring one
+of our high traffic repos.  We want the following setup:</p>
+
+<ul>
+<li><p>the "gitolite-admin" repo, as well as an internal project repo called
+"ip1", should be mastered on frodo and mirrored to sam.</p></li>
+<li><p>internal project "ip2" has almost all of its developers closer to sam, so
+it should be mastered there, and mirrored on frodo.</p></li>
+<li><p>an open source project we manage, "os1", should be mastered on frodo and
+mirrored on both sam and gollum.</p></li>
+</ul>
+
+<p>So here's how our example would go:</p>
+
+<ol>
+<li><p>Clone frodo's and sam's gitolite-admin repos to your workstation, then add
+the following lines to both their gitolite.conf files:</p>
+
+<pre><code>repo ip1 gitolite-admin
+    config gitolite.mirror.master   =   "frodo"
+    config gitolite.mirror.slaves   =   "sam"
+
+repo ip2
+    config gitolite.mirror.master   =   "sam"
+    config gitolite.mirror.slaves   =   "frodo"
+</code></pre>
+
+<p>You also need normal access control lines for ip1 and ip2; I'm assuming
+you already have them elsewhere, at least on frodo.  (What you have on sam
+won't matter in a few minutes, as you will see!)</p>
+
+<p>Commit and push these changes.</p></li>
+<li><p>There are a couple of quirks to keep in mind when you make changes to the
+gitolite-admin repo's config.</p>
+
+<ul>
+<li><p>the first push will create the <code>git config</code> entries required, but by
+then it is too late to <em>act</em> on them; i.e., actually do the mirroring.
+If there were any older values, like a different list of slaves
+perhaps, then those would be in effect.</p>
+
+<p>This is largely because git invokes post-receive before post-update.
+In theory I can work around this but I do not intend to.</p>
+
+<p>Anyway, this means that after the 2 pushes, you have to make a dummy
+push from frodo:</p>
+
+<pre><code>git commit --allow-empty -m empty; git push
+</code></pre>
+
+<p>which gets you something like this amidst the other messages:</p>
+
+<pre><code>remote: (25158&amp;) frodo ==== (gitolite-admin) ===&gt; sam
+</code></pre>
+
+<p>telling you that frodo is sending gitolite-admin to sam in the
+background.</p></li>
+<li><p>the second quirk is that your clone of server sam's gitolite-admin
+repo is now completely out of date, since frodo has overwritten it on
+the server.  You have to 'cd' to that clone and do this:</p>
+
+<pre><code>git fetch
+git reset --hard origin/master
+</code></pre></li>
+</ul></li>
+<li><p>That completes the setup of the gitolite-admin and the internal project
+repos.  We'll now setup things for the open source project, "os1".</p>
+
+<p>On frodo's gitolite-admin clone, add the following lines to
+<code>conf/gitolite.conf</code>, then commit and push:</p>
+
+<pre><code>repo os1
+    config gitolite.mirror.master   =   "frodo"
+    config gitolite.mirror.slaves   =   "sam gollum"
+</code></pre>
+
+<p>Also, send the same lines to gollum's administrator and ask him to add
+them into his conf/gitolite.conf file, commit, and push.</p></li>
+</ol>
+
+<!-- file: mirroring "commands to (re-)sync mirrors" -->
+
+<h3>commands to (re-)sync mirrors: <a href="mirrsync.html" title="commands to (re-)sync mirrors">Link</a></h3>
+
+<!-- file: mirrsync "commands to (re-)sync mirrors" -->
+
+<h3>commands to (re-)sync mirrors</h3>
+
+<p>You don't have to put all the slaves in <code>gitolite.mirror.slaves</code>.  For
+example, let's say you have some repos that are very active, and two of your
+mirrors that are halfway across the world are getting pushed very frequently.
+But you don't need those mirrors to be that closely updated, perhaps <em>because</em>
+they are halfway across the world and those guys are asleep ;-)</p>
+
+<p>Or maybe there was a network glitch and even the default slaves are now
+lagging, so they need to be manually synced.</p>
+
+<p>Or a slave realised that one of its repos is lagging for some reason, and
+wants to request an immediate update.</p>
+
+<p>Whatever the reason, you need ways to sync a repo from a command line.  Here
+are ways to do that:</p>
+
+<ol>
+<li><p>On the master server, you can start a <strong>background</strong> job to mirror a repo.
+The command/syntax is</p>
+
+<pre><code>gl-mirror-shell request-push reponame [list of keys/slaves]
+</code></pre>
+
+<p>The list at the end is optional, and can be a mix of slave names or your
+own gitolite mirror config keys.  (Yes, you can have any key, named
+anything you like, as long as it starts with <code>gitolite.mirror.</code>).</p>
+
+<p>If the list is not supplied, the <code>gitolite.mirror.slaves</code> key is used.</p>
+
+<p>Keys can have values that in turn contain a list of keys/slaves.  The list
+is recursively <em>expanded</em> but recursion is not <em>detected</em>.  Order is
+preserved while duplicates are removed.  If you didn't get that, see the
+example :-)</p>
+
+<p><strong>Warning</strong>: the <code>gitolite.mirror.slaves</code> key should have only hosts, no
+keys, in it.</p>
+
+<p>The program exits with a return value of "1" if it found no slaves in the
+list passed, otherwise it fires off the background job, prints an
+informative message, and exits with a return value of "0".</p>
+
+<p>We'll take an example.  Let's say your gitolite config file has this:</p>
+
+<pre><code>repo ip1
+    config gitolite.mirror.master       =   "frodo"
+    config gitolite.mirror.slaves       =   "sam merry pippin"
+    config gitolite.mirror.hourly       =   "sam legolas"
+    config gitolite.mirror.nightly      =   "gitolite.mirror.hourly gimli"
+    config gitolite.mirror.all          =   "gitolite.mirror.nightly gitolite.mirror.hourly gitolite.mirror.slaves"
+</code></pre>
+
+<p>Then the following commands have the results described in comments:</p>
+
+<pre><code>gl-mirror-shell request-push ip1
+# which is the same as:
+gl-mirror-shell request-push ip1 gitolite.mirror.slaves
+# pushes to sam, merry, pippin
+
+gl-mirror-shell request-push ip1 gollum
+# pushes only to gollum.  Note that gollum is not a member of any of
+# the slave lists we defined.
+
+gl-mirror-shell request-push ip1 gitolite.mirror.slaves gollum
+# pushes to sam, merry, pippin, gollum
+
+gl-mirror-shell request-push ip1 gitolite.mirror.slaves gitolite.mirror.hourly
+# pushes to sam, merry, pippin, legolas
+
+gl-mirror-shell request-push ip1 gitolite.mirror.all
+# pushes to sam, legolas, gimli, merry, pippin
+</code></pre>
+
+<p>The last two examples show recursive expansion with order-preserving
+duplicate removal (hey there's now a published conference paper on
+gitolite, so we have to use jargon <em>somewhere</em> or they won't accept
+follow-on papers!).</p>
+
+<p>If you do something like this:</p>
+
+<pre><code>config gitolite.mirror.nightly      =   "gimli gitolite.mirror.nightly"
+</code></pre>
+
+<p>or this:</p>
+
+<pre><code>config gitolite.mirror.nightly      =   "gimli gitolite.mirror.hourly"
+config gitolite.mirror.hourly       =   "legolas gitolite.mirror.nightly"
+</code></pre>
+
+<p>you deserve what you get.</p></li>
+<li><p>If you want to start a <strong>foreground</strong> job, the syntax is <code>gl-mirror-shell
+request-push ip1 -fg gollum</code>.  Foreground mode requires one (and only one)
+slave name -- you cannot send to an implicit list, nor to more than one
+slave.</p></li>
+<li><p>Cronjobs and custom mirroring schemes are now very easy to do.  Use either
+of the command forms above and write a script around it.  Appendix A
+contains an example setup.</p></li>
+<li><p>Once in a while a slave will realise it needs an update, and wants to ask
+for one.  It can run this command to do so:</p>
+
+<pre><code>ssh sam request-push ip2
+</code></pre>
+
+<p>If the requesting server is not one of the slaves listed in the config
+variable gitolite.mirror.slaves on the master, it will be rejected.</p>
+
+<p>This is always a foreground push, reflecting the fact that the slave may
+want to know why their push errored out or didn't work last time or
+whatever.</p></li>
+</ol>
+
+<!-- file: mirroring "details" -->
+
+<p><a name="ad/m-dtls"></a></p>
+
+<h2>details</h2>
+
+<h3>the <code>conf/gitolite.conf</code> file: <a href="mirrconf.html" title="the `conf/gitolite.conf` file">Link</a></h3>
+
+<!-- file: mirrconf "the `conf/gitolite.conf` file" -->
+
+<h3>the <code>conf/gitolite.conf</code> file</h3>
+
+<p>One goal I have is to minimise the code changes to "core" gitolite due to
+this, so all repo-specific mirror settings are stored as <code>git config</code>
+variables (you know you can specify git config variables in the gitolite
+config file right?).  These are:</p>
+
+<ul>
+<li><p><code>gitolite.mirror.master</code></p>
+
+<p>The name of the server which is the master for this repo.  Each server
+will compare this with <code>$GL_HOSTNAME</code> (from its own rc file) to
+determine if it's the master or a slave.  Here're the possible values:</p>
+
+<ul>
+<li><strong>undefined</strong> or <code>local</code>: this repo is local to this server</li>
+<li><strong>same</strong> as <code>$GL_HOSTNAME</code>: this server is the "master" for this
+repo.  (The repo is "native" to this server).</li>
+<li><strong>not same</strong> as <code>$GL_HOSTNAME</code>: this server is a "slave" for the
+repo.  (The repo is a non-native on this server).</li>
+</ul></li>
+<li><p><code>gitolite.mirror.slaves</code></p>
+
+<p>Ignored for non-native repos.  For native repos, this is a space-separated
+list of servers to push to from the <code>post-receive</code> hook.</p>
+
+<p>Clearly, you can have different sets of slaves for different repos (again,
+see "discussion" section later for more on this).</p></li>
+<li><p><code>gitolite.mirror.redirectOK</code></p>
+
+<p>See the section on "redirecting pushes"</p></li>
+<li><p>In addition, you can create your own slave lists, named whatever you want,
+except they have to start with <code>gitolite.mirror.</code>.  The section on
+"commands to (re-)sync mirrors" has some examples.</p></li>
+</ul>
+
+<!-- file: mirroring "redirecting pushes" -->
+
+<h3>redirecting pushes: <a href="mirrredirect.html" title="redirecting pushes">Link</a></h3>
+
+<!-- file: mirrredirect "redirecting pushes" -->
+
+<h3>redirecting pushes</h3>
+
+<p><strong>Please read carefully; there are security implications if you enable this
+for mirrors NOT under your control</strong>.</p>
+
+<p>When a user pushes to a non-native repo, it is possible to transparently
+redirect the push to the correct master server.  This is a very neat feature,
+because now all your users just use one URL (the mirror nearest to them).
+They don't need to know where the actual master is, and more importantly, if
+you and the other admins change it, they don't need to know it changed!</p>
+
+<p>The <code>gitolite.mirror.redirectOK</code> config variable decides where this
+redirection is OK.  If it is set to 'true', any valid 'slave' can redirect an
+incoming non-native push from a developer.  Otherwise, it contains a list of
+slaves that are permitted to redirect pushes (this might happen if you don't
+trust some of your slaves enough to accept a redirected push from them).</p>
+
+<p><strong>Warning</strong>: like <code>gitolite.mirror.slaves</code>, this key also should have only
+hosts, no keys, in it.</p>
+
+<p>This check needs to pass on both the master and slave servers; both have a say
+in deciding if this is allowed.  (The master may have real reasons not to
+allow this; see below.  I cannot think of any real reason for the <em>slave</em> to
+disable this, but it's there in case some admin doesn't like it).</p>
+
+<p>There are some potential issues that you MUST consider before enabling this:</p>
+
+<ul>
+<li><p>(security) If the slave and master server are so different or autonomous
+that a user, say "alice", on the slave is not guaranteed to be the same
+one as "alice" on the master, then the master admin should NOT enable this
+feature.</p>
+
+<p>This is because, in this scheme, authentication happens on the slave, but
+authorisation is on the master.  The slave-authenticated userid (alice) is
+passed to the master.</p>
+
+<p>(If you know ssh well enough, you know that the ssh authentication has
+already happened, so all we can do is ensure authorisation happens with
+whatever username we know so far).</p></li>
+<li><p>If your slave is out of sync with the master for whatever reason, then the
+user will get confusing results.  A <code>git fetch</code> may say everything is
+upto-date but the push fails saying it is not a fast-forward push.  (Of
+course there's a way to fix this; see the "commands to (re-)sync mirrors"
+section above).</p></li>
+<li><p>We cannot redirect non-git commands like ADC, setperms, etc because we
+don't really have a way of knowing what repo he's talking about (different
+commands have different syntaxes, some have more than one reponame...).
+Any user who needs to do that should access the end server directly.  It
+should be easy enough to write an ADC to do the forwarding, in case the
+slave server is the only one that can reach the real master due to network
+or firewall setup.</p>
+
+<p>Ideally, I recommend that ad hoc repos not be mirrored at all.  Keep
+mirroring for "blessed" repos only.</p></li>
+</ul>
+
+<!-- file: mirroring "example setups" -->
+
+<p><a name="mirroring_example_setups_"></a></p>
+
+<h2>example setups</h2>
+
+<p>Here are some samples of what is possible.</p>
+
+<h3>non-autonomous: <a href="mirrnonauto.html" title="non-autonomous">Link</a></h3>
+
+<!-- file: mirrnonauto "non-autonomous" -->
+
+<h3>non-autonomous</h3>
+
+<p>In this setup, the slave server is under the same "management" as the master.
+All repos, including gitolite-admin are mirrored, and <em>each slave is an exact
+replica of the master</em>. Since the admin repo is mirrored, authentication info
+is identical across all servers, and it is safe to use redirected pushes.
+(This was the only type of mirroring possible in the old mirroring code in
+gitolite).</p>
+
+<p>Install gitolite on all servers. Then add these lines to the top of all admin
+repos and push them all. This sets up the config for mirroring all repos.</p>
+
+<pre><code>repo @all
+    config gitolite.mirror.master = "frodo"
+    config gitolite.mirror.slaves = "sam gollum"
+</code></pre>
+
+<p>Once they're all pushed, sync the admin repo once:</p>
+
+<pre><code># on master server
+gl-mirror-shell request-push gitolite-admin
+</code></pre>
+
+<p>Since authentication is also being mirrored, you can take advantage of
+redirected pushing if you wish:</p>
+
+<pre><code>repo @all
+    config gitolite.mirror.redirectOK = "true"
+</code></pre>
+
+<!-- file: mirroring "non-autonomous with local repos" -->
+
+<h3>non-autonomous with local repos: <a href="mirrnonautolocal.html" title="non-autonomous with local repos">Link</a></h3>
+
+<!-- file: mirrnonautolocal "non-autonomous with local repos" -->
+
+<h3>non-autonomous with local repos</h3>
+
+<p>As above, but you want to allow each slave server to have some repos be
+"local" to the server (not be mirrored), for whatever reason. Different slaves
+may have different needs, so this really means that the same gitolite.conf
+should behave differently on each server -- something which till now was
+impossible.</p>
+
+<p>Well what's life without a new feature once in a while? The string "HOSTNAME"
+is now specially treated in an include filename. If it is seen without any
+alphanumeric characters or underscores next to it on either side, it is
+replaced by the value of <code>$GL_HOSTNAME</code>.</p>
+
+<p>Setup the config as in the previous setup except that you shouldn't use repo
+@all now; instead, you'll have to name the repos to be mirrored in some way.
+Make sure gitolite-admin is in this list. Complete the mirror setup (including
+the first-time sync command) like before.</p>
+
+<p>Now add the line include "HOSTNAME.conf" to the end of conf/gitolite.conf, and
+create new files, conf/frodo.conf, conf/sam.conf, etc., with appropriate
+content.</p>
+
+<p>That's it. When this config is pushed, each machine will have an effective
+config that consists of the main file, with the correct HOSTNAME.conf included
+(and all the others ignored) when the include statement is reached.</p>
+
+<!-- file: mirroring "semi-autonomous" -->
+
+<h3>semi-autonomous: <a href="mirrsemiauto.html" title="semi-autonomous">Link</a></h3>
+
+<!-- file: mirrsemiauto "semi-autonomous" -->
+
+<h3>semi-autonomous</h3>
+
+<p>So far, the "central" admin still has control over the gitolite.conf file and
+all repos created.  Sometimes it's easier to give control over parts of the
+configuration to people at the mirror sites.  To keep it simple, each admin
+will be able to do whatever they want to directories within a subdirectory of
+the same name as the hostname.</p>
+
+<p>You can combine the "HOSTNAME" feature above with <a href="deleg.html" title="delegating access control responsibilities">delegation</a>. Let's
+say the admin for sam is a user called "gamgee", and the admin for gollum is
+"smeagol".</p>
+
+<p>Add this to your conf file:</p>
+
+<pre><code>@sam    =   sam/..*
+@gollum =   gollum/..*
+</code></pre>
+
+<p>Then use NAME/ rules (see the delegation doc for details) and allow gamgee to
+write only conf/sam.conf, and smeagol to write only conf/gollum.conf.</p>
+
+<p>Now in the main config file, at the end (or wherever you wish), add one line:</p>
+
+<pre><code>subconf "HOSTNAME.conf"
+</code></pre>
+
+<!-- file: mirroring "autonomous" -->
+
+<h3>autonomous: <a href="mirrauto.html" title="autonomous">Link</a></h3>
+
+<!-- file: mirrauto "autonomous" -->
+
+<h3>autonomous</h3>
+
+<p>In many ways this is the simplest setup.</p>
+
+<p>The slave server belongs to someone else. Their admin has final say on what
+goes into their gitolite-admin repo and thus their server's config. The
+gitolite-admin repo is NOT mirrored, and mirroring of individual repos (i.e.,
+actual config lines included) is by negotiation/agreement between the admins.</p>
+
+<p>Authentication info is not common. The master has no real control over who can
+read the repos on the slave. Allowing redirected pushes is not a good idea,
+unless you have other means of trust (administrative, contractual, legal,
+etc.)</p>
+
+<p>Best for open source projects with heavy "fetch" load compared to "push".</p>
+
+<!-- file: mirroring "discussion" -->
+
+<h2>discussion: <a href="mirrdisc.html" title="discussion">Link</a></h2>
+
+<!-- file: mirrdisc "discussion" -->
+
+<h2>discussion</h2>
+
+<p><a name="mirroring_problems_with_the_old_mirroring_model_"></a></p>
+
+<h3>problems with the old mirroring model</h3>
+
+<p>The old mirroring model had a single server as the master for <em>all</em>
+repositories.  Slaves were effectively only for load-balancing reads, or for
+failover if the master died.</p>
+
+<p>This is not good enough for corporate setups where the developers are spread
+fairly evenly across the world.  Some repos need to be closer to some teams
+(NUMA is a good analogy).</p>
+
+<p>A model where different repos are "mastered" in different cities is much more
+efficient here.</p>
+
+<p>The old model had other rigidities too, though they're not really <em>problems</em>,
+as such:</p>
+
+<ul>
+<li><p>the slaves are just slaves; they can't have any "local" repos.</p></li>
+<li><p>a slave had to carry <em>all</em> repos; it couldn't choose to carry just a
+subset.</p></li>
+<li><p>it implicitly assumed all the mirrors were under the same admin, and that
+the gitolite-admin repo was itself mirrored too.</p></li>
+</ul>
+
+<p><a name="mirroring_the_new_mirroring_model_"></a></p>
+
+<h3>the new mirroring model</h3>
+
+<p>In the new model, servers can be much more independent and autonomous than in
+the old model.  (Don't miss the side note in the 'repository level setup'
+section if you prefer the old model).</p>
+
+<p>The new model has a few pros and cons.  The pros come from the flexibility and
+freedom that mirrors servers get, and the cons come from authorisation being
+more rigorously checked (for example, a slave will only accept a push if <em>its</em>
+configuration also says that the sending server is indeed the master for this
+repo).</p>
+
+<ul>
+<li><p>A mirroring operation will not <em>create</em> a repo on the mirror; it has to
+exist before a push happens on the master.  Typically, the admin on the
+slave must create the repo by adding the appropriate lines in his config.</p>
+
+<p>If your setup is not autonomous (i.e., you're mirroring the admin repo as
+well) then this happens automatically for normal repos.  However,
+<em>wildcard repos still won't work as seamlessly as in the old model</em>; see
+the first bullet in the 'IMPORTANT cautions' section earlier.</p></li>
+<li><p>The gitolite-admin repo (and config) need not be mirrored.  This allows
+the slave server admin to create site-local repos, without forcing him to
+create a second gitolite install for them.</p>
+
+<p>(Site-local repos are useful for purely local projects that need
+not/should not be mirrored for some reason, or ad-hoc personal repos that
+developers create for themselves, etc.)</p></li>
+<li><p>Servers can choose to mirror a subset of the repos from one of the bigger
+servers.</p>
+
+<p>In the open source world, you can imagine more popular repos (or more
+popular parts of huge projects like KDE) having more mirrors.  Or
+substitute "more popular" with "larger in size" if you wish
+(FlightGear-data anyone?)</p>
+
+<p>In the corporate world it could help with jurisdiction issues if the
+mirror is in a different country with different laws.</p>
+
+<p>I'm sure people will find other uses for this.  And I'm <em>positive</em> the
+pros will outweigh the cons.  If you don't like it, follow the suggestion
+in the side note somewhere up above, and just forget this feature exists
+:-)</p></li>
+</ul>
+
+<!-- file: mirroring "appendices" -->
+
+<p><a name="mirroring_appendices_"></a></p>
+
+<h2>appendices</h2>
+
+<h3>appendix A: example cronjob based mirroring: <a href="mirrcron.html" title="appendix A: example cronjob based mirroring">Link</a></h3>
+
+<!-- file: mirrcron "appendix A: example cronjob based mirroring" -->
+
+<h3>appendix A: example cronjob based mirroring</h3>
+
+<p>Let's say you have some repos that are very active.  You're pushing halfway
+across the world every few seconds, but those slaves do not need to be that closely
+updated, perhaps <em>because</em> they are halfway across the world and those guys
+are asleep ;-)</p>
+
+<p>You'd like to update them once an hour instead.  Here's how you might do that.</p>
+
+<p>First add this line to the configuration for those repos:</p>
+
+<pre><code>config gitolite.mirror.hourly = "slave1 slave2 slave3"
+</code></pre>
+
+<p>Then write a cron job that looks like this (untested).</p>
+
+<pre><code>#!/bin/bash
+
+REPO_BASE=`${0%/*}/gl-query-rc REPO_BASE`
+
+cd $REPO_BASE
+find . -type d -name "*.git" -prune | while read r
+do
+    # get reponame as gitolite knows it
+    r=${r:2}
+    r=${r%.git}
+
+    gl-mirror-shell request-push $r gitolite.mirror.hourly
+
+    # that command backgrounds the push, so you'd best wait a few seconds
+    # before hitting the next one, otherwise you'll have all your repos
+    # going out at once!
+    sleep 10
+done
+</code></pre>
+
+<!-- file: mirroring "appendix B: efficiency versus paranoia" -->
+
+<h3>appendix B: efficiency versus paranoia: <a href="mirrparanoia.html" title="appendix B: efficiency versus paranoia">Link</a></h3>
+
+<!-- file: mirrparanoia "appendix B: efficiency versus paranoia" -->
+
+<h3>appendix B: efficiency versus paranoia</h3>
+
+<p>If you're paranoid enough to use mirrors, you should be paranoid enough to
+use the <code>receive.fsckObjects</code> setting.  However, informal tests indicate a
+40-50% CPU overhead from this.  If you're ok with that, make the appropriate
+adjustments to <code>GL_GITCONFIG_KEYS</code> in the rc file, then add this to your
+gitolite.conf file:</p>
+
+<pre><code>repo @all
+    config receive.fsckObjects = "true"
+</code></pre>
+
+<p>Personally, I just set <code>git config --global receive.fsckObjects true</code>, since
+those servers aren't doing anything else anyway, and are idle for long
+stretches of time.  It's upto you what you want to do here.</p>

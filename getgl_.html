@@ -1,0 +1,56 @@
+<head>
+<title>
+getting the gitolite software
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#install">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>getting the gitolite software</h3>
+
+<p>You can get the latest version of gitolite from github or google code using
+the 'git clone' command:</p>
+
+<pre><code>git clone git://github.com/sitaramc/gitolite.git
+        # (OR)
+git clone https://code.google.com/p/gitolite/
+</code></pre>
+
+<p><a name="install_getting_a_tar_file_from_a_clone_"></a></p>
+
+<h4>getting a tar file from a clone</h4>
+
+<p>If you are on an internal network and cannot clone the gitolite repo, you can
+do the clone on some other machine and create a tar file from it to use on the
+internal network.  Here's how:</p>
+
+<pre><code>git clone git://github.com/sitaramc/gitolite.git
+        # (OR)
+git clone git://sitaramc.indefero.net/sitaramc/gitolite.git
+cd gitolite
+make master.tar
+# or maybe "make pu.tar"
+</code></pre>
+
+<p>Please use the make command as shown, not a plain "git archive", because the
+Makefile adds a file called <code>.GITOLITE-VERSION</code> that will help you identify
+which version you are using.</p>
+

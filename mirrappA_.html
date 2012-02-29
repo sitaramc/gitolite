@@ -1,0 +1,66 @@
+<head>
+<title>
+appendix A: delegation helper files
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring-complex-example">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>appendix A: delegation helper files</h2>
+
+<p>These two files were briefly mentioned in the delegation setup.</p>
+
+<p>(A1) <code>conf/host-product-map.conf</code> has the following contents:</p>
+
+<pre><code># For each host foo, there will be one line:
+#   @foo    =   foo/..*
+# line (for local repos for the host).
+
+# For each product bar whose master is a host foo, there will be one line:
+#   @foo    =   bar/..*
+# to add bar/..* to the allowed patterns when subconf "foo" is in effect
+
+# ------------------------------------------------------------------------------
+# so for our example:
+
+@sam        =   sam/..*
+@sam        =   p1/..*
+
+@frodo      =   frodo/..*
+</code></pre>
+
+<p>(A2) <code>conf/NAME-restrictions.conf</code> has the following contents:</p>
+
+<pre><code># For each host foo, there will be two lines:
+#   RW                          =   username-of-foo-host-admin
+#   RW  NAME/conf/master/foo/   =   username-of-foo-host-admin
+#           IMPORTANT: DO NOT MISS THE TRAILING SLASH IN THE LINE ABOVE!
+
+# ------------------------------------------------------------------------------
+
+repo gitolite-admin     # this line is required
+
+    RW                          =   sam-admin
+    RW  NAME/conf/master/sam/   =   sam-admin
+
+    RW                          =   frodo-admin
+    RW  NAME/conf/master/frodo/ =   frodo-admin
+</code></pre>

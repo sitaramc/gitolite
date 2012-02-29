@@ -1,0 +1,70 @@
+<head>
+<title>
+helpful background information
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#install">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>helpful background information</h3>
+
+<ul>
+<li><p>gitolite runs as a single (real) user on a server, and is invoked via ssh.
+Traditionally, this "hosting user" is "git", and thus all git URLs start
+with <code>ssh://git@server</code> (or the equivalent shorter form <code>git@server:</code>).</p>
+
+<ul>
+<li><p>RPM/DEB create and use "gitolite" as the hosting user</p></li>
+<li><p>there is <em>usually</em> only one hosting user per server (machine), but
+gitolite makes it trivial to have as many as you want.  In fact, every
+user on the server is a potential hosting user.</p></li>
+</ul></li>
+<li><p>using this single user and sshd (or httpd) authentication, gitolite allows
+you to create any number of "virtual" users.  Virtual user names only mean
+something to gitolite, and they need not be the same as any real userid on
+the server or any of the clients accessing it.</p>
+
+<ul>
+<li>the first such virtual user is the "admin user", created during the
+install sequence.</li>
+</ul></li>
+<li><p>gitolite depends <strong>heavily</strong> on ssh pubkey (passwordless) access.  Do not
+assume you know all about ssh -- most people <strong>don't</strong>.  If in doubt, use
+a dedicated userid on both client and server for installation and
+administration of gitolite.</p>
+
+<p>To make matters worse, ssh problems in gitolite don't always look like ssh
+problems.  See the <a href="sts.html" title="ssh troubleshooting">ssh troubleshooting</a> document for help.</p></li>
+<li><p>gitolite <strong>does NOT</strong> like it when people with shell access to the server
+fiddle with files and directories it controls.</p>
+
+<p>Apparently this was not obvious to some people.</p></li>
+</ul>
+
+<p>It is possible to have the server and the client be the same machine, and even
+the admin user be also the hosting user, (i.e., <code>sitaram@server</code> can install
+and administer a gitolite setup running under <code>sitaram@server</code>, a situation
+that is common with some hosting services).  It's actually fairly easy and
+<strong>safe</strong> to do, <strong>as long as you have password access to the server</strong> for
+emergency use.  However, I will not be documenting it because (a) if you know
+ssh you'll know how to extrapolate my instructions to do this and (b) if you
+don't know ssh it'll be a nightmare to support you.</p>
+

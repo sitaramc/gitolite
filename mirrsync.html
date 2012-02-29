@@ -1,0 +1,137 @@
+<head>
+<title>
+commands to (re-)sync mirrors
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>commands to (re-)sync mirrors</h3>
+
+<p>You don't have to put all the slaves in <code>gitolite.mirror.slaves</code>.  For
+example, let's say you have some repos that are very active, and two of your
+mirrors that are halfway across the world are getting pushed very frequently.
+But you don't need those mirrors to be that closely updated, perhaps <em>because</em>
+they are halfway across the world and those guys are asleep ;-)</p>
+
+<p>Or maybe there was a network glitch and even the default slaves are now
+lagging, so they need to be manually synced.</p>
+
+<p>Or a slave realised that one of its repos is lagging for some reason, and
+wants to request an immediate update.</p>
+
+<p>Whatever the reason, you need ways to sync a repo from a command line.  Here
+are ways to do that:</p>
+
+<ol>
+<li><p>On the master server, you can start a <strong>background</strong> job to mirror a repo.
+The command/syntax is</p>
+
+<pre><code>gl-mirror-shell request-push reponame [list of keys/slaves]
+</code></pre>
+
+<p>The list at the end is optional, and can be a mix of slave names or your
+own gitolite mirror config keys.  (Yes, you can have any key, named
+anything you like, as long as it starts with <code>gitolite.mirror.</code>).</p>
+
+<p>If the list is not supplied, the <code>gitolite.mirror.slaves</code> key is used.</p>
+
+<p>Keys can have values that in turn contain a list of keys/slaves.  The list
+is recursively <em>expanded</em> but recursion is not <em>detected</em>.  Order is
+preserved while duplicates are removed.  If you didn't get that, see the
+example :-)</p>
+
+<p><strong>Warning</strong>: the <code>gitolite.mirror.slaves</code> key should have only hosts, no
+keys, in it.</p>
+
+<p>The program exits with a return value of "1" if it found no slaves in the
+list passed, otherwise it fires off the background job, prints an
+informative message, and exits with a return value of "0".</p>
+
+<p>We'll take an example.  Let's say your gitolite config file has this:</p>
+
+<pre><code>repo ip1
+    config gitolite.mirror.master       =   "frodo"
+    config gitolite.mirror.slaves       =   "sam merry pippin"
+    config gitolite.mirror.hourly       =   "sam legolas"
+    config gitolite.mirror.nightly      =   "gitolite.mirror.hourly gimli"
+    config gitolite.mirror.all          =   "gitolite.mirror.nightly gitolite.mirror.hourly gitolite.mirror.slaves"
+</code></pre>
+
+<p>Then the following commands have the results described in comments:</p>
+
+<pre><code>gl-mirror-shell request-push ip1
+# which is the same as:
+gl-mirror-shell request-push ip1 gitolite.mirror.slaves
+# pushes to sam, merry, pippin
+
+gl-mirror-shell request-push ip1 gollum
+# pushes only to gollum.  Note that gollum is not a member of any of
+# the slave lists we defined.
+
+gl-mirror-shell request-push ip1 gitolite.mirror.slaves gollum
+# pushes to sam, merry, pippin, gollum
+
+gl-mirror-shell request-push ip1 gitolite.mirror.slaves gitolite.mirror.hourly
+# pushes to sam, merry, pippin, legolas
+
+gl-mirror-shell request-push ip1 gitolite.mirror.all
+# pushes to sam, legolas, gimli, merry, pippin
+</code></pre>
+
+<p>The last two examples show recursive expansion with order-preserving
+duplicate removal (hey there's now a published conference paper on
+gitolite, so we have to use jargon <em>somewhere</em> or they won't accept
+follow-on papers!).</p>
+
+<p>If you do something like this:</p>
+
+<pre><code>config gitolite.mirror.nightly      =   "gimli gitolite.mirror.nightly"
+</code></pre>
+
+<p>or this:</p>
+
+<pre><code>config gitolite.mirror.nightly      =   "gimli gitolite.mirror.hourly"
+config gitolite.mirror.hourly       =   "legolas gitolite.mirror.nightly"
+</code></pre>
+
+<p>you deserve what you get.</p></li>
+<li><p>If you want to start a <strong>foreground</strong> job, the syntax is <code>gl-mirror-shell
+request-push ip1 -fg gollum</code>.  Foreground mode requires one (and only one)
+slave name -- you cannot send to an implicit list, nor to more than one
+slave.</p></li>
+<li><p>Cronjobs and custom mirroring schemes are now very easy to do.  Use either
+of the command forms above and write a script around it.  Appendix A
+contains an example setup.</p></li>
+<li><p>Once in a while a slave will realise it needs an update, and wants to ask
+for one.  It can run this command to do so:</p>
+
+<pre><code>ssh sam request-push ip2
+</code></pre>
+
+<p>If the requesting server is not one of the slaves listed in the config
+variable gitolite.mirror.slaves on the master, it will be rejected.</p>
+
+<p>This is always a foreground push, reflecting the fact that the slave may
+want to know why their push errored out or didn't work last time or
+whatever.</p></li>
+</ol>
+

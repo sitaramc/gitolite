@@ -1,0 +1,390 @@
+<head>
+<title>
+repositories named with wildcards
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#wildcard-repositories">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: wild "repositories named with wildcards" -->
+
+<h1>repositories named with wildcards</h1>
+
+<p><strong><em>IMPORTANT NOTE</em></strong>:</p>
+
+<p>This feature may be somewhat "brittle" in terms of security.  Creating
+repositories based on wild cards, giving "ownership" to the specific user who
+created it, allowing him/her to hand out permissions to other users to
+collaborate, all these are possible.  And any of these could have a bug in it.
+I haven't found any yet, but that doesn't mean there aren't any.</p>
+
+<hr />
+
+<p>This document is mostly "by example".</p>
+
+<hr />
+
+<p><a name="wildcard_repositories_quick_introduction_"></a></p>
+
+<h2>quick introduction</h2>
+
+<p>The wildrepos feature allows you to specify access control rules using regular
+expression patterns, so you can have many actual repos being served by a
+single set of rules in the config file.  The regex pattern can also include
+the word <code>CREATOR</code> in it, allowing you to parametrise the name of the user
+creating the repo.  The examples below will make this clearer.</p>
+
+<p><a name="wildcard_repositories_rc_file_setting_required_"></a></p>
+
+<h2>rc file setting required</h2>
+
+<p>This feature requires that you set <code>$GL_WILDREPOS</code> to "1" in <code>~/.gitolite.rc</code>
+on the server.  Please search for that variable in <code>doc/gitolite.rc.mkd</code>
+for more information on this.</p>
+
+<p><a name="wildcard_repositories_examples_of_wildcard_repos_"></a></p>
+
+<h2>examples of wildcard repos</h2>
+
+<p>As the introduction said, you can include the word <code>CREATOR</code> in the regex
+pattern, though it is not mandatory.  We'll look at examples of both types of
+usage.</p>
+
+<p>Which of these alternatives you choose depends on your needs, and the social
+aspects of your environment.  Including the creator name in the pattern keeps
+users rigidly separated from each others repos, and is good for a largely
+autonomous collection of users with a high probability of repo name clashes.</p>
+
+<p>Omitting the creator name from the pattern puts the repos in a common
+namespace, and is suitable for environments where it is not very important to
+keep track of who actually created the repo (except for granting access), but
+needs more communication / co-operation among the users to avoid repo name
+clashes.</p>
+
+<p><a name="wildcard_repositories_wildcard_repos_with_creator_name_in_them_"></a></p>
+
+<h3>wildcard repos with creator name in them</h3>
+
+<p>Here's an example snippet:</p>
+
+<pre><code>@prof       =   u1
+@TAs        =   u2 u3
+@students   =   u4 u5 u6
+
+repo    assignments/CREATOR/a[0-9][0-9]
+    C   =   @students
+    RW+ =   CREATOR
+    RW  =   WRITERS @TAs
+    R   =   READERS @prof
+</code></pre>
+
+<p>Note the "C" permission.  This is a standalone "C", which gives the named
+users the right to <em>create a repo</em>.  <font color="gray">This is not to be
+confused with the "RWC" or its variants described elsewhere, which are about
+<em>branches</em>, not <em>repos</em>.</font></p>
+
+<p>For now, ignore the special usernames READERS and WRITERS, and just create a
+new repo, as user "u4" (a student):</p>
+
+<pre><code>$ git clone git@server:assignments/u4/a12
+Initialized empty Git repository in /home/sitaram/t/a12/.git/
+Initialized empty Git repository in /home/gitolite/repositories/assignments/u4/a12.git/
+warning: You appear to have cloned an empty repository.
+</code></pre>
+
+<p>Notice the <em>two</em> empty repo inits, and the order in which they occur ;-)</p>
+
+<p><a name="wildcard_repositories_wildcard_repos_without_creator_name_in_them_"></a></p>
+
+<h3>wildcard repos without creator name in them</h3>
+
+<p>Here's how the same example would look if you did not want the CREATOR's name
+to be part of the actual repo name.</p>
+
+<pre><code>repo    assignments/a[0-9][0-9]
+    C   =   @students
+    RW+ =   CREATOR
+    RW  =   WRITERS @TAs
+    R   =   READERS @prof
+</code></pre>
+
+<p>We haven't changed anything except the repo name pattern.  This means that the
+first student that creates, say, <code>assignments/a12</code> becomes the owner.
+Mistakes (such as claiming a12 instead of a13) need to be rectified by an
+admin logging on to the back end, though it's not too difficult.</p>
+
+<p>You could also repace the C line like this:</p>
+
+<pre><code>    C   =   @TAs
+</code></pre>
+
+<p>and have a TA create the repos in advance.</p>
+
+<p>In either case, they could then use the <code>setperms</code> feature to specify which
+users are "READERS" and which are "WRITERS".  See later for details.</p>
+
+<h2>valid regexes and how they are used: <a href="wildregex.html" title="valid regexes and how they are used">Link</a></h2>
+
+<!-- file: wildregex "valid regexes and how they are used" -->
+
+<h2>valid regexes and how they are used</h2>
+
+<p><a name="wildcard_repositories_side_note_valid_regexes_"></a></p>
+
+<h3>side-note: valid regexes</h3>
+
+<p>Due to projects like <code>gtk+</code>, the <code>+</code> character is now considered a valid
+character for an <em>ordinary</em> repo.  Therefore, a pattern like <code>foo/.+</code> does not
+look like a regex to gitolite.  Use <code>foo/..*</code> if you want that.</p>
+
+<p>Also, <code>..*</code> by itself is not considered a valid repo pattern.  Try
+<code>[a-zA-Z0-9].*</code>.</p>
+
+<p><a name="wildcard_repositories_side_note_line_anchored_regexes_"></a></p>
+
+<h3>side-note: line-anchored regexes</h3>
+
+<p>A regex like</p>
+
+<pre><code>repo assignments/S[0-9]+/A[0-9]+
+</code></pre>
+
+<p>would match <code>assignments/S02/A37</code>.  It will not match <code>assignments/S02/ABC</code>,
+or <code>assignments/S02/a37</code>, obviously.</p>
+
+<p>But you may be surprised to find that it does not match even
+<code>assignments/S02/A37/B99</code>.  This is because internally, gitolite
+<em>line-anchors</em> the given regex; so that regex actually becomes
+<code>^assignments/S[0-9]+/A[0-9]+$</code> -- notice the line beginning and ending
+metacharacters.</p>
+
+<p><a name="wildcard_repositories_contrast_with_refexes_"></a></p>
+
+<h4>contrast with refexes</h4>
+
+<p>Just for interest, note that this is in contrast to the refexes for the normal
+"branch" permissions, as described in <code>doc/gitolite.conf.mkd</code> and elsewhere.
+These "refexes" are only anchored at the start; a pattern like
+<code>refs/heads/master</code> actually can match <code>refs/heads/master01/bar</code> as well, even
+if no one will actually push such a branch!  You can anchor both sides if you
+really care, by using <code>master$</code> instead of <code>master</code>, but that is <em>not</em> the
+default for refexes.</p>
+
+<!-- file: wild "handing out rights to wildcard-matched repos" -->
+
+<h2>handing out rights to wildcard-matched repos: <a href="setperms.html" title="handing out rights to wildcard-matched repos">Link</a></h2>
+
+<!-- file: setperms "handing out rights to wildcard-matched repos" -->
+
+<h2>handing out rights to wildcard-matched repos</h2>
+
+<p>In the examples above, we saw two special "user" names: READERS and WRITERS.
+The permissions they have are controlled by the config file, but <strong><em>who is
+part of this list</em></strong> is controlled by the person who created the repository.</p>
+
+<p>The use case is that, although our toy example has only 3 students, in reality
+there will be a few dozen, but each assignment will be worked on only by a
+handful from among those.  This allows the creator to take ad hoc sets of
+users from among the actual users in the system, and give them one of two
+roles (in this example, READERS and WRITERS respectively).  In theory you
+could do the same thing by creating lots of little "assignment-NN" groups in
+the config file but that may be a little too cumbersome for non-secret
+environments.</p>
+
+<p>Create a small text file that contains the permissions you desire:</p>
+
+<pre><code>$ cat &gt; myperms
+READERS u5
+WRITERS u6
+(hit ctrl-d here)
+</code></pre>
+
+<p>...and use the new <strong>setperms</strong> command to set permissions for your repo:</p>
+
+<pre><code>$ ssh git@server setperms assignments/u4/a12 &lt; myperms
+New perms are:
+READERS u5
+WRITERS u6
+</code></pre>
+
+<p>'setperms' will helpfully print what the new permissions are but you can also
+use <strong>getperms</strong> to check:</p>
+
+<pre><code>$ ssh git@server getperms assignments/u4/a12
+READERS u5
+WRITERS u6
+</code></pre>
+
+<p>The following points are important:</p>
+
+<ul>
+<li>note the syntax of the command; it's not a "git" command, and there's no
+<code>:</code> like in a repo URL.</li>
+<li>for the actual text being sent in via STDIN, the first space-separated
+word is the role (in this example, READERS or WRITERS), and the rest
+are simple usernames.</li>
+</ul>
+
+<p><a name="wildcard_repositories_admin_adding_other_roles_than_READERS_and_WRITERS_"></a></p>
+
+<h3>(admin) adding other roles than READERS and WRITERS</h3>
+
+<p>Let's say your needs are more complex and you need more roles.  For example,
+you might like to have a setup where only a tester can update tags, and only a
+manager can delete branches:</p>
+
+<pre><code>repo foo/..*
+  C                 =   u1
+  RW    refs/tags/  =   TESTERS
+  -     refs/tags/  =   @all
+  RW+               =   WRITERS
+  RW                =   INTERNS
+  R                 =   READERS
+  RW+D              =   MANAGERS
+</code></pre>
+
+<p>As you can see, someone pre-creates the repo and assigns rights to various
+people, say by sending something like this to <code>setperms</code>:</p>
+
+<pre><code>READERS wally
+WRITERS dilbert alice
+MANAGERS phb
+INTERNS ashok
+TESTERS ashok
+</code></pre>
+
+<p>You can enable this by setting the <code>GL_WILDREPOS_PERM_CATS</code> variable in the rc
+file.  The rc file documentation (<code>doc/gitolite.rc.mkd</code>) explains how.</p>
+
+<p><a name="rolenamewarn"></a></p>
+
+<h4><strong>IMPORTANT WARNING ABOUT THIS FEATURE</strong></h4>
+
+<p>Please make sure that none of the role names conflict with any of the
+<strong>usernames</strong> in the system.  For example, if you have a user called "foo",
+make sure you do not include "foo" as a valid role in
+<code>$GL_WILDREPOS_PERM_CATS</code>.</p>
+
+<p>You can keep things sane by using UPPERCASE names for roles, while keeping all
+your usernames lowercase; then you don't have to worry about this problem.</p>
+
+<!-- file: wild "setting a gitweb description for a wildcard-matched repo" -->
+
+<p><a name="wildcard_repositories_setting_a_gitweb_description_for_a_wildcard_matched_repo_"></a></p>
+
+<h2>setting a gitweb description for a wildcard-matched repo</h2>
+
+<p>Similar to the getperms/setperms commands, there are the
+<a href="user.html#setdesc" title="adding a description to repos you created">getdesc/setdesc</a> commands, thanks to Teemu.</p>
+
+<p><a name="wildcard_repositories_reporting_"></a></p>
+
+<h2>reporting</h2>
+
+<p>In order to see what repositories were created from a wildcard, use the
+<a href="info_expand.html#expand" title="the &quot;expand&quot; command">"expand"</a> command.</p>
+
+<p><a name="wildcard_repositories_deleting_a_wild_repo_"></a></p>
+
+<h2>deleting a wild repo</h2>
+
+<p>See <a href="wild_repodel.html" title="deleting repos safely">repo deletion</a> for more on this.  Note that this requires you
+to install/setup "adc"s (admin defined commands).  See
+<a href="ADCs.html" title="admin defined commands">admin-defined-commands</a> for how to do that.</p>
+
+<hr />
+
+<p>Enjoy, and please use with care.  This is pretty powerful stuff.  As they say:
+if you break it, you get to keep both pieces :)</p>
+
+<h2>how it actually works: <a href="wildhow_.html" title="how it actually works">Link</a></h2>
+
+<!-- file: wildhow_ "how it actually works" -->
+
+<h2>how it actually works</h2>
+
+<p>This section tells you what is happening inside gitolite so you can understand
+this feature better.  Let's use the config example at the beginning of this
+document:</p>
+
+<pre><code>repo    assignments/CREATOR/a[0-9][0-9]
+    C   =   @students
+    RW+ =   CREATOR
+    RW  =   WRITERS @TAs
+    R   =   READERS @prof
+</code></pre>
+
+<p>First we find the set of rules to apply.  This involves replacing the special
+words CREATOR, WRITERS, and READERS with appropriate usernames to derive an
+"effective" ruleset for the repo in question.</p>
+
+<p>For a <strong>new</strong> repo, replace the word CREATOR in all repo patterns and rules
+with the name of the invoking user.</p>
+
+<blockquote>
+  <p>(Note: this is why you should never use <code>C = CREATOR</code>; it becomes <code>C =
+  invoking_user</code>!  Unless you really want to allow <em>all</em> users to create
+  repos, you should restrict "C" perms to an actual user or set of users,
+  like in the examples in this document).</p>
+</blockquote>
+
+<p>For an <strong>existing</strong> repo, do the same but replace with the name of the user
+who actually <em>created</em> the repo (this name is recorded in a special file in
+the repo directory when the repo is first created, so it is available).</p>
+
+<p>Now find a repo pattern that matches the actual reponame being pushed -- this
+tells you which set of rules to apply.  There can be multiple matches; if so,
+they will all be applied in the sequence they appear in the config file.</p>
+
+<p>If the invoking user has been given the "WRITERS" role using <code>setperms</code>, all
+permissions for the the user WRITERS are given to the invoking username (and
+similarly for READERS).</p>
+
+<p>At this point we have an effective ruleset, and the normal access rules (R,
+RW, etc) apply, with the addition that the invoking user needs "C" access to
+be able to create a repo.</p>
+
+<blockquote>
+  <p>(Note: "C" rights do not automatically give the CREATOR any other rights;
+  they must be specifically given.  <code>RW+ = CREATOR</code> is recommended in most
+  situations, as you can see in our example).</p>
+</blockquote>
+
+<p>Assuming user "u4" trying to push-create a new repo called
+<code>assignments/u4/a23</code>, this is what the effective ruleset looks like:</p>
+
+<pre><code>repo    assignments/u4/a23
+    C   =   @students
+    RW+ =   u4
+    RW  =   @TAs
+    R   =   @prof
+</code></pre>
+
+<p>If u4 gives u5 the "WRITERS" role using <code>setperms</code>, and u5 tries to access
+that repo, the ruleset looks like:</p>
+
+<pre><code>repo    assignments/u4/a23
+    C   =   @students
+    RW+ =   u4
+    RW  =   u5 @TAs
+    R   =   @prof
+</code></pre>
+
+<p>I hope that helps.</p>

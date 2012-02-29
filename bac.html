@@ -1,0 +1,206 @@
+<head>
+<title>
+basic access control
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gitolite.conf">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>basic access control</h2>
+
+<p>Here's a very basic set of rules:</p>
+
+<pre><code>repo    gitolite-admin
+        RW+     =   sitaram
+
+repo    testing
+        RW+     =   @all
+
+repo    gitolite simplicity
+        RW+     =   sitaram dilbert
+        RW      =   alice ashok
+        R       =   wally
+</code></pre>
+
+<p>It should be easy to guess what most of this means:</p>
+
+<ul>
+<li><code>R</code> means "read" permission</li>
+<li><code>RW</code> means "read and write", but no rewind</li>
+<li><code>RW+</code> means "read and write", with rewind allowed</li>
+</ul>
+
+<p>A "rewind" is more often called a "non-fast forward push"; see git docs for
+what that is.  The <code>+</code> was chosen because it is part of the "git push" syntax
+for non-ff pushes.</p>
+
+<p>Note that <em>tags</em> are generally considered "write once", so they are treated
+specially by gitolite: you need rewind permission (<code>RW+</code>) to <em>overwrite</em> a
+tag with a new value.</p>
+
+<p>In a later section you'll see some more advanced permissions.</p>
+
+<p><a name="gitolite_conf_how_rules_are_matched_"></a></p>
+
+<h3>how rules are matched</h3>
+
+<p>It's important to understand that there're two levels at which access control
+happens.  Please see <a href="tipssec_.html#2levels" title="two levels of access rights checking">this</a> for details, especially about the first level
+check.  Much of the complexity applies only to the second level check, so that
+is all we will be discussing here.  This check is done by the update hook, and
+determines whether the push succeeds or fails.</p>
+
+<p>For basic permissions like this, matching is simple.  Gitolite already knows:</p>
+
+<ul>
+<li>the user</li>
+<li>the repo</li>
+<li>the branch or tag ("ref") being pushed</li>
+<li>whether it is a normal (ff) push or a rewind (non-ff) push.</li>
+</ul>
+
+<p>Gitolite goes down the list of rules matching the user, repo, and the ref.
+The first matching rule that has the permission you're looking for (<code>W</code> or
+<code>+</code>), results in success.  A fallthrough results in failure.</p>
+
+<p><a name="refex"></a></p>
+
+<h3>branches, tags, and specifying "refex"es</h3>
+
+<p>One of the original goals of gitolite was to allow access control at the
+branch/tag (aka "ref") level.  The git source code contains a sample update
+hook that has the following in it:</p>
+
+<pre><code># from Documentation/howto/update-hook-example.txt:
+
+refs/heads/master       junio
++refs/heads/pu          junio
+refs/heads/cogito$      pasky
+refs/heads/bw/.*        linus
+refs/heads/tmp/.*       .*
+refs/tags/v[0-9].*      junio
+</code></pre>
+
+<p>If you did this in gitolite, this is what the equivalents would be:</p>
+
+<pre><code>repo    git
+        RW      master$             =   junio   # line 1
+        RW+     pu$                 =   junio   # line 2
+        RW      cogito$             =   pasky   # line 3
+        RW      bw/                 =   linus   # line 4
+        RW      tmp/                =   @all    # line 5
+        RW      refs/tags/v[0-9]    =   junio   # line 6
+</code></pre>
+
+<p>The following points will help you understand these rules.  (Git recap:
+branches and tags together are called "ref"s in git.  A branch ref usually
+looks like "refs/heads/foo", while a tag ref looks like "refs/tags/bar")</p>
+
+<ul>
+<li><p>the general syntax of a paragraph of rules is:</p>
+
+<pre><code># start line:
+repo [one or more repos and/or repo groups]
+# followed by one or more permissions lines:
+[permission] [zero or more refexes] = [one or more users]
+</code></pre></li>
+<li><p>a <strong>refex</strong> is a <em>perl regex</em> that matches a ref.  When you try to push a
+commit to a branch or a tag, that "ref" is matched against the refex part
+of each rule.</p></li>
+<li><p>if the refex does not start with <code>refs/</code>, gitolite assumes a prefix of
+<code>refs/heads/</code>.  This is useful because <em>branch</em> matching is the most
+common case, as you can see this applies to lines 1 through 5 here.</p></li>
+<li><p>if no refex appears, the rule applies to all refs in that repo (as if you
+had specified <code>refs/.*</code> as the refex).</p></li>
+<li><p>refexes are prefix-matched (they are internally anchored with <code>^</code> before
+being used).  This means only the beginning of the actual ref needs to
+match the refex, unless the refex has an explicit <code>$</code> meta-character at
+the end (like the first 3 lines in our example do).</p>
+
+<p>Line 5, for instance, allows anyone to push a branch inside the "tmp/"
+namespace, while line 6 provides the ability to push version tags; "v1",
+"v1.0", "v2.0rc1", all match the criterion specified by <code>v[0-9]</code> because
+this is a prefix match only.</p></li>
+</ul>
+
+<p><a name="groups"></a></p>
+
+<h3>groups</h3>
+
+<p>Gitolite allows you to define <strong>groups</strong> of repos. users, or even refexes.  A
+group is semantically (but <em>not</em> syntactically) like a <code>#define</code> in C.  Here
+is an example of each kind:</p>
+
+<pre><code>@oss_repos  =   gitolite linux git perl rakudo entrans vkc
+@staff      =   sitaram some_dev another-dev
+@important  =   master$ QA_done refs/tags/v[0-9]
+</code></pre>
+
+<p>The syntax of a group definition is simply:</p>
+
+<pre><code>@groupname = [one or more names]
+</code></pre>
+
+<p>A group can <em>accumulate</em> values.  For example:</p>
+
+<pre><code>@staff      =   sitaram some_dev another-dev
+@staff      =   au.thor
+</code></pre>
+
+<p>is the same as</p>
+
+<pre><code>@staff      =   sitaram some_dev another-dev au.thor
+</code></pre>
+
+<p>This is more convenient than continuation lines, because it allows you to add
+to a group anywhere.  Many people generate their gitolite.conf itself from
+some <em>other</em> database, and it is very useful to be able to do this sort of
+thing.</p>
+
+<p>Groups can include other groups, and the included group will be expanded to
+whatever value it <em>currently</em> has:</p>
+
+<pre><code>@staff      =   sitaram some_dev another-dev    # line 1
+@staff      =   au.thor                         # line 2
+@interns    =   indy james                      # line 3
+@alldevs    =   bob @interns @staff             # line 4
+</code></pre>
+
+<p>"@alldevs" expands to 7 names now.  However, remember that the config file is
+parsed in a single-pass, so later <em>additions</em> to a group name cannot affect
+earlier <em>uses</em> of it.  If you moved line 2 to the end, "@alldevs" would only
+have 6 names in it.</p>
+
+<p><a name="gitolite_conf_the_special_all_group_"></a></p>
+
+<h4>the special <code>@all</code> group</h4>
+
+<p>There's a special group called <code>@all</code> that includes all authenticated users
+when used as a username; you've seen examples of it earlier.</p>
+
+<p>Advanced users: also see the entry for <code>GL_ALL_INCLUDES_SPECIAL</code> in the
+documentation for <a href="rc.html" title="configuring gitolite's advanced features -- the `.gitolite.rc` file"><code>~/.gitolite.rc</code></a>.</p>
+
+<p>When used as a reponame, it includes all repos physically present in
+<code>~/repositories</code> (or whatever is the value of <code>$REPO_BASE</code>).</p>
+
+<h3>side note: "R" permissions for refs: <a href="rpr_.html" title="side note: &quot;R&quot; permissions for refs">Link</a></h3>
+

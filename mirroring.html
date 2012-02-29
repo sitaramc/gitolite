@@ -1,0 +1,171 @@
+<head>
+<title>
+mirroring gitolite servers
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>mirroring gitolite servers</h1>
+
+<p>Mirroring a repo is simple in git; you just need code like this in a
+<code>post-receive</code> hook in each repo:</p>
+
+<pre><code>#!/bin/bash
+git push --mirror slave_user@mirror.host:/path/to/repo.git
+# if running gitolite, the $GL_REPO variable could be useful:
+# git push --mirror slave_user@mirror.host:/repo/base/path/$GL_REPO.git
+</code></pre>
+
+<p>For a lot of people, though, mirroring is more than just 'backup', and their
+needs are complex enough that setup is hard.</p>
+
+<p><a name="mirrwhy_"></a></p>
+
+<h2>why</h2>
+
+<p>Gitolite's mirroring used to be very rigid -- one master, any number of
+slaves, but the slaves are identical copies of the master. No variations
+allowed.</p>
+
+<p>It's now been reworked to be much more flexible, to cater to almost any kind
+of setup you need. Here're some advantages:</p>
+
+<ul>
+<li><p><strong>faster reads for everyone</strong>: host a slave in every city you have a
+sizable number of developers in, and have them access their local server
+instead of hitting the WAN, at least for 'fetch' operations.</p></li>
+<li><p><strong>faster writes for most devs</strong>: one server doesn't have to be the master
+for all repos! You can choose where a repo gets "mastered" based on where
+the majority of that repo's users are.</p>
+
+<p>This was the single biggest motivation for the re-work of gitolite's
+mirroring; the rest of the cool stuff just happened as this feature took
+shape.</p></li>
+<li><p><strong>transparent writes</strong>: if all the mirrors are in your control (i.e., you
+trust their authentication) pushes to a slave can be transparently
+redirected to the master, so developers simply access their local server
+for everything. They don't need to know where the master is, so they're
+insulated from any changes you make behind the scenes.</p>
+
+<p>This is as close to <strong>active-active</strong> mirroring as you can get without
+worrying about race conditions and similar problems.</p></li>
+<li><p><strong>partial mirroring</strong>: all repos don't have to go all mirrors.  You can
+choose not to mirror a repo at all, or mirror it only to certain servers.
+This could be due to any reason: repo too big/high-traffic for the server,
+repo has crypto code and the server is in a non-free country, repo has no
+local users at that site, or (in autonomous setups) the server admin
+simply doesn't want to mirror this specific repo.</p></li>
+<li><p><strong>late mirroring</strong>: if you're ok with the lag, you can have some mirrors
+updated only at certain times of the day, (with a simple command), instead
+of every time a push happens.</p></li>
+<li><p><strong>autonomous mirrors</strong>: finally, your mirrors don't have to be totally
+under your control. They can be owned by someone else, and you negotiate
+your mirroring with them.</p></li>
+</ul>
+
+<p>As you can see, this is a bit more than a backup solution ;-)</p>
+
+<p><a name="mirroring_RULE_NUMBER_ONE__"></a></p>
+
+<h2>RULE NUMBER ONE!</h2>
+
+<p><strong>RULE OF GIT MIRRORING: users should push directly to only one server</strong>!  All
+the other machines (the slaves) should be updated by the master server.</p>
+
+<p>If a user pushes directly to one of the slaves, those changes will get wiped
+out on the next mirror push from the real master server.</p>
+
+<p>Corollary: if the primary went down and you effected a changeover, you must
+make sure that the primary does not come up in a push-enabled mode when it
+recovers.</p>
+
+<p><strong>Getting around rule number one</strong>: see the section on "redirecting pushes"
+later.</p>
+
+<p><a name="mirroring_concepts_and_terminology_"></a></p>
+
+<h2>concepts and terminology</h2>
+
+<p>Servers can host 3 kinds of repos: master, slave, and local.</p>
+
+<ul>
+<li><p>A repo can be a <strong>master</strong> on one and only one server.  A repo on its
+"master" server is a <strong>native</strong> repo, on slaves it is "non-native".</p></li>
+<li><p>A <strong>slave</strong> repo cannot be pushed to by a user.  It will only accept
+pushes from a master server. (Exception: see the "redirecting pushes"
+section later)</p></li>
+<li><p>A <strong>local</strong> repo is not involved in mirroring at all, in either direction.</p></li>
+</ul>
+
+<p><a name="mirroring_setting_up_mirroring_"></a></p>
+
+<h2>setting up mirroring</h2>
+
+<h3>IMPORTANT cautions: <a href="mirrcautions.html" title="IMPORTANT cautions">Link</a></h3>
+
+
+<h3>setup and usage: <a href="mirrsetup.html" title="setup and usage">Link</a></h3>
+
+
+<h3>commands to (re-)sync mirrors: <a href="mirrsync.html" title="commands to (re-)sync mirrors">Link</a></h3>
+
+
+<p><a name="ad/m-dtls"></a></p>
+
+<h2>details</h2>
+
+<h3>the <code>conf/gitolite.conf</code> file: <a href="mirrconf.html" title="the `conf/gitolite.conf` file">Link</a></h3>
+
+
+<h3>redirecting pushes: <a href="mirrredirect.html" title="redirecting pushes">Link</a></h3>
+
+
+<p><a name="mirroring_example_setups_"></a></p>
+
+<h2>example setups</h2>
+
+<p>Here are some samples of what is possible.</p>
+
+<h3>non-autonomous: <a href="mirrnonauto.html" title="non-autonomous">Link</a></h3>
+
+
+<h3>non-autonomous with local repos: <a href="mirrnonautolocal.html" title="non-autonomous with local repos">Link</a></h3>
+
+
+<h3>semi-autonomous: <a href="mirrsemiauto.html" title="semi-autonomous">Link</a></h3>
+
+
+<h3>autonomous: <a href="mirrauto.html" title="autonomous">Link</a></h3>
+
+
+<h2>discussion: <a href="mirrdisc.html" title="discussion">Link</a></h2>
+
+
+<p><a name="mirroring_appendices_"></a></p>
+
+<h2>appendices</h2>
+
+<h3>appendix A: example cronjob based mirroring: <a href="mirrcron.html" title="appendix A: example cronjob based mirroring">Link</a></h3>
+
+
+<h3>appendix B: efficiency versus paranoia: <a href="mirrparanoia.html" title="appendix B: efficiency versus paranoia">Link</a></h3>
+

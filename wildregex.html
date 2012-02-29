@@ -1,0 +1,69 @@
+<head>
+<title>
+valid regexes and how they are used
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#wildcard-repositories">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>valid regexes and how they are used</h2>
+
+<p><a name="wildcard_repositories_side_note_valid_regexes_"></a></p>
+
+<h3>side-note: valid regexes</h3>
+
+<p>Due to projects like <code>gtk+</code>, the <code>+</code> character is now considered a valid
+character for an <em>ordinary</em> repo.  Therefore, a pattern like <code>foo/.+</code> does not
+look like a regex to gitolite.  Use <code>foo/..*</code> if you want that.</p>
+
+<p>Also, <code>..*</code> by itself is not considered a valid repo pattern.  Try
+<code>[a-zA-Z0-9].*</code>.</p>
+
+<p><a name="wildcard_repositories_side_note_line_anchored_regexes_"></a></p>
+
+<h3>side-note: line-anchored regexes</h3>
+
+<p>A regex like</p>
+
+<pre><code>repo assignments/S[0-9]+/A[0-9]+
+</code></pre>
+
+<p>would match <code>assignments/S02/A37</code>.  It will not match <code>assignments/S02/ABC</code>,
+or <code>assignments/S02/a37</code>, obviously.</p>
+
+<p>But you may be surprised to find that it does not match even
+<code>assignments/S02/A37/B99</code>.  This is because internally, gitolite
+<em>line-anchors</em> the given regex; so that regex actually becomes
+<code>^assignments/S[0-9]+/A[0-9]+$</code> -- notice the line beginning and ending
+metacharacters.</p>
+
+<p><a name="wildcard_repositories_contrast_with_refexes_"></a></p>
+
+<h4>contrast with refexes</h4>
+
+<p>Just for interest, note that this is in contrast to the refexes for the normal
+"branch" permissions, as described in <code>doc/gitolite.conf.mkd</code> and elsewhere.
+These "refexes" are only anchored at the start; a pattern like
+<code>refs/heads/master</code> actually can match <code>refs/heads/master01/bar</code> as well, even
+if no one will actually push such a branch!  You can anchor both sides if you
+really care, by using <code>master$</code> instead of <code>master</code>, but that is <em>not</em> the
+default for refexes.</p>
+

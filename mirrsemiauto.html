@@ -1,0 +1,52 @@
+<head>
+<title>
+semi-autonomous
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>semi-autonomous</h3>
+
+<p>So far, the "central" admin still has control over the gitolite.conf file and
+all repos created.  Sometimes it's easier to give control over parts of the
+configuration to people at the mirror sites.  To keep it simple, each admin
+will be able to do whatever they want to directories within a subdirectory of
+the same name as the hostname.</p>
+
+<p>You can combine the "HOSTNAME" feature above with <a href="deleg.html" title="delegating access control responsibilities">delegation</a>. Let's
+say the admin for sam is a user called "gamgee", and the admin for gollum is
+"smeagol".</p>
+
+<p>Add this to your conf file:</p>
+
+<pre><code>@sam    =   sam/..*
+@gollum =   gollum/..*
+</code></pre>
+
+<p>Then use NAME/ rules (see the delegation doc for details) and allow gamgee to
+write only conf/sam.conf, and smeagol to write only conf/gollum.conf.</p>
+
+<p>Now in the main config file, at the end (or wherever you wish), add one line:</p>
+
+<pre><code>subconf "HOSTNAME.conf"
+</code></pre>
+

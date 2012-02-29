@@ -1,0 +1,213 @@
+<head>
+<title>
+other tips
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gitolite.conf">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>other tips</h2>
+
+<p><a name="gitolite_conf_personal_branches_"></a></p>
+
+<h3>personal branches</h3>
+
+<p>Gitolite lets you define a "personal" or "scratch" namespace prefix for each
+developer.  See <a href="tnconv_.html#pers" title="&quot;personal&quot; branches">here</a> for details.</p>
+
+<p><a name="ruleaccum"></a></p>
+
+<h3>rule accumulation</h3>
+
+<p>(Also see <a href="exaac.html#ruleaccum2" title="rule accumulation">this</a> for a different example that may be more
+intuitive for some people).</p>
+
+<p>Gitolite lets you specify access rules for a repo in bits and pieces, and
+accumulates them in the same sequence they were given.  This is very
+convenient.  Let's say you have a mix of open source and closed source
+projects, and "bosses" should have read access to all projects, and everyone
+should have read access to open source projects.  Assuming the appropriate
+group definitions, this would work:</p>
+
+<pre><code># all bosses have read access to all projects
+repo @open @closed @topsecret
+    R   =   @bosses
+
+# everyone has read access to "open" projects
+repo @open
+    R   =   @bosses @devs @interns
+</code></pre>
+
+<p>If you notice that <code>@bosses</code> are given read access to <code>@open</code> via both rules,
+don't worry that this causes some duplication or inefficiency.  It doesn't :-)</p>
+
+<p>Elsewhere in the file, you would specify access for individual repos (like RW,
+RW+, etc).  Gitolite combines all of these access rules, maintaining the
+textual order in which they occur, when authorising a push.</p>
+
+<p>And although this example used groups, you can use reponames as well, or mix
+and match them.  You can even distribute rulesets across multiple "include"
+files if you wish.</p>
+
+<p>Just remember that if you use <a href="aac.html#deny" title="&quot;deny&quot; rules">deny rules</a> anywhere then the <em>order of the
+rules matters</em>!</p>
+
+<p>This feature also helps people who generate their gitolite.conf itself from
+some <em>other</em> database -- it allows them much more flexibility in how they
+generate rules.</p>
+
+<p><a name="gwd"></a></p>
+
+<h3>specifying gitweb and daemon access</h3>
+
+<p>Gitolite allows you to specify access for git-daemon and gitweb.  This is a
+feature that I personally do not use (corporate environments don't like
+unauthenticated access of any kind to any repo!), but someone wanted it, so
+here goes.</p>
+
+<p>Gitolite has two pre-defined, "special", usernames: <code>daemon</code> and <code>gitweb</code>.</p>
+
+<p>To make a repo or repo group accessible via "git daemon", just give read
+permission to the special user "daemon".  Similarly, give read permission to
+<code>gitweb</code> to allow the gitweb CGI to show the repo.  Something like this:</p>
+
+<pre><code>repo    foo bar baz
+    R   =   gitweb daemon
+</code></pre>
+
+<p>This gives you a quick way to offer multiple repos up for gitweb and/or daemon
+access.</p>
+
+<p>However, <strong>setting a description</strong> for the project also enables gitweb
+permissions so you can do it that way if you want.  Of course in this case you
+have to deal with each repo separately.  Add lines like this to gitolite.conf:</p>
+
+<pre><code>foo = "some description"
+bar = "some other description"
+baz = "yet another description"
+</code></pre>
+
+<p>You can also <strong>specify an owner</strong> for gitweb to show, if you like; for example
+I might use:</p>
+
+<pre><code>gitolite "Sitaram Chamarty" = "fast, secure, fine-grained, access control for git"
+</code></pre>
+
+<p>These lines are standalone, so you can add them anywhere in the conf file.</p>
+
+<p>Note that gitolite does <strong>not</strong> install or configure gitweb/git-daemon -- that
+is a one-time setup you must do separately.  All gitolite does is:</p>
+
+<ul>
+<li>for daemon, create the file <code>git-daemon-export-ok</code> in the repository</li>
+<li>for gitweb, add the repo (plus owner name, if given) to the list of
+projects to be served by gitweb (see the config file variable
+<code>$PROJECTS_LIST</code>, which should have the same value you specified for
+<code>$projects_list</code> when setting up gitweb)</li>
+<li>put the description, if given, in <code>$repo/description</code></li>
+</ul>
+
+<p>The "compile" script will keep these files consistent with the config settings
+-- this includes removing such settings/files if you remove "read" permissions
+for the special usernames or remove the description line.</p>
+
+<p>Please <strong>note</strong> that giving permissions to these special users via <code>@all</code>
+(that is, using either <code>repo @all</code> or <code>R = @all</code>), will not work unless you
+set the rc-file variable <code>$GL_ALL_INCLUDES_SPECIAL</code> to <code>1</code>.  Also, <strong>NOTE</strong>
+that giving them read access to <code>repo @all</code> means the <code>gitolite-admin</code> repo is
+also accessible.  <strong>It is upto you to decide if that is OK in your
+environment</strong>.</p>
+
+<p><a name="rsgc"></a></p>
+
+<h3>repo specific <code>git config</code> commands</h3>
+
+<p>(Thanks to teemu dot matilainen at iki dot fi)</p>
+
+<blockquote>
+  <hr />
+
+<p><strong>Note</strong>: this won't work unless the rc file has the right settings;
+  please see <code>$GL_GITCONFIG_KEYS</code> in the <a href="rc.html" title="configuring gitolite's advanced features -- the `.gitolite.rc` file">rc file doc</a> for details and
+  security information.</p>
+
+<hr />
+</blockquote>
+
+<p>Sometimes you want to specify <code>git config</code> settings for your repos.</p>
+
+<p>For example, say you have a custom post-receive hook that sends an email when
+a push happens, and this hook looks in the config for whom to send the email
+to, etc.</p>
+
+<p>You can set these git config values within a "repo" paragraph:</p>
+
+<pre><code>repo gitolite
+    config hooks.mailinglist = gitolite-commits@example.tld
+    config hooks.emailprefix = "[gitolite] "
+    config foo.bar = ""
+    config foo.baz =
+</code></pre>
+
+<p>The syntax is simple:</p>
+
+<pre><code>config sectionname.keyname = [optional value_string]
+</code></pre>
+
+<p>This does either a plain "git config section.key value" (for the first 3
+examples above) or "git config --unset-all section.key" (for the last
+example).  Other forms of the <code>git config</code> command (<code>--add</code>, the
+<code>value_regex</code>, etc) are not supported.</p>
+
+<blockquote>
+  <hr />
+
+<p><strong>WARNING</strong>: simply deleting the config line from the <code>conf/gitolite.conf</code>
+  file will <em>not</em> delete the variable from <code>repo.git/config</code>.  The syntax in
+  the last example is the <em>only</em> way to make gitolite execute a
+  <code>--unset-all</code> operation on the given key.</p>
+
+<hr />
+</blockquote>
+
+<p>You can repeat the 'config' line as many times as you like, and the last
+occurrence will be the one in effect.  This allows you to override settings
+just for one project, as in this example:</p>
+
+<pre><code>repo @all
+    config gitolite.mirror.master = "frodo"
+    config gitolite.mirror.slaves = "sam gollum"
+
+repo top-secret-project
+    # only sam, because we don't trust gollum
+    config gitolite.mirror.slaves = "sam"
+</code></pre>
+
+<p>The "delete config variable" syntax can also be used, if you wish:</p>
+
+<pre><code>repo highlander     # there can be only one!
+    config gitolite.mirror.master =
+    config gitolite.mirror.slaves =
+</code></pre>
+
+<p>As you can see, the general idea is to place the most generic ones (<code>repo
+@all</code>, or repo patterns like <code>repo foo.*</code>) first, and place more specific ones
+later to override the generic settings.</p>

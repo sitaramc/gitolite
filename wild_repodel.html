@@ -1,0 +1,82 @@
+<head>
+<title>
+deleting repos safely
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#repo-deletion">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>deleting repos safely</h1>
+
+<p><strong>NOTE</strong>: this page is about deleting <a href="wild.html" title="repositories named with wildcards">user-created repos</a>.  It is
+<strong>not</strong> about deleting "normal" repos (the kind that are specified in the
+gitolite.conf file itself) -- to delete those read <a href="tips.html#repodel" title="deleting a repo">here</a>.</p>
+
+<p>(see <a href="http://groups.google.com/group/gitolite/browse_thread/thread/fb9cf5a464b6dfee">this thread</a> on the gitolite mailing list)</p>
+
+<p>By default, the old 'rmrepo' ADC (admin-defined command) just went and deleted
+the repo -- no questions asked!  Sometimes, that could be a disaster -- you
+lose the whole thing in one mad moment of typo-ing or frustration.  Ouch.</p>
+
+<p>This has been replaced by 2 families of ADCs.  I say "families" because each
+has one main command and 2 ancillary ones.  Admins can choose to install
+either, both, or neither family of commands.</p>
+
+<p>Local settings for these ADCs can be found in the common settings file
+"adc.common-functions".</p>
+
+<ol>
+<li><p>'rm' will remove the repo.  If <code>USE_LOCK_UNLOCK</code> is set, rm will refuse to
+remove a locked repo.  All repos are locked by default, and you have to
+explicitly 'unlock' a repo to remove it.  You can also 'lock' it again
+instead of removing it of course.</p>
+
+<p>There's also <code>ARE_YOU_SURE</code>, for situations where a simple warning
+suffices.</p>
+
+<p>You can also use both these flags if you wish.</p></li>
+<li><p>'trash' will move the repo to a safe location.  There are settings for
+where this location is and what suffix is added to the repo name.  You can
+'list-trash' to see what trash you have collected, and you can 'restore'
+one of the listed repos.</p>
+
+<p>It's easy to automatically clean out the trash occasionally.  By default,
+entries in the trash look like this:</p>
+
+<pre><code>foo/r1/2010-10-22_13:14:24
+foo/r1/2010-10-22_13:14:50
+</code></pre>
+
+<p>This shows a repo foo/r1 that was created and trashed twice.</p>
+
+<p>Since the date appears in the name, you can use it with a cutoff to clean
+up old repos.  Untested example:</p>
+
+<pre><code>cutoff=`date -I -d '28 days ago'`
+find $TRASH_CAN -type d -name "20??-??-??_*" | while read r
+do
+    d=`basename $r`
+    [[ $d &lt; $cutoff ]] &amp;&amp; rm -rf $r
+done
+</code></pre>
+
+<p>Put this in cron to run once a day and that should be it.</p></li>
+</ol>

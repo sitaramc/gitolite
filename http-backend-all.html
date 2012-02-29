@@ -1,0 +1,242 @@
+<head>
+<title>
+how to setup gitolite to use smart http mode
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#http-backend">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: http "how to setup gitolite to use smart http mode" -->
+
+<h1>how to setup gitolite to use smart http mode</h1>
+
+<p><strong>Note</strong>: "smart http" refers to the feature that came with git 1.6.6, late
+2009 or so.  The base documentation for this is <code>man git-http-backend</code>.  Do
+<strong>NOT</strong> read <code>Documentation/howto/setup-git-server-over-http.txt</code> and think
+that is the same or even relevant -- that is from 2006 and is quite different
+(and arguably obsolete).</p>
+
+<p><a name="http_backend_WARNINGS_plus_stuff_I_need_help_with_"></a></p>
+
+<h2>WARNINGS, plus stuff I need help with</h2>
+
+<ul>
+<li><p>I have NOT converted the test suite to use this mode.  Volunteers to
+convert it to http access are welcome :-)</p></li>
+<li><p>I have no idea how to handle the password issue other than creating a
+<code>~/.netrc</code> file and making it <code>chmod 600</code>.  Anyway, http based access is
+inherently less secure than pubkeys so not much point worrying about it.</p></li>
+<li><p>I have not tested any of the ancillary standalone programs (like
+gl-admin-push) in this mode.  They're most likely going to crash and burn
+because <code>$HOME</code> is not defined or in the wrong place; manually set
+<code>HOME=$GITOLITE_HTTP_HOME</code> and hope for the best.  Luckily most of them
+have to do with sshkeys so this may not matter.  YMMV.</p></li>
+<li><p>tested on stock Fedora 14; if you test on other environments please let me
+know how it worked out and if we need to adjust this document</p></li>
+<li><p>tested https with dummy certs and <code>GIT_SSL_NO_VERIFY</code>; no reason why it
+shouldn't work on a proper setup with everything in place</p></li>
+<li><p>have not tried making repos available to both ssh <em>and</em> http mode clients;
+(I'd guess it ought to work fine if the "apache" user was made login-able
+and given a proper $HOME and <code>~/.ssh/authorized_keys</code> and all that).  If
+anyone has the energy to try that please let me know how that went.</p></li>
+</ul>
+
+<p><a name="http_backend_additional_requirements_"></a></p>
+
+<h2>additional requirements</h2>
+
+<ul>
+<li>requires <code>GIT_PROJECT_ROOT</code> (see "man git-http-backend" for what this is)
+set explicitly (i.e., it is no longer optional).  Please set it to some
+place outside apache's <code>DOCUMENT_ROOT</code>.</li>
+</ul>
+
+<p><a name="http_backend_detailed_instructions_"></a></p>
+
+<h2>detailed instructions</h2>
+
+<p>I assume you've installed apache 2.x and git on the server.</p>
+
+<p>I assume your httpd runs under the "apache" userid; adjust instructions below
+if it does not.  Similarly for "/var/www" and other file names/locations.</p>
+
+<p>I assume you have read the "<a href="install.html#insttrouble" title="install trouble?">please read this first</a>" section of the
+main install document to get an idea of the general concepts and terminology
+(just ignore anything that is specific to ssh).</p>
+
+<p><a name="http_backend_install_gitolite_under_apache__"></a></p>
+
+<h3>install gitolite under "apache"</h3>
+
+<p>Follow the "non-root" method, but since you can't even "su - apache", make the
+following variations when doing this as root:</p>
+
+<ul>
+<li><p><code>cd ~apache</code> first; this is <code>/var/www</code> on Fedora 14</p></li>
+<li><p>do this in the shell</p>
+
+<pre><code>mkdir gitolite-home
+export GITOLITE_HTTP_HOME
+GITOLITE_HTTP_HOME=/var/www/gitolite-home
+PATH=$PATH:$GITOLITE_HTTP_HOME/bin
+</code></pre></li>
+<li><p>now run the following commands.  These are really the first 3 steps of the
+"non-root" install (clone, mkdir, and gl-system-install), <strong>except</strong> you
+substitute <code>GITOLITE_HTTP_HOME</code> in place of <code>HOME</code>.  Note that you do NOT
+run the gl-setup step yet.</p>
+
+<pre><code>cd gitolite-home
+git clone /tmp/gitolite.git gitolite-source
+    # or wherever your local clone is, or directly from git://github.com/sitaramc/gitolite
+
+cd gitolite-source
+GHH=$GITOLITE_HTTP_HOME     # just for convenience in next 2 commands
+mkdir -p              $GHH/bin $GHH/share/gitolite/conf $GHH/share/gitolite/hooks
+src/gl-system-install $GHH/bin $GHH/share/gitolite/conf $GHH/share/gitolite/hooks
+</code></pre></li>
+<li><p>after the gl-system-install step, add these to the <strong>top</strong> of
+/var/www/gitolite-home/share/gitolite/conf/example.gitolite.rc</p>
+
+<pre><code>$ENV{GIT_HTTP_BACKEND} = "/usr/libexec/git-core/git-http-backend";
+    # or wherever you have that file; note: NO trailing slash
+$ENV{PATH} .= ":$ENV{GITOLITE_HTTP_HOME}/bin";
+    # note the ".=" here, not "="
+</code></pre></li>
+<li><p>run gl-setup with the name of your admin user</p>
+
+<pre><code>gl-setup sitaram
+</code></pre></li>
+<li><p>IMPORTANT: fix up ownerships</p>
+
+<pre><code>chown -R apache.apache $GITOLITE_HTTP_HOME
+</code></pre></li>
+</ul>
+
+<p><a name="http_backend_setup_apache_"></a></p>
+
+<h3>setup apache</h3>
+
+<p>You will need to setup certain values in the httpd conf, as given in <code>man
+git-http-backend</code>.  You can put all them into, for instance,
+<code>/etc/httpd/conf.d/gitolite.conf</code> and apache [at least on Fedora 14] will pick
+it up.  These are the values to use; note that these are somewhat different
+from those in the manpage cited above, plus we have one extra variable:</p>
+
+<pre><code>SetEnv GIT_PROJECT_ROOT /var/www/gitolite-home/repositories
+SetEnv GIT_HTTP_EXPORT_ALL
+    # please see notes below on ssh+http access
+ScriptAlias /git/ /var/www/gitolite-home/bin/gl-auth-command/
+    # note trailing slash
+
+SetEnv GITOLITE_HTTP_HOME /var/www/gitolite-home
+
+&lt;Location /git&gt;
+    AuthType Basic
+    AuthName "Private Git Access"
+    Require valid-user
+    AuthUserFile /path/to/some/passwdfile
+&lt;/Location&gt;
+</code></pre>
+
+<p>Now create/update the password file in <code>/path/to/some/passwdfile</code> using the
+<code>htpasswd</code> command, and you're all done for the setup!</p>
+
+<p><a name="http_backend_usage_"></a></p>
+
+<h2>usage</h2>
+
+<p>Git URLs look like <code>http://user:password@server/git/reponame.git</code>.</p>
+
+<p>The custom commands, like "info", "expand" should be handled as follows.  The
+command name will come just after the <code>/git/</code>, followed by a <code>?</code>, followed by
+the arguments, with <code>+</code> representing a space.  Here are some examples:</p>
+
+<pre><code># ssh git@server info
+curl http://user:password@server/git/info
+# ssh git@server info repopatt
+curl http://user:password@server/git/info?repopatt
+# ssh git@server info repopatt user1 user2
+curl http://user:password@server/git/info?repopatt+user1+user2
+</code></pre>
+
+<p>It gets even more interesting for the <code>setperms</code> command, which expects STDIN.
+I didn't want to get too much into the code here, so I found that the
+following works and I'm leaving it at that:</p>
+
+<pre><code>(echo R user1 user2; echo RW user3 user4) |
+    curl --data-binary @- http://user:password@server/git/setperms?reponame.git
+</code></pre>
+
+<p>With a few nice shell aliases, you won't even notice the horrible convolutions
+here ;-)</p>
+
+<p><a name="http_backend_allowing_anonymous_access_"></a></p>
+
+<h2>allowing anonymous access</h2>
+
+<p>Like <a href="mob.html" title="mob branches in gitolite">mob branches</a> with ssh, you can allow completely
+<strong>un</strong>-authenticated users to still have some rights specified in gitolite.
+Briefly, here's how:</p>
+
+<ul>
+<li><p>specify a ScriptAlias in apache config for unauthenticated access also.  I
+prefer something like</p>
+
+<pre><code>ScriptAlias /gitmob/ /var/www/gitolite-home/bin/gl-auth-command/
+</code></pre></li>
+<li><p>set <code>$GL_HTTP_ANON_USER</code> to some name, like 'mob' or 'anon' in the rc file</p></li>
+<li><p>give rights to this user ('mob' or 'anon' or whatever you used) in the
+gitolite config file and push the change</p></li>
+</ul>
+
+<p>URLs (in this example) will then look like <code>http://server/gitmob/reponame.git</code>
+-- we lose the userid:passwd part and change 'git' to 'gitmob'.</p>
+
+<p><a name="http_backend_ssh_http_access_and_the_GIT_HTTP_EXPORT_ALL_variable_"></a></p>
+
+<h2>ssh + http access and the <code>GIT_HTTP_EXPORT_ALL</code> variable</h2>
+
+<p>This document only talks about setting up access to a set of git repositories
+purely via smart http.  The <code>GIT_HTTP_EXPORT_ALL</code> variable must be set for
+such environments.</p>
+
+<p>However, it is possible to allow both ssh as well as http access, perhaps
+using suexec to make the CGI run under the 'git' user [detailed documentation
+patches welcome!]  For those environments, this variable is not mandatory.</p>
+
+<p>If you omit that variable, you can decide which repo is accessible via http by
+setting <code>R = daemon</code> just for those repos.</p>
+
+<p>Please note that there is no way to use "deny" rules for <em>read</em> access.  Do
+not try:</p>
+
+<pre><code>    repo gitolite-admin
+        -   =   daemon
+
+    repo @all
+        R   =   daemon
+</code></pre>
+
+<p>to achieve the (possibly common) need for disallowing http access to the admin
+repo.</p>
+
+<hr />
+
+<p>Enjoy!</p>

@@ -1,0 +1,52 @@
+<head>
+<title>
+adding users and repos
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#admin">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>adding users and repos</h2>
+
+<p>Do <strong>NOT</strong> add repos or users directly on the server!  You MUST manage the
+server by cloning the special 'gitolite-admin' repo on your workstation (<code>git
+clone git@server:gitolite-admin</code>), making changes, and pushing them.  This
+section tells you how to add users and repos.</p>
+
+<ul>
+<li><p>ask each user who will get access to send you a public key.  (Generating a
+keypair is described somewhere in <a href="gl_ssh.html" title="how gitolite uses ssh">this</a> page).</p></li>
+<li><p>rename each public key according to the user's name, with a <code>.pub</code>
+extension, like <code>sitaram.pub</code> or <code>john-smith.pub</code>.  You can also use
+periods and underscores</p></li>
+<li><p>copy all these <code>*.pub</code> files to <code>keydir</code> in your gitolite-admin repo
+clone.  You can also organise them into various subdirectories of <code>keydir</code>
+if you wish, since the entire tree is searched.</p></li>
+<li><p>edit the config file (<code>conf/gitolite.conf</code> in your admin repo clone).  See
+the <a href="conf.html" title="the access control file `gitolite.conf`">gitolite.conf</a> documentation for details on what goes in that
+file, syntax, etc.  Just add new repos as needed, and add new users and
+give them permissions as required.  The users names should be exactly the
+same as their keyfile names, but without the <code>.pub</code> extension</p></li>
+<li><p>when done, commit your changes and push.  Any new repos you specified will
+automatically be created (empty, but clonable) and users' access will be
+updated as needed.</p></li>
+</ul>
+

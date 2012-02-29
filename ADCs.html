@@ -1,0 +1,268 @@
+<head>
+<title>
+admin defined commands
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#admin-defined-commands">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>admin defined commands</h1>
+
+<p><a name="admin_defined_commands_ADC_background_"></a></p>
+
+<h2>ADC background</h2>
+
+<p>The admin-defined commands (ADCs) feature allows controlled access to
+specific, "safe", programs or scripts, without giving users full shell access.</p>
+
+<p><strong>WARNING</strong>: regardless of what you read below, the security of the code in
+the commands or scripts you install as ADCs is <strong>your responsibility</strong>.  The
+sample ADCs shipped with gitolite (in <code>contrib/adc</code>) should be safe enough,
+but an extra pair of eyes never hurt, so please review before use.</p>
+
+<p><font color="gray">Although this is a generic way to allow pretty much any
+command to be run, most of the examples and sample ADCs pertain to allowing
+users to manage their "own" repos.  If that's your use case, please read
+the <a href="wild.html" title="repositories named with wildcards">wildcard repositories</a> doc before you continue here.</font></p>
+
+<p><a name="admin_defined_commands_ADC_details_"></a></p>
+
+<h2>ADC details</h2>
+
+<p><a name="admin_defined_commands_installing_ADCs_"></a></p>
+
+<h3>installing ADCs</h3>
+
+<p>ADCs can only be installed by someone with shell access to the server; merely
+having push rights to the admin repo is not enough.</p>
+
+<ul>
+<li><p>edit <code>~/.gitolite.rc</code> and set <code>$GL_ADC_PATH</code> to a directory that is <em>not</em>
+in <code>$PATH</code>.</p></li>
+<li><p>add your "safe" executables to this directory.</p></li>
+</ul>
+
+<p><strong>Warning</strong>: An ADC can hide (or override) gitolite's built-in commands like
+'info', 'expand', 'setperms', or even 'git-receive-pack' or 'git-upload-pack'!
+This is by design.  So be careful what you name your scripts.</p>
+
+<p>However, it is perfectly ok, and may even be necessary in some cases, to name
+them after system executables (like 'rsync').</p>
+
+<p><a name="admin_defined_commands_user_invocation_"></a></p>
+
+<h3>user invocation</h3>
+
+<p>If you have a command called "foo" in that directory, then a user can invoke
+it by saying:</p>
+
+<pre><code>ssh git@server foo argument list
+</code></pre>
+
+<p><a name="admin_defined_commands_checking_authorisation_inside_an_ADC_"></a></p>
+
+<h3>checking authorisation inside an ADC</h3>
+
+<p>Once an ADC is installed, <em>all</em> users can run it.  But sometimes you want only
+some people to be able to do so.</p>
+
+<p>While you cannot prevent the ADC from running at all, you can <em>start</em> the ADC
+with code that checks the user's access to <em>any</em> arbitrary repo.  For example,
+you can bail out if the user does not have "W" access to the "gitolite-admin"
+repo, which is an easy way of making sure an ADC is only run by admins.</p>
+
+<p>See the section on "the anatomy of a command" later for this and many more
+details.</p>
+
+<p><a name="admin_defined_commands_checking_arguments_"></a></p>
+
+<h3>checking arguments</h3>
+
+<p>Gitolite will call an ADC only if the arguments passed to it match a very
+strict pattern (see <code>$ADC_CMD_ARGS_PATT</code> in <code>src/gitolite_rc.pm</code>).  This
+reduces the risk of various kinds of shell-meta related compromises.</p>
+
+<p><a name="admin_defined_commands_passing_unchecked_arguments_"></a></p>
+
+<h3>passing unchecked arguments</h3>
+
+<p>Some commands need arguments with a broader range of characters than
+<code>$ADC_CMD_ARGS_PATT</code> will allow.  As long as you are sure those commands are
+doing their own argument checking and sanitisation, you can place such
+commands in <code>$GL_ADC_PATH/ua</code> and they will be run with <strong>no checks on the
+arguments</strong>.</p>
+
+<p>The "ua" stand for "unchecked arguments".  Consider this your last warning ;-)</p>
+
+<p><a name="admin_defined_commands_fake_repos_and_access_control_for_non_git_programs_"></a></p>
+
+<h2>"fake" repos and access control for non-git programs</h2>
+
+<p>A "fake" repo is a repo that exists in the config file but is specially named
+(starts with "EXTCMD/") so that gitolite will not create an actual repo on
+disk for it.  It serves as a place holder for different sets of rules.</p>
+
+<p>If you install the 'rsync' ADC, you can use a fake repo called 'EXTCMD/rsync'
+to collect a set of rules that specify what user is allowed to read/write what
+files using the rsync command on his workstation.  See <code>contrib/adc/rsync</code> for
+more on this.</p>
+
+<p><font color="gray"><em>Any</em> non-git program can be similarly access controlled,
+as long as the <em>command line</em> that the client attempts to execute on the
+server has sufficient information to decide.  Protocols where the command line
+is just one word and everything else happens in the conversation later cannot
+be helped by this mechanism.</font></p>
+
+<p><a name="admin_defined_commands_anatomy_of_a_command_"></a></p>
+
+<h2>anatomy of a command</h2>
+
+<p>You can do whatever you want in an ADC!  It's upto you to check the
+permissions of <em>each</em> repo that the user is manipulating using your ADC --
+your code can <code>rm -rf $GL_REPO_BASE_ABS</code> if you like and gitolite wouldn't
+stop you.</p>
+
+<p>The current directory (<code>$PWD</code>) will be set to the <code>$HOME</code> of <code>git@server</code> (or
+whatever id you're using).  It won't be any specific repo, it won't even be
+the base directory of all the repos.</p>
+
+<p>Gitolite defines a few environment variables, as well as allows you to
+directly query the ownership and access permissions of any repository.</p>
+
+<p>The environment variables available are:</p>
+
+<ul>
+<li><code>GL_USER</code> -- the name of the user invoking the command</li>
+<li><code>GL_BINDIR</code> -- the directory containing all the binaries (in particular,
+<code>gitolite.pm</code>, which is all we really care about here)</li>
+<li><code>GL_REPO_BASE_ABS</code> -- the absolute path of the base directory containing
+all the repos</li>
+</ul>
+
+<p>There are a few other variables also available but the above are the only ones
+you should rely on.  Please treat any other variables you notice as being
+internal/undocumented/subject to change.</p>
+
+<p>[Implementation note: some of the distro packagers don't seem to like
+<code>GL_BINDIR</code>.  I have not tested this in those scenarios, but they probably put
+<code>gitolite.pm</code> somewhere in perl's lib path anyway, so it ought to work].</p>
+
+<p>You can query ownership and permissions for the current user (which may not
+necessarily be the owner).  This is done loosely as follows (don't use this
+exact code yet though):</p>
+
+<pre><code>perl -I$GL_BINDIR -Mgitolite -e "cli_repo_rights('reponame')"
+</code></pre>
+
+<p>which will print two space-separated words: permissions and owner.  Something
+like <code>_____R__W u1</code> or maybe <code>____@R_@W &lt;gitolite&gt;</code>.  (The <code>u1</code> indicates the
+queried repo is a wildcard repo created by user <code>u1</code>; for meanings of the "@"
+see doc/report-output.mkd)</p>
+
+<p>But that's cumbersome.  It's much nicer to use the convenient functions
+defined in <code>contrib/adc/adc.common-functions</code>; see the comments in that file
+for details, and any of the other samples for how to use them.</p>
+
+<p>If you prefer perl, there is a nicely commented example in
+<code>contrib/adc/get-rights-and-owner.in-perl</code>.</p>
+
+<p><a name="admin_defined_commands_example_uses_and_sample_commands_in_contrib_adc__"></a></p>
+
+<h2>example uses and sample commands in <code>contrib/adc</code></h2>
+
+<p><a name="fork"></a></p>
+
+<h3>the 'fork' ADC</h3>
+
+<p>A user would use the fork command like this:</p>
+
+<pre><code>ssh git@server fork from to
+</code></pre>
+
+<p>where "from" is a repo to which the user invoking the fork has "R" access, and
+"to" is a repo that does not yet exist and to which he has "C" access.</p>
+
+<p>(Reminder: these access checks are done by the "fork" script, <strong>not</strong> within
+gitolite -- once again, you are responsible for making sure your scripts
+maintain the security of the system!)</p>
+
+<p>Strictly speaking this command is not really needed.  Even without all this
+"admin-defined commands" setup you could still do the following, purely from
+the client side:</p>
+
+<pre><code>git clone git@server:from
+cd from
+git remote add new git@server:to
+git push new refs/*:refs/*
+</code></pre>
+
+<p>or some such incantation.</p>
+
+<p><a name="admin_defined_commands_deleting_trashing_repos_"></a></p>
+
+<h3>deleting/trashing repos</h3>
+
+<p>See the <a href="wild_repodel.html" title="deleting repos safely">repo-deletion document</a> for details about this.</p>
+
+<p><a name="able"></a></p>
+
+<h3>enable/disable push access temporarily</h3>
+
+<p>If you want to disable push access to gitolite temporarily (maybe for
+maintenance), anyone with write access to the gitolite-admin repo can do this:</p>
+
+<pre><code>ssh git@server able dis @all    # able dis ==&gt; dis able
+</code></pre>
+
+<p>To re-enable after the maint work is done:</p>
+
+<pre><code>ssh git@server able en @all     # able en ==&gt; en able
+</code></pre>
+
+<p>You can also do this for one or more individual repos; in place of <code>@all</code>,
+just use a space separated list of reponames (exactly as they would appear in
+the config file).  Wildcards are not supported; patches welcome ;-)</p>
+
+<p>Note: please see <a href="tnconv_.html#disable" title="disabling write access to take backups">this</a> for more on this.</p>
+
+<p><a name="admin_defined_commands_how_the_ADC_feature_came_about_"></a></p>
+
+<h2>how the ADC feature came about</h2>
+
+<p><font color="gray"></p>
+
+<p>Gitolite was named to be short for "gitosis-lite".  Someone now wants to turn
+it into a "github-lite" :-) and even had some code to start me off thinking.</p>
+
+<p>Since my first impulse on being asked for a feature is to say no, I was
+casting about for a reason when he gave me one: he first made some noises
+about perl, then said something about rewriting it all in scheme.  Nice... I
+resisted the urge to point him to <a href="http://xkcd.com/224/">this</a>, told him that's a great
+idea and he should go for it, mentally blessing him for letting me off the
+hook on coding it ;-) <a href="http://c2.com/cgi/wiki?LazinessImpatienceHubris">Laziness</a> <em>is</em> the first virtue you know!</p>
+
+<p>And that was that.  For a couple of days.</p>
+
+<p>Soon, though, I realised that there could be a pretty big bonus in this for
+tightly controlled setups, so I went and coded it all anyway.  See the section
+on "restricted admin" for what's really exciting about this for <em>me</em>.</p>
+
+<p></font></p>

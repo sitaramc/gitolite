@@ -1,0 +1,247 @@
+<head>
+<title>
+assorted tips and notes
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#tips-notes">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>assorted tips and notes</h1>
+
+<p><a name="tips_notes_common_errors_and_mistakes_"></a></p>
+
+<h2>common errors and mistakes</h2>
+
+<ul>
+<li><p>adding <code>repositories/</code> at the start of the repo name in the <code>git clone</code>.
+This error is typically made by the <em>admin</em> himself -- because he knows
+what <code>$REPO_BASE</code> is set to and thinks he has to provide that prefix on
+the client side also :-)  In fact gitolite prepends <code>$REPO_BASE</code>
+internally, so you shouldn't also do the same thing!</p></li>
+<li><p>being able to clone but getting errors on push.  Most likely caused by a
+combination of:</p>
+
+<ul>
+<li><p>you already have shell access to the server, not just "gitolite"
+access, <em>and</em></p></li>
+<li><p>you cloned using <code>git clone git@server:repositories/repo.git</code> (notice
+there's an extra "repositories/" in there?)</p></li>
+</ul>
+
+<p>In other words, you used a key that completely bypassed gitolite and went
+straight to the shell to do the clone.</p>
+
+<p><p>Please see doc/ssh-troubleshooting.mkd for what all this means.</p></li>
+</ul>
+<a name="tips_notes_other_errors_warnings_notes__"></a></p>
+
+<h2>other errors, warnings, notes...</h2>
+
+<p><a name="tips_notes_cloning_an_empty_repo_"></a></p>
+
+<h3>cloning an empty repo</h3>
+
+<p>Cloning an empty repo is only possible with clients greater than 1.6.2.  So at
+least one of your clients needs to have a recent git.  Once at least one
+commit has been made, older clients can also use it</p>
+
+<p>When you clone an empty repo, git seems to complain about <code>fatal: The remote
+end hung up unexpectedly</code>.  However, you can ignore this, since it doesn't
+seem to hurt anything.  [Update 2009-09-14; this has been fixed in git
+1.6.4.3]</p>
+
+<p><a name="tips_notes_all_syntax_for_repos_"></a></p>
+
+<h3><code>@all</code> syntax for repos</h3>
+
+<p>There <em>is</em> a way to use the <code>@all</code> syntax for repos also, as described in
+<code>doc/gitolite.conf.mkd</code>.  However, there are a couple of minor cautions:</p>
+
+<ul>
+<li>don't use <code>NAME/</code> or such restrictions on the special <code>@all</code> repo.  Due to
+the potential for defeating a crucial optimisation and slowing down <em>all</em>
+access, we do not support this.</li>
+</ul>
+
+<p><a name="tips_notes_features_"></a></p>
+
+<h2>features</h2>
+
+<p>Apart from the big ones listed in the top level README, and subjective ones
+like "better config file format", gitolite has evolved to have many useful
+features than the original goal of branch-level access control.</p>
+
+<p><a name="tips_notes_syntax_and_normal_usage_"></a></p>
+
+<h3>syntax and normal usage</h3>
+
+<p><a name="multikey"></a></p>
+
+<h4>one user, many keys</h4>
+
+<p>If you have a user who has more than one pubkey (like from different machines)
+the simplest way to deal with it is to add subdirectories and add keys there.
+For example, I might have these files in <code>keydir/</code>:</p>
+
+<pre><code>sitaram.pub
+home/sitaram.pub
+laptop/sitaram.pub
+</code></pre>
+
+<h5>old style multi keys: <a href="oldmultikeys.html" title="old style multi keys">Link</a></h5>
+
+
+<h3>security, access control, and auditing: <a href="tipssec_.html" title="security, access control, and auditing">Link</a></h3>
+
+
+<h3>convenience features: <a href="tnconv_.html" title="convenience features">Link</a></h3>
+
+
+<p><a name="tips_notes_INconvenience_features_"></a></p>
+
+<h3>INconvenience features</h3>
+
+<p><a name="repodel"></a></p>
+
+<h4>deleting a repo</h4>
+
+<p>By design, there is no code in gitolite to <em>delete</em> a repo if the repo was
+specified by name in the config file.  (Wildcard repos <em>can</em> be deleted by the
+user; see <a href="wild_repodel.html" title="deleting repos safely">here</a> for details).</p>
+
+<p>If you <em>do</em> want to permanently delete a <em>non</em>-wildcard repo, here's what you
+do:</p>
+
+<ul>
+<li><p>remove the repo from the gitolite-admin repo clone's <code>conf/gitolite.conf</code>
+file.  "add" the change, commit, and push.</p></li>
+<li><p><em>then</em> remove the repo from <code>~/repositories</code> on the server (or whatever
+you set <code>$REPO_BASE</code> to in the <code>~/.gitolite.rc</code>)</p></li>
+</ul>
+
+<p><a name="tips_notes_renaming_a_repo_"></a></p>
+
+<h4>renaming a repo</h4>
+
+<p>This is similar; there's no code to do this in gitolite.  What you do is:</p>
+
+<ul>
+<li>log on to the server, <code>cd $REPO_BASE</code> (default: <code>cd ~/repositories</code>), and
+<code>mv old-name.git new-name.git</code></li>
+<li>back on your gitolite-admin clone, edit <code>conf/gitolite.conf</code> and replace
+all occurrences of <code>old-name</code> with <code>new-name</code>.  Then add, commit, and push
+as usual.</li>
+</ul>
+
+<p>The order of these 2 steps is important; do not reverse them :-)</p>
+
+<p><a name="tips_notes_helping_with_gitweb_"></a></p>
+
+<h3>helping with gitweb</h3>
+
+<p>Although gitweb is a completely separate program, gitolite can do quite a
+lot to help you manage gitweb access as well; once the initial setup is
+complete, you can do it all from within the gitolite config file!</p>
+
+<p>If you just want gitweb to show some repositories, see <a href="confother_.html#gwd" title="specifying gitweb and daemon access">here</a> for how to
+specify which repos to show.</p>
+
+<p><a name="gitwebauth"></a></p>
+
+<h4>easier to link gitweb authorisation with gitolite</h4>
+
+<p>Over and above whether a repo is even <em>shown</em> by gitweb, you may want to
+further restrict people, allowing them to view <em>only</em> those repos for which
+they have been given read access by gitolite.</p>
+
+<p>This requires that:</p>
+
+<ul>
+<li>you have to have some sort of HTTP auth on your web server (out of my
+scope, sorry!)</li>
+<li>the HTTP auth should use the same username (like "sitaram") as used in the
+gitolite config (for the corresponding user)</li>
+</ul>
+
+<p>Normally a superuser sets up passwords for users using the "htpasswd" command,
+but this is an administrative chore.</p>
+
+<p>Robin Smidsrød had the <em>great</em> idea that, since each user already has pubkey
+access to <code>git@server</code>, this gives us a very neat way of using gitolite to let
+the users <em>manage their own HTTP passwords</em>.  Here's how:</p>
+
+<ul>
+<li>setup apache so that the htaccess file it looks for is owned by the "git"
+user</li>
+<li>in the <code>~/.gitolite.rc</code> file, look for the variable <code>$HTPASSWD_FILE</code> and
+point it to this file</li>
+<li>tell your users to type in <code>ssh git@server htpasswd</code> to set or change
+their HTTP passwords</li>
+</ul>
+
+<p>Of course some other authentication method can be used (e.g. <code>mod_ldap</code>) as
+long as the usernames match.</p>
+
+<p>Gitweb allows you to specify a subroutine to decide on access.  We use that
+feature and tie it to gitolite.  Configuration example can be found in
+<code>contrib/gitweb/</code>.</p>
+
+<p><a name="umask"></a></p>
+
+<h4>umask setting</h4>
+
+<p>Gitweb not able to read your repos?  You can change the umask for newly
+created repos to something more relaxed -- see the <code>REPO_UMASK</code> setting in the
+<a href="rc.html" title="configuring gitolite's advanced features -- the `.gitolite.rc` file">rc file documentation</a>.</p>
+
+<p><a name="tips_notes_advanced_features_"></a></p>
+
+<h3>advanced features</h3>
+
+<p>There are some really cool features that are now in pretty wide use.</p>
+
+<ul>
+<li><p><strong><a href="wild.html" title="repositories named with wildcards">repos named with wildcards</a></strong> is useful when some or most of your
+repos fit a pattern, avoiding the need to name repos individually in the
+config file.  New repos matching the pattern can be created by any user
+(if you give them rights to), with a set of permissions assigned to
+"roles", and the creator can then place users into those roles.</p></li>
+<li><p><strong><a href="ADCs.html" title="admin defined commands">admin defined commands</a></strong> allow controlled access to specific
+commands and scripts without giving users full shell access.</p></li>
+</ul>
+
+<p><a name="tips_notes_odds_and_ends_"></a></p>
+
+<h3>odds and ends</h3>
+
+<p><a name="tips_notes_poking_the_admin_repo_to_force_a_compile_"></a></p>
+
+<h4>"poking" the admin repo to force a compile</h4>
+
+<p>Sometimes you need to force a compile, as if you pushed the gitolite-admin
+repo.  I have a git alias that looks like this:</p>
+
+<pre><code>[alias]
+    poke = !git ls-remote origin | grep -w refs/heads/poke &amp;&amp; git push origin :poke || git push origin master:poke
+</code></pre>
+
+<p>so I just run <code>git poke</code>.  This toggles between deleting and creating a dummy
+branch called "poke".  Either operation will trigger the hooks.</p>

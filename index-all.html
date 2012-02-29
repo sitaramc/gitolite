@@ -23,6 +23,7 @@ Hosting git repositories
     <a href="support.html">support</a>
 </p>
 
+<!-- file: index "Hosting git repositories" -->
 
 <h1>Hosting git repositories</h1>
 
@@ -147,6 +148,59 @@ httpd if you prefer (this may require root access).</li>
 
 <h2>why is gitolite needed?: <a href="need_.html" title="why is gitolite needed?">Link</a></h2>
 
+<!-- file: need_ "why is gitolite needed?" -->
+
+<h2>why is gitolite needed?</h2>
+
+<p>Gitolite is separate from git, and needs to be installed and configured.  So...
+why do we bother?</p>
+
+<p>Gitolite is useful in any server that is going to host multiple git
+repositories, each with many developers, where some sort of access control is
+required.</p>
+
+<p>In theory, this can be done with plain old Unix permissions: each user is a
+member of one or more groups, each group "owns" one or more repositories, and
+using unix permissions (especially the setgid bit -- <code>chmod g+s</code>) you can
+allow/disallow users access to repos.</p>
+
+<p>But there are several disadvantages here:</p>
+
+<ul>
+<li>every user needs a userid and password on the server.  This is usually a
+killer, especially in tightly controlled environments</li>
+<li>adding/removing access rights involves complex <code>usermod -G ...</code> mumblings
+which most admins would rather not deal with</li>
+<li><em>viewing</em> (aka auditing) the current set of permissions requires running
+multiple commands to list directories and their permissions/ownerships,
+users and their group memberships, and then correlating all these manually</li>
+<li>auditing historical permissions or permission changes is pretty much
+impossible without extraneous tools</li>
+<li>errors or omissions in setting the permissions exactly can cause problems
+of either kind: false accepts or false rejects</li>
+<li>without going into ACLs it is not possible to give some people read-only
+access while some others have read-write access to a repo (unless you make
+it world-readable).  Group access just doesn't have enough granularity</li>
+<li>it is absolutely impossible to restrict pushing by branch name or tag
+name.</li>
+</ul>
+
+<p>Gitolite does away with all this:</p>
+
+<ul>
+<li>it uses ssh magic to remove the need to give actual unix userids to
+developers</li>
+<li>it uses a simple but powerful config file format to specify access rights</li>
+<li>access control changes are affected by modifying this file, adding or
+removing user's public keys, and "compiling" the configuration</li>
+<li>this also makes auditing trivial -- all the data is in one place, and
+changes to the configuration are also logged, so you can audit them.</li>
+<li>finally, the config file allows distinguishing between read-only and
+read-write access, not only at the repository level, but at the branch
+level within repositories.</li>
+</ul>
+
+<!-- file: index "why did I write it?" -->
 
 <p><a name="index_why_did_I_write_it__"></a></p>
 
@@ -164,6 +218,32 @@ completely (<code>receive.denyNonFastForwards</code> or <code>receive.denyDelete
 
 <h3>some more features: <a href="morefeatures_.html" title="some more features">Link</a></h3>
 
+<!-- file: morefeatures_ "some more features" -->
+
+<h3>some more features</h3>
+
+<p>Here're some more features.</p>
+
+<ul>
+<li>simple, yet powerful, config file syntax, including specifying
+gitweb/daemon access.  You'll need this power if you manage lots of
+users+repos+combinations of access</li>
+<li>apart from branch-name based restrictions, you can also restrict by
+file/dir name changed (i.e., output of <code>git diff --name-only</code>)</li>
+<li>if your requirements are still too complex, you can split up the config
+file and delegate authority over parts of it</li>
+<li>easy to specify gitweb owner, description and gitweb/daemon access</li>
+<li>easy to sync gitweb (http) authorisation with gitolite's access config</li>
+<li>comprehensive logging [aka: management does not think "blame" is just a
+synonym for "annotate" :-)]</li>
+<li>"personal namespace" prefix for each dev</li>
+<li>migration guide and simple converter for gitosis conf file</li>
+<li>"exclude" (or "deny") rights at the branch/tag level</li>
+<li>specify repos using patterns (patterns may include creator's name)</li>
+<li>define powerful operations on the server side, even github-like forking</li>
+</ul>
+
+<!-- file: index "security" -->
 
 <p><a name="index_security_"></a></p>
 

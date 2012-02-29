@@ -1,0 +1,78 @@
+<head>
+<title>
+gitolite.conf -- by example
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gitolite.conf-by-example">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>gitolite.conf -- by example</h1>
+
+<p>I hate people who make statements like "I dont have time to learn".  People
+with that sort of attitude shouldn't use gitolite at all, and I refuse to
+spoon-feed them or be their personal tutor.</p>
+
+<p>However, it's possible that even with the right attitude and willingness to
+learn, some people just get a mental block about something, and so I figure
+this might help.</p>
+
+<p>(Side note: followup questions not welcome from people in the former category;
+you know who you are).</p>
+
+<p><strong>WARNING 1</strong>: in case of conflict between this document and reality, reality
+wins.  For conflict between this document and the <a href="conf.html" title="the access control file `gitolite.conf`">main document</a>, the
+main document wins.  In any case, please bring such issues to my notice.</p>
+
+<p><strong>WARNING 2</strong>: this document has examples only for the most commonly used
+features.  If you don't find a feature here, look in the main document before
+asking me.</p>
+
+<p><strong>WARNING 3</strong>: Read the WHOLE document.  I can't keep saying, for instance,
+that "rewind" actually means any of 3 different things so I'll say it only
+once.  It's upto you to have read that part also.</p>
+
+<p><a name="gitolite_conf_by_example_general_notes_"></a></p>
+
+<h2>general notes</h2>
+
+<p>Git branch/tag name <strong>recap</strong>: branches look like refs/heads/something, tags
+look like refs/tags/something.  When there is no ambiguity, we leave out the
+refs/heads/ and the refs/tags/.</p>
+
+<p>A "rewind" means any of 3 things: force-push a branch (make it go backward,
+using 'git push -f' or equivalent), delete a branch, or update a tag.  The
+first two are clearly information-losing operations so it is wise to require
+special rights to do them.  The third is in the same category because tags are
+supposed to be "write once" so <strong>re</strong>-writing a tag is considered abnormal.</p>
+
+<p>These examples are only for the more complex parts of the conf file.  We're
+not going to discuss things like what characters are allowed in a username or
+reponame, how to write a comment line, how to write continuation lines (you
+can't), include files, and all such <em>lexical</em> issues.</p>
+
+<h2>extremely brief regex overview: <a href="regexov.html" title="extremely brief regex overview">Link</a></h2>
+
+
+<h2>basic access control: <a href="exbac.html" title="basic access control">Link</a></h2>
+
+
+<h2>advanced access control: <a href="exaac.html" title="advanced access control">Link</a></h2>
+

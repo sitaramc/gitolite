@@ -1,0 +1,41 @@
+<head>
+<title>
+appendix B: efficiency versus paranoia
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>appendix B: efficiency versus paranoia</h3>
+
+<p>If you're paranoid enough to use mirrors, you should be paranoid enough to
+use the <code>receive.fsckObjects</code> setting.  However, informal tests indicate a
+40-50% CPU overhead from this.  If you're ok with that, make the appropriate
+adjustments to <code>GL_GITCONFIG_KEYS</code> in the rc file, then add this to your
+gitolite.conf file:</p>
+
+<pre><code>repo @all
+    config receive.fsckObjects = "true"
+</code></pre>
+
+<p>Personally, I just set <code>git config --global receive.fsckObjects true</code>, since
+those servers aren't doing anything else anyway, and are idle for long
+stretches of time.  It's upto you what you want to do here.</p>

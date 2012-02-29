@@ -1,0 +1,128 @@
+<head>
+<title>
+notes on the testing setup
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#README-t">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: t_ "notes on the testing setup" -->
+
+<h1>notes on the testing setup</h1>
+
+<p><strong>WARNING: PLEASE use a dedicated user for doing this</strong>.  Various files and
+directories get overwritten and it's much simpler this way.</p>
+
+<p><a name="README_t_terminology_"></a></p>
+
+<h2>terminology</h2>
+
+<pre><code>#define PW "patches welcome!"
+#define TODO PW
+</code></pre>
+
+<p><a name="README_t_notes_and_background_"></a></p>
+
+<h2>notes and background</h2>
+
+<p>All testing is done on one <strong>brand new</strong> userid.  We use ssh host alias tricks
+to simulate multiple gitolite users within this, so <code>ssh gitolite info</code> gets
+you different results than <code>ssh u1 info</code>.</p>
+
+<p>The test suite is mainly meant for testing <strong>the core (access control)
+functionality</strong>.  It doesn't test anything else, like say the install or
+upgrade operations.  Other big features NOT covered by the test suite are
+mirroring, smart http, and password-based access.</p>
+
+<p>Note that the test driver has evolved as new scripts were added; you will see
+that older scripts are a little less sophisticated.</p>
+
+<p><a name="README_t_playing_with_gitolite_"></a></p>
+
+<h2>playing with gitolite</h2>
+
+<p>(Please heed the warning at the top of this document and use a dedicated user
+for this).</p>
+
+<p>Playing with gitolite is easy.</p>
+
+<ul>
+<li><p>Create a userid (doesn't matter what it's called; we'll pretend it's
+"gl-test" in this document).</p></li>
+<li><p>Make sure sshd allows incoming ssh to this userid at least from localhost.
+(Out of scope for this document: sshd config, 'AllowUsers', etc...)</p></li>
+<li><p>Now log in as this user (doesn't matter how), and run the following
+commands:</p>
+
+<pre><code>cd $HOME        # if not already in $HOME
+git clone git://github.com/sitaramc/gitolite
+gitolite/t/install
+</code></pre>
+
+<p>This installs the "testbed" in the userid you chose.  No other user is
+affected in any way.</p></li>
+</ul>
+
+<p>This is what you get when you do this:</p>
+
+<ul>
+<li><p>A gitolite user called "tester", tied to an ssh host alias called
+"gitolite".  This user has RW+ rights to the admin repo; running <code>ssh
+gitolite info</code> should get you the expected results.</p></li>
+<li><p>Six gitolite users called "u1" through "u6", all done through ssh host
+aliases.  Running <code>ssh u1 info</code> etc. should show you only the "testing"
+repo accessible to them.</p></li>
+<li><p>A clone of the admin repo in <code>~/gitolite-admin</code>, created by <code>git clone
+gitolite:gitolite-admin</code>.  If you <code>cd ~/gitolite-admin</code>, you will see the
+keys for the users mentioned above (tester, u1, ..., u6).</p></li>
+<li><p>The rest of a gitolite installation, such as the rc file in <code>~/.gitolite.rc</code> etc.</p></li>
+</ul>
+
+<p>Don't forget that the client and the server are all on the same user on the
+same machine.</p>
+
+<p>And don't forget, too, that we are simulating 7 gitolite users using ssh keys!
+(How?  Maybe <code>~/.ssh/config</code> will give you a hint).  You can now use those 7
+users in any way you please in the config file and test out different user's
+access simply using a different URL.  For example, <code>git clone u1:testing</code> and
+<code>git clone u2:testing</code> may give you different results depending on what rights
+you gave users "u1" and "u2" in your config.</p>
+
+<p><a name="README_t_testing_gitolite_"></a></p>
+
+<h2>testing gitolite</h2>
+
+<p>First, do what the "playing with gitolite" section says.  That is a
+pre-requisite.</p>
+
+<p>Once that is done, run this command (still in <code>$HOME</code> of the gl-test userid):</p>
+
+<pre><code>prove gitolite/t/test-driver.sh
+</code></pre>
+
+<p>(note: to make it work easier with prove, I ended up making the "subtest"
+numbers be the actual test numbers, making it look like I have over 2000
+tests, when in reality I have about 600)</p>
+
+<p><a name="README_t_instructions_for_adding_new_tests_"></a></p>
+
+<h2>instructions for adding new tests</h2>
+
+<p>(TODO)</p>

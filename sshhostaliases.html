@@ -1,0 +1,61 @@
+<head>
+<title>
+appendix 4: host aliases
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#ssh-troubleshooting">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>appendix 4: host aliases</h2>
+
+<p>(or "making git use the right options for ssh")</p>
+
+<p>The ssh command has several options for non-default items to be specified.
+Two common examples are <code>-p</code> for the port number if it is not 22, and <code>-i</code> for
+the public key file if you do not want to use just <code>~/.ssh/id_rsa</code> or such.</p>
+
+<p>Git has two ssh-based URL syntaxes, but neither allows specifying a
+non-default public key file.  And a port number is only allowed in one of
+them.  (See <code>man git-clone</code> for details).  Finally, hosts often have to be
+referred with IP addresses (such is life), or the name is very long, or hard
+to remember.</p>
+
+<p>Using a "host" para in <code>~/.ssh/config</code> lets you nicely encapsulate all this
+within ssh and give it a short, easy-to-remember, name.  Example:</p>
+
+<pre><code>host gitolite
+    user git
+    hostname a.long.server.name.or.annoying.IP.address
+    port 22
+    identityfile ~/.ssh/id_rsa
+</code></pre>
+
+<p>Now you can simply use the one word <code>gitolite</code> (which is the host alias we
+defined here) and ssh will infer all those details defined under it -- just
+say <code>ssh gitolite</code> and <code>git clone gitolite:reponame</code> and things will work.</p>
+
+<p>(By the way, the 'port' and 'identityfile' lines are needed only if you have
+non-default values, although I put them in anyway just to be complete).</p>
+
+<p>If you have <em>more than one</em> pubkey with access to the <em>same</em> server, you
+<strong>must</strong> use this method to make git pick up the right key.  There is no other
+way to do this, as far as I know.</p>
+

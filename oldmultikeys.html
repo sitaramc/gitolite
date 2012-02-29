@@ -1,0 +1,59 @@
+<head>
+<title>
+old style multi keys
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#tips-notes">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h5>old style multi keys</h5>
+
+<p>This is an older method of enabling multi-keys.  It will continue to work and
+be supported in <em>code</em>, simply because I prefer it.  But I am not going to
+document it except for the example below, nor am I going to support it in
+terms of questions.  Sorry.  Apparently it was too complex to understand, even
+for some smart folks I know.  This tells me it was probably ill thought out
+and should have been obsoleted as soon as e0fe73a was pushed.</p>
+
+<p>Anyway, here's <em>all</em> the documentation for it -- some sample pubkey filenames
+and the corresponding derived usernames:</p>
+
+<ul>
+<li><p>plain username, no multikey</p>
+
+<pre><code>sitaramc.pub                            sitaramc
+</code></pre></li>
+<li><p>plain username, with multikeys</p>
+
+<pre><code>sitaramc@laptop.pub                     sitaramc
+sitaramc@desktop.pub                    sitaramc
+</code></pre></li>
+<li><p>email address as username, no multikey</p>
+
+<pre><code>sitaramc@gmail.com.pub                  sitaramc@gmail.com
+</code></pre></li>
+<li><p>email address as username, with multikeys</p>
+
+<pre><code>sitaramc@gmail.com@laptop.pub           sitaramc@gmail.com
+sitaramc@gmail.com@desktop.pub          sitaramc@gmail.com
+</code></pre></li>
+</ul>
+

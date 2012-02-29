@@ -1,0 +1,70 @@
+<head>
+<title>
+non-root method
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#install">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>non-root method</h3>
+
+<p><strong>IMPORTANT WARNING -- IGNORE AT YOUR PERIL</strong>: if you want to use this method
+you had better know the password to the hosting user on the server, or be able
+to <code>su</code> to it from root, just in case you manage to lock yourself out by
+messing with the keys.</p>
+
+<p><strong>NOTE</strong>: This method is exhaustively described in the <a href="http://sites.google.com/site/senawario/home/gitolite-tutorial">tutorial</a>, if
+you're interested.  (That tutorial is by someone else but it's nice enough for
+me to link it here).</p>
+
+<p>On your <em>workstation</em>:</p>
+
+<ul>
+<li>copy your <code>~/.ssh/id_rsa.pub</code> file to <code>/tmp/YourName.pub</code> on the server.
+(The name of this file determines your gitolite username, so if you leave
+it as <code>id_rsa.pub</code>, your gitolite username will be <code>id_rsa</code>, which may not
+be what you want).</li>
+</ul>
+
+<p>On your <em>server</em>, as <em>git</em> (the "hosting user"), first check if <code>$HOME/bin</code> is
+on the default PATH.  If not, fiddle with the <code>.bashrc</code> or <code>.bash_profile</code> or
+similar files and add it somehow.  Then:</p>
+
+<pre><code>git clone git://github.com/sitaramc/gitolite
+gitolite/src/gl-system-install
+# defaults to being the same as:
+# gitolite/src/gl-system-install $HOME/bin $HOME/share/gitolite/conf $HOME/share/gitolite/hooks
+
+# to upgrade gitolite, repeat the above commands.  Make sure you use the
+# same arguments for the last command each time.
+
+gl-setup /tmp/YourName.pub
+</code></pre>
+
+<p>Note: please see appendix d for command line options for <a href="install.html#gl-setup" title="appendix d: command line options for gl-setup">gl-setup</a>.</p>
+
+<p>On your <em>workstation</em>:</p>
+
+<pre><code>git clone git@server:gitolite-admin
+</code></pre>
+
+<h4>upgrading from from-client method to non-root method: <a href="upgrfromclient.html" title="upgrading from from-client method to non-root method">Link</a></h4>
+

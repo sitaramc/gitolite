@@ -1,0 +1,56 @@
+<head>
+<title>
+upgrading from from-client method to non-root method
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#install">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h4>upgrading from from-client method to non-root method</h4>
+
+<p>Since the from-client method is now deprecated for reasons explained
+elsewhere, some folks may want to do their next upgrade using the non-root
+method.</p>
+
+<p>There are many, many ways to skin this cat; here's one way:</p>
+
+<ul>
+<li><p>follow non-root install but stop after the gl-system-install step</p></li>
+<li><p>temporarily rename your <code>~/.gitolite.rc</code> file to something else</p></li>
+<li><p>now run the gl-setup step</p>
+
+<p>(background: this will create a default rc file with default values, but
+crucially, it will give you the correct values for two very critical
+variables that are not used in the old from-client install method)</p></li>
+<li><p>edit <code>~/.gitolite.rc</code> and bring in any non-default settings you may have
+had in your old rc file.</p>
+
+<p>When you're done, the only difference between your old and current rc
+files should be that the <code>$GL_PACKAGE_CONF</code> and the <code>$GL_PACKAGE_HOOKS</code>
+variables are no longer commented out and look somewhat like this:</p>
+
+<pre><code>$GL_PACKAGE_CONF = '/home/git/share/gitolite/conf';
+$GL_PACKAGE_HOOKS = '/home/git/share/gitolite/hooks';
+</code></pre>
+
+<p>Now save the file.</p></li>
+</ul>
+

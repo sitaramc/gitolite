@@ -1,0 +1,176 @@
+<head>
+<title>
+repositories named with wildcards
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#wildcard-repositories">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>repositories named with wildcards</h1>
+
+<p><strong><em>IMPORTANT NOTE</em></strong>:</p>
+
+<p>This feature may be somewhat "brittle" in terms of security.  Creating
+repositories based on wild cards, giving "ownership" to the specific user who
+created it, allowing him/her to hand out permissions to other users to
+collaborate, all these are possible.  And any of these could have a bug in it.
+I haven't found any yet, but that doesn't mean there aren't any.</p>
+
+<hr />
+
+<p>This document is mostly "by example".</p>
+
+<hr />
+
+<p><a name="wildcard_repositories_quick_introduction_"></a></p>
+
+<h2>quick introduction</h2>
+
+<p>The wildrepos feature allows you to specify access control rules using regular
+expression patterns, so you can have many actual repos being served by a
+single set of rules in the config file.  The regex pattern can also include
+the word <code>CREATOR</code> in it, allowing you to parametrise the name of the user
+creating the repo.  The examples below will make this clearer.</p>
+
+<p><a name="wildcard_repositories_rc_file_setting_required_"></a></p>
+
+<h2>rc file setting required</h2>
+
+<p>This feature requires that you set <code>$GL_WILDREPOS</code> to "1" in <code>~/.gitolite.rc</code>
+on the server.  Please search for that variable in <code>doc/gitolite.rc.mkd</code>
+for more information on this.</p>
+
+<p><a name="wildcard_repositories_examples_of_wildcard_repos_"></a></p>
+
+<h2>examples of wildcard repos</h2>
+
+<p>As the introduction said, you can include the word <code>CREATOR</code> in the regex
+pattern, though it is not mandatory.  We'll look at examples of both types of
+usage.</p>
+
+<p>Which of these alternatives you choose depends on your needs, and the social
+aspects of your environment.  Including the creator name in the pattern keeps
+users rigidly separated from each others repos, and is good for a largely
+autonomous collection of users with a high probability of repo name clashes.</p>
+
+<p>Omitting the creator name from the pattern puts the repos in a common
+namespace, and is suitable for environments where it is not very important to
+keep track of who actually created the repo (except for granting access), but
+needs more communication / co-operation among the users to avoid repo name
+clashes.</p>
+
+<p><a name="wildcard_repositories_wildcard_repos_with_creator_name_in_them_"></a></p>
+
+<h3>wildcard repos with creator name in them</h3>
+
+<p>Here's an example snippet:</p>
+
+<pre><code>@prof       =   u1
+@TAs        =   u2 u3
+@students   =   u4 u5 u6
+
+repo    assignments/CREATOR/a[0-9][0-9]
+    C   =   @students
+    RW+ =   CREATOR
+    RW  =   WRITERS @TAs
+    R   =   READERS @prof
+</code></pre>
+
+<p>Note the "C" permission.  This is a standalone "C", which gives the named
+users the right to <em>create a repo</em>.  <font color="gray">This is not to be
+confused with the "RWC" or its variants described elsewhere, which are about
+<em>branches</em>, not <em>repos</em>.</font></p>
+
+<p>For now, ignore the special usernames READERS and WRITERS, and just create a
+new repo, as user "u4" (a student):</p>
+
+<pre><code>$ git clone git@server:assignments/u4/a12
+Initialized empty Git repository in /home/sitaram/t/a12/.git/
+Initialized empty Git repository in /home/gitolite/repositories/assignments/u4/a12.git/
+warning: You appear to have cloned an empty repository.
+</code></pre>
+
+<p>Notice the <em>two</em> empty repo inits, and the order in which they occur ;-)</p>
+
+<p><a name="wildcard_repositories_wildcard_repos_without_creator_name_in_them_"></a></p>
+
+<h3>wildcard repos without creator name in them</h3>
+
+<p>Here's how the same example would look if you did not want the CREATOR's name
+to be part of the actual repo name.</p>
+
+<pre><code>repo    assignments/a[0-9][0-9]
+    C   =   @students
+    RW+ =   CREATOR
+    RW  =   WRITERS @TAs
+    R   =   READERS @prof
+</code></pre>
+
+<p>We haven't changed anything except the repo name pattern.  This means that the
+first student that creates, say, <code>assignments/a12</code> becomes the owner.
+Mistakes (such as claiming a12 instead of a13) need to be rectified by an
+admin logging on to the back end, though it's not too difficult.</p>
+
+<p>You could also repace the C line like this:</p>
+
+<pre><code>    C   =   @TAs
+</code></pre>
+
+<p>and have a TA create the repos in advance.</p>
+
+<p>In either case, they could then use the <code>setperms</code> feature to specify which
+users are "READERS" and which are "WRITERS".  See later for details.</p>
+
+<h2>valid regexes and how they are used: <a href="wildregex.html" title="valid regexes and how they are used">Link</a></h2>
+
+
+<h2>handing out rights to wildcard-matched repos: <a href="setperms.html" title="handing out rights to wildcard-matched repos">Link</a></h2>
+
+
+<p><a name="wildcard_repositories_setting_a_gitweb_description_for_a_wildcard_matched_repo_"></a></p>
+
+<h2>setting a gitweb description for a wildcard-matched repo</h2>
+
+<p>Similar to the getperms/setperms commands, there are the
+<a href="user.html#setdesc" title="adding a description to repos you created">getdesc/setdesc</a> commands, thanks to Teemu.</p>
+
+<p><a name="wildcard_repositories_reporting_"></a></p>
+
+<h2>reporting</h2>
+
+<p>In order to see what repositories were created from a wildcard, use the
+<a href="info_expand.html#expand" title="the &quot;expand&quot; command">"expand"</a> command.</p>
+
+<p><a name="wildcard_repositories_deleting_a_wild_repo_"></a></p>
+
+<h2>deleting a wild repo</h2>
+
+<p>See <a href="wild_repodel.html" title="deleting repos safely">repo deletion</a> for more on this.  Note that this requires you
+to install/setup "adc"s (admin defined commands).  See
+<a href="ADCs.html" title="admin defined commands">admin-defined-commands</a> for how to do that.</p>
+
+<hr />
+
+<p>Enjoy, and please use with care.  This is pretty powerful stuff.  As they say:
+if you break it, you get to keep both pieces :)</p>
+
+<h2>how it actually works: <a href="wildhow_.html" title="how it actually works">Link</a></h2>
+

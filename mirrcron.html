@@ -1,0 +1,62 @@
+<head>
+<title>
+appendix A: example cronjob based mirroring
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>appendix A: example cronjob based mirroring</h3>
+
+<p>Let's say you have some repos that are very active.  You're pushing halfway
+across the world every few seconds, but those slaves do not need to be that closely
+updated, perhaps <em>because</em> they are halfway across the world and those guys
+are asleep ;-)</p>
+
+<p>You'd like to update them once an hour instead.  Here's how you might do that.</p>
+
+<p>First add this line to the configuration for those repos:</p>
+
+<pre><code>config gitolite.mirror.hourly = "slave1 slave2 slave3"
+</code></pre>
+
+<p>Then write a cron job that looks like this (untested).</p>
+
+<pre><code>#!/bin/bash
+
+REPO_BASE=`${0%/*}/gl-query-rc REPO_BASE`
+
+cd $REPO_BASE
+find . -type d -name "*.git" -prune | while read r
+do
+    # get reponame as gitolite knows it
+    r=${r:2}
+    r=${r%.git}
+
+    gl-mirror-shell request-push $r gitolite.mirror.hourly
+
+    # that command backgrounds the push, so you'd best wait a few seconds
+    # before hitting the next one, otherwise you'll have all your repos
+    # going out at once!
+    sleep 10
+done
+</code></pre>
+

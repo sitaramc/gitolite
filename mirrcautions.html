@@ -1,0 +1,67 @@
+<head>
+<title>
+IMPORTANT cautions
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>IMPORTANT cautions</h3>
+
+<ul>
+<li><p>For reasons given in the 'discussion' section later, the mirroring process
+will never <em>create</em> a repo on the receiving side.  It has to exist, and be
+willing to accept pushes from the master.</p>
+
+<p>In particular, this means that repositories created by end-users ("wild"
+repos) <em>need to be explicitly created</em> on the mirror (preferably by the
+same user, assuming his ssh key works there as well).  Once the repo has
+been created on the slave, subsequent pushes will be mirrored correctly.</p></li>
+<li><p>This process will <em>only</em> mirror your git repositories, using <code>git push
+--mirror</code>.  It will <em>not</em> mirror log files, and repo-specific files like
+<code>gl-creater</code> and <code>gl-perms</code> files, or indeed anything that was manually
+created or added (for example, custom config entries added manually
+instead of via gitolite).</p>
+
+<p>None of these affect actual repo contents of course, but they could be
+important, (especially the gl-creator, although if your wildcard pattern
+had "CREATOR" in it you can recreate those files easily enough anyway).</p></li>
+<li><p>This document has been tested using a 3-server setup, all installed using
+the <em>non-root</em> method (see doc/1-INSTALL.mkd).  However, the process is
+probably not going to be very forgiving of human error -- like anything
+that is this deep in "system admin" territory, errors are likely to be
+costly.  If you're the kind who hits enter first and then thinks about
+what he typed, you're in for some fun times ;-)</p>
+
+<p>On the plus side, everything we do is done using git commands, so things
+are never <em>really</em> lost until you do a <code>git gc</code>.</p></li>
+<li><p>Mirroring has <em>not</em> been, and will not be, tested with gitolite installed
+using the deprecated 'from-client' method.  Please use one of the other
+methods.</p></li>
+<li><p>Also, this has <em>not</em> been tested with smart-http.  I'm not even sure it'll
+work; http is very fiddly to get right.  If you want mirroring, at least
+your server-to-server comms should be over ssh.</p></li>
+<li><p>Finally, this method uses repo-specific <code>git config</code> variables to store
+the mirroring information.  Please read the <strong>WARNING</strong> in the
+documentation on <a href="confother_.html#rsgc" title="repo specific `git config` commands">git config commands</a> if you wish to <strong>delete</strong> one
+of those lines.</p></li>
+</ul>
+

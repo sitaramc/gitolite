@@ -1,0 +1,118 @@
+<head>
+<title>
+handing out rights to wildcard-matched repos
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#wildcard-repositories">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>handing out rights to wildcard-matched repos</h2>
+
+<p>In the examples above, we saw two special "user" names: READERS and WRITERS.
+The permissions they have are controlled by the config file, but <strong><em>who is
+part of this list</em></strong> is controlled by the person who created the repository.</p>
+
+<p>The use case is that, although our toy example has only 3 students, in reality
+there will be a few dozen, but each assignment will be worked on only by a
+handful from among those.  This allows the creator to take ad hoc sets of
+users from among the actual users in the system, and give them one of two
+roles (in this example, READERS and WRITERS respectively).  In theory you
+could do the same thing by creating lots of little "assignment-NN" groups in
+the config file but that may be a little too cumbersome for non-secret
+environments.</p>
+
+<p>Create a small text file that contains the permissions you desire:</p>
+
+<pre><code>$ cat &gt; myperms
+READERS u5
+WRITERS u6
+(hit ctrl-d here)
+</code></pre>
+
+<p>...and use the new <strong>setperms</strong> command to set permissions for your repo:</p>
+
+<pre><code>$ ssh git@server setperms assignments/u4/a12 &lt; myperms
+New perms are:
+READERS u5
+WRITERS u6
+</code></pre>
+
+<p>'setperms' will helpfully print what the new permissions are but you can also
+use <strong>getperms</strong> to check:</p>
+
+<pre><code>$ ssh git@server getperms assignments/u4/a12
+READERS u5
+WRITERS u6
+</code></pre>
+
+<p>The following points are important:</p>
+
+<ul>
+<li>note the syntax of the command; it's not a "git" command, and there's no
+<code>:</code> like in a repo URL.</li>
+<li>for the actual text being sent in via STDIN, the first space-separated
+word is the role (in this example, READERS or WRITERS), and the rest
+are simple usernames.</li>
+</ul>
+
+<p><a name="wildcard_repositories_admin_adding_other_roles_than_READERS_and_WRITERS_"></a></p>
+
+<h3>(admin) adding other roles than READERS and WRITERS</h3>
+
+<p>Let's say your needs are more complex and you need more roles.  For example,
+you might like to have a setup where only a tester can update tags, and only a
+manager can delete branches:</p>
+
+<pre><code>repo foo/..*
+  C                 =   u1
+  RW    refs/tags/  =   TESTERS
+  -     refs/tags/  =   @all
+  RW+               =   WRITERS
+  RW                =   INTERNS
+  R                 =   READERS
+  RW+D              =   MANAGERS
+</code></pre>
+
+<p>As you can see, someone pre-creates the repo and assigns rights to various
+people, say by sending something like this to <code>setperms</code>:</p>
+
+<pre><code>READERS wally
+WRITERS dilbert alice
+MANAGERS phb
+INTERNS ashok
+TESTERS ashok
+</code></pre>
+
+<p>You can enable this by setting the <code>GL_WILDREPOS_PERM_CATS</code> variable in the rc
+file.  The rc file documentation (<code>doc/gitolite.rc.mkd</code>) explains how.</p>
+
+<p><a name="rolenamewarn"></a></p>
+
+<h4><strong>IMPORTANT WARNING ABOUT THIS FEATURE</strong></h4>
+
+<p>Please make sure that none of the role names conflict with any of the
+<strong>usernames</strong> in the system.  For example, if you have a user called "foo",
+make sure you do not include "foo" as a valid role in
+<code>$GL_WILDREPOS_PERM_CATS</code>.</p>
+
+<p>You can keep things sane by using UPPERCASE names for roles, while keeping all
+your usernames lowercase; then you don't have to worry about this problem.</p>
+

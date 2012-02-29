@@ -1,0 +1,165 @@
+<head>
+<title>
+output of the "info" and "expand" commands
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#report-output">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: info_expand "output of the "info" and "expand" commands" -->
+
+<h1>output of the "info" and "expand" commands</h1>
+
+<p>Running "ssh git@server info" or "ssh git@server expand" gives you certain
+output.  This doclet describes the output; you're welcome to help me make it
+clearer :)</p>
+
+<p><a name="info"></a></p>
+
+<h2>the "info" command</h2>
+
+<p>Usage:</p>
+
+<pre><code>ssh git@server info [optional_pattern [list of users]]
+</code></pre>
+
+<p>The "info" command shows you all the repos (and repo patterns) in the config
+file that you have been given any kind of access to.  If you supply an
+optional pattern the output will be limited to repos matching that pattern.
+If you're an admin you can append a list of users to see their permissions
+instead of your own; in this mode the pattern is mandatory, even if you just
+use <code>.</code> to cheat.</p>
+
+<p>Here is a sample output of the info command.  There are 3 columns of
+permissions (create, read, and write) in the output, although the first column
+is often blank.</p>
+
+<pre><code>$ ssh git@server info
+hello sitaram, this is gitolite v2.1-29-g5a125fa running on git 1.7.4.4
+the gitolite config gives you the following access:
+     R      SecureBrowse
+     R   W  anu-wsd
+     R   W  entrans
+    @R   W  git-notes
+    @R   W  gitolite
+     R   W  gitolite-admin
+     R   W  indic_web_input
+ @C  R   W  private/sitaram/[\w.-]+
+     R   W  proxy
+ @C @R   W  public/sitaram/[\w.-]+
+    @R_ @W_ testing
+     R   W  vkc
+</code></pre>
+
+<p><a name="report_output_interpreting_the_output_"></a></p>
+
+<h3>interpreting the output</h3>
+
+<p>The meaning of C, R, and W are self-explanatory, but they may be prefixed or
+suffixed by a symbol:</p>
+
+<ul>
+<li><p>an <code>@</code> prefix means "@all" users have been given this permission</p>
+
+<pre><code>repo foo
+    R       =   @all
+</code></pre></li>
+<li><p>a <code>#</code> prefix means this user is a "superuser" (think root's shell prompt)
+and so has access to <code>@all</code> repos.  Which means you'll see this prefix
+(or, in some cases, an <code>&amp;</code>; see next bullet) for <em>all</em> the repos, or none
+of them</p>
+
+<pre><code>repo @all
+    R       =   sitaram
+</code></pre></li>
+<li><p>an <code>&amp;</code> prefix means both of the above are true</p></li>
+</ul>
+
+<p>The <code>_</code> suffix is special.  This says the user has only implicit access (due
+to one of the <code>@all</code> uses), but no explicit access.</p>
+
+<p><a name="limitoutput"></a></p>
+
+<h3>using patterns to limit output</h3>
+
+<p>Here are a couple of samples with optional patterns:</p>
+
+<pre><code>$ ssh git@server info git
+hello sitaram, this is gitolite v2.1-29-g5a125fa running on git 1.7.4.4
+the gitolite config gives you the following access:
+    @R   W  git-notes
+    @R   W  gitolite
+     R   W  gitolite-admin
+
+$ ssh git@server info admin
+hello sitaram, this is gitolite v2.1-29-g5a125fa running on git 1.7.4.4
+the gitolite config gives you the following access:
+     R   W  gitolite-admin
+</code></pre>
+
+<p>In "big-config" mode (i.e., when <code>GL_BIG_CONFIG</code> is set) the pattern is
+<strong>mandatory</strong>.  You can try and cheat the system by passing in a "." but
+gitolite truncates the output after 20 results to prevent a DOS.  (This limit
+can be changed; see <code>$BIG_INFO_CAP</code> in the documentation for
+<a href="rc.html" title="configuring gitolite's advanced features -- the `.gitolite.rc` file"><code>~/.gitolite.rc</code></a>).</p>
+
+<p>The pattern is also mandatory when an admin wants to find out what access some
+<em>other</em> user has, which you may have guessed from the syntax in the "usage"
+line above.</p>
+
+<p><a name="openssh5.6"></a></p>
+
+<h3>side note: openssh 5.6</h3>
+
+<p>It used to be that the gitolite documentation would say "just use <code>ssh
+git@server</code>" in the past, because gitolite defaults to the "info" command if
+no command is passed.</p>
+
+<p>However, starting with <a href="http://www.openssh.org/txt/release-5.6">openssh 5.6</a>, this won't work.  The ssh
+client will now "Kill channel when pty allocation requests fail".  This means
+that gitolite is not even invoked; you only get a message about pty allocation
+failure, followed by "connection closed".</p>
+
+<p>So now you have to use an explicit "info" command, (<code>ssh git@server info</code>) or
+add the <code>-T</code> option to ssh (<code>ssh -T git@server</code>).</p>
+
+<p><a name="expand"></a></p>
+
+<h2>the "expand" command</h2>
+
+<p>Usage:</p>
+
+<pre><code>ssh git@server expand [optional_pattern]
+</code></pre>
+
+<p>The "expand" command trawls through all the repositories on the server,
+limiting to repos matching the pattern you provide (default is all repos
+found).</p>
+
+<p>For each repo found, it searches for it in the config -- either the actual
+repo entry (when the repo is not a wildcard repo), or an entry for the
+wildcard that matches it -- and reports permissions.  It also takes into
+account extra permissions enabled by the <code>setperms</code> command (see
+doc/wildcard-repositories.mkd).  It shows you the "creator" of the repo as
+an additional column, defaulting to <code>&lt;gitolite&gt;</code> if it was not a wildcard
+repo.</p>
+
+<p>The limit of number of repos shown in big-config mode (20, by default)
+described earlier applies to the "expand" command also.</p>

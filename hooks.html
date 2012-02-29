@@ -1,0 +1,154 @@
+<head>
+<title>
+using hooks
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#admin">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>using hooks</h2>
+
+<p><a name="customhooks"></a></p>
+
+<h3>custom hooks</h3>
+
+<p>You can supply your own, custom, hook scripts if you wish.  Install gitolite
+as usual, then:</p>
+
+<ul>
+<li>go to ~/.gitolite/hooks/common on the server and put your new hook there</li>
+<li>now run "gl-setup" again</li>
+</ul>
+
+<p>You can use this procedure to install new hooks as well as to update hooks
+that you had previously installed.</p>
+
+<p><font color="red"><strong>IMPORTANT WARNINGS</strong></font></p>
+
+<ul>
+<li><p>The <code>update</code> hook in <code>hooks/common</code> is what implements all the
+branch-level permissions in gitolite.  If you fiddle with the hooks
+directory, please make sure you do not mess with this file accidentally,
+or all your fancy per-branch permissions will stop working.</p></li>
+<li><p>Do not under any conditions put anything in <code>hooks/gitolite-admin</code> --
+nothing in gitolite requires you to do anything here.  Leave it alone!</p></li>
+</ul>
+
+<p><a name="hookchaining"></a></p>
+
+<h3>hook chaining</h3>
+
+<p>Sometimes you need to use git hooks for your own purposes (site-local
+validations, CI integration, email notifications, or the ever popular "live
+website update"!).  However, the hooks you want to use may already be in use
+by gitolite.</p>
+
+<p>This section will tell you what to do in such cases.  First, let's list the
+hooks that gitolite uses:</p>
+
+<ul>
+<li><p>The <code>update</code> hook is used in all repos and is critical to gitolite's
+access control!</p></li>
+<li><p>The <code>post-receive</code> hook is used in all repos but only if mirroring has
+been enabled.  Shipped as <code>post-receive.mirrorpush</code>, it is renamed to
+'post-receive' and installed as part of the mirroring setup.</p></li>
+<li><p>The <code>post-update</code> hook is used in the <code>gitolite-admin</code> repo only, to
+"compile" the configuration and so on.</p></li>
+</ul>
+
+<p>To run your own 'update' hook, just put it in a file called <code>update.secondary</code>
+and install it as a hook.  Gitolite's update hook will automatically chain to
+it, taking care to pass it the same 3 arguments the original update hook
+received from git.</p>
+
+<p><font color="gray"></p>
+
+<blockquote>
+  <p>Also see the document on <a href="vref.html" title="virtual refs">virtual refs</a> for a way to add additional
+  checks that you might need.</p>
+</blockquote>
+
+<p></font></p>
+
+<p>For <code>post-receive</code>, (if using mirroring) do the opposite.  You're normally
+expected to rename the shipped 'post-receive.mirrorpush' to 'post-receive',
+but don't do this.  Instead, simply run <code>hooks/post-receive.mirrorpush</code> at the
+end of <em>your</em> hook code.  Do not worry about replicating STDIN (the documented
+way in which a post-receive hook receives its input) because the mirroring
+code does not use it.</p>
+
+<p>To run your own <code>post-update</code> hook on normal repos, just install a hook called
+'post-update' the usual way.  It'll be installed on all normal repos but not
+on the special gitolite-admin repo.  If you need that for the gitolite-admin
+repo, you'll have to call it <code>post-update.secondary</code>.</p>
+
+<p>Finally, these names ('update.secondary' and 'post-update.secondary') are
+merely the defaults.  You can change them to anything you want; look in
+conf/example.gitolite.rc for details.</p>
+
+<p><a name="admin_environment_variables_available_to_hooks_"></a></p>
+
+<h3>environment variables available to hooks</h3>
+
+<p>The following environment variables are set, and may be useful for any custom
+processing you wish to do in your hook code:</p>
+
+<ul>
+<li><code>GL_USER</code> -- the user doing the push</li>
+<li><code>GL_REPO</code> -- the reponame</li>
+<li><code>GL_REPO_BASE_ABS</code> -- the absolute base path where all the repos are kept</li>
+</ul>
+
+<p>The following variables are also set, but are generally less useful:</p>
+
+<ul>
+<li><code>GL_BINDIR</code> -- where all the binaries live</li>
+<li><code>GL_ADMINDIR</code> -- common directory for many gitolite things</li>
+</ul>
+
+<p><a name="admin_gl_post_init_hook_"></a></p>
+
+<h3>"gl-post-init" hook</h3>
+
+<p>Sometimes it is necessary to do something whenever a new repo is created.  If
+you need this functionality, just supply a hook called "gl-post-init" with
+whatever code you want in it.</p>
+
+<p><a name="pre-git"></a></p>
+
+<h3>"gl-pre-git" hook</h3>
+
+<p>Although git has lots of nice hooks you can tap into, they all run only on a
+push.  There's nothing that runs on a fetch or a clone, and there's no way to
+run something <em>before</em> git-receive-pack or git-upload-pack, (as the case may
+be) are invoked.</p>
+
+<p>That's what the <code>gl-pre-git</code> hook is for.  If an executable hook called
+<code>gl-pre-git</code> is present, it will be invoked with the current directory set to
+<code>repo.git</code>, and with a single argument which will be either <code>R</code> or <code>W</code>
+depending on what the client is trying to do.  The environment variables
+<code>GL_USER</code> and <code>GL_REPO</code> are available.  STDOUT will be forced to STDERR before
+it is called, to avoid confusing the client.</p>
+
+<p>If the code returns anything other than 0, gitolite will terminate the
+operation (i.e., not run git at all), just like many git hooks do, so make
+sure you end with <code>exit 0</code> or equivalent.</p>
+

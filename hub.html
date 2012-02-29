@@ -1,0 +1,236 @@
+<head>
+<title>
+the 'hub' ADC
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#hub">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>the 'hub' ADC</h1>
+
+<p><a name="hub_a_home_grown_hub_for_git_repos_"></a></p>
+
+<h2>a home grown 'hub' for git repos</h2>
+
+<p>This ADC (admin-defined command) helps collaboration among repos.  The name is
+in honor of github, which is the primary host for gitolite itself.</p>
+
+<p>[Note that github is a web-based service, and does a lot more, like comments,
+code reviews, etc., none of which are possible here.  We're only talking about
+some basic stuff to make the most common operations easier.  In particular,
+this system is not a replacement for normal project communications like
+email!]</p>
+
+<p><strong>Conventions used</strong>: all through the following description, we will assume
+that <strong>Alice</strong> has a repo <strong>parent</strong>, <strong>Bob</strong> has a fork of parent called
+<strong>child</strong>, and he is asking Alice to pull a branch he made called <strong>b1</strong> from
+child to parent.</p>
+
+<p>In plain git (without using github or similar), the pull request process
+starts with an email from Bob to Alice, followed by Alice running a <code>git fetch
+&lt;Bob's URL&gt; b1</code> (optionally preceded by a <code>git remote add</code> for convenience of
+long term use).  Until this happens she can't see much detail about the
+commits to be pulled.</p>
+
+<p><strong>What this ADC does</strong> is (a) collect all the pull requests she needs to look
+at in one place, and (b) allow her to examine the changes with any combination
+of <code>git log</code> and <code>git diff</code> options <em>without having to fetch the content
+first</em>, and (c) act as a trusted intermediary to allow Alice to fetch <em>just
+one branch</em> from Bob even if she does not have any access to Bob's repository!</p>
+
+<p>In a situation where there may be lots of requests, being able to take a quick
+look at them (and possibly reject some), without having to pull down anything
+at all, could be very useful.</p>
+
+<p>Once past that level, she could get the changes down to her workstation using
+<code>git fetch</code> as normal.  With this ADC, however, she has another alternative:
+get them over to <code>parent</code> (her repo) on the same gitolite server, then later
+do a normal <code>git fetch [origin]</code> to get it to her workstation.  This has the
+added advantage that other people, who may be watching her repo but not Bob's,
+now get to see what Bob sent her and send comments etc.</p>
+
+<p><a name="hub_general_syntax_"></a></p>
+
+<h2>general syntax</h2>
+
+<p>The general syntax is</p>
+
+<pre><code>ssh git@server hub &lt;hub-command&gt; &lt;args&gt;
+</code></pre>
+
+<p><a name="hub_Bob_s_commands_"></a></p>
+
+<h3>Bob's commands</h3>
+
+<p>The following commands do not cause a fetch, and should be quite fast:</p>
+
+<ul>
+<li><p>Bob sends a pull request for branch b1 to repo parent.  Notice he does not
+mention Alice by name.  This command expects a message to be piped/typed
+in via STDIN [this message is meant to be transient and is not stored long
+term; use email for more "permanent" communications].</p>
+
+<pre><code>echo "hi Alice, please pull" | ssh git@server hub request-pull child b1 [parent]
+</code></pre>
+
+<p>If <code>child</code> was created by a recent version of the 'fork' ADC (or the KDE
+'clone' ADC), which records the name of the parent repo on a fork, and it
+is <em>that</em> repo to which Bob wishes to send the pull request, the third
+argument is optional.</p></li>
+<li><p>Bob lists the status (fetched/rejected/pending) of pull requests he has
+made from his repo child to repo parent.  (Note we don't say "accepted" but
+"fetched"; see later for why):</p>
+
+<pre><code>ssh git@server hub request-status child [parent]
+</code></pre>
+
+<p>The second argument is optional the same way as the 3rd argument in the
+previous command.</p>
+
+<p>Requests that have been accepted or rejected will usually have some
+additional text, supplied by the user who did the reject/accept.  Bob can
+ask for those details by request number:</p>
+
+<pre><code>ssh git@server hub request-status child [parent] request-number
+</code></pre></li>
+</ul>
+
+<p><a name="hub_Alice_s_just_looking_commands_"></a></p>
+
+<h3>Alice's "just looking" commands</h3>
+
+<ul>
+<li><p>Alice lists requests waiting for her to check and possibly pull into
+parent.  For each waiting pull request, she will see a serial number, the
+originating repo name (child, in our example), the requestor (Bob, here),
+and the branch/tag-name (b1) being pulled:</p>
+
+<pre><code>ssh git@server hub list-requests parent
+</code></pre>
+
+<p>This command also takes an optional list of search strings that are OR-d
+together and matched against the 'status' field.  So saying</p>
+
+<pre><code>ssh git@server hub list-requests parent fetched pending
+</code></pre>
+
+<p>would list only items that were 'fetched' or 'pending' (meaning 'accepted'
+and 'rejected' would not show up).</p></li>
+<li><p>Alice views request # 1 waiting to be pulled into parent.  Shows the same
+details as above for that request, followed by the message that Bob typed
+in when he ran <code>request-pull</code>:</p>
+
+<pre><code>ssh git@server hub view-request parent 1
+</code></pre></li>
+<li><p>Alice views the log of the branch she is being asked to pull.  Note that
+this does NOT involve a fetch, so it will be pretty fast.  The log starts
+from b1, and stops at a SHA that represents any of the branches in parent.
+Alice can use any git-log options she wants to; for instance <code>--graph</code>,
+<code>--decorate</code>, <code>--boundary</code>, etc., could be quite useful.  However, she
+can't use any GUI; it has to be 'git log':</p>
+
+<pre><code>ssh git@server hub view-log parent 1 &lt;git log options&gt;
+</code></pre>
+
+<p>Notice that the repo name Alice supplies is still her own, although the
+log comes from the child repo that Bob wants Alice to pull from.  It's
+best if you think of this as "view the commits from pull request #1 in
+'parent'".</p></li>
+<li><p>Alice views the diff between arbitrary commits on child:</p>
+
+<pre><code>ssh git@server hub view-diff parent 1 &lt;git diff options&gt;
+</code></pre>
+
+<p>Again, she mentions <em>her</em> reponame but the diff's come from <code>child</code>.  Also
+note that, due to restrictions on what characters are allowed in arguments
+to ADCs, you probably can't do things like <code>pu^</code> or <code>master~3</code>, and have
+to use SHAs instead.</p></li>
+</ul>
+
+<p><a name="hub_Alice_s_action_commands_"></a></p>
+
+<h3>Alice's "action" commands</h3>
+
+<ul>
+<li><p>Alice doesn't like what she sees and decides to reject it.  This command
+expects some text on STDIN as the rejection message:</p>
+
+<pre><code>echo "hi Bob, your patch needs work; see email" | ssh git@server hub reject parent 1
+</code></pre></li>
+<li><p>Alice likes what she sees so far and wants to fetch the branch Bob is
+asking her to pull.  Note that we are intentionally not using the word
+"accept", because this command does not (and cannot, since it is running
+on a bare repo on the server) do a pull.  What it does is it fetches into
+a branch whose name will be <code>requests/child/b1</code>.</p>
+
+<p>Note that when multiple requests from the same repo (child) for the same
+branch (b1) happen, each "fetch" overwrites the branch.  This allows Bob
+to continually refine the branch he is requesting for a pull based on
+(presumably emailed) comments from Alice.  In a way, this is a "remote
+tracking branch", just like <code>refs/remotes/origin/b1</code>.</p>
+
+<pre><code>ssh git@server hub fetch parent 1
+</code></pre>
+
+<p>This command will actually fetch from child into parent, and may take time
+when the changes are large.  However all this is on the server so it does
+not involve network traffic:</p></li>
+<li><p>Alice has fetched the stuff she wants, looked at it/tested it, and decides
+to merge it into <code>parent</code>.  Once that is done, she runs:</p>
+
+<pre><code>echo "thanks for the frobnitz patch Bob" | ssh git@server hub accept parent 1
+</code></pre>
+
+<p>to let Bob know next time he checks 'request-status'.  Like the <code>reject</code>
+sub-command, this is also just a status update; no actual 'git' changes
+happen.</p></li>
+</ul>
+
+<p>Notice the sequence of Alice's action commands: it's either 'reject', or a
+'fetch' then 'accept'.</p>
+
+<p><a name="hub_what_next__"></a></p>
+
+<h2>what next?</h2>
+
+<p>At this point, you're done with the <code>hub</code> ADC.  However, all this is on the
+bare <code>parent.git</code> on the server, and nothing has hit Alice's workstation yet!
+Alice will still have to run a fetch or a pull on her workstation if she wants
+to check the code in detail, use a tool like gitk, and especially to
+compile/test it.  <em>Then</em> she decides whether to accept or reject the request,
+which will have to be communicated via email, of course; see the second para
+of this document ;-)</p>
+
+<p>Finally, note that Alice does not actually need to use the <code>fetch</code> subcommand.
+She can do the traditional thing and fetch Bob's repo/branch directly to her
+<em>workstation</em>.</p>
+
+<p><a name="hub_note_to_the_admin_configuration_variables_"></a></p>
+
+<h2>note to the admin: configuration variables</h2>
+
+<p>There are 2 configuration variables.  <code>BASE_FETCH_URL</code> should be set to a
+simple "read" URL (so it doesn't even have to be ssh) that almost anyone using
+this server can use.  It's only used in producing the <code>git fetch</code> command
+mentioned just above.</p>
+
+<p><code>GL_FORKED_FROM</code> is set to <code>gl-forked-from</code> by default, but if your initials
+are <code>JM</code> you can set it to <code>kde-cloned-from</code> to save time and trouble ;-)</p>

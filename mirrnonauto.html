@@ -1,0 +1,56 @@
+<head>
+<title>
+non-autonomous
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>non-autonomous</h3>
+
+<p>In this setup, the slave server is under the same "management" as the master.
+All repos, including gitolite-admin are mirrored, and <em>each slave is an exact
+replica of the master</em>. Since the admin repo is mirrored, authentication info
+is identical across all servers, and it is safe to use redirected pushes.
+(This was the only type of mirroring possible in the old mirroring code in
+gitolite).</p>
+
+<p>Install gitolite on all servers. Then add these lines to the top of all admin
+repos and push them all. This sets up the config for mirroring all repos.</p>
+
+<pre><code>repo @all
+    config gitolite.mirror.master = "frodo"
+    config gitolite.mirror.slaves = "sam gollum"
+</code></pre>
+
+<p>Once they're all pushed, sync the admin repo once:</p>
+
+<pre><code># on master server
+gl-mirror-shell request-push gitolite-admin
+</code></pre>
+
+<p>Since authentication is also being mirrored, you can take advantage of
+redirected pushing if you wish:</p>
+
+<pre><code>repo @all
+    config gitolite.mirror.redirectOK = "true"
+</code></pre>
+

@@ -1,0 +1,311 @@
+<head>
+<title>
+what is a "big-config"
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#big-config">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>what is a "big-config"</h1>
+
+<p>This document is just background info; you don't actually need to read the
+whole thing if you don't care.  All you need to do is set <code>BIG_CONFIG</code> to 1 in
+the rc file and you're done.  If you have no use for gitweb, git-daemon, or
+<a href="confother_.html#rsgc" title="repo specific `git config` commands">git config</a>, you can save even more time by setting
+<code>GL_NO_DAEMON_NO_GITWEB</code>.</p>
+
+<p>Finally, if you're <em>really</em> an expert (or your initials are "JK"), you can
+even set <code>GL_NO_CREATE_REPOS</code> and <code>GL_NO_SETUP_AUTHKEYS</code>.  However, be warned
+that if you're not sufficiently clueful, those last 2 variables could have a
+<a href="rc.html#rcsecurity" title="variables with a security impact">security impact</a>.</p>
+
+<p><a name="big_config_when_why_do_we_need_it__"></a></p>
+
+<h2>when/why do we need it?</h2>
+
+<p>A "big config" is anything that has a few thousand users and a few thousand
+repos, resulting in a very large 'compiled' config file.</p>
+
+<p><a name="big_config_the_problem_"></a></p>
+
+<h3>the problem</h3>
+
+<p>To understand the problem, consider what happens if you have something like
+this in your gitolite conf file:</p>
+
+<pre><code>@wbr    =   lynx firefox
+@devs   =   alice bob
+
+repo @wbr
+    RW+     next    =   @devs
+    RW    master    =   @devs
+</code></pre>
+
+<p>Without the 'big config' setting, gitolite internally translates this to:</p>
+
+<pre><code>repo lynx firefox
+    RW+     next    =   alice bob
+    RW    master    =   alice bob
+</code></pre>
+
+<p>and then generates the actual config rules once for each user-repo-ref
+combination (there are 8 combinations above); the compiled config file looks
+somewhat like <a href="bigno_.html" title="compiled config with big-config disabled">this</a>.</p>
+
+<p>Of course, the output is the same whether you used groups (like <code>@wbr</code> and
+<code>@devs</code> in the example above) or listed the repos directly on the 'repo'
+lines.</p>
+
+<p>Anyway, you can imagine what that does when you have 10,000 users and 10,000
+repos.  Let's just say it's not pretty :)</p>
+
+<p><a name="big_config_how_do_we_use_it__"></a></p>
+
+<h2>how do we use it?</h2>
+
+<p>Just set</p>
+
+<pre><code>$GL_BIG_CONFIG = 1;
+</code></pre>
+
+<p>in the <code>~/.gitolite.rc</code> file on the server (see next section for more
+variables).  When you do that, and push this configuration, one of two things
+happens.</p>
+
+<p><a name="big_config_access_rules_for_groups_"></a></p>
+
+<h3>access rules for groups</h3>
+
+<p>If you used group names in the 'repo' lines (as in <code>repo @wbr</code>), then the
+compiled config looks like <a href="bigyes_.html" title="compiled config with big-config enabled">this</a>.</p>
+
+<p>That's a lot smaller, and allows orders of magintude more repos and groups to
+be supported.</p>
+
+<p><a name="big_config_access_rules_for_individual_repos_split_config__"></a></p>
+
+<h3>access rules for individual repos (split config)</h3>
+
+<p>If, on the other hand, you had the repos listed individually, (as in <code>repo
+lynx firefox</code>), then the main config file would now look like this:</p>
+
+<pre><code>%repos = ();
+%split_conf = (
+  'firefox' =&gt; 1,
+  'lynx' =&gt; 1
+);
+</code></pre>
+
+<p>And each individual repo's configuration would go its own directory.  For
+instance, <code>~/repositories/lynx.git/gl-conf</code> would look like this:</p>
+
+<pre><code>%one_repo = (
+  'lynx' =&gt; {
+    'R' =&gt; {
+      'alice' =&gt; 1,
+      'bob' =&gt; 1
+    },
+    'W' =&gt; {
+      'alice' =&gt; 1,
+      'bob' =&gt; 1
+    },
+    'alice' =&gt; [
+      [
+        0,
+        'refs/heads/next',
+        'RW+'
+      ],
+      [
+        4,
+        'refs/heads/master',
+        'RW'
+      ]
+    ],
+    'bob' =&gt; [
+      [
+        1,
+        'refs/heads/next',
+        'RW+'
+      ],
+      [
+        5,
+        'refs/heads/master',
+        'RW'
+      ]
+    ]
+  }
+);
+</code></pre>
+
+<p>That does not reduce the overall size of the repo config (because you did not
+group the repos), but the main repo config is now even smaller!</p>
+
+<p><a name="big_config_what_are_the_downsides__"></a></p>
+
+<h2>what are the downsides?</h2>
+
+<p>There are some downsides.</p>
+
+<p>The following apply if individual ("split") conf files are written, which in
+turn only happens if you used repo names instead of group names on the <code>repo</code>
+lines:</p>
+
+<ul>
+<li><p>the compile (gitolite-admin push) is now slower, because it potentially
+has to write a few thousand small files instead of one large one.  Since
+the compile should be relatively infrequent compared to developer access,
+this is ok -- the main config file is parsed much faster now, so every hit
+to the server will benefit.</p></li>
+<li><p>we can no longer distinguish 'repo not found on disk' from 'you dont have
+access'.  They both now look like 'you dont have access'.</p></li>
+</ul>
+
+<p><a name="big_config_other_optimisations_"></a></p>
+
+<h2>other optimisations</h2>
+
+<p><a name="big_config_disabling_various_defaults_"></a></p>
+
+<h3>disabling various defaults</h3>
+
+<p>The default RC file contains the following lines (we've already discussed the
+first one):</p>
+
+<pre><code>$GL_BIG_CONFIG = 0;
+$GL_NO_DAEMON_NO_GITWEB = 0;
+$GL_NO_CREATE_REPOS = 0;
+$GL_NO_SETUP_AUTHKEYS = 0;
+</code></pre>
+
+<p><code>GL_NO_DAEMON_NO_GITWEB</code> is a very useful optimisation that you <em>must</em> enable
+if you <em>do</em> have a large number of repositories, and do <em>not</em> use gitolite's
+support for gitweb or git-daemon access (see "<a href="confother_.html#gwd" title="specifying gitweb and daemon access">this</a>" for details).  This
+will save a lot of time when you push the gitolite-admin repo with changes.
+This variable also controls whether "git config" lines (such as <code>config
+hooks.emailprefix = "[gitolite]"</code>) will be processed or not.</p>
+
+<p>You should be a lot more careful with <code>GL_NO_CREATE_REPOS</code> and
+<code>GL_NO_SETUP_AUTHKEYS</code>.  These are meant for installations where some backend
+system already exists that does all the actual repo creation, (including
+setting up the proper hooks -- very important for access control), and all the
+authentication setup (ssh auth keys), respectively.</p>
+
+<p>Summary: Please <strong>leave those two variables alone</strong> unless you're initials are
+"JK" ;-)</p>
+
+<p><a name="authkeyopt"></a></p>
+
+<h3>optimising the authkeys file</h3>
+
+<p>Sshd does a linear scan of the <code>~/.ssh/authorized_keys</code> file when an incoming
+connection shows up.  This means that keys found near the top get served
+faster than keys near the bottom.  On my laptop, it takes about 2500 keys
+before I notice the delay; on a typical server it could be double that, so
+don't worry about all this unless your user-count is in that range.</p>
+
+<p>One way to deal with 5000+ keys is to use customised, database-backed ssh
+daemons, but many people are uncomfortable with taking non-standard versions
+of such a critical piece of the security infrastructure.  In addition, most
+distributions do not make it painless to use them.</p>
+
+<p>So what do you do?</p>
+
+<p>The following trick uses the Pareto principle (a.k.a the "80-20 rule")
+to get an immediate boost in response for the most frequent or prolific
+developers.  It can allow you to ignore the problem until the next big
+increase in your user counts!</p>
+
+<p>Here's how:</p>
+
+<ul>
+<li>create subdirectories of keydir/ called 0, 1, (maybe 2, 3, etc., also),
+and 9.</li>
+<li>in 0/, put in the pubkeys of the most frequent users</li>
+<li>in 1/, add the next most important set of users, and so on for 2, 3, etc.</li>
+<li>finally, put all the rest in 9/</li>
+</ul>
+
+<p>Make sure "9" contains at least 70-90% of the total number of pubkeys,
+otherwise this doesn't really help.</p>
+
+<p>You can easily determine who your top users are by runnning something like
+this (note the clever date command that always gets you last months log file!)</p>
+
+<pre><code>cat .gitolite/logs/gitolite-`date +%Y-%m -d -30days`.log |
+    cut -f2 | sort | uniq -c | sort -n -r
+</code></pre>
+
+<h2>storing usergroup information outside gitolite (like in LDAP): <a href="ldap.html" title="storing usergroup information outside gitolite (like in LDAP)">Link</a></h2>
+
+
+<p><a name="big_config_implementation_notes_"></a></p>
+
+<h2>implementation notes</h2>
+
+<p>To understand how big-config works (at least when you're using grouped repos),
+we'll first look at how it works without this setting.  Think back to the
+example at the top, and assume 'alice' is accessing the 'lynx' repo.  The
+various rights are governed by the following hash elements:</p>
+
+<pre><code># for the first level checks
+$repos{'lynx'}{'R'}{'alice'} = 1
+$repos{'lynx'}{'W'}{'alice'} = 1
+
+# for the second level checks
+$repos{'lynx'}{'alice'}{'refs/heads/master'} = 'RW';
+$repos{'lynx'}{'alice'}{'refs/heads/next'} = 'RW+';
+</code></pre>
+
+<p>Those elements are explicitly specified in the compiled hash, as you can see
+(you don't need to know perl too much to read a hash; just make some educated
+guesses if needed!)</p>
+
+<p>Now look at the compiled hash produced when <code>GL_BIG_CONFIG</code> is set.  In place
+of both 'firefox' and 'lynx' you have '@wbr', and similarly '@devs' for both
+'alice' and 'bob'.  In addition, there is a group hash at the bottom that
+lists each group and its members.</p>
+
+<p>When 'alice' tries to access the 'lynx' repo, gitolite collects all the group
+names that these names belong to, so '@devs' is added to the list of 'user'
+names that 'alice' inherits permissions from, and '@wbr' is added to the list
+of 'repo' names that 'lynx' inherits from.  This means that the final access
+inherits all permissions pertaining to the following combinations:</p>
+
+<pre><code>alice, lynx
+alice, @wbr
+@devs, lynx
+@devs, @wbr
+</code></pre>
+
+<p>(Actually there are 3 more... try and guess what they may be!)</p>
+
+<p>Anyway, all ACL rules for these combinations are clubbed together to make the
+composite set of rules that 'alice' accessing 'lynx' is subject to.</p>
+
+<p><a name="big_config_config_listings_"></a></p>
+
+<h2>config listings</h2>
+
+<h3>compiled config with big-config disabled: <a href="bigno_.html" title="compiled config with big-config disabled">Link</a></h3>
+
+
+<h3>compiled config with big-config enabled: <a href="bigyes_.html" title="compiled config with big-config enabled">Link</a></h3>
+

@@ -1,0 +1,83 @@
+<head>
+<title>
+redirecting pushes
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>redirecting pushes</h3>
+
+<p><strong>Please read carefully; there are security implications if you enable this
+for mirrors NOT under your control</strong>.</p>
+
+<p>When a user pushes to a non-native repo, it is possible to transparently
+redirect the push to the correct master server.  This is a very neat feature,
+because now all your users just use one URL (the mirror nearest to them).
+They don't need to know where the actual master is, and more importantly, if
+you and the other admins change it, they don't need to know it changed!</p>
+
+<p>The <code>gitolite.mirror.redirectOK</code> config variable decides where this
+redirection is OK.  If it is set to 'true', any valid 'slave' can redirect an
+incoming non-native push from a developer.  Otherwise, it contains a list of
+slaves that are permitted to redirect pushes (this might happen if you don't
+trust some of your slaves enough to accept a redirected push from them).</p>
+
+<p><strong>Warning</strong>: like <code>gitolite.mirror.slaves</code>, this key also should have only
+hosts, no keys, in it.</p>
+
+<p>This check needs to pass on both the master and slave servers; both have a say
+in deciding if this is allowed.  (The master may have real reasons not to
+allow this; see below.  I cannot think of any real reason for the <em>slave</em> to
+disable this, but it's there in case some admin doesn't like it).</p>
+
+<p>There are some potential issues that you MUST consider before enabling this:</p>
+
+<ul>
+<li><p>(security) If the slave and master server are so different or autonomous
+that a user, say "alice", on the slave is not guaranteed to be the same
+one as "alice" on the master, then the master admin should NOT enable this
+feature.</p>
+
+<p>This is because, in this scheme, authentication happens on the slave, but
+authorisation is on the master.  The slave-authenticated userid (alice) is
+passed to the master.</p>
+
+<p>(If you know ssh well enough, you know that the ssh authentication has
+already happened, so all we can do is ensure authorisation happens with
+whatever username we know so far).</p></li>
+<li><p>If your slave is out of sync with the master for whatever reason, then the
+user will get confusing results.  A <code>git fetch</code> may say everything is
+upto-date but the push fails saying it is not a fast-forward push.  (Of
+course there's a way to fix this; see the "commands to (re-)sync mirrors"
+section above).</p></li>
+<li><p>We cannot redirect non-git commands like ADC, setperms, etc because we
+don't really have a way of knowing what repo he's talking about (different
+commands have different syntaxes, some have more than one reponame...).
+Any user who needs to do that should access the end server directly.  It
+should be easy enough to write an ADC to do the forwarding, in case the
+slave server is the only one that can reach the real master due to network
+or firewall setup.</p>
+
+<p>Ideally, I recommend that ad hoc repos not be mirrored at all.  Keep
+mirroring for "blessed" repos only.</p></li>
+</ul>
+

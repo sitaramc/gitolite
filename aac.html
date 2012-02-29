@@ -1,0 +1,252 @@
+<head>
+<title>
+advanced access control
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gitolite.conf">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>advanced access control</h2>
+
+<p>The previous section is sufficient for most common needs, but gitolite can go
+a lot further than that.</p>
+
+<p><a name="NAME"></a></p>
+
+<h3>restricting pushes by dir/file name using NAME/</h3>
+
+<p>Here's a hopefully self-explanatory example.  Assume the project has the
+following contents at the top level: a README, a "doc/" directory, and an
+"src/" directory.</p>
+
+<pre><code>repo foo
+        RW+                             =   lead_dev                # rule 1
+        RW                              =   dev1 dev2 dev3 dev4     # rule 2
+
+        RW  NAME/                       =   lead_dev                # rule 3
+        RW  NAME/doc/                   =   dev1 dev2               # rule 4
+        RW  NAME/src/                   =   dev1 dev2 dev3 dev4     # rule 5
+</code></pre>
+
+<p>Notes:</p>
+
+<ul>
+<li><p>the "NAME/" is part of the syntax; think of it as a keyword if you like.
+The rest of it is treated as a refex to match against each file being
+touched (see "SPECIFYING AND USING A REFEX" above for details)</p></li>
+<li><p>file/dir NAME-based restrictions are <em>in addition</em> to normal (branch-name
+based) restrictions; they are not a <em>replacement</em> for them.  This is why
+rule #2 (or something like it, maybe with a more specific branch-name) is
+needed; without it, dev1/2/3/4 cannot push any branches.</p></li>
+<li><p>if a repo has <em>any</em> NAME/ rules, then NAME-based restrictions are checked
+for <em>all</em> users.  This is why rule 3 is needed, even though we don't
+actually have any NAME-based restrictions on lead_dev.  Notice the pattern
+on rule 3.</p></li>
+<li><p><em>each</em> file touched by the commits being pushed is checked against those
+rules.  So, lead_dev can push changes to any files, dev1/2 can push
+changes to files in "doc/" and "src/" (but not the top level README), and
+dev3/4 can only push changes to files in "src/".</p></li>
+</ul>
+
+<p><a name="deny"></a></p>
+
+<h3>"deny" rules</h3>
+
+<p><a name="gitolite_conf_warnings_and_required_reading_"></a></p>
+
+<h4>warnings and required reading</h4>
+
+<p>Gitolite performs access checks at 2 levels.  The first check is performed for
+both read <em>and</em> write operations, while the second one happens only for write
+operations.</p>
+
+<p><strong>Required reading</strong>: <a href="tipssec_.html#2levels" title="two levels of access rights checking">this section</a> of the documentation.</p>
+
+<p><strong>Warning</strong>: When using deny rules, the order of your rules matters, where
+earlier it did not.  If you're just starting to add a deny rule to an existing
+ruleset, it's a good idea to review the entire ruleset once, to make sure
+you're doing it right.</p>
+
+<p><a name="gitolite_conf_deny_rules_for_refs_in_a_repo_"></a></p>
+
+<h4>"deny" rules for refs in a repo</h4>
+
+<p>You can use "deny" rules for the second check, to prevent people pushing
+branches or tags that they should not be allowed to.</p>
+
+<p>Take a look at the following snippet, which <em>seems</em> to say that "bruce" can
+write versioned tags (anything containing <code>refs/tags/v[0-9]</code>), but the other
+staffers can't:</p>
+
+<pre><code>    @staff = bruce whitfield martin
+            [... and later ...]
+    RW refs/tags/v[0-9]     = bruce
+    RW refs/tags            = @staff
+</code></pre>
+
+<p>But that's not how the matching works.  As long as any refex matches the
+refname being updated, it's a "yes".  Since the second refex (which says
+"anything containing <code>refs/tags</code>") is a superset of the first one, it lets
+anyone on <code>@staff</code> create versioned tags, not just Bruce.</p>
+
+<p>So how do we say "these people can create any tags except tags that look like
+this pattern"?</p>
+
+<p>One way to fix this is to allow "deny" rules.  We make a small addition to the
+permissions syntax, and define a more rigorous, ordered, interpretation.</p>
+
+<p>Let's recap the <strong>existing semantics</strong>:</p>
+
+<blockquote>
+  <p>The first matching refex that has the permission you're looking for (<code>W</code>
+  or <code>+</code>), results in success.  A fallthrough results in failure.</p>
+</blockquote>
+
+<p>Here are the <strong>new semantics</strong>, with changes from the "main" one in bold:</p>
+
+<blockquote>
+  <p>The first matching refex that has the permission you're looking for (<code>W</code>
+  or <code>+</code>) <strong>or a minus (<code>-</code>)</strong>, results in success <strong>or failure,
+  respectively</strong>.  A fallthrough <strong>also</strong> results in failure.</p>
+</blockquote>
+
+<p>So the example we started with becomes, if you use "deny" rules:</p>
+
+<pre><code>    RW refs/tags/v[0-9]     = bruce
+    -  refs/tags/v[0-9]     = @staff
+    RW refs/tags            = @staff
+</code></pre>
+
+<p>And here's how it works:</p>
+
+<ul>
+<li>for non-version tags, only the 3rd rule matches, so anyone on staff can
+push them</li>
+<li>for version tags by bruce, the first rule matches so he can push them</li>
+<li>for version tags by staffers <em>other than bruce</em>, the second rule matches
+before the third one, and it has a <code>-</code> as the permission, so the push
+fails</li>
+</ul>
+
+<p><a name="gitolite_conf_deny_rules_for_the_entire_repo_"></a></p>
+
+<h4>"deny" rules for the entire repo</h4>
+
+<p>The previous section described deny rules for the second check, which is a
+fairly common need.  However, gitolite does not process deny rules for the
+first check -- it's usually simple enough to make sure your config file does
+not allow the particular user/repo combindation at all.</p>
+
+<p>But there's one case where this becomes cumbersome: when you want to create
+exceptions to uses of <code>@all</code>.</p>
+
+<p>For example, if you want gitweb to show <code>@all</code> repos except the special
+'gitolite-admin' repo, you must manually (and laboriously) maintain a list of
+all your repos (except gitolite-admin) and use that in place of <code>@all</code>.  Oh
+joy...</p>
+
+<p>But now you can do this:</p>
+
+<pre><code>repo gitolite-admin
+    -   =   gitweb daemon
+    [... other access rules ...]
+    config gitolite-options.deny-repo = 1
+
+repo @all
+    R   =   gitweb daemon
+</code></pre>
+
+<p>Here are some notes on how/why this works:</p>
+
+<ul>
+<li><p>The order is important -- the deny rule must come first.</p></li>
+<li><p>The 'config' line is what tells git to behave differently, i.e., apply
+deny rules for the first check also.</p></li>
+<li><p>Since there is no "ref" to match against the refexes in the rules,
+gitolite just ignores the refexes, and simply looks at the permission (R,
+RW, "-", etc) and the user list.</p></li>
+</ul>
+
+<p><a name="rwcd"></a></p>
+
+<h3>creating and deleting branches</h3>
+
+<p>Since the beginning of gitolite, <code>RW</code> gave the ability, not only to update,
+but to <em>create</em> a branch (that matched the refex).  Similarly, <code>RW+</code> meant
+being able to not only rewind, but also delete a ref.  Conceptually, a rewind
+is almost the same as a delete+push (the only difference I can see is if you
+had core.logAllRefUpdates set, which is <em>not</em> a default setting).</p>
+
+<p>However, there seem to be cases where it is useful to distinguish these cases.
+Arguments can be made on all sides if you're dealing with new users, so
+gitolite now supports that (in a backward compatible way).</p>
+
+<p>We'll look at the delete/rewind case in detail first:</p>
+
+<ul>
+<li><p>if the rules for a repo do not contain a <code>D</code> anywhere, then <code>RW+</code> will
+allow both rewind and delete operations.  Apart from being more convenient
+if you don't need this separation, this also ensures backward
+compatibility for setups created before this separation feature was added
+to gitolite).</p></li>
+<li><p>if, however, <em>any</em> of the rules for a repo contains a <code>D</code> (example: <code>RWD</code>,
+<code>RW+D</code>, etc) then <code>RW+</code> by itself will permit only a rewind, not a delete</p></li>
+</ul>
+
+<p>The same thing applies to create/push, where if you have permissions like
+<code>RWC</code> or <code>RW+C</code> anywhere in that repo, a simple <code>RW</code> or <code>RW+</code> can no longer
+<em>create</em> a new ref.</p>
+
+<p>You can combine the <code>C</code> and <code>D</code> also.  Thus, the set of permissions you now
+know about are, in regex syntax: <code>R|RW+?C?D?</code>.  See a later section for the
+full set of permissions possible.</p>
+
+<p>Some usage hints:</p>
+
+<ul>
+<li><p>if you find that <code>RW+</code> no longer allows creation/deletion but you can't
+see a <code>C</code>/<code>D</code> permission in the rules, remember that gitolite allows a
+repo config to be specified in multiple places for convenience, included
+delegated or included files.  Be sure to search everywhere :)</p></li>
+<li><p>a quick way to make this the default for <em>all</em> your repos is:</p>
+
+<pre><code>repo @all
+    RWCD    dummy-branch    =   foo
+</code></pre>
+
+<p>where foo can be either the administrator, or if you can ignore the
+warning message when you push, a non-existant user.</p></li>
+</ul>
+
+<p><a name="mergecheck"></a></p>
+
+<h3>enforcing a no-merges policy</h3>
+
+<p>Some people want to enforce a no-merges policy for various reasons.  The new
+"M" qualifier can be used to specify who is allowed to push merge commits.
+This works just like "C" and "D" in the previous section, so <strong>please read
+that for a more detailed description</strong> and apply the same ideas, (including
+the <code>@all</code> trick!) to "M" for "allow merge commits".</p>
+
+<p>The only other thing to remember is that this qualifier, if used, goes at the
+end of any permission starting with <code>RW</code> (i.e., all of them except <code>R</code>).  For
+example, <code>RW</code> becomes <code>RWM</code>, <code>RW+</code> becomes <code>RW+M</code>, <code>RW+CD</code> becomes <code>RW+CDM</code>.</p>
+

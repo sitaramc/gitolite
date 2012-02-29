@@ -1,0 +1,291 @@
+<head>
+<title>
+gitolite.conf -- by example
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gitolite.conf-by-example">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: conf_examples "gitolite.conf -- by example" -->
+
+<h1>gitolite.conf -- by example</h1>
+
+<p>I hate people who make statements like "I dont have time to learn".  People
+with that sort of attitude shouldn't use gitolite at all, and I refuse to
+spoon-feed them or be their personal tutor.</p>
+
+<p>However, it's possible that even with the right attitude and willingness to
+learn, some people just get a mental block about something, and so I figure
+this might help.</p>
+
+<p>(Side note: followup questions not welcome from people in the former category;
+you know who you are).</p>
+
+<p><strong>WARNING 1</strong>: in case of conflict between this document and reality, reality
+wins.  For conflict between this document and the <a href="conf.html" title="the access control file `gitolite.conf`">main document</a>, the
+main document wins.  In any case, please bring such issues to my notice.</p>
+
+<p><strong>WARNING 2</strong>: this document has examples only for the most commonly used
+features.  If you don't find a feature here, look in the main document before
+asking me.</p>
+
+<p><strong>WARNING 3</strong>: Read the WHOLE document.  I can't keep saying, for instance,
+that "rewind" actually means any of 3 different things so I'll say it only
+once.  It's upto you to have read that part also.</p>
+
+<p><a name="gitolite_conf_by_example_general_notes_"></a></p>
+
+<h2>general notes</h2>
+
+<p>Git branch/tag name <strong>recap</strong>: branches look like refs/heads/something, tags
+look like refs/tags/something.  When there is no ambiguity, we leave out the
+refs/heads/ and the refs/tags/.</p>
+
+<p>A "rewind" means any of 3 things: force-push a branch (make it go backward,
+using 'git push -f' or equivalent), delete a branch, or update a tag.  The
+first two are clearly information-losing operations so it is wise to require
+special rights to do them.  The third is in the same category because tags are
+supposed to be "write once" so <strong>re</strong>-writing a tag is considered abnormal.</p>
+
+<p>These examples are only for the more complex parts of the conf file.  We're
+not going to discuss things like what characters are allowed in a username or
+reponame, how to write a comment line, how to write continuation lines (you
+can't), include files, and all such <em>lexical</em> issues.</p>
+
+<h2>extremely brief regex overview: <a href="regexov.html" title="extremely brief regex overview">Link</a></h2>
+
+<!-- file: regexov "extremely brief regex overview" -->
+
+<h2>extremely brief regex overview</h2>
+
+<p>Regexes are powerful.  Gitolite uses that power as much as it can.  If you
+can't handle that power, hire someone who can and become a manager.</p>
+
+<p>That said, here's a very quick overview of the highlights.</p>
+
+<p><code>^</code> and <code>$</code> are called "anchors".  They anchor the match to the beginning and
+end of the string respectively.</p>
+
+<pre><code>^foo    matches any string starting with 'foo'
+foo$    matches any string ending with 'foo'
+^foo$   matches exact string 'foo'.
+</code></pre>
+
+<p>To be precise, the last one is "any string starting and ending with <em>the same</em>
+'foo'".  "foofoo" does not match.</p>
+
+<p><code>[0-9]</code> is an example of a character class; it matches any single digit.
+<code>[a-z]</code> matches any lower case alpha, and <code>[0-9a-f]</code> is the range of hex
+characters.  You should now guess what <code>[a-zA-Z0-9_]</code> does.</p>
+
+<p><code>.</code> (the period) is special -- it matches any character.  If you want to match
+an actual period, you need to say <code>\.</code>.</p>
+
+<p><code>*</code>, <code>?</code>, and <code>+</code> are quantifiers.  They apply to the previous token.  <code>a*</code>
+means "zero or more 'a' characters".  Similarly <code>a+</code> means "one or more", and
+<code>a?</code> means "zero or one".</p>
+
+<p>As a result, <code>.*</code> means "any number (including zero) of any character".</p>
+
+<p>The previous token need not be a single character; you can use parens to make
+it longer.  <code>(foo)+</code> matches one or more "foo", (like "foo", "foofoo",
+"foofoofoo", etc.)</p>
+
+<!-- file: conf_examples "basic access control" -->
+
+<h2>basic access control: <a href="exbac.html" title="basic access control">Link</a></h2>
+
+<!-- file: exbac "basic access control" -->
+
+<h2>basic access control</h2>
+
+<pre><code>repo    gitolite-admin
+        RW+                 =   sitaram
+        # this is equivalent to:
+        RW+     refs/.*     =   sitaram
+</code></pre>
+
+<p>Sitaram is the only admin.  He can push, create, delete, or rewind any branch
+or tag in the gitolite-admin repo.</p>
+
+<pre><code>repo    testing
+        RW+     =   @all
+</code></pre>
+
+<p>The 'testing' repo is a play area for everyone.  Anyone can do anything to any
+branch or tag on it.</p>
+
+<pre><code>repo    foo
+        RW+     =   sitaram dilbert
+        RW      =   alice ashok
+        R       =   wally
+</code></pre>
+
+<p>Wally can only read the repo.  Alice and Ashok can push but not rewind; only
+Sitaram and Dilbert can do that.</p>
+
+<p>And now, a common misunderstanding:</p>
+
+<pre><code>        R master    =   wally       # WILL NOT DO WHAT YOU THINK IT DOES!!
+</code></pre>
+
+<p>This won't work.  Please see <a href="rpr_.html" title="side note: &quot;R&quot; permissions for refs">here</a> for more on this.</p>
+
+<pre><code>repo    foo
+        RW      master$             =   dilbert alice
+        # this is equivalent to:
+        RW      refs/heads/master$  =   dilbert alice
+</code></pre>
+
+<p>The reason for treating "master$" as "refs/heads/master$" is that  matching
+branches is the most common use so the syntax is optimised to make that
+simpler to write and easier to read.  Anything <em>not</em> starting with <code>refs/</code>
+(<font color="gray">or <code>NAME/</code>, but that is out of scope for this
+document</font>), is implicitly prefixed with <code>refs/heads/</code>.</p>
+
+<p>The <code>master$</code> is called a "refex" (a regex that matches a ref).</p>
+
+<p>Dilbert and Alice can push to the "master" branch.  Unless some other rule
+allows it, they cannot push to, say, "master1", "masterfull" etc., due to the
+<code>$</code> at the end of the refex.</p>
+
+<p>Refexes are <em>prefix matched</em>; i.e., treated as if they have a <code>^</code> at the
+start.  (This means <code>^refs/heads/master</code> in this case, not <code>^master</code>, in case
+you forgot!)</p>
+
+<p>This rule therefore does not match "headmaster", or even
+"refs/heads/refs/heads/master" (<font color="gray">yes, it is possible to
+confuse yourself by pushing a branch like that in git</font>).</p>
+
+<pre><code>        RW+     pu                  =   dilbert
+        # again, remember this is equivalent to:
+        RW+     refs/heads/pu       =   dilbert
+</code></pre>
+
+<p>Dilbert can push any branch whose name starts with "pu".  This includes "pu1",
+"pupu", "pu/up", and so on, not just "pu".  This is because there is no <code>$</code> at
+the end.</p>
+
+<pre><code>        RW      junk/               =   wally
+</code></pre>
+
+<p>Wally can push any branch under "junk/", which means "junk/foo", "junk/bar",
+are ok but not "junk1" or even "junk".</p>
+
+<pre><code>        RW      tmp/                =   @all
+</code></pre>
+
+<p>Similar to above, but for <em>any</em> authenticated user.</p>
+
+<pre><code>        RW      refs/tags/v[0-9]    =   ashok   # the QA guy
+</code></pre>
+
+<p>Ashok is allowed to push version tags.  He can push any tag whose name starts
+with a "v", then a digit, like "v1", "v1.0", "v2.0rc1", etc., but not "v-1",
+"ver1".</p>
+
+<!-- file: conf_examples "advanced access control" -->
+
+<h2>advanced access control: <a href="exaac.html" title="advanced access control">Link</a></h2>
+
+<!-- file: exaac "advanced access control" -->
+
+<h2>advanced access control</h2>
+
+<p><a name="gitolite_conf_by_example_deny_rules_"></a></p>
+
+<h3>"deny" rules</h3>
+
+<p><strong>Warning</strong>: When using deny rules, the order of your rules matters, where
+earlier it did not.</p>
+
+<p>PROCESSING LOGIC:</p>
+
+<blockquote>
+  <p>The first matching refex that has the permission you're looking for (<code>W</code>
+  or <code>+</code>) <strong>or a minus (<code>-</code>)</strong>, results in success <strong>or failure,
+  respectively</strong>.  A fallthrough <strong>also</strong> results in failure.</p>
+</blockquote>
+
+<pre><code>    RW refs/tags/v[0-9]     = ashok
+    -  refs/tags/v[0-9]     = @staff
+    RW refs/tags            = @staff
+</code></pre>
+
+<p>This allows only Ashok to write "version tags" (see rule for Ashok the QA guy
+somewhere above).  The others can write any tags they want, <em>except</em> version
+tags.  To understand this, try and match each rule <em>in sequence</em> with the name
+of the tag being pushed, and the user doing it, applying the logic described
+earlier.</p>
+
+<ul>
+<li>for non-version tags, only the 3rd rule matches, so anyone on staff can
+push them</li>
+<li>for version tags by ashok, the first rule matches so he can push them</li>
+<li>for version tags by staffers <em>other than ashok</em>, the second rule matches
+before the third one, and it has a <code>-</code> as the permission, so the push
+fails</li>
+</ul>
+
+<p><a name="ruleaccum2"></a></p>
+
+<h3>rule accumulation</h3>
+
+<p>Rules accumulate.  Even when separated by rules for other repos.  They
+accumulate intuitively.  For example:</p>
+
+<pre><code>repo foo
+    RW+             =   alice
+
+repo bar
+    RW+             =   dilbert
+
+repo @all
+    RW  dev/USER/   =   @staff
+
+repo foo
+    RW+ tmp/        =   @staff
+</code></pre>
+
+<p>has the <strong>effective</strong> ruleset, for repo foo, of</p>
+
+<pre><code>repo foo
+    RW+             =   alice
+    RW  dev/USER/   =   @staff
+    RW+ tmp/        =   @staff
+</code></pre>
+
+<p>Just remember that if you use <a href="aac.html#deny" title="&quot;deny&quot; rules">deny rules</a> anywhere then the <em>order of the
+rules matters</em>!</p>
+
+<p><a name="gitolite_conf_by_example_gitweb_and_daemon_"></a></p>
+
+<h3>gitweb and daemon</h3>
+
+<p>Gitolite does NOT do anything for gitweb and daemon access <strong>except</strong></p>
+
+<ul>
+<li>for daemon, create the file <code>git-daemon-export-ok</code> in the repository</li>
+<li>for gitweb, add the repo (plus owner name, if given) to the list of
+projects to be served by gitweb (see the config file variable
+<code>$PROJECTS_LIST</code>, which should have the same value you specified for
+<code>$projects_list</code> when setting up gitweb)</li>
+<li>put the description, if given, in <code>$repo/description</code></li>
+</ul>

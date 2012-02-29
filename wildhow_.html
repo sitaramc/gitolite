@@ -1,0 +1,96 @@
+<head>
+<title>
+how it actually works
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#wildcard-repositories">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>how it actually works</h2>
+
+<p>This section tells you what is happening inside gitolite so you can understand
+this feature better.  Let's use the config example at the beginning of this
+document:</p>
+
+<pre><code>repo    assignments/CREATOR/a[0-9][0-9]
+    C   =   @students
+    RW+ =   CREATOR
+    RW  =   WRITERS @TAs
+    R   =   READERS @prof
+</code></pre>
+
+<p>First we find the set of rules to apply.  This involves replacing the special
+words CREATOR, WRITERS, and READERS with appropriate usernames to derive an
+"effective" ruleset for the repo in question.</p>
+
+<p>For a <strong>new</strong> repo, replace the word CREATOR in all repo patterns and rules
+with the name of the invoking user.</p>
+
+<blockquote>
+  <p>(Note: this is why you should never use <code>C = CREATOR</code>; it becomes <code>C =
+  invoking_user</code>!  Unless you really want to allow <em>all</em> users to create
+  repos, you should restrict "C" perms to an actual user or set of users,
+  like in the examples in this document).</p>
+</blockquote>
+
+<p>For an <strong>existing</strong> repo, do the same but replace with the name of the user
+who actually <em>created</em> the repo (this name is recorded in a special file in
+the repo directory when the repo is first created, so it is available).</p>
+
+<p>Now find a repo pattern that matches the actual reponame being pushed -- this
+tells you which set of rules to apply.  There can be multiple matches; if so,
+they will all be applied in the sequence they appear in the config file.</p>
+
+<p>If the invoking user has been given the "WRITERS" role using <code>setperms</code>, all
+permissions for the the user WRITERS are given to the invoking username (and
+similarly for READERS).</p>
+
+<p>At this point we have an effective ruleset, and the normal access rules (R,
+RW, etc) apply, with the addition that the invoking user needs "C" access to
+be able to create a repo.</p>
+
+<blockquote>
+  <p>(Note: "C" rights do not automatically give the CREATOR any other rights;
+  they must be specifically given.  <code>RW+ = CREATOR</code> is recommended in most
+  situations, as you can see in our example).</p>
+</blockquote>
+
+<p>Assuming user "u4" trying to push-create a new repo called
+<code>assignments/u4/a23</code>, this is what the effective ruleset looks like:</p>
+
+<pre><code>repo    assignments/u4/a23
+    C   =   @students
+    RW+ =   u4
+    RW  =   @TAs
+    R   =   @prof
+</code></pre>
+
+<p>If u4 gives u5 the "WRITERS" role using <code>setperms</code>, and u5 tries to access
+that repo, the ruleset looks like:</p>
+
+<pre><code>repo    assignments/u4/a23
+    C   =   @students
+    RW+ =   u4
+    RW  =   u5 @TAs
+    R   =   @prof
+</code></pre>
+
+<p>I hope that helps.</p>

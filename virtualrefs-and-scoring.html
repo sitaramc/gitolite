@@ -1,0 +1,332 @@
+<head>
+<title>
+virtual refs and scoring
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#virtualrefs-and-scoring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<p><a name="virtualrefs_and_scoring_virtual_refs_and_scoring_"></a></p>
+
+<h1>virtual refs and scoring</h1>
+
+<p><strong>IMPORTANT: UNTIL THIS NOTICE IS REMOVED, THESE FEATURES ARE ONLY AVAILABLE
+IN THE "vrs" BRANCH</strong>.  If you want it in "pu" you need to use "vrs" for some
+time, test it as well as you can, and tell me it works for you.  The more
+people do that, the faster it moves to "pu" (hint hint!)</p>
+
+<p>There are 2 distinct topics covered here, but they're related because the
+second one depends on the first.  Since both are complex in their own right, I
+gave them their own document rather than dump it somewhere in
+doc/gitolite.conf.mkd.</p>
+
+<p>This is advanced magic.  If you need every step explained or written down with
+exact commands, this is not for you; sorry.</p>
+
+<p><a name="virtualrefs_and_scoring_real_refs_virtual_refs_and_reftypes_"></a></p>
+
+<h2>real refs, virtual refs, and reftypes</h2>
+
+<p>So far, you've seen access control that works based on what branch or tag
+you're trying to push.  This is called a "ref", in git terms, and looks like
+<code>refs/heads/master</code> or <code>refs/tags/v2.0rc1</code>.  <strong>We call this a "real" ref</strong>.</p>
+
+<p>But suppose you want to prevent a push based on other conditions.  Typically,
+you want to limit the "damage" a well-meaning but inexpert junior dev can do.
+Here're some examples:</p>
+
+<ul>
+<li>prevent pushing changes to specific, critical, files (e.g., <code>Makefile</code>)</li>
+<li>prevent adding new files by file "type" (perhaps using the <code>file</code> command)</li>
+<li>prevent files larger than a certain size to be added</li>
+<li>prevent pushes that affect more than a certain number of files</li>
+<li>allow some actions only if coming from an internal IP (perceived to be
+more secure perhaps)</li>
+<li>prevent some actions if coming in via httpd (instead of ssh)</li>
+</ul>
+
+<p>If you think about it, each of these is a characteristic of the push, just
+like <code>refs/heads/master</code> is.  You can treat them all as "ref"s of some kind,
+so <strong>we call them "virtual" refs, each of a different "reftype"</strong>.</p>
+
+<p>Solutions to each of the above examples, in order, might look like this.
+(Note that this is not a usable ruleset; each line is independent and is
+merely showing the syntax):</p>
+
+<pre><code>-   VR_NAME/Makefile    =   @junior_devs
+-   VR_TYPE/relocatable =   @junior_devs
+-   VR_SIZE/500000      =   @junior_devs
+-   VR_COUNT/10         =   @junior_devs
+RW+ VR_IP/172\.25\.     =   @junior_devs
+-   VR_VIA/http         =   @junior_devs
+</code></pre>
+
+<p>Only NAME, SIZE, and COUNT have been implemented.  You can implement and
+maintain your own virtual refs without touching the main gitolite code base,
+so if you end up implementing one of the others please contribute.</p>
+
+<p><a name="virtualrefs_and_scoring_side_notes_"></a></p>
+
+<h3>side notes</h3>
+
+<p><a name="virtualrefs_and_scoring_who_needs_this__"></a></p>
+
+<h4>who needs this?</h4>
+
+<p>Have you ever had a junior dev make a sweeping whitespace or cr/lf change and
+commit the whole darn thing?  Or added a large "core" file by mistake?</p>
+
+<p>Strictly speaking, most of these restrictions can be done by forcing junior
+devs to use their own branches and someone manually checking their commits
+before merging them into one of the main branches.</p>
+
+<p>However, that creates work for the senior devs, plus they might miss something
+if they're checking manually.  Automation is good...</p>
+
+<p><a name="virtualrefs_and_scoring_number_of_refs_returned_"></a></p>
+
+<h4>number of refs returned</h4>
+
+<p>Notice above that NAME (and TYPE, if someone implements it) will usually
+return more than one "ref".  After all, you do change more than one file in a
+push.  However, SIZE (size of largest new file added), COUNT, and IP return
+only one value -- there can only be one "answer" to the question they're
+asking.</p>
+
+<p><a name="virtualrefs_and_scoring_installing_virtual_refs_"></a></p>
+
+<h3>installing virtual refs</h3>
+
+<p>Virtual refs do not get installed automatically.  You have to install them
+yourself.  The ones that ship with gitolite can be found in <code>contrib/vr/</code>; you
+need to copy them to <code>src/</code> and then install/upgrade gitolite.  Or you can
+place them directly on the server after a normal gitolite install.  It doesn't
+matter how you do it; in the end they need to be in the same directory as
+<code>gl-auth-command</code> and all the rest of the scripts.</p>
+
+<p><a name="virtualrefs_and_scoring_adding_your_own_virtual_refs_"></a></p>
+
+<h3>adding your own virtual refs</h3>
+
+<p>All virtual refs start with <code>VR_</code>.  Adding a new virtual ref called <code>VR_FOO</code>
+consists of creating a script (in any language) called <code>VR_FOO</code> that takes 5
+arguments and prints a "match type" and a newline separate list of "refs".
+See <code>VR_COUNT</code> for details; that script implements the COUNT virtual ref and
+also serves as documentation on writing VR scripts.</p>
+
+<p><a name="virtualrefs_and_scoring_passing_simple_arguments_to_the_VR_script_"></a></p>
+
+<h3>passing simple arguments to the VR script</h3>
+
+<p>If you think about it, a rule like </p>
+
+<pre><code>-   VR_NAME/Makefile    @interns
+</code></pre>
+
+<p>can have several interpretations.  The simplest (and the one we use) is: "does
+<code>git diff $oldsha $newsha</code> contain a file called <code>Makefile</code>?  If it does, do
+not let an intern push the commit chain".</p>
+
+<p>However, this means such an intern can <em>never</em> create a personal branch based
+off of some existing branch (as described <a href="tnconv_.html#pers" title="&quot;personal&quot; branches">here</a>), which sorta defeats
+the purpose of having personal branches, no?</p>
+
+<p>If all he did was <code>git checkout -b priv/ashok/my-master master; git push
+origin HEAD</code>, is that really the same as touching the Makefile?  What if we're
+prefer to ask: "is the <code>Makefile</code> touched by one of the <strong>new commits</strong> (if
+any) he made"?  This actually means we have to look in all the commits in
+$newsha that do not already exist in the repo (i.e., reachable from $oldsha or
+<em>any</em> other ref in the repo).</p>
+
+<p>As you can see, that's quite a distinction.  Even the code isn't
+straightforward:</p>
+
+<pre><code>git rev-list $newsha --not --all | xargs -r git show --name-only $nf --format=%n | grep . | sort -u
+</code></pre>
+
+<p>[Note: There're probably a few other ways to skin that cat; I'm open to better ideas.]</p>
+
+<p>How about another wrinkle?  What if we want to make a distinction between
+adding a <strong>new file</strong> which did not exist in the branch before, and updating
+one that already existed?  We have a project where a small set of 3rd party
+JAR files (yes, binaries!) are needed to be regularly checked in for
+completeness of the build scripts[1].  It is possible that a junior dev may
+end up having to update one of these and push, and we want to allow that,
+while preventing him from pushing any of the myriad other JAR files in his
+work tree.</p>
+
+<p>[1] -- please let us not discuss other ways of doing this; we're discussing
+gitolite features here not git features.</p>
+
+<p>In short, we can't just use <code>VR_NAME/.*\.jar</code> as the refex.  In fact, the
+command that we want to use to check for the presence of "JAR" files is not
+<code>git diff $oldsha $newsha</code> but <code>git diff --diff-filter=A $oldsha $newsha</code>.</p>
+
+<p>As you can see, that's now <em>two</em> different wrinkles on the simple <code>VR_NAME</code>
+virtual ref.</p>
+
+<p>And it's not just the NAME virtual ref; they will apply equally well to the
+<code>VR_COUNT</code> script too -- a rule like</p>
+
+<pre><code>-   VR_COUNT/10         =   @interns
+</code></pre>
+
+<p>is meant to protect from large-scale changes (as described near the top of
+this document), but it also suffers the same problems as <code>VR_NAME</code> if the poor
+lowly intern should decide to create a personal branch from an existing one;
+the rule doesn't satisfy the "count less than 10" and the push is denied.</p>
+
+<p>The way to deal with this is to allow VR scripts to accept an optional list of
+arguments after the first 5 (see <code>VR_COUNT</code> for more).  Let us say we decide
+an argument of <code>nc</code> (new commit) describes the first situation, and <code>nf</code> (new
+file) describes the second one.  To specify that you want interns not to add
+<em>new</em> JAR files (but that it is OK to push changes to JAR files that already
+existed), you just use <code>VR_NAME-nf/.*\.jar</code> as the refex.  Similarly, if you
+want to say "he's allowed to branch off from or merge in a branch that already
+has the forbidden file, but he can't make changes to the file <em>himself</em>", you
+use <code>VR_NAME-nc/.*\.jar</code> as the refex.</p>
+
+<p>[I hope I need not mention that the <em>code</em> of the VR script should process
+these optional arguments and change its behaviour accordingly!]</p>
+
+<p>So here's the simple convention: a virtual ref name in the gitolite.conf file
+can contain hyphens that separate arguments.  So <code>VR_NAME-nf</code> passes <code>nf</code> as
+the 6th argument (after the first 5 mandatory ones -- see <code>VR_COUNT</code> for
+details) to the <code>gl-VR_NAME</code> script.  And (if you're willing to test it!)
+<code>VR_COUNT-nf-nc</code> passes both <code>nf</code> and <code>nc</code> as the 6th and 7th arguments to the
+count script.</p>
+
+<p>Mnemonic: <code>VR_FOO-bar-baz</code> is like <code>VR_FOO -bar -baz</code>.</p>
+
+<p><a name="virtualrefs_and_scoring_scoring_"></a></p>
+
+<h2>scoring</h2>
+
+<p>Restrictions based on virtual reftypes are totally orthogonal to and
+independent from branch/tag name ("real" ref) restrictions.  To succeed, the
+push has to satisfy all reftypes that apply to this user.</p>
+
+<p>However, what if you need something like the following, where we are
+specifying a condition that is spanning two reftypes:</p>
+
+<pre><code> * alice can do anything on any branch except master
+ * on master she can do anything except push file "foo"
+</code></pre>
+
+<p>This was not possible earlier, but now it can be done by the following syntax
+(and it's backward compatible too, assuming no one creates branch names that
+look like integers!):</p>
+
+<pre><code>RW+     master          =   alice       # line 1
+RW+ 20                  =   alice       # line 2
+
+-       VR_NAME/foo     =   alice       # line 3
+RW+     VR_NAME/        =   alice       # line 4
+</code></pre>
+
+<p>This has the following semantics:</p>
+
+<ul>
+<li><p>the default "score" is 10 for a RW/RW+/etc. rule that matches the
+user/repo/ref, and 0 for a "-" rule</p></li>
+<li><p>for reftypes that return multiple refs, (like <code>VR_NAME/</code>, and if
+someone implements it, <code>VR_TYPE</code>), the score for that reftype is the
+minimum score from all the refs</p>
+
+<ul>
+<li>i.e., take the score for each ref, and use the least of them as the
+score for the <code>VR_NAME/</code> reftype</li>
+</ul></li>
+<li><p>for access to be granted, every reftype used must return a score of 10</p></li>
+<li><p><em>but</em>... only the total is checked, so some rules are allowed to
+<em>compensate</em> for others</p>
+
+<ul>
+<li><p>what you see above is line 2 compensating for line 3</p></li>
+<li><p>when alice pushes a branch other than master (line 2), she can make
+changes to file "foo" (line 3) even though line 3 returns a 0 score</p></li>
+</ul></li>
+</ul>
+
+<p><a name="virtualrefs_and_scoring_documentation_for_individual_virtual_refs_"></a></p>
+
+<h2>documentation for individual virtual refs</h2>
+
+<p>Documentation for individual virtual refs can be found in the corresponding
+source file.  Documentation on how to create your own virtual refs can be
+found in <code>VR_COUNT</code>.</p>
+
+<p>The only exception is NAME, which has always been in core gitolite (and on
+which the delegation feature depends), so it is documented here.</p>
+
+<p>This section also serves as further detail on how virtual ref matching works.</p>
+
+<p><a name="virtualrefs_and_scoring_VR_NAME__"></a></p>
+
+<h3><code>VR_NAME</code></h3>
+
+<p>The <code>VR_NAME</code> virtual ref returns the output of the following command:</p>
+
+<pre><code>git diff --name-only $OLDSHA $NEWSHA
+</code></pre>
+
+<p>That is, each file/directory that was added/changed/deleted between the old
+and the new SHA becomes one "ref" to be matched against any rules starting
+with <code>VR_NAME/</code> in the gitolite.conf file.</p>
+
+<p>For example, you could use this to specify that junior developers should not
+be allowed to push changes to the 'Makefile':</p>
+
+<pre><code>repo    foo
+        RW+                     =   @senior_devs
+        RW                      =   @junior_devs
+        -   VR_NAME/Makefile    =   @junior_devs
+        RW  VR_NAME/            =   @junior_devs
+</code></pre>
+
+<p>This allows senior devs to do whatever they want (notice they don't have any
+<code>VR_NAME</code> reftype rules at all), while for junior devs, if they try to push a
+commit series that contains a change to the 'Makefile' it will get rejected,
+otherwise it gets accepted.</p>
+
+<p>Here's another example.  Assume the project has the following contents at the
+top level: a README, a "doc/" directory, and an "src/" directory.</p>
+
+<pre><code>repo foo
+        RW+                             =   lead_dev                # rule 1
+        RW                              =   dev1 dev2 dev3 dev4     # rule 2
+
+        RW  VR_NAME/doc/                =   dev1 dev2               # rule 3
+        RW  VR_NAME/src/                =   dev1 dev2 dev3 dev4     # rule 4
+</code></pre>
+
+<p>Here're some points to note that might help to understand this:</p>
+
+<ul>
+<li><p>virtual ref-based restrictions are <em>in addition</em> to normal (branch-name
+based) restrictions; they are not a <em>replacement</em> for them.  This is why
+rule #2 (or something like it, maybe with a more specific branch-name) is
+needed; without it, dev1/2/3/4 cannot push any branches.</p></li>
+<li><p><em>each</em> file touched by the commits being pushed is checked against those
+rules.  So, <code>lead_dev</code> can push changes to any files (she has no <code>VR_NAME</code>
+rules), dev1/2 can push changes to files in "doc/" and "src/" (but not the
+top level README), and dev3/4 can only push changes to files in "src/".</p></li>
+</ul>

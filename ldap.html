@@ -1,0 +1,79 @@
+<head>
+<title>
+storing usergroup information outside gitolite (like in LDAP)
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#big-config">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>storing usergroup information outside gitolite (like in LDAP)</h2>
+
+<p>[Please NOTE: this is all about <em>user</em> groups, not <em>repo</em> groups]</p>
+
+<p>[WARNING: the earlier method of doing this has been discontinued; please see
+the commit message for details]</p>
+
+<p>Gitolite now allows usergroup information to be stored outside its own config
+file.  We'll see "why" first, then the "how".</p>
+
+<p><a name="ldapwhy_"></a></p>
+
+<h3>why</h3>
+
+<p>Large sites often have LDAP servers that already contain user and group
+information, including group membership details.  Such sites may prefer that
+gitolite just pick up that info instead of having to redundantly put it in
+gitolite's config file.</p>
+
+<p>Consider this example config for one repo:</p>
+
+<pre><code>repo foo
+    RW+ =   @lead_devs
+    RW  =   @devs
+    R   =   @interns
+</code></pre>
+
+<p>Normally, you would also need to specify:</p>
+
+<pre><code>@lead_devs  =   dilbert alice
+@devs       =   wally
+@interns    =   ashok
+</code></pre>
+
+<p>However, if the corporate LDAP server already tags these people correctly, and
+if there is some way of getting that information out <strong>at run time</strong>, that
+would be cool.</p>
+
+<p><a name="ldaphow_"></a></p>
+
+<h3>how</h3>
+
+<p>All you need is a script that, given a username, queries your LDAP or similar
+server, and returns a space-separated list of all the groups she is a member
+of.  If an invalid user name is sent in, or the user is valid but is not part
+of any groups, it should print nothing.</p>
+
+<p>This script will probably be specific to your site.  (See contrib/ldap for some
+example scripts that were contributed by the Nokia MeeGo team.)</p>
+
+<p>Then set the <code>$GL_GET_MEMBERSHIPS_PGM</code> variable in the rc file to the full
+path of this program, set <code>$GL_BIG_CONFIG</code> to 1, and that will be that.</p>
+

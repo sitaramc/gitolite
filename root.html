@@ -1,0 +1,64 @@
+<head>
+<title>
+root method
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#install">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>root method</h3>
+
+<p>On your <em>workstation</em>:</p>
+
+<ul>
+<li>copy your <code>~/.ssh/id_rsa.pub</code> file to <code>/tmp/YourName.pub</code> on the server.
+(The name of this file determines your gitolite username, so if you leave
+it as <code>id_rsa.pub</code>, your gitolite username will be <code>id_rsa</code>, which may not
+be what you want).</li>
+</ul>
+
+<p>On your <em>server</em>, as <em>root</em>:</p>
+
+<pre><code>git clone git://github.com/sitaramc/gitolite
+gitolite/src/gl-system-install
+# defaults to being the same as:
+# gitolite/src/gl-system-install /usr/local/bin /var/gitolite/conf /var/gitolite/hooks
+
+# to upgrade gitolite, repeat the above commands.  Make sure you use the
+# same arguments for the last command each time.
+
+# now create your "hosting user" ('git' in our examples) using whatever
+# command your distro expects you to use
+
+# switch to the hosting user
+su - git
+
+# (now as git)
+gl-setup /tmp/YourName.pub
+</code></pre>
+
+<p>Note: please see appendix d for command line options for <a href="install.html#gl-setup" title="appendix d: command line options for gl-setup">gl-setup</a>.</p>
+
+<p>On your <em>workstation</em>:</p>
+
+<pre><code>git clone git@server:gitolite-admin
+</code></pre>
+

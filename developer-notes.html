@@ -1,0 +1,67 @@
+<head>
+<title>
+**Why v2?**
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#developer-notes">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<p><a name="developer_notes_Why_v2__"></a></p>
+
+<h1><strong>Why v2?</strong></h1>
+
+<p>I went onto <code>#perl</code> to ask some question about setpriority() and got yelled at
+for writing "horrible code".  And that was one of the kinder comments; my
+rather fragile ego is trying to forget the rest ;-)</p>
+
+<p>They also gave me a link to a PDF book, "Modern Perl" by 'chromatic'.  Nice
+book; one of the first things you learn from it is that you should not go to
+<code>#perl</code> for general help.</p>
+
+<p>Anyway, the summary of the collective angst of <code>#perl</code> (well 2 people anyway)
+was: use Getopt::Long, FindBin, 'use lib', a library for HTTP stuff, stop
+prefixing subs with '&amp;', and get rid of the huge number of 'our' declarations.</p>
+
+<p>That last item is the only one I totally agree with, because it was on my long
+term todo list anyway.  And 'use lib' sorta goes with it, so that's fine too.
+And as soon as I found that vim colors the sub names differently if you take
+out the '&amp;' I decided I'd do that too :-) [But honestly, if <code>&amp;sub</code> is so bad
+shouldn't "man perlsub" at least say something negative about it, other than
+"disables prototype checking", which doesn't matter here since I'm not using
+prototypes?]</p>
+
+<p>As for the rest, FindBin brings in a good 1000+ lines for something that I do
+in a line or two (since I don't care about all the pathological edge cases).
+Getopt::Long is 2649 lines to replace the code below  [note that there <em>is</em>
+only one possible option to this command, and it is <em>never</em> run manually
+either, so I don't need any fancy features]:</p>
+
+<pre><code>my $shell_allowed = 0;
+if (@ARGV and $ARGV[0] eq '-s') {
+    $shell_allowed = 1;
+    shift;
+}
+</code></pre>
+
+<p>Apparently TMTOWTDI has given way to TOOWTDI.</p>
+
+<p>Anyway, I spent a few hours refactoring it.  And I do thank them for pushing
+me to stop being lazy on the "our" business.</p>

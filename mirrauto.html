@@ -1,0 +1,42 @@
+<head>
+<title>
+autonomous
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>autonomous</h3>
+
+<p>In many ways this is the simplest setup.</p>
+
+<p>The slave server belongs to someone else. Their admin has final say on what
+goes into their gitolite-admin repo and thus their server's config. The
+gitolite-admin repo is NOT mirrored, and mirroring of individual repos (i.e.,
+actual config lines included) is by negotiation/agreement between the admins.</p>
+
+<p>Authentication info is not common. The master has no real control over who can
+read the repos on the slave. Allowing redirected pushes is not a good idea,
+unless you have other means of trust (administrative, contractual, legal,
+etc.)</p>
+
+<p>Best for open source projects with heavy "fetch" load compared to "push".</p>
+

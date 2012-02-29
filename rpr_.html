@@ -1,0 +1,58 @@
+<head>
+<title>
+side note: "R" permissions for refs
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gitolite.conf">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>side note: "R" permissions for refs</h3>
+
+<p>You can control "read" access only at the repo level, not at the branch level.
+For example, this <strong>won't</strong> limit Wally to reading only the master branch:</p>
+
+<pre><code>repo foo
+    R master    =   wally       # WILL NOT DO WHAT YOU THINK IT DOES!!
+</code></pre>
+
+<p>and this <strong>won't</strong> prevent him from reading it:</p>
+
+<pre><code>repo foo
+    - master    =   wally       # WILL NOT DO WHAT YOU THINK IT DOES!!
+    R           =   wally
+</code></pre>
+
+<p>This (inability to distinguish one ref from another during a read operation)
+is a git issue, not a gitolite issue.</p>
+
+<p>There are 3 ways around this, though:</p>
+
+<ul>
+<li>switch to gerrit, which has its own git stack, its own sshd, and God knows
+what else.  All written in Java, the COBOL of the internet era ;-)</li>
+<li>bug the git people to add this feature in ;-)</li>
+<li>use a separate repo for Wally.</li>
+</ul>
+
+<p>Using separate repos is not that hard with gitolite.  Here's how to maintain a
+<a href="partialcopy.html" title="maintaining a partial copy of a repo">partial copy</a> of the main repo and keep it synced (while not
+allowing the secret branches into it).</p>
+

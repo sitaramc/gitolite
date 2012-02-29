@@ -1,0 +1,163 @@
+<head>
+<title>
+maintaining a partial copy of a repo
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#partial-copy">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: partialcopy "maintaining a partial copy of a repo" -->
+
+<h1>maintaining a partial copy of a repo</h1>
+
+<p>The regular documentation on basic access control mentions <a href="rpr_.html" title="side note: &quot;R&quot; permissions for refs">here</a> that
+it is easy to maintain two repositories if you need a (set of) branch(es) to
+be "secret", with one repo that has everything, and another that has
+everything but the secret branches.</p>
+
+<p>Here's how gitolite can help do that sanely, with minimal hassles for all
+concerned.  This will ensure the right branches propagate correctly when
+people pull/push -- you don't have to do anything manually after setting it up
+unless the rules change.</p>
+
+<p>To start with, here's a <strong>NON-WORKING</strong> config that merely describes what
+we're <strong>trying</strong> to achieve:</p>
+
+<pre><code>                # THIS WILL NOT WORK!
+repo foo
+        -   secret-1$       =   wally
+        RW+ dev/USER/       =   wally
+        RW+                 =   dilbert alice ashok wally
+</code></pre>
+
+<p>We want Wally the slacker to not be able to see the "secret-1" branch.</p>
+
+<p>The only way to do this is to have two repos -- one with and the other without
+the secret branch.</p>
+
+<p><font color="gray">These two repos cannot share git objects (to save disk
+space) using hardlinks etc.  Doing so would cause a data leak if Wally decides
+to stop slacking and start hacking.  See my conversation with Shawn
+<a href="http://colabti.org/irclogger/irclogger_log/git?date=2010-09-17#l2710">here</a> for more on this, but it basically involves Wally finding out
+the SHA of one of the secret branches, pushing a branch that he claims to have
+built on that SHA, then fetching that branch again.</p>
+
+<p>It requires a serious understanding of the git transport protocol, how objects
+are sent/received, how thin packs are created, etc., to implement it.  Or to
+convince yourself that someone's implementation is correct.</p>
+
+<p>Meanwhile, the method described here, once you accept the disk space cost, is
+quite understandable to mere mortals like me :-)</font></p>
+
+<p>In the above example you had 2 sets of read access -- (1) all branches (2) all
+branches except secret-1.  If you end up with one more set (say, "all branches
+except secret-2") then you need one more repo to handle it.  If you can afford
+the storage, the following recipe can certainly make it <em>manageable</em>.</p>
+
+<p><a name="partial_copy_first_as_usual_the_caveats__"></a></p>
+
+<h2>first, as usual, the caveats!</h2>
+
+<ul>
+<li><p>if you change the config to disallow something that used to be allowed,
+any tags pointing to objects that Wally's repo acquired before the change,
+will keep coming back!  That is, branch B1 had a tag T1 within it.  Later,
+B1 was disallowed for Wally.  However, Wally's repo will still retain the
+tag T1!</p>
+
+<p>So, if you ever disallow a branch that used to be allowed, it's best to
+purge Wally's repo manually and let it get rebuilt on the next access.
+Just delete it from the disk, push the gitolite-admin config to force it
+to re-create, then access it as a legitimate user.</p></li>
+<li><p>this recipe has not been, and will not be, tested with smart http.</p></li>
+<li><p>it probably won't play well with wildcard repos either; not tested.</p></li>
+<li><p>finally, mirroring support for such repos has not been tested too.</p></li>
+</ul>
+
+<p><a name="partial_copy_the_basic_idea_"></a></p>
+
+<h2>the basic idea</h2>
+
+<p>The basic idea is very simple.</p>
+
+<ul>
+<li><p>one repo is the "main" one.  It contains all the branches, and is the one
+that people with full access will use.</p></li>
+<li><p>the other repo (or all the other repos, if you have more than one set, as
+described above) is a "partial copy", with only a subset of the branches
+in the main repo.</p></li>
+<li><p>every time someone accesses the partial copy, the branches that that user
+is allowed to read are fetched from the main repo.  <strong>See note in example
+below</strong>.</p></li>
+<li><p>every time someone pushes to the partial copy, the branch being pushed is
+sent back to the main repo before the update succeeds.</p></li>
+</ul>
+
+<p>The main repo is always the canonical/current one.  The others may or may not
+be uptodate.</p>
+
+<p><a name="partial_copy_the_config_file_"></a></p>
+
+<h2>the config file</h2>
+
+<p>Here's what we actually need to put in the config file.  Note that the
+reponames can be whatever you want of course.</p>
+
+<pre><code>repo foo
+        RW+                 =   dilbert alice ashok
+
+repo foo-partialcopy-1
+        -   secret-1$       =   wally
+        R                   =   wally
+        RW+ dev/USER/       =   wally
+
+        config gitolite.partialCopyOf = foo
+</code></pre>
+
+<p><strong>Important notes</strong>:</p>
+
+<ul>
+<li><p>Wally must not have any access to "foo".  Absolutely none at all.</p></li>
+<li><p>Wally's rules for <code>foo-partialcopy-1</code> must be written such that restricted
+branches are denied.  You could list only the branches he's allowed to
+read, or you could deny the ones he's not allowed and add a blanket "R"
+for the others later, as in this example.</p>
+
+<p>Note that this is the same <a href="aac.html#deny" title="&quot;deny&quot; rules">deny</a> logic that is normally used for write
+operations, but applied to "read" in this case.  All we're doing is using
+this logic to determine what branches from <code>foo</code> are allowed to propagate
+to the partial copy repo.  <em>This is NOT being used by git to restrict
+reads; at the risk of repetition, git does NOT have that capability</em>.</p></li>
+<li><p>All the other users with access to <code>foo-partialcopy-1</code> must be under the
+same restrictions as Wally.  So let's say Ashok is not allowed to view a
+branch called "USCO".  That needs to be defined in yet another partial
+copy repo, and <code>ashok</code> must be removed from the access list for <code>foo</code>.</p></li>
+</ul>
+
+<p><a name="partial_copy_the_hooks_"></a></p>
+
+<h2>the hooks</h2>
+
+<p>The code for both hooks is included in the source directory
+<code>contrib/partial-copy</code>.  Note that this is all done <em>without</em> touching
+gitolite core at all -- we only use two hooks; both described in the <a href="hooks.html" title="using hooks">hooks</a>
+section.  A pictorial representation of all the stuff gitolite runs is
+<a href="pictures.html#flow" title="gitolite flow">here</a>; it may help you understand the role that these two hooks are
+playing in this scenario.</p>

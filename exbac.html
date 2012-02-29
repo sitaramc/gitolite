@@ -1,0 +1,113 @@
+<head>
+<title>
+basic access control
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gitolite.conf-by-example">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>basic access control</h2>
+
+<pre><code>repo    gitolite-admin
+        RW+                 =   sitaram
+        # this is equivalent to:
+        RW+     refs/.*     =   sitaram
+</code></pre>
+
+<p>Sitaram is the only admin.  He can push, create, delete, or rewind any branch
+or tag in the gitolite-admin repo.</p>
+
+<pre><code>repo    testing
+        RW+     =   @all
+</code></pre>
+
+<p>The 'testing' repo is a play area for everyone.  Anyone can do anything to any
+branch or tag on it.</p>
+
+<pre><code>repo    foo
+        RW+     =   sitaram dilbert
+        RW      =   alice ashok
+        R       =   wally
+</code></pre>
+
+<p>Wally can only read the repo.  Alice and Ashok can push but not rewind; only
+Sitaram and Dilbert can do that.</p>
+
+<p>And now, a common misunderstanding:</p>
+
+<pre><code>        R master    =   wally       # WILL NOT DO WHAT YOU THINK IT DOES!!
+</code></pre>
+
+<p>This won't work.  Please see <a href="rpr_.html" title="side note: &quot;R&quot; permissions for refs">here</a> for more on this.</p>
+
+<pre><code>repo    foo
+        RW      master$             =   dilbert alice
+        # this is equivalent to:
+        RW      refs/heads/master$  =   dilbert alice
+</code></pre>
+
+<p>The reason for treating "master$" as "refs/heads/master$" is that  matching
+branches is the most common use so the syntax is optimised to make that
+simpler to write and easier to read.  Anything <em>not</em> starting with <code>refs/</code>
+(<font color="gray">or <code>NAME/</code>, but that is out of scope for this
+document</font>), is implicitly prefixed with <code>refs/heads/</code>.</p>
+
+<p>The <code>master$</code> is called a "refex" (a regex that matches a ref).</p>
+
+<p>Dilbert and Alice can push to the "master" branch.  Unless some other rule
+allows it, they cannot push to, say, "master1", "masterfull" etc., due to the
+<code>$</code> at the end of the refex.</p>
+
+<p>Refexes are <em>prefix matched</em>; i.e., treated as if they have a <code>^</code> at the
+start.  (This means <code>^refs/heads/master</code> in this case, not <code>^master</code>, in case
+you forgot!)</p>
+
+<p>This rule therefore does not match "headmaster", or even
+"refs/heads/refs/heads/master" (<font color="gray">yes, it is possible to
+confuse yourself by pushing a branch like that in git</font>).</p>
+
+<pre><code>        RW+     pu                  =   dilbert
+        # again, remember this is equivalent to:
+        RW+     refs/heads/pu       =   dilbert
+</code></pre>
+
+<p>Dilbert can push any branch whose name starts with "pu".  This includes "pu1",
+"pupu", "pu/up", and so on, not just "pu".  This is because there is no <code>$</code> at
+the end.</p>
+
+<pre><code>        RW      junk/               =   wally
+</code></pre>
+
+<p>Wally can push any branch under "junk/", which means "junk/foo", "junk/bar",
+are ok but not "junk1" or even "junk".</p>
+
+<pre><code>        RW      tmp/                =   @all
+</code></pre>
+
+<p>Similar to above, but for <em>any</em> authenticated user.</p>
+
+<pre><code>        RW      refs/tags/v[0-9]    =   ashok   # the QA guy
+</code></pre>
+
+<p>Ashok is allowed to push version tags.  He can push any tag whose name starts
+with a "v", then a digit, like "v1", "v1.0", "v2.0rc1", etc., but not "v-1",
+"ver1".</p>
+

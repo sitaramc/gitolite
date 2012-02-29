@@ -1,0 +1,95 @@
+<head>
+<title>
+(contributed doc: integrating gitolite with monkeysphere)
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#monkeysphere">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: monkeysphere "(contributed doc: integrating gitolite with monkeysphere)" -->
+
+<h1>(contributed doc: integrating gitolite with monkeysphere)</h1>
+
+<p>This document attempts to describe one way to integrate
+<a href="http://web.monkeysphere.info/">Monkeysphere</a> authentication
+with <a href="http://github.com/sitaramc/gitolite">gitolite</a>.</p>
+
+<p>We presuppose that you have a system with a new enough
+version of Monkeysphere to support ssh <code>authorized_keys</code>
+options, and that you are not making use of
+monkeysphere-authentication on this system.</p>
+
+<p>As a first step, import the key or keys you wish to
+act as Monkeysphere certifiers into the GnuPG public
+keyring of the gitolite user (for example,
+<code>gpg --keyserver pool.sks-keyservers.net --recv-keys B0AE9A02</code>)
+Then edit such keys (<code>gpg --edit B0AE9A02</code>) and assign them
+<em>ultimate</em> ownertrust.</p>
+
+<p>Next install a script of this nature as <code>post-update.secondary</code>
+in the <code>hooks/</code> directory of the <code>gitolite-admin</code> repository.  You can also
+follow the "using hooks" section in gitolite's "admin" document to let
+gitolite put your new hook in the correct place.</p>
+
+<pre><code>#!/bin/zsh
+
+# this should use locking
+
+pushd ${GL_ADMINDIR}
+
+if [[ -d monkeydir ]]
+then
+    cp ~/.monkeysphere/authorized_user_ids ~/.monkeysphere/old-authorized_user_ids
+    rm -f ~/.monkeysphere/new-authorized_user_ids
+    for i in monkeydir/*.pub
+    do
+        username=$i:t:r
+    for j in ${(f)"$(&lt;$i)"}
+        do
+            cat &gt;&gt; ~/.monkeysphere/new-authorized_user_ids &lt;&lt;EOF
+$j
+  command="/usr/share/gitolite/gl-auth-command $username"
+  no-port-forwarding
+  no-X11-forwarding
+  no-agent-forwarding
+  no-pty
+EOF
+
+        done
+    done
+
+    mv ~/.monkeysphere/new-authorized_user_ids ~/.monkeysphere/authorized_user_ids
+    monkeysphere update-authorized_keys
+fi
+
+popd
+
+ADMIN_POST_UPDATE_CHAINS_TO=hooks/post-update.tertiary
+
+if [[ -x $ADMIN_POST_UPDATE_CHAINS_TO ]]; then
+    exec $ADMIN_POST_UPDATE_CHAINS_TO "$@"
+fi
+</code></pre>
+
+<p>Finally, place <em>username</em>.pub files containing OpenPGP IDs into
+ a directory called <code>monkeydir/</code> in the root of the gitolite-admin
+repository.  If everything has been set up correctly, adding
+and pushing these files should then result in the appropriate
+generation of <code>~/.ssh/authorized_keys</code>.</p>

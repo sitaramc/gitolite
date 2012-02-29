@@ -1,0 +1,52 @@
+<head>
+<title>
+non-autonomous with local repos
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>non-autonomous with local repos</h3>
+
+<p>As above, but you want to allow each slave server to have some repos be
+"local" to the server (not be mirrored), for whatever reason. Different slaves
+may have different needs, so this really means that the same gitolite.conf
+should behave differently on each server -- something which till now was
+impossible.</p>
+
+<p>Well what's life without a new feature once in a while? The string "HOSTNAME"
+is now specially treated in an include filename. If it is seen without any
+alphanumeric characters or underscores next to it on either side, it is
+replaced by the value of <code>$GL_HOSTNAME</code>.</p>
+
+<p>Setup the config as in the previous setup except that you shouldn't use repo
+@all now; instead, you'll have to name the repos to be mirrored in some way.
+Make sure gitolite-admin is in this list. Complete the mirror setup (including
+the first-time sync command) like before.</p>
+
+<p>Now add the line include "HOSTNAME.conf" to the end of conf/gitolite.conf, and
+create new files, conf/frodo.conf, conf/sam.conf, etc., with appropriate
+content.</p>
+
+<p>That's it. When this config is pushed, each machine will have an effective
+config that consists of the main file, with the correct HOSTNAME.conf included
+(and all the others ignored) when the include statement is reached.</p>
+

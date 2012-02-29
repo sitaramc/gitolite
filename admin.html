@@ -1,0 +1,83 @@
+<head>
+<title>
+administering and running gitolite
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#admin">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>administering and running gitolite</h1>
+
+<p><a name="admin_please_read_this_first_"></a></p>
+
+<h2>please read this first</h2>
+
+<p>Unless you know what you're doing, do not do <strong>anything</strong> manually on the
+server (except when the documentation says you should, for example to add
+custom hooks).  In particular, adding new repositories or users or changing
+the access control rules should not be done directly on the server.  Things
+will break.  For example, if you manually create a repo on the server, it will
+not have the required "update" hook, without which there is no access control
+for pushes.</p>
+
+<p>Most normal (day-to-day) gitolite admin work is done by cloning the
+gitolite-admin repo from the server to your workstation, making changes to the
+clone, and pushing those changes back.</p>
+
+<p>The installation steps in the previous section include the steps to do this
+clone, so you should already have one on your workstation, in
+<code>~/gitolite-admin</code>.  You can of course clone it anywhere else you want and use
+that clone.</p>
+
+<p>Either way, make sure you <code>cd</code> into this clone first.</p>
+
+<p><em>Note</em>: some of the paths in this document use variable names.  Just refer to
+<code>~/.gitolite.rc</code> for the correct values for <em>your</em> installation.</p>
+
+<p>Once you've cloned it, you're ready to add users and repos.</p>
+
+<h2>adding users and repos: <a href="add.html" title="adding users and repos">Link</a></h2>
+
+
+<h2>using hooks: <a href="hooks.html" title="using hooks">Link</a></h2>
+
+
+<p><a name="admin_other_features_"></a></p>
+
+<h2>other features</h2>
+
+<h3>moving pre-existing repos into gitolite: <a href="moverepos.html" title="moving pre-existing repos into gitolite">Link</a></h3>
+
+
+<h3>moving the whole thing from one server to another: <a href="moveserver.html" title="moving the whole thing from one server to another">Link</a></h3>
+
+
+<p><a name="admin_custom_git_config_"></a></p>
+
+<h3>custom git config</h3>
+
+<p>The custom hooks feature is a blunt instrument -- all repos get the hook you
+specified and will run it.  You can of course install hooks manually on the
+server, but sometimes that's cumbersome.</p>
+
+<p>Instead, you could set your hooks to only work if a certain "gitconfig"
+variable was set.  See <a href="confother_.html#rsgc" title="repo specific `git config` commands">this</a> for a way to specify "git config"
+settings on a per repository basis.</p>

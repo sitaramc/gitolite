@@ -1,0 +1,108 @@
+<head>
+<title>
+mob branches in gitolite
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mob-branches">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>mob branches in gitolite</h1>
+
+<p>WARNING: This is hairy stuff.  But what's life without a little danger?</p>
+
+<p>WARNING 2: girocco does mob branches quite differently; the controls on what a
+mob branch can do are much more fundamental.  Here we just trick gitolite into
+accepting anonymous ssh connections and pretending they're from a mythical
+user called "mob".  <strong>This means all the access control is -- as you might
+expect -- in the gitolite.conf file, so make sure you don't give the <code>mob</code>
+user too many rights!</strong></p>
+
+<p>(tested on Fedora 14; assumes your gitolite server userid is "gitolite" and
+install was "non-root" method; adjust according to your environment.  If you
+need more than this, you should not be enabling mob branches anyway ;-)</p>
+
+<p>[hah!  Easy way out of being badgered with questions!]</p>
+
+<ul>
+<li><p>create a file called <code>/tmp/mobshell</code> (put it somewhere more permanent if
+you wish).  This file should be <code>chmod +x</code> and contain</p>
+
+<pre><code>#!/bin/sh
+shift
+export SSH_ORIGINAL_COMMAND
+SSH_ORIGINAL_COMMAND="$*"
+
+/home/gitolite/bin/gl-auth-command mob
+    # see one of the lines in ~gitolite/.ssh/authorized_keys for the
+    # precise location of the gl-auth-command script
+</code></pre></li>
+<li><p>create a user called mob.  Give it the same UID number and <code>$HOME</code> as your
+gitolite server userid, and set the login shell to be the script you just
+created.  Also delete the password.</p>
+
+<pre><code>id -u gitolite
+# returns 503 or something...
+useradd -d /home/gitolite -s /tmp/mobshell -u 503 -o mob
+passwd -d mob
+</code></pre></li>
+<li><p>make sure you have a recent enough sshd and put these lines at the bottom,
+then restart sshd</p>
+
+<pre><code>    Match user mob
+        PermitEmptyPasswords yes
+</code></pre></li>
+</ul>
+
+<p>That's it.  Now you can add stuff to your gitolite.conf file.  Here's some
+examples:</p>
+
+<ul>
+<li><p>This allows the mob user to do anything to the "mob" branch:</p>
+
+<pre><code>repo foo
+    RW+         =   alice bob
+    R           =   eve
+    RW+ mob$    =   mob
+    # only the mob branch, nothing more
+</code></pre></li>
+<li><p>This is the same, except it can be any branch under "mob/" so you get some
+flexibility:</p>
+
+<pre><code>    RW+ mob/    =   mob
+</code></pre></li>
+<li><p>Girocco allows pushing to the mob branch only if it already exists (that
+is, the mob user cannot <em>create</em> the mob branch, but if it already exists
+he can push to it).  Here's how you'd do that in gitolite:</p>
+
+<pre><code>repo foo
+    RW+C        =   alice bob
+    R           =   eve
+    RW+ mob$    =   mob
+</code></pre></li>
+<li><p>This gives <em>every</em> repo a mob branch (be careful!)</p>
+
+<pre><code>repo @all
+    RW+ mob$    =   mob
+</code></pre></li>
+</ul>
+
+<p>How do mob users access it?  The URLs just look like: <code>mob@server:repo</code>
+instead of <code>gitolite@server:repo</code> That's it!</p>

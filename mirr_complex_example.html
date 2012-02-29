@@ -1,0 +1,163 @@
+<head>
+<title>
+semi-autonomous mirroring setup example
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring-complex-example">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>semi-autonomous mirroring setup example</h1>
+
+<p>This document describes one way to do this.  Gitolite is powerful so you can
+probably find other ways to suit you.</p>
+
+<p><a name="mirroring_complex_example_overview_of_problem_"></a></p>
+
+<h2>overview of problem</h2>
+
+<p>The example is from real life, with the following characteristics:</p>
+
+<ul>
+<li>multiple servers (hosts)</li>
+<li>multiple "products", each product has one or more git repos</li>
+<li>different products are "native to" (mastered on) different hosts</li>
+<li>a product may be mirrored to zero or more other hosts (mirrored to zero
+hosts means it is <strong>local</strong> to the host)</li>
+</ul>
+
+<p>The admin requirements are:</p>
+
+<ul>
+<li>the overall system will have one or more <strong>master admins</strong>; they manage
+the main config file, for instance.</li>
+<li>each host will have one or more <strong>host admins</strong></li>
+<li>these host admins should be allowed to create any repos they need (within
+one of a set of directory names allocated to them), and assign access to
+whomever they please</li>
+<li>they should not be able to "step on each other" -- setup access rules for
+repos not in their control</li>
+</ul>
+
+<p>The following can only be done by the master admins:</p>
+
+<ul>
+<li>authentication (ssh keys) are centrally managed and distributed.  Host
+admins should not be allowed to do this.</li>
+<li>mirroring setup -- who's the master and who're the slaves for any repo</li>
+<li>allowing redirected pushes from slaves</li>
+</ul>
+
+<p><a name="mirroring_complex_example_overview_of_setup_"></a></p>
+
+<h2>overview of setup</h2>
+
+<p>We will use p1 as the product, with sam as the master and frodo as a slave.
+Assume equivalent text/code for other product/master/slave combos.</p>
+
+<p>This setup imposes the condition that all repos should be under some directory
+name; either a product name or, for local repos, a hostname.  In our example,
+these directory names would be p1 or sam on the host sam, and frodo on the
+host frodo.</p>
+
+<p><a name="mirroring_complex_example_gitolite_feature_recap_"></a></p>
+
+<h3>gitolite feature recap</h3>
+
+<p>We use <a href="deleg.html" title="delegating access control responsibilities">delegation</a>, to ensure that admins for sam can only write
+files whose names start with <code>master/sam/</code>.  The actual files they will write
+are <code>master/sam/p1.conf</code> etc., one for each product that is mastered on their
+server.</p>
+
+<p>We use <a href="deleg.html#subconf" title="the subconf command">subconf</a>.  When you say <code>subconf "path/to/foo.conf</code>, then within
+that file (and anything included from it), access can only be defined for
+repos that regex-match one of the elements of <code>@foo</code>.</p>
+
+<p><a name="mirroring_complex_example_pre_requisites_"></a></p>
+
+<h2>pre-requisites</h2>
+
+<p>First, install mirroring on all servers according to the main mirroring
+document.  Set it up so that the gitolite-admin repo is mastered at one server
+and everyone else slaves it.</p>
+
+<p>Also, after (or during) the normal mirroring install, edit <code>~/.gitolite.rc</code> on
+all servers and set <code>$GL_WILDREPOS</code> to 1 (from its default of 0).</p>
+
+<p><a name="mirroring_complex_example_quick_setup_"></a></p>
+
+<h2>quick setup</h2>
+
+<ul>
+<li>edit your <code>gitolite.conf</code> file as given in step 1 below
+<ul>
+<li>ignore all the comments, even the ones that tell you to do something :-)</li>
+<li>change only the names of the admin users, and the names of the servers
+in the config lines.  Everything else stays the same</li>
+</ul></li>
+<li>now copy <code>mirror-conf-helper</code> from the contrib directory to your home or
+some easy to type place, and run it to setup your hosts, products, and slaves</li>
+</ul>
+
+<p>A typical sequence with that script is:</p>
+
+<pre><code># cd to your gitolite-admin clone
+
+# create a new host
+~/mirror-conf-helper newhost sam sam-admin
+
+# create the actual repository and access rules.  This is done by the host
+# admin for the host on which it is mastered (or you can do it yourself).
+# See step 3 below for details.
+mkdir -p conf/master/sam
+vim      conf/master/sam/p1.conf
+    # now add in some "repo p1/..." and "RW ..." lines for the repos in
+    # product p1 and save
+
+# add product p1 to the list of repos sam is allowed to control
+~/mirror-conf-helper newprod sam p1
+
+# add a slave
+~/mirror-conf-helper newslave sam p1 frodo
+</code></pre>
+
+<p>You can then treat the detailed steps described below as extra information or
+"background reading" ;-)</p>
+
+<h2>step by step: <a href="mirrexsteps_.html" title="step by step">Link</a></h2>
+
+
+<p><a name="mirroring_complex_example_next_steps_"></a></p>
+
+<h2>next steps</h2>
+
+<p>Once you've done the initial setup, here's what ongoing additions will
+require.</p>
+
+<ul>
+<li><p>any new repos that are created for the same <em>product</em> require only step 3</p></li>
+<li><p>a new <em>product</em> will require steps A1, 3, 4 and 5</p></li>
+<li><p>a new <em>host</em> will require additions in all the steps, including adding the
+hostname in the slaves list for the admin repo (this is in the main
+gitolite.conf file)</p></li>
+</ul>
+
+<h2>appendix A: delegation helper files: <a href="mirrappA_.html" title="appendix A: delegation helper files">Link</a></h2>
+

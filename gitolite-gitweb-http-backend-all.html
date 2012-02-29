@@ -1,0 +1,329 @@
+<head>
+<title>
+how to set up gitolite+gitweb+ssh+http-backend
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gitolite-gitweb-http-backend">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: ggshb "how to set up gitolite+gitweb+ssh+http-backend" -->
+
+<h1>how to set up gitolite+gitweb+ssh+http-backend</h1>
+
+<p><a name="gitolite_gitweb_http_backend_NAME_"></a></p>
+
+<h2>NAME</h2>
+
+<p>gitolite-gitweb-http-backend</p>
+
+<p><a name="gitolite_gitweb_http_backend_DESCRIPTION_"></a></p>
+
+<h2>DESCRIPTION</h2>
+
+<p>You've been tasked with rolling out gitolite and git-web in your
+corporate environment and your requirements are as follows:</p>
+
+<ol>
+<li>git access must be via both ssh and http[s]</li>
+<li>browsable via git-web</li>
+<li>your web server must run as a user different from that of the git user</li>
+<li>The repository has its own virtual host</li>
+</ol>
+
+<p>Note that these instructions are geared toward OpenSuSE 11.4.  Feel
+free to modify the examples below to your environment.</p>
+
+<p><a name="gitolite_gitweb_http_backend_EXAMPLE_ENVIRONMENT_"></a></p>
+
+<h2>EXAMPLE ENVIRONMENT</h2>
+
+<p>The following assumptions are made for the purposes of example:</p>
+
+<ul>
+<li>The server name will be git.example.com</li>
+<li>Repositories are located in <code>/srv/git</code> and are owned by the <code>git</code> user</li>
+<li>Apache 2.2.* running as <code>wwwrun:www</code> will be used as the web server</li>
+<li>gitolite has been installed via package management (yum, zypper, apt-get,
+etc)</li>
+<li>gitweb browsing is via http://git.example.com/</li>
+<li><p>The repositories can be cloned from the following URLs:</p>
+
+<ul>
+<li>git@git.example.com:&lt;repo-name&gt;</li>
+<li>http://git.example.com/&lt;repo-name&gt;.git</li>
+</ul></li>
+<li><p>HTTP authentication is handled via a local htpasswd file</p></li>
+<li>http://git.example.com will be a virtual host</li>
+<li>Two git repositories will be created:
+<ul>
+<li>engineering</li>
+<li>operations</li>
+</ul></li>
+</ul>
+
+<p><a name="gitolite_gitweb_http_backend_GITOLITE_SETUP_"></a></p>
+
+<h2>GITOLITE SETUP</h2>
+
+<p>Install gitolite via your package management tools.  Under OpenSuSE, this will
+install repositories in <code>/srv/git</code>.  Follow the instructions found
+<a href="install.html" title="gitolite installation">here</a> for initial set up.</p>
+
+<p><a name="gitolite_gitweb_http_backend_gitolite_rc_"></a></p>
+
+<h3>gitolite.rc</h3>
+
+<p>You will need to tell gitolite.rc about some additional keys that will
+be needed for each repository.  Make sure the following config option
+is set in <code>/srv/git/.gitolite.rc</code>:</p>
+
+<pre><code>$GL_GITCONFIG_KEYS = "gitweb.url receive.denyNonFastforwards receive.denyDeletes";
+</code></pre>
+
+<p>These options tell gitolite to allow the user to set these values in
+<code>gitolite.conf</code>, which in turn will be propagated to each
+repositories git config.</p>
+
+<p><a name="gitolite_gitweb_http_backend_gitolite_conf_"></a></p>
+
+<h3>gitolite.conf</h3>
+
+<p>For the purposes of example, we assume that we have two groups accessing each repository: engineering and operations.  So, our <code>gitolite.conf</code> file will look something like this:</p>
+
+<pre><code>#
+# Group Definitions
+#
+
+@engineering  = daniel erik alex jose mark
+@operations   = james chris long bora dmitriy
+@gladmin      = james chris
+
+#
+# Repository Definitions
+#
+
+# Note that we give access to the daemon user, thus enabling
+# git-daemon-export-ok (see
+# https://github.com/sitaramc/gitolite/blob/pu/doc/2-admin.mkd#gwd)
+
+repo    gitolite-admin
+        RW      =   @sysops daemon
+        R       =   @all
+
+repo    engineering
+        RW      = @engineering @gladmin daemon
+        R       = @all
+        config  gitweb.url                  = git@git.example.com:engineering
+        config  receive.denyNonFastforwards = true
+        config  receive.denyDeletes         = true
+
+repo    operations
+        RW      = @operations @engineering @gladmin daemon
+        R       = @all
+        config  gitweb.url                  = git@git.example.com:operations
+        config  receive.denyNonFastforwards = true
+        config  receive.denyDeletes         = true
+
+repo    @all
+        R       =   daemon gitweb
+
+# additional configuration ...
+</code></pre>
+
+<p>Save, commit, and push your changes to the gitolite-admin repo as
+described <a href="conf.html" title="the access control file `gitolite.conf`">here</a>.</p>
+
+<p><a name="gitolite_gitweb_http_backend_APACHE_SETUP_"></a></p>
+
+<h2>APACHE SETUP</h2>
+
+<p>Under OpenSuSE 11.4, Apache runs as user <code>wwwrun</code> group <code>www</code> (see <code>/etc/apache2/uid.conf</code>).  But wait!  How can Apache running as <code>wwwrun</code> commit to git repositories, which are owned by <code>git</code>?</p>
+
+<p><a name="gitolite_gitweb_http_backend_suexec_"></a></p>
+
+<h3>suexec</h3>
+
+<p>Enter SuExec.  This is an apache module that allows apache to run
+under the auspicious of a different user.  For this to work, we need
+to do some setup ahead of time.  First, we need to make sure the
+<code>suexec</code> program has the right permissions:</p>
+
+<pre><code># OpenSuSE 11.4 puts the suexec program under /usr/sbin/suexec2
+$ chgrp www /usr/sbin/suexec2
+$ chmod 4750 /usr/sbin/suexec2
+
+# Verify permissions
+$ ls -al /usr/sbin/suexec2
+-rwsr-x--- 1 root www 14944 Feb 18 20:53 /usr/sbin/suexec2
+</code></pre>
+
+<p>Next, we need to create a wrapper script for the suexec program and
+place that under the correct directory.  To find out the where to
+place the wrapper script, do the following:</p>
+
+<pre><code>$ /usr/sbin/suexec2 -V
+ -D AP_DOC_ROOT="/srv/www"
+ -D AP_GID_MIN=96
+ -D AP_HTTPD_USER="wwwrun"
+ -D AP_LOG_EXEC="/var/log/apache2/suexec.log"
+ -D AP_SAFE_PATH="/usr/local/bin:/usr/bin:/bin"
+ -D AP_UID_MIN=96
+ -D AP_USERDIR_SUFFIX="public_html"
+</code></pre>
+
+<p>The variable we are interested in is <code>AP_DOC_ROOT</code> which is
+<code>/srv/www</code>.  So, we place the wrapper script in
+<code>/srv/www/bin/gitolite-suexec-wrapper.sh</code> with the following contents:</p>
+
+<pre><code>#!/bin/bash
+
+#
+# Wrapper for gl-auth-command
+#
+
+USER=$1
+
+export GIT_PROJECT_ROOT="/srv/git/projects"
+export GITOLITE_HTTP_HOME="/srv/git"
+
+# OpenSuSE gitolite RPM places gl-auth-command in /usr/bin
+exec /usr/bin/gl-auth-command $USER
+
+# End
+</code></pre>
+
+<p><em>For security purposes, this file MUST exist under <code>/srv/www</code>!</em></p>
+
+<p>Finally, make sure Apache loads the suexec module.  Under OpenSuSE,
+this would mean adding "suexec" to <code>APACHE_MODULES</code> in
+<code>/etc/sysconfig/apache2</code>.</p>
+
+<p><a name="gitolite_gitweb_http_backend_Gitweb_"></a></p>
+
+<h3>Gitweb</h3>
+
+<p>As gitweb will now be run under the <code>git</code> user, all files must be
+under <code>/srv/www</code> as well.</p>
+
+<pre><code># Under OpenSuSe, git-web installs in /usr/share/gitweb
+$ cp -r /usr/share/gitweb /srv/www
+$ chown -R git.git /srv/www/gitweb
+</code></pre>
+
+<p>Do not forget to point <code>$projectroot</code> in <code>/etc/gitweb.conf</code> to
+<code>/srv/git/projects</code>!</p>
+
+<p><a name="gitolite_gitweb_http_backend_Virtual_Host_"></a></p>
+
+<h3>Virtual Host</h3>
+
+<p>Configure your virtual host as follows:</p>
+
+<pre><code>&lt;VirtualHost git.example.com:80&gt;
+
+    ServerName  git.example.com
+    ServerAlias git
+
+    # By default, use gitweb
+    DocumentRoot /srv/www/gitweb
+
+    # Suexec setup
+    SuexecUserGroup git git
+
+    # Set up appropriate GIT environments
+    SetEnv GIT_PROJECT_ROOT /srv/git/projects
+    SetEnv GIT_HTTP_EXPORT_ALL
+
+    # Set up appropriate gitolite environment
+    SetEnv GITOLITE_HTTP_HOME /srv/git
+
+    # To serve gitweb at the same url, use a ScriptAliasMatch to
+    # only those URLs that git http-backend can handle, and
+    # forward the rest to gitweb:
+    ScriptAliasMatch \
+            "(?x)^/(.*/(HEAD | \
+                            info/refs | \
+                            objects/(info/[^/]+ | \
+                                     [0-9a-f]{2}/[0-9a-f]{38} | \
+                                     pack/pack-[0-9a-f]{40}\.(pack|idx)) | \
+                            git-(upload|receive)-pack))$" \
+            /srv/www/bin/gitolite-suexec-wrapper.sh/$1
+
+    # Make sure we can execute gitweb okay
+    &lt;Directory "/srv/www/gitweb"&gt;
+            Options ExecCGI
+            AllowOverride None
+            AddHandler cgi-script .cgi
+            DirectoryIndex gitweb.cgi
+            Order allow,deny
+            Allow from all
+    &lt;/Directory&gt;
+
+    # We need gl-auth-command executable
+    &lt;Directory "/srv/www/gitbin"&gt;
+            &lt;Files "gitolite-suexec-wrapper.sh"&gt;
+                    Order allow,deny
+                    Allow from all
+            &lt;/Files&gt;
+    &lt;/Directory&gt;
+
+    # Set up authentication to taste
+    &lt;Location /&gt;
+               AuthType Basic
+               AuthName "Private Git Access"
+               Require valid-user
+               AuthUserFile /srv/git/passfile
+    &lt;/Location&gt;
+
+&lt;/VirtualHost&gt;
+</code></pre>
+
+<p><a name="gitolite_gitweb_http_backend_VALIDATION_"></a></p>
+
+<h2>VALIDATION</h2>
+
+<p>Once apache has been restarted, verify your configuration:</p>
+
+<ul>
+<li>Repository browsable via gitweb</li>
+<li>Check out repository via ssh</li>
+<li>Check out repository via http</li>
+<li>Commit over ssh git@git.example.com</li>
+<li>Commit over http</li>
+</ul>
+
+<p><a name="gitolite_gitweb_http_backend_ADDITIONAL_RESOURCES_"></a></p>
+
+<h2>ADDITIONAL RESOURCES</h2>
+
+<ul>
+<li><a href="http://httpd.apache.org/docs/2.2/suexec.html">http://httpd.apache.org/docs/2.2/suexec.html</a> Apache suexec
+documentation</li>
+<li><a href="http://www.kernel.org/pub/software/scm/git/docs/git-http-backend.html">http://www.kernel.org/pub/software/scm/git/docs/git-http-backend.html</a>
+git-http-backend(1) documentation</li>
+<li><a href="https://git.wiki.kernel.org/index.php/Gitweb">https://git.wiki.kernel.org/index.php/Gitweb</a> git-web documentaiton</li>
+<li><a href="http://sitaramc.github.com/gitolite/doc/http-backend.html">http://sitaramc.github.com/gitolite/doc/http-backend.html</a> gitolite http backend documentation</li>
+</ul>
+
+<p><a name="gitolite_gitweb_http_backend_AUTHOR_"></a></p>
+
+<h2>AUTHOR</h2>
+
+<p>Christopher M. Fuhrman &lt;&lt; cfuhrman at panix dot com >></p>

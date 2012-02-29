@@ -1,0 +1,165 @@
+<head>
+<title>
+developer/patch maintainer notes
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#developer-notes">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h1>developer/patch maintainer notes</h1>
+
+<p><a name="developer_notes_general_stuff_"></a></p>
+
+<h2>general stuff</h2>
+
+<ul>
+<li><p>all scripts and libraries must be in the same directory.  However, RPM/DEB
+packagers can put the libraries where they want, as long as they can be
+found in perl's default <code>@INC</code>.</p></li>
+<li><p>gl-auth-command <strong>requires</strong> an actual <code>~/.gitolite.rc</code> (except if your
+initials are "JK" or "DG", in which case <code>/etc/gitolite/gitolite.rc</code> also
+works!)  It knows how to look around and set env vars etc correctly</p></li>
+<li><p>all programs except gl-auth-command <strong>require</strong> the environment variables
+<code>GL_RC</code> and <code>GL_BINDIR</code> set properly.  Your best bet is to run them <em>via</em>
+gl-auth-command, like so:</p>
+
+<pre><code>path/to/gl-auth-command -e other_program other_program_arguments
+</code></pre>
+
+<p>In any case none of these programs are meant to be run manually -- pretty
+much all of them are run via gl-auth-command or from something that was
+forked from it so the variables <em>will</em> exist during normal operation.</p></li>
+</ul>
+
+<p><a name="developer_notes_the_rc_file_"></a></p>
+
+<h2>the rc file</h2>
+
+<p>The 'rc' file has one major change from v1: any new values in the rc file need
+to be added to the @EXPORT list in <code>src/gitolite_rc.pm</code>.</p>
+
+<p><a name="developer_notes_modules_"></a></p>
+
+<h2>modules</h2>
+
+<p>There are 3 "modules" (<code>gitolite_rc</code>, <code>gitolite_env</code>, and <code>gitolite</code> itself).
+Their purposes should be fairly obvious.</p>
+
+<p><a name="developer_notes_that_bindir_thing_"></a></p>
+
+<h2>that 'bindir' thing</h2>
+
+<p>The importance of <code>GL_BINDIR</code> is that the command= argument in
+<code>~/.ssh/authorized_keys</code> must be a full path, ideally, and the compile script
+gets this from <code>GL_BINDIR</code>.</p>
+
+<p><a name="developer_notes_from_perl_"></a></p>
+
+<h3>from perl</h3>
+
+<ul>
+<li><p>for frequently run perl programs, I prefer my method</p>
+
+<ul>
+<li>gl-auth-command -- this is invoked with a full path</li>
+<li>gl-mirror-shell -- same as above</li>
+<li>gl-time -- same as above</li>
+</ul></li>
+<li><p>"their" ideal is "FindBin".  I will use it only on manually or
+infrequently run programs</p>
+
+<ul>
+<li>gl-setup-authkeys (external shim to compile keys separately from PTA)</li>
+</ul></li>
+</ul>
+
+<p><a name="developer_notes_from_shell_"></a></p>
+
+<h3>from shell</h3>
+
+<ul>
+<li><p>a perl program called gl-query-rc finds its own BINDIR (using my perl
+method, not FindBin).  This is suitable for calling from shell scripts
+as <code>${0%/*}/gl-query-rc GL_BINDIR</code></p>
+
+<ul>
+<li>gl-setup</li>
+<li>gl-tool</li>
+<li>gl-mirror-push</li>
+</ul></li>
+</ul>
+
+<p><a name="developer_notes_OUTLIER__"></a></p>
+
+<h3>OUTLIER!</h3>
+
+<ul>
+<li>gl-admin-push is an outlier.  For some silly reason I have the notion that
+even if it runs from /tmp it should get the right values, so it is the
+only one that interrogates <code>~/.ssh/authorized_keys</code> to get the actual
+BINDIR in use!</li>
+</ul>
+
+<p><a name="developer_notes_special_types_of_setups_"></a></p>
+
+<h2>special types of setups</h2>
+
+<p><a name="developer_notes_Fedora_"></a></p>
+
+<h3>Fedora</h3>
+
+<p>Fedora has a very special setup, as follows:</p>
+
+<ul>
+<li>each user has his own userid and login</li>
+<li>his/her ~/.ssh/authkeys file (containing only his/her key) has a
+"command=" clause invoking gl-auth-command</li>
+<li><p>trusted users have "gl-auth-command -s" meaning they can get a shell if
+they want to</p></li>
+<li><p>actual git repos are under "git" (or some such), and include the chmod g+s
+(git init --shared) unix perms tricks for shared access.  (<font
+color="gray">Starting with git 1.7.something, you would also need to
+explicitly delete the new receive.denyNonFastForwards setting that git
+seems to default to when you use --shared</font>).</p></li>
+<li><p>but since they're coming through gl-auth, branch-level acls are in effect</p></li>
+<li><p>the gitolite config file is generated from some database and compiled (all
+via cron)</p></li>
+<li><p>the keydir/ is empty; in fact they probably don't use the admin repo at
+all, AFAIK</p></li>
+</ul>
+
+<p>The most important implication of this setup is that <strong>the RC file is no
+longer is <code>$HOME</code> of the 'git' user</strong>.  They keep it in
+<code>/etc/gitolite/gitolite.rc</code>.  This means that a properly setup rc file must
+already be present in <code>/etc/gitolite/gitolite.rc</code> before doing any such
+installs.</p>
+
+<p>There are also some other "impedance mismatches" that may show up.  For
+example, the gl-setup triggered by detecting a change in <code>$data_version</code>
+following an RPM update once caused problems.  This auto-update is designed to
+run on the next "hit" of any kind (which arguably makes things very easy in
+normal installations), but in Fedora's case it also means it runs <em>as that
+user</em>.  Who may not have "write" access to <code>$GL_ADMINDIR</code>!  So the compile
+fails, and you now have new code trying to work with old format data.</p>
+
+<p>The solution is to explicitly run a compile, from a properly privileged
+userid, as soon as you do an RPM upgrade.</p>
+

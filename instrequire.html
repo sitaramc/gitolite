@@ -1,0 +1,80 @@
+<head>
+<title>
+requirements
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#install">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>requirements</h3>
+
+<p><a name="install_client_workstation_"></a></p>
+
+<h4>client/workstation</h4>
+
+<ul>
+<li>git version 1.6.6 or greater
+<ul>
+<li>even msysgit on Windows is fine; please don't ask me for help if
+you're using putty, plink, puttygen, etc., for ssh; I recommend
+msysgit for Windows and the openssh that comes with it</li>
+</ul></li>
+</ul>
+
+<p><a name="install_server_"></a></p>
+
+<h4>server</h4>
+
+<ul>
+<li>any Unix system with a posix compatible "sh".
+<ul>
+<li>people using "csh" or derivatives please don't ask me for help -- tell
+your admin csh is not posix compatible</li>
+</ul></li>
+<li>git version 1.6.6 or later
+<ul>
+<li>can be in a non-PATH location if you are unable to install it
+normally; see the <code>$GIT_PATH</code> variable in the "rc" file</li>
+</ul></li>
+<li>perl 5.8 or later</li>
+<li>openssh or any ssh that can understand the <code>authorized_keys</code> file format
+(probably optional if you're using the http backend)</li>
+<li>a Unix userid to be the hosting user, usually "git" but it can be any
+user, even your own normal one.  (If you're using an RPM/DEB the install
+probably created one called "gitolite").</li>
+</ul>
+
+<p><a name="install_technical_skills_"></a></p>
+
+<h4>technical skills</h4>
+
+<ul>
+<li><p>if you're installing gitolite, you're a "system admin", like it or not.
+Ssh is therefore a necessary skill.  Please take the time to learn at
+least enough to get passwordless access working.</p></li>
+<li><p>you also need to be somewhat familiar with git itself.  You cannot
+administer a whole bunch of git repositories if you don't know the basics
+of git.</p></li>
+<li><p>some familiarity with Unix and shells is probably required</p></li>
+<li><p>regular expressions are a big part of gitolite in many places but
+familiarity is not necessary to do basic access control.</p></li>
+</ul>
+

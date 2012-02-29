@@ -1,0 +1,174 @@
+<head>
+<title>
+gitolite in pictures
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#1000-words">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: pictures "gitolite in pictures" -->
+
+<h1>gitolite in pictures</h1>
+
+<p>Well, they say a picture speaks a thousand words, so here're a few!</p>
+
+<p><strong>NOTE</strong>: if you're viewing this file in raw text, please note that some
+characters in text within a ditaa drawing may not be ASCII.  This is due to a
+ditaa flaw that treats even a single hyphen as a line drawing character, so I
+had to use Unicode 2010 for it.  I expect that I will have to resort to
+similar tricks for colon, equals, and many others like it if and when I need
+those in text within a ditaa diagram.</p>
+
+<p><a name="1000_words_installation_and_setup_"></a></p>
+
+<h2>installation and setup</h2>
+
+<p>Here's a picture showing the "non-root" install.  We assume Alice is the
+gitolite admin, and "git" is the hosting user on the server.</p>
+
+<img src="images/1000-words-0001" title="Figure 1" />
+
+<p>The files names are there <strong>only for information</strong>.  You do <strong>not</strong> have to do
+anything to them yourself; in fact you should not!  You only need the command
+for each step shown:</p>
+
+<ol>
+<li>copy the admin's pubkey to the server as "alice.pub"</li>
+<li><code>git clone git://github.com/sitaramc/gitolite</code> or equivalent</li>
+<li><code>gitolite/src/gl-system-install</code></li>
+<li><code>gl-setup -q alice.pub</code></li>
+</ol>
+
+<p>Note also that you only need ONE real user on the server.  In our example it
+is git.  In particular, you do NOT create Unix userids for your gitolite
+users.</p>
+
+<p><a name="1000_words_adding_users_to_gitolite_"></a></p>
+
+<h2>adding users to gitolite</h2>
+
+<p>Once you've done the install, here's how you add users.</p>
+
+<img src="images/1000-words-0002" title="Figure 2" />
+
+<p>All this is done from the admin (Alice)'s workstation.  The steps are:</p>
+
+<ol>
+<li><code>git clone git@server:gitolite-admin</code></li>
+<li>obtain pubkeys from each user.  Email, USB, DHL, pigeon post, owl mail,
+any method you like.  Rename each received file to the name of the user,
+add a ".pub" at the end, copy it into <code>keydir/</code> in the gitolite-admin repo
+you cloned.</li>
+<li><code>git add keydir</code>, then <code>git commit</code>, then <code>git push</code></li>
+</ol>
+
+<p>You do NOT need to add Carol or Bob as <em>real</em> (Unix) users.  You do NOT add
+their keys directly anywhere on the server; you do it by cloning, adding keys,
+and pushing.</p>
+
+<p><a name="1000_words_adding_repos_to_gitolite_"></a></p>
+
+<h2>adding repos to gitolite</h2>
+
+<p>Adding a repo is even easier.  It's so easy that you don't really need a
+picture.  OK maybe a small one:</p>
+
+<img src="images/1000-words-0003" title="Figure 3" />
+
+<p>Again, all this is done from the admin (Alice)'s workstation.  Steps one and
+three are the same as for adding users, but step 2 consists of adding config
+lines for whatever repo you want too add.</p>
+
+<ol>
+<li><code>git clone git@server:gitolite-admin</code></li>
+<li><p>edit <code>conf/gitolite.conf</code> in the repo clone you just made.  Add repo
+paragraphs, maybe like this, and save the file:</p>
+
+<pre><code>repo foo
+    RW+     =   alice
+    RW      =   bob
+</code></pre></li>
+<li><p><code>git add conf/gitolite.conf</code>, then <code>git commit</code>, then <code>git push</code></p></li>
+</ol>
+
+<p>You do NOT add the repos directly anywhere on the server; you do it by
+cloning, adding repo and access lines, and pushing.</p>
+
+<p><a name="flow"></a></p>
+
+<h2>gitolite flow</h2>
+
+<p>This is the overall flow of gitolite, showing how the various parts fit
+together.  This is particularly useful for an admin to see where his
+site-local hooks fit, how they get called, and what stages of the process they
+affect.</p>
+
+<p><strong>Legend</strong>: diamonds are decision boxes whose results can abort the operation.
+Arrows are calls/invocations.  Dashed lines just point to sub-parts of the
+process on the left side.  Blue processes are external to gitolite.  Green is
+gitolite code.  Yellow is site-local code that you (the admin of your site)
+can add, to influence gitolite's behaviour.</p>
+
+<p>Authentication (<strong>AUTHN</strong>) is typically done by sshd, but could also be httpd
+etc.  This step invokes <code>gl-auth-command</code> (<strong>GLAC</strong>), which is the main entry
+point for gitolite, passing it a username and a command.  The most common
+commands look like one of these:</p>
+
+<pre><code>git-upload-pack 'repo'
+git-receive-pack 'repo'
+</code></pre>
+
+<p>GLAC first checks the command to see if it is a read or a write (<strong>RW</strong>)
+operation (upload-pack is a read, receive-pack is a write).</p>
+
+<p>At this point, GLAC knows the username, the reponame, and the type of
+operation.  It executes the first <a href="tipssec_.html#2levels" title="two levels of access rights checking">level</a> access check (<strong>AC1</strong>),
+which passes if the user has at least one ref for which the operation is
+allowed.</p>
+
+<p><font color="gray">Note that neither "deny" rules nor the rule sequences are
+taken into account for this step.  For instance, user "alice" will pass this
+step even with this configuration:</p>
+
+<pre><code>repo foo
+    -   =   alice
+    RW  =   alice
+</code></pre>
+
+<p>although some other user, say "bob", will not.</font></p>
+
+<img src="images/1000-words-0004" title="Figure 4" />
+
+<p>Once AC1 has passed, GLAC calls the <a href="hooks.html#pre-git" title="&quot;gl-pre-git&quot; hook"><code>gl-pre-git</code></a> hook (<strong>PGH</strong>), if
+it is present.  This hook allows the admin to add his own checks at this first
+stage and even abort the operation if needed.</p>
+
+<p>If PGH passes, GLAC now invokes git itself, which runs the command specified.
+If the command is <code>git-upload-pack</code>, nothing else happens and the process
+completes.</p>
+
+<p>However, if it is a push operation (<code>git-receive-pack</code>) then git calls the
+update hook (<strong>UP</strong>), per <code>man githooks</code>.  The update hook executes the second
+<a href="tipssec_.html#2levels" title="two levels of access rights checking">level</a> access check (<strong>AC2</strong>), and depending on its success, the
+operation succeeds or fails.</p>
+
+<p>The update hook calls a secondary hook, <a href="hooks.html#hookchaining" title="hook chaining"><code>update.secondary</code></a>
+(<strong>SEC</strong>) if it exists.  Similar to PGH, this allows the admin to add
+site-local checks before allowing the update to complete.</p>

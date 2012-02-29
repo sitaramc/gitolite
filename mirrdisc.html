@@ -1,0 +1,101 @@
+<head>
+<title>
+discussion
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>discussion</h2>
+
+<p><a name="mirroring_problems_with_the_old_mirroring_model_"></a></p>
+
+<h3>problems with the old mirroring model</h3>
+
+<p>The old mirroring model had a single server as the master for <em>all</em>
+repositories.  Slaves were effectively only for load-balancing reads, or for
+failover if the master died.</p>
+
+<p>This is not good enough for corporate setups where the developers are spread
+fairly evenly across the world.  Some repos need to be closer to some teams
+(NUMA is a good analogy).</p>
+
+<p>A model where different repos are "mastered" in different cities is much more
+efficient here.</p>
+
+<p>The old model had other rigidities too, though they're not really <em>problems</em>,
+as such:</p>
+
+<ul>
+<li><p>the slaves are just slaves; they can't have any "local" repos.</p></li>
+<li><p>a slave had to carry <em>all</em> repos; it couldn't choose to carry just a
+subset.</p></li>
+<li><p>it implicitly assumed all the mirrors were under the same admin, and that
+the gitolite-admin repo was itself mirrored too.</p></li>
+</ul>
+
+<p><a name="mirroring_the_new_mirroring_model_"></a></p>
+
+<h3>the new mirroring model</h3>
+
+<p>In the new model, servers can be much more independent and autonomous than in
+the old model.  (Don't miss the side note in the 'repository level setup'
+section if you prefer the old model).</p>
+
+<p>The new model has a few pros and cons.  The pros come from the flexibility and
+freedom that mirrors servers get, and the cons come from authorisation being
+more rigorously checked (for example, a slave will only accept a push if <em>its</em>
+configuration also says that the sending server is indeed the master for this
+repo).</p>
+
+<ul>
+<li><p>A mirroring operation will not <em>create</em> a repo on the mirror; it has to
+exist before a push happens on the master.  Typically, the admin on the
+slave must create the repo by adding the appropriate lines in his config.</p>
+
+<p>If your setup is not autonomous (i.e., you're mirroring the admin repo as
+well) then this happens automatically for normal repos.  However,
+<em>wildcard repos still won't work as seamlessly as in the old model</em>; see
+the first bullet in the 'IMPORTANT cautions' section earlier.</p></li>
+<li><p>The gitolite-admin repo (and config) need not be mirrored.  This allows
+the slave server admin to create site-local repos, without forcing him to
+create a second gitolite install for them.</p>
+
+<p>(Site-local repos are useful for purely local projects that need
+not/should not be mirrored for some reason, or ad-hoc personal repos that
+developers create for themselves, etc.)</p></li>
+<li><p>Servers can choose to mirror a subset of the repos from one of the bigger
+servers.</p>
+
+<p>In the open source world, you can imagine more popular repos (or more
+popular parts of huge projects like KDE) having more mirrors.  Or
+substitute "more popular" with "larger in size" if you wish
+(FlightGear-data anyone?)</p>
+
+<p>In the corporate world it could help with jurisdiction issues if the
+mirror is in a different country with different laws.</p>
+
+<p>I'm sure people will find other uses for this.  And I'm <em>positive</em> the
+pros will outweigh the cons.  If you don't like it, follow the suggestion
+in the side note somewhere up above, and just forget this feature exists
+:-)</p></li>
+</ul>
+

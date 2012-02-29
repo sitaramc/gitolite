@@ -1,0 +1,62 @@
+<head>
+<title>
+the `conf/gitolite.conf` file
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#mirroring">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>the <code>conf/gitolite.conf</code> file</h3>
+
+<p>One goal I have is to minimise the code changes to "core" gitolite due to
+this, so all repo-specific mirror settings are stored as <code>git config</code>
+variables (you know you can specify git config variables in the gitolite
+config file right?).  These are:</p>
+
+<ul>
+<li><p><code>gitolite.mirror.master</code></p>
+
+<p>The name of the server which is the master for this repo.  Each server
+will compare this with <code>$GL_HOSTNAME</code> (from its own rc file) to
+determine if it's the master or a slave.  Here're the possible values:</p>
+
+<ul>
+<li><strong>undefined</strong> or <code>local</code>: this repo is local to this server</li>
+<li><strong>same</strong> as <code>$GL_HOSTNAME</code>: this server is the "master" for this
+repo.  (The repo is "native" to this server).</li>
+<li><strong>not same</strong> as <code>$GL_HOSTNAME</code>: this server is a "slave" for the
+repo.  (The repo is a non-native on this server).</li>
+</ul></li>
+<li><p><code>gitolite.mirror.slaves</code></p>
+
+<p>Ignored for non-native repos.  For native repos, this is a space-separated
+list of servers to push to from the <code>post-receive</code> hook.</p>
+
+<p>Clearly, you can have different sets of slaves for different repos (again,
+see "discussion" section later for more on this).</p></li>
+<li><p><code>gitolite.mirror.redirectOK</code></p>
+
+<p>See the section on "redirecting pushes"</p></li>
+<li><p>In addition, you can create your own slave lists, named whatever you want,
+except they have to start with <code>gitolite.mirror.</code>.  The section on
+"commands to (re-)sync mirrors" has some examples.</p></li>
+</ul>
+

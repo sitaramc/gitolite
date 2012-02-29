@@ -1,0 +1,108 @@
+<head>
+<title>
+advanced access control
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#gitolite.conf-by-example">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h2>advanced access control</h2>
+
+<p><a name="gitolite_conf_by_example_deny_rules_"></a></p>
+
+<h3>"deny" rules</h3>
+
+<p><strong>Warning</strong>: When using deny rules, the order of your rules matters, where
+earlier it did not.</p>
+
+<p>PROCESSING LOGIC:</p>
+
+<blockquote>
+  <p>The first matching refex that has the permission you're looking for (<code>W</code>
+  or <code>+</code>) <strong>or a minus (<code>-</code>)</strong>, results in success <strong>or failure,
+  respectively</strong>.  A fallthrough <strong>also</strong> results in failure.</p>
+</blockquote>
+
+<pre><code>    RW refs/tags/v[0-9]     = ashok
+    -  refs/tags/v[0-9]     = @staff
+    RW refs/tags            = @staff
+</code></pre>
+
+<p>This allows only Ashok to write "version tags" (see rule for Ashok the QA guy
+somewhere above).  The others can write any tags they want, <em>except</em> version
+tags.  To understand this, try and match each rule <em>in sequence</em> with the name
+of the tag being pushed, and the user doing it, applying the logic described
+earlier.</p>
+
+<ul>
+<li>for non-version tags, only the 3rd rule matches, so anyone on staff can
+push them</li>
+<li>for version tags by ashok, the first rule matches so he can push them</li>
+<li>for version tags by staffers <em>other than ashok</em>, the second rule matches
+before the third one, and it has a <code>-</code> as the permission, so the push
+fails</li>
+</ul>
+
+<p><a name="ruleaccum2"></a></p>
+
+<h3>rule accumulation</h3>
+
+<p>Rules accumulate.  Even when separated by rules for other repos.  They
+accumulate intuitively.  For example:</p>
+
+<pre><code>repo foo
+    RW+             =   alice
+
+repo bar
+    RW+             =   dilbert
+
+repo @all
+    RW  dev/USER/   =   @staff
+
+repo foo
+    RW+ tmp/        =   @staff
+</code></pre>
+
+<p>has the <strong>effective</strong> ruleset, for repo foo, of</p>
+
+<pre><code>repo foo
+    RW+             =   alice
+    RW  dev/USER/   =   @staff
+    RW+ tmp/        =   @staff
+</code></pre>
+
+<p>Just remember that if you use <a href="aac.html#deny" title="&quot;deny&quot; rules">deny rules</a> anywhere then the <em>order of the
+rules matters</em>!</p>
+
+<p><a name="gitolite_conf_by_example_gitweb_and_daemon_"></a></p>
+
+<h3>gitweb and daemon</h3>
+
+<p>Gitolite does NOT do anything for gitweb and daemon access <strong>except</strong></p>
+
+<ul>
+<li>for daemon, create the file <code>git-daemon-export-ok</code> in the repository</li>
+<li>for gitweb, add the repo (plus owner name, if given) to the list of
+projects to be served by gitweb (see the config file variable
+<code>$PROJECTS_LIST</code>, which should have the same value you specified for
+<code>$projects_list</code> when setting up gitweb)</li>
+<li>put the description, if given, in <code>$repo/description</code></li>
+</ul>

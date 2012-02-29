@@ -1,0 +1,308 @@
+<head>
+<title>
+...not a gitolite problem!
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#nagp">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+<!-- file: nagp "...not a gitolite problem!" -->
+
+<h1>...not a gitolite problem!</h1>
+
+<p>Subtitle: Unix, ssh, git, and gitolite -- recognising the boundaries</p>
+
+<p><strong>Warning</strong>: Most of this is technical, but some of it is definitely
+subjective opinion.</p>
+
+<p>More and more people are being tasked with creating a "server" environment for
+git, (and thus being forcibly introduced to gitolite), before they've had a
+chance to know git (or even Unix) well enough.  As a result, I often get
+questions that have <strong>nothing</strong> to do with gitolite, because people don't know
+where the boundaries are.</p>
+
+<p>Here're some facts about gitolite:</p>
+
+<ul>
+<li><p>gitolite runs on the server.  To the client it looks just like any other
+ssh-based URL that is using public keys.</p></li>
+<li><p>once you connect, it looks just like any other <a href="http://sitaramc.github.com/concepts/0-terminology.html#working_tree_repository_bare_repository">bare repo</a> on a
+server for normal git operations (clone, fetch, push).  Users won't even
+<em>know</em> it exists if they do only what they're allowed to.  (I.e., it
+becomes visible only when it has to deny access for some operation)</p></li>
+<li><p>even "on disk", except for reserving the <code>update</code> hook for its own
+purposes and possibly a couple of extra files, the contents of a
+gitolite-managed bare repo are the same as a normal bare repo.</p></li>
+</ul>
+
+<p>A good short term measure is to read this <a href="http://sitaramc.github.com/1-basic-usage/simple-git-session.html">simple git session</a> for
+insights into the relationship between the "server" and the "client" in git.
+That might help with some of the problems described in this document.</p>
+
+<p><a name="nagp_ssh_"></a></p>
+
+<h2>ssh</h2>
+
+<p>Let's get this out of the way first.  The <em>superstar</em> of the "not a gitolite
+problem" category is actually ssh.</p>
+
+<p>Surprised?  It is so common that it has <a href="auth.html" title="authentication versus authorisation">its own document</a> to tell
+you why it is <em>not</em> a gitolite problem, while <a href="sts.html" title="ssh troubleshooting">another one</a> tries to
+help you anyway!</p>
+
+<p><a name="nagp_PATH_issues_"></a></p>
+
+<h2>PATH issues</h2>
+
+<p>This is actually related to ssh.  When you run commands over ssh, they run
+<em>non</em>-interactively, and depend on what your shell is, etc., certain shell
+startup files are not executed, so some environment variables may be different
+than what you see when you log in interactively.</p>
+
+<p>Example: Redmine/Chiliproject using RVM and redmine git hosting can't run
+post-receive hook.
+<a href="https://github.com/ericpaulbishop/redmine_git_hosting/issues/125">This</a> has
+more info on this specific issue.</p>
+
+<p>It is also useful to remember that <em>gitolite does not fiddle with the PATH
+except for adding the <code>GIT_PATH</code> variable if you defined it</em>.</p>
+
+<p><a name="nagp_git_"></a></p>
+
+<h2>git</h2>
+
+<ul>
+<li><p>first push to a new repo</p>
+
+<p>Even if the error message said "the remote end hung up unexpectedly", this
+is not a gitolite problem.  If you read the full message, it will probably
+be something like this:</p>
+
+<pre><code>No refs in common and none specified; doing nothing.
+Perhaps you should specify a branch such as 'master'.
+fatal: The remote end hung up unexpectedly
+error: failed to push some refs to '/tmp/tmp-repos/bare.git'
+</code></pre>
+
+<p>(To be fair, this message is still not clear enough; even a careful reader
+might end up trying <code>git push master</code> instead of <code>git push origin
+master</code>.)</p></li>
+<li><p>client-side versus server-side hooks</p>
+
+<p>Just because you saw something in gitolite's docs about hooks, it doesn't
+mean gitolite can make a "post-checkout" hook work!</p>
+
+<p>You need to read man githooks again to understand the difference between
+hooks that run on your local repo in response to local commands (like
+commit, checkout), and remote hooks that run on the server in response to
+a client-initiated operation (like push).</p>
+
+<p>An equally wrong expectation is that a clone or a pull will also bring
+along hooks from the server!  Sorry, but there is nothing in git that
+allows the <em>server</em> to do something on the <em>client</em> -- if there were, it
+would be a huge security issue.</p>
+
+<p>What you can do in gitolite is to write yourself a hook that checks every
+commit in a push for compliance and rejects the push (<em>all</em> the commits in
+the push, mind!) if it doesn't comply.  However, other than telling you
+how to get your hook to trigger, the actual code in that hook is out of
+scope for me.</p></li>
+<li><p>Jenkins integration</p>
+
+<p>I don't know much about CI systems, but I'm pretty sure they run off of
+some hook or other, but gitolite may already be using those hooks.  The
+section on hook chaining <a href="hooks.html#hookchaining" title="hook chaining">here</a> shows you how to run your own
+hooks.</p>
+
+<p>In short, CI integration is no more a gitolite problem than any other
+purpose for which git's hooks can be used.</p></li>
+</ul>
+
+<p><a name="nagp_windows_"></a></p>
+
+<h2>windows</h2>
+
+<p>I'm <em>interested</em> in making sure it works fine with Windows, simply because I
+have colleagues at work who use it.  But that doesn't mean I can help you; I
+just don't know enough to help you.  (And if you even breathe the words
+"putty" or "plink" I will totally tune you out!)</p>
+
+<p>I do have people using it happily on Windows with Eclipse, Visual Studio, and
+God alone knows what else, so I know it <em>can</em> (be made to) work.</p>
+
+<p>So, hang in there... it'll all work out eventually.</p>
+
+<p><a name="nagp_apple_"></a></p>
+
+<h2>apple</h2>
+
+<p>Weirdly enough, this is the one thing that Steve Ballmer and I probably agree
+on, so I won't elaborate on that ;-)</p>
+
+<p>It seems to me though, that many recent reports of "weird" behaviour reported
+have come from Macs.  Yet another reason for me to back off with an apology.</p>
+
+<p><a name="nagp_just_say_NO__"></a></p>
+
+<h2>just say NO!</h2>
+
+<p>These are the things I won't do, for various reasons, mostly technical, with a
+smattering of some subjective stuff.  If you've been hit by one of these, and
+disagree with me -- well that's why gitolite is GPL.  As long as you satisfy
+the GPL, you can simply "fork off" ;-)</p>
+
+<ul>
+<li><p>using a database backend</p>
+
+<p>Someone wanted help rewriting gitolite to use a database instead of a perl
+hash.</p>
+
+<p>I think that's a very bad idea.  Show me an install where gitolite does
+not scale and I'll fix it without using a damn database.  I <em>chose</em> the
+perl hash very deliberately and for very specific reasons; using a DB
+would kill all that.</p></li>
+<li><p>symlinks within <code>REPO_BASE</code></p>
+
+<p>Someone wanted to put the actual repos somewhere else and create a symlink
+to them inside gitolite's <code>REPO_BASE</code>.</p>
+
+<p>No.  Gitolite assumes all of <code>REPO_BASE</code> is in its control, and nothing
+else outside is (barring the admin directory <code>~/.gitolite</code> and the rc file
+<code>~/.gitolite.rc</code>).</p>
+
+<p>You could argue that this is secure enough if the admin knows what he is
+doing, but I'm not buying that.  Some odd screwup involving symlinks will
+show up some day and gitolite will get blamed.</p></li>
+<li><p>deleting environment variables copied from client session</p>
+
+<p>This same guy wanted me to add code to delete certain environment
+variables at startup because "the openssh servers in the linux
+distribution that [he] use[s], are configured to copy <code>GIT_*</code> variables to
+the remote session".</p>
+
+<p>This is wrong on so many levels it's almost plonk-able!</p></li>
+<li><p>using <code>cp</code> instead of <code>ln</code></p>
+
+<p>Guy has an NTFS file system mounted on Linux.  So... no symlinks (an NTFS
+file system on Windows works fine because msysgit/cygwin manage to
+<em>simulate</em> them.  NTFS mounted on Linux won't do that!)</p>
+
+<p>He wanted all the symlink stuff to be replaced by copies.</p>
+
+<p>No. Way.</p></li>
+<li><p>non-bare repos on the server</p>
+
+<p>Some guy gave me a complicated spiel about git-svn not liking bare repos
+or whatever.  I tuned off at the first mention of those 3 letters so I
+don't really know what the actual problem was.</p>
+
+<p>But it doesn't matter.  Even if someone (Ralf H) had not chipped in with a
+workable solution, I still would not do it.  A server repo should be bare.
+Period.</p></li>
+</ul>
+
+<p><a name="nagp_behind_my_back_"></a></p>
+
+<h3>behind my back</h3>
+
+<p>Some of the "Just say NO" items are from situations where someone or something
+changes stuff behind gitolite's back.  I am particularly unsympathetic to this
+sort of thing.</p>
+
+<ul>
+<li><p>incomplete ownership of <code>REPO_BASE</code></p>
+
+<p>This guy had a repo-base directory where not all of the files were owned
+by the git user.  As a result, some of the hooks did not get created.  He
+claimed my code should detect OS-permissions issues while it's doing its
+stuff.</p>
+
+<p>No.  I refuse to have the code constantly look over its shoulder making
+sure fundamental assumptions are being met.</p></li>
+<li><p>empty template directory</p>
+
+<p>(See man git-init for what a template directory is).</p>
+
+<p>The same guy with the symlinks and the environment variables (so this is
+his third appearance in this list!) had an empty template directory
+because he "does not like to have sample hooks in every repository".  So
+naturally, the hooks directory does not get created when you run a <code>git
+init</code>.  He expects gitolite to compensate for it.</p>
+
+<p>Granted, it's only a 1-line change.  But again, this falls under
+"constantly looking over your shoulder to double check fundamental
+assumptions".  Where does it end?</p></li>
+<li><p>per-repo umask setting</p>
+
+<p>Some people believe that gitolite should have code to compensate for a
+"potential" failure of gitweb or httpd to restrict access as designed.</p>
+
+<p>Sorry.  Not in "core" at least.  This is yet another of those "constantly
+looking over your shoulder" examples.  Why should it be gitolite's problem
+to compensate if gitweb or httpd misbehave?  Yes, I know all about layers
+of security and defense in depth, thank you but no.</p>
+
+<p><font color="gray"></p>
+
+<blockquote>
+  <p>I gave them a solution that involves adding <code>config
+  core.sharedRepository = 0750</code> in the gitolite.conf file for those
+  repos, then doing a one-time fixup for newly created repos.  But they
+  decided they needed to patch gitolite and they're going with it.</p>
+
+<p>I'm not too worried.  These guys ran a HEAVILY patched gitosis for
+  years; they're probably used to it.</p>
+</blockquote>
+
+<p></font></p></li>
+</ul>
+
+<p><a name="nagp_that_s_outrageous_"></a></p>
+
+<h2>that's outrageous</h2>
+
+<p>This section is for really outrageous stuff.</p>
+
+<ul>
+<li><p>clearing out a repo the long/wrong way</p>
+
+<p>This guy tells me he often needs to clear out a repo.  How?  He first
+manually deletes the repo on the server, then pushes a dummy commit to the
+admin repo to let gitolite re-create it.</p>
+
+<p>Of course, this second step is "annoying" so he mailed me and told me
+there has to be a better way!</p>
+
+<p>I asked him why he didn't try <code>git push -f</code> and he said he didn't know he
+could do that.  I'm NOT joking.  I wish I were!  (Yes, we all know that
+<code>git push -f</code> is not the same as delete/re-create, but the point is that
+he really didn't need it; he just assumed that's the only way to force his
+commits to the remote.)</p></li>
+<li><p>can connect to github, can't connect to gitolite</p>
+
+<p>So this mac-fan went on about his great IDE (CodeX or something) and how
+it works with github but no luck with gitolite.  Therefore he comes and
+asks on #gitolite.  (I give him bonus points for telling people on TWO
+channels that it is "THE best ide").</p>
+
+<p>The actual error?  "host unreachable".</p>
+
+<p>In usenet terms... <code>*PLONK*</code>!</p></li>
+</ul>

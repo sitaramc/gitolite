@@ -1,0 +1,49 @@
+<head>
+<title>
+some more features
+</title>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#index">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<h3>some more features</h3>
+
+<p>Here're some more features.</p>
+
+<ul>
+<li>simple, yet powerful, config file syntax, including specifying
+gitweb/daemon access.  You'll need this power if you manage lots of
+users+repos+combinations of access</li>
+<li>apart from branch-name based restrictions, you can also restrict by
+file/dir name changed (i.e., output of <code>git diff --name-only</code>)</li>
+<li>if your requirements are still too complex, you can split up the config
+file and delegate authority over parts of it</li>
+<li>easy to specify gitweb owner, description and gitweb/daemon access</li>
+<li>easy to sync gitweb (http) authorisation with gitolite's access config</li>
+<li>comprehensive logging [aka: management does not think "blame" is just a
+synonym for "annotate" :-)]</li>
+<li>"personal namespace" prefix for each dev</li>
+<li>migration guide and simple converter for gitosis conf file</li>
+<li>"exclude" (or "deny") rights at the branch/tag level</li>
+<li>specify repos using patterns (patterns may include creator's name)</li>
+<li>define powerful operations on the server side, even github-like forking</li>
+</ul>
+
