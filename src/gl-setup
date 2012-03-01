@@ -103,7 +103,7 @@ then
     }
     print_rc_vars $GL_PACKAGE_CONF/example.gitolite.rc > $TEMPDIR/.newvars
     print_rc_vars $GL_RC                               > $TEMPDIR/.oldvars
-    comm -23 $TEMPDIR/.newvars $TEMPDIR/.oldvars > $TEMPDIR/.diffvars
+    grep -f $TEMPDIR/.oldvars -v $TEMPDIR/.newvars > $TEMPDIR/.diffvars
     if [ -s $TEMPDIR/.diffvars ]
     then
         cp $GL_PACKAGE_CONF/example.gitolite.rc $HOME/.gitolite.rc.new
