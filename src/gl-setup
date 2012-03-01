@@ -32,7 +32,7 @@ get_rc_val() {
 #   tempdir setup
 # ----------------------------------------------------------------------
 
-TEMPDIR=`mktemp -d -t tmp.XXXXXXXXXX`
+TEMPDIR=`perl -MFile::Temp -l -e 'print File::Temp::tempdir("tmp.XXXXXXXXXX", TMPDIR => 1);'`
 export TEMPDIR
 trap "/bin/rm -rf $TEMPDIR" 0
 
