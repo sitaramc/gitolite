@@ -269,7 +269,7 @@
       * [why did I write it?](index.html#index_why_did_I_write_it__)
           * [some more features](morefeatures_.html)
       * [security](index.html#index_security_)
-      * [contact and license](index.html#index_contact_and_license_)
+      * [contact and license](license.html) <!-- (license) -->
 
 ----
 
