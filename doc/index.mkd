@@ -177,9 +177,13 @@ INR.  The hole should not require enabling any of the options listed as having
 a [security impact][rcsecurity] in the rc file, nor obvious things like setting
 the umask too loose, etc.
 
-## contact and license
+## F=license contact and license
 
-Gitolite is released under GPL v2.  See COPYING for details.
+The gitolite software is released under GPL v2.  See COPYING for details.
+
+The gitolite documentation is provided under a [Creative Commons
+Attribution-NonCommercial-ShareAlike 3.0 Unported
+License](http://creativecommons.org/licenses/by-nc-sa/3.0/).
 
   * author: sitaramc@gmail.com, sitaram@atc.tcs.com
   * mailing list: gitolite@googlegroups.com

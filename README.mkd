@@ -16,3 +16,8 @@ it, features, contact/mailing list info, and so on.
 For convenience, here is a link to the [master table of
 contents](http://sitaramc.github.com/gitolite/master-toc.html), which is very
 useful to search using your browser's search function.
+
+----
+
+License information for code and documentation is at the end of doc/index.mkd
+(or you can read it online [here][license]).
