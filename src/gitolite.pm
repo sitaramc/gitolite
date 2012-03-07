@@ -22,6 +22,7 @@ use Exporter 'import';
     setup_daemon_access
     setup_git_configs
     setup_gitweb_access
+    setup_gitweb_category
     setup_web_access
     shell_out
     slurp
@@ -573,6 +574,19 @@ sub setup_gitweb_access
 
     return ($desc or can_read($repo, 'gitweb'));
         # this return value is used by the caller to write to projects.list
+}
+
+my $category_file = "category";
+sub setup_gitweb_category
+{
+    my ($repo, $category) = @_;
+
+    if ($category) 
+    {
+        open(DESC, ">", $category_file);
+        print DESC $category . "\n";
+        close DESC;
+    } 
 }
 
 # ----------------------------------------------------------------------------

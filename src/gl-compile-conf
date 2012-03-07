@@ -67,6 +67,7 @@ my %user_list = ();
 # gitweb descriptions and owners; plain text, keyed by "$repo.git"
 my %desc = ();
 my %owner = ();
+my %category = ();
 
 # backward compat for delegation
 my $subconf_seen = 0;
@@ -284,6 +285,15 @@ sub parse_conf_line
                 parse_conf_file( $file, $fragment );
             }
         }
+    }
+    # very simple syntax for the gitweb category of repo;
+    #       reponame category = "category name"
+    elsif ($line =~ /^(\S+)(?: category) = "(.*)"$/)
+    {
+        my ($repo, $category) = ($1, $2);
+        die "$ABRT bad repo name '$repo'\n" unless $repo =~ $REPONAME_PATT;
+        die "$ABRT $fragment attempting to set category for $repo\n" if check_fragment_repo_disallowed( $fragment, $repo );
+        $category{"$repo.git"} = $category;
     }
     # very simple syntax for the gitweb description of repo; one of:
     #       reponame = "some description string"
@@ -558,6 +568,7 @@ for my $repo (@phy_repos) {
     #   Anyway, I believe it doesn't make sense to have all wild repos
     #   (for some pattern) to have the same description and owner.
     $projlist{"$repo.git"} = 1 if setup_gitweb_access($repo, $desc{"$repo.git"} || '', $owner{"$repo.git"} || '');
+    setup_gitweb_category($repo, $category{"$repo.git"} || '');
 
     # git config
     # implementation note: this must happen *after* one of the previous 2
