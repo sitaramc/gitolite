@@ -14,6 +14,7 @@ The following subcommands are available; they should all respond to '-h':
     list-groups                 list all group names in conf
     list-users                  list all users/user groups in conf
     list-repos                  list all repos/repo groups in conf
+    list-phy-repos              list all repos actually on disk
     list-memberships            list all groups a name is a member of
     list-members                list all members of a group
 
@@ -29,6 +30,7 @@ use FindBin;
 
 BEGIN { $ENV{GL_BINDIR} = $FindBin::Bin; }
 use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
 use Gitolite::Common;
 
 use strict;
@@ -75,6 +77,10 @@ sub args {
         require Gitolite::Conf::Load;
         Gitolite::Conf::Load->import;
         print "$_\n" for ( @{ list_repos() } );
+    } elsif ( $command eq 'list-phy-repos' ) {
+        shift @ARGV;
+        _chdir($GL_REPO_BASE);
+        print "$_\n" for ( @{ list_phy_repos() } );
     } elsif ( $command eq 'list-memberships' ) {
         shift @ARGV;
         require Gitolite::Conf::Load;
@@ -85,5 +91,7 @@ sub args {
         require Gitolite::Conf::Load;
         Gitolite::Conf::Load->import;
         print "$_\n" for ( @{ list_members() } );
+    } else {
+        _die "unknown gitolite sub-command";
     }
 }

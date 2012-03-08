@@ -147,6 +147,7 @@ sub sort_u {
     my @phy_repos = ();
 
     sub list_phy_repos {
+        _die "'gitolite list_phy_repos' takes no arguments" if @ARGV;
         trace(3);
 
         # use cached value only if it exists *and* no arg was received (i.e.,
