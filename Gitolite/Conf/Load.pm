@@ -10,6 +10,7 @@ package Gitolite::Conf::Load;
   list_groups
   list_users
   list_repos
+  list_memberships
 );
 
 use Exporter 'import';
@@ -240,6 +241,23 @@ Usage:  gitolite list-repos
     push @r, keys %split_conf;
 
     return (sort_u(\@r));
+}
+
+sub list_memberships {
+
+    die "
+Usage:  gitolite list-memberships <name>
+
+  - list all groups a name is a member of
+  - takes one user/repo name
+
+" if @ARGV and $ARGV[0] eq '-h' or not @ARGV and not @_;
+
+    my $name = ( @_ ? shift @_ : shift @ARGV );
+
+    load_common();
+    my @m = memberships($name);
+    return (sort_u(\@m));
 }
 
 # ----------------------------------------------------------------------

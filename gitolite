@@ -14,9 +14,12 @@ The following subcommands are available; they should all respond to '-h':
     list-groups                 list all group names in conf
     list-users                  list all users/user groups in conf
     list-repos                  list all repos/repo groups in conf
+    list-memberships            list all groups a name is a member of
 
 Warnings:
-  - list-users is disk bound and could take a while on sites with thousands of repos
+  - list-users is disk bound and could take a while on sites with 1000s of repos
+  - list-memberships does not check if the name is known; unknown names come
+    back with 2 answers: the name itself and '@all'
 =cut
 
 # ----------------------------------------------------------------------
@@ -71,5 +74,10 @@ sub args {
         require Gitolite::Conf::Load;
         Gitolite::Conf::Load->import;
         print "$_\n" for ( @{ list_repos() } );
+    } elsif ( $command eq 'list-memberships' ) {
+        shift @ARGV;
+        require Gitolite::Conf::Load;
+        Gitolite::Conf::Load->import;
+        print "$_\n" for ( @{ list_memberships() } );
     }
 }
