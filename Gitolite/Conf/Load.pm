@@ -9,6 +9,7 @@ package Gitolite::Conf::Load;
 
   list_groups
   list_users
+  list_repos
 );
 
 use Exporter 'import';
@@ -178,7 +179,13 @@ sub data_version_mismatch {
 
 # list all groups
 sub list_groups {
-    die "\nUsage:  gitolite list-groups\n\n(no options, no flags)\n\n" if @ARGV;
+    die "
+Usage:  gitolite list-groups
+
+  - lists all group names in conf
+  - no options, no flags
+
+" if @ARGV;
 
     load_common();
 
@@ -193,7 +200,14 @@ sub list_users {
     my $count = 0;
     my $total = 0;
 
-    die "\nUsage:  gitolite list-users\n\n  - no options, no flags\n  - may be slow if you have thousands of repos\n\n" if @ARGV;
+    die "
+Usage:  gitolite list-users
+
+  - lists all users/user groups in conf
+  - no options, no flags
+  - WARNING: may be slow if you have thousands of repos
+
+" if @ARGV;
 
     load_common();
 
@@ -207,6 +221,25 @@ sub list_users {
     }
     print STDERR "\n";
     return (sort_u(\@u));
+}
+
+
+sub list_repos {
+
+    die "
+Usage:  gitolite list-repos
+
+  - lists all repos/repo groups in conf
+  - no options, no flags
+
+" if @ARGV;
+
+    load_common();
+
+    my @r = keys %repos;
+    push @r, keys %split_conf;
+
+    return (sort_u(\@r));
 }
 
 # ----------------------------------------------------------------------

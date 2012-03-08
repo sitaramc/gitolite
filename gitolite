@@ -12,7 +12,8 @@ The following subcommands are available; they should all respond to '-h':
     compile                     compile gitolite.conf
     query-rc                    get values of rc variables
     list-groups                 list all group names in conf
-    list-users                  list all user names in conf
+    list-users                  list all users/user groups in conf
+    list-repos                  list all repos/repo groups in conf
 
 Warnings:
   - list-users is disk bound and could take a while on sites with thousands of repos
@@ -65,5 +66,10 @@ sub args {
         require Gitolite::Conf::Load;
         Gitolite::Conf::Load->import;
         print "$_\n" for ( @{ list_users() } );
+    } elsif ( $command eq 'list-repos' ) {
+        shift @ARGV;
+        require Gitolite::Conf::Load;
+        Gitolite::Conf::Load->import;
+        print "$_\n" for ( @{ list_repos() } );
     }
 }
