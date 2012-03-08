@@ -15,6 +15,7 @@ The following subcommands are available; they should all respond to '-h':
     list-users                  list all users/user groups in conf
     list-repos                  list all repos/repo groups in conf
     list-memberships            list all groups a name is a member of
+    list-members                list all members of a group
 
 Warnings:
   - list-users is disk bound and could take a while on sites with 1000s of repos
@@ -79,5 +80,10 @@ sub args {
         require Gitolite::Conf::Load;
         Gitolite::Conf::Load->import;
         print "$_\n" for ( @{ list_memberships() } );
+    } elsif ( $command eq 'list-members' ) {
+        shift @ARGV;
+        require Gitolite::Conf::Load;
+        Gitolite::Conf::Load->import;
+        print "$_\n" for ( @{ list_members() } );
     }
 }

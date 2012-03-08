@@ -11,6 +11,7 @@ package Gitolite::Conf::Load;
   list_users
   list_repos
   list_memberships
+  list_members
 );
 
 use Exporter 'import';
@@ -257,6 +258,30 @@ Usage:  gitolite list-memberships <name>
 
     load_common();
     my @m = memberships($name);
+    return (sort_u(\@m));
+}
+
+sub list_members {
+
+    die "
+Usage:  gitolite list-members <group name>
+
+  - list all members of a group
+  - takes one group name
+
+" if @ARGV and $ARGV[0] eq '-h' or not @ARGV and not @_;
+
+    my $name = ( @_ ? shift @_ : shift @ARGV );
+
+    load_common();
+
+    my @m = ();
+    while (my ($k, $v) = each ( %groups )) {
+        for my $g ( @{ $v } ) {
+            push @m, $k if $g eq $name;
+        }
+    }
+
     return (sort_u(\@m));
 }
 
