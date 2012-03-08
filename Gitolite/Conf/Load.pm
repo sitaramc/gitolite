@@ -6,6 +6,8 @@ package Gitolite::Conf::Load;
 @EXPORT = qw(
   load
   access
+
+  list_groups
 );
 
 use Exporter 'import';
@@ -167,6 +169,23 @@ sub memberships {
 
 sub data_version_mismatch {
     return $data_version ne $current_data_version;
+}
+
+# ----------------------------------------------------------------------
+# api functions
+# ----------------------------------------------------------------------
+
+# list all groups
+sub list_groups {
+    die "\nUsage:  gitolite list-groups\n\n(no options, no flags)\n\n" if @ARGV;
+
+    load_common();
+
+    my @g = ();
+    while (my ($k, $v) = each ( %groups )) {
+        push @g, @{ $v };
+    }
+    return (sort_u(\@g));
 }
 
 1;

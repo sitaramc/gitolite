@@ -11,6 +11,7 @@ The following subcommands are available; they should all respond to '-h':
     setup                       1st run: initial setup; all runs: hook fixups
     compile                     compile gitolite.conf
     query-rc                    get values of rc variables
+    list-groups                 list all group names in conf
 =cut
 
 # ----------------------------------------------------------------------
@@ -50,5 +51,10 @@ sub args {
         require Gitolite::Commands::QueryRc;
         Gitolite::Commands::QueryRc->import;
         query_rc();
+    } elsif ( $command eq 'list-groups' ) {
+        shift @ARGV;
+        require Gitolite::Conf::Load;
+        Gitolite::Conf::Load->import;
+        print "$_\n" for ( @{ list_groups() } );
     }
 }
