@@ -1,0 +1,110 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# this is hardcoded; change it if needed
+use lib "$ENV{HOME}/bin";
+use Gitolite::Test;
+
+# basic tests
+# ----------------------------------------------------------------------
+
+try "
+    plan 74
+
+    ## clone
+    glt clone dev2 file://gitolite-admin
+                                !ok;    gsh
+                                        /FATAL: DENIED: R access to gitolite-admin by dev2 .fallthru./
+                                        /fatal: The remote end hung up unexpectedly/
+    glt clone admin --progress file://gitolite-admin
+                                ok;     gsh
+                                        /Counting/; /Compressing/; /Total/
+    cd gitolite-admin;          ok
+    ";
+
+put "conf/gitolite.conf", "
+    \@admins     =   admin dev1
+    repo gitolite-admin
+        -   mm  =   \@admins
+        RW      =   \@admins
+        RW+     =   admin
+
+    repo testing
+        RW+     =   \@all
+";
+
+try "
+    ## push
+    git add conf;               ok
+    git status -s;              ok;     /M  conf/gitolite.conf/
+    git commit -m t01a;         ok;     /master.*t01a/
+    glt push dev2 origin;       !ok;    gsh
+                                        /FATAL: DENIED: W access to gitolite-admin by dev2 .fallthru./
+                                        /fatal: The remote end hung up unexpectedly/
+    glt push admin origin;      ok;     /master -. master/
+    tsh empty;                  ok;
+    glt push admin origin master:mm
+                                !ok;    gsh
+                                        /FATAL: DENIED: W access to gitolite-admin by admin .rule: refs/heads/mm./
+                                        /remote: error: hook declined to update refs/heads/mm/
+                                        /To file://gitolite-admin/
+                                        /remote rejected. master -. mm .hook declined./
+                                        /error: failed to push some refs to 'file://gitolite-admin'/
+
+    ";
+
+put "conf/gitolite.conf", "
+    \@admins     =   admin dev1
+    repo gitolite-admin
+        RW+     =   admin
+
+    repo testing
+        RW+     =   \@all
+
+    repo t1
+        R       =   u2
+        RW      =   u3
+        RW+     =   u4
+";
+
+try "
+    ## push 2
+    git add conf;               ok
+    git status -s;              ok;     /M  conf/gitolite.conf/
+    git commit -m t01b;         ok;     /master.*t01b/
+    glt push admin origin;      ok;     gsh
+                                        /master -. master/
+
+    ## clone
+    cd ..;                      ok;
+    glt clone u1 file://t1;     !ok;    gsh
+                                        /FATAL: DENIED: R access to t1 by u1 .fallthru./
+                                        /fatal: The remote end hung up unexpectedly/
+    glt clone u2 file://t1;     ok;     gsh
+                                        /warning: You appear to have cloned an empty repository./
+    ls -al t1;                  ok;     /$ENV{USER}.*$ENV{USER}.*\.git/
+    cd t1;                      ok;
+
+    ## push
+    test-commit tc1 tc2 tc2;    ok;     /f7153e3/
+    glt push u2 origin;         !ok;    gsh
+                                        /FATAL: DENIED: W access to t1 by u2 .fallthru./
+                                        /fatal: The remote end hung up unexpectedly/
+    glt push u3 origin master;  ok;     gsh
+                                        /master -. master/
+
+    ## rewind
+    reset-h HEAD^;              ok;     /HEAD is now at 537f964 tc2/
+    test-tick; test-commit tc3; ok;     /a691552/
+    glt push u3 origin;         !ok;    gsh
+                                        /rejected.*master -. master.*non-fast-forward./
+    glt push u3 -f origin;      !ok;    gsh
+                                        /FATAL: DENIED: \\+ access to t1 by u3 .fallthru./
+                                        /remote: error: hook declined to update refs/heads/master/
+                                        /To file://t1/
+                                        /remote rejected. master -. master .hook declined./
+                                        /error: failed to push some refs to 'file://t1'/
+    glt push u4 origin +master; ok;     gsh
+                                        / \\+ f7153e3...a691552 master -. master.*forced update./
+"

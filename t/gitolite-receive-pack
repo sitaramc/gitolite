@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+print STDERR "TRACE: grp(", join( ")(", @ARGV ), ")\n";
+
+my $repo = shift;
+$repo =~ s/\.git$//;
+my $user = $ENV{G3T_USER} || 'no-such-user';
+
+$ENV{SSH_ORIGINAL_COMMAND} = "git-receive-pack '$repo'";
+exec( "$ENV{HOME}/bin/gitolite-shell", $user );

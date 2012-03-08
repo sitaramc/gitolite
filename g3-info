@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+# gitolite shell, invoked from ~/.ssh/authorized_keys
+# ----------------------------------------------------------------------
+
+BEGIN {
+    # find and set bin dir
+    $ENV{GL_BINDIR} = "$ENV{HOME}/bin";
+}
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+use strict;
+use warnings;
+
+# ----------------------------------------------------------------------
+
+my $user = shift or die;
+my $aa;
+my $ref = 'unknown';
+
+my $ret;
+while (<>) {
+    chomp;
+
+    my $perm = '';
+    for $aa (qw(R W C)) {
+        $ret = access($_, $user, $aa, $ref);
+        $perm .= ( $ret =~ /DENIED/ ? "  " : " $aa" );
+    }
+    print "$perm\t$_\n" if $perm =~ /\S/;
+}

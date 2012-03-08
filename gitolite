@@ -1,0 +1,54 @@
+#!/usr/bin/perl
+
+# all gitolite CLI tools run as sub-commands of this command
+# ----------------------------------------------------------------------
+
+=for usage
+Usage:  gitolite [sub-command] [options]
+
+The following subcommands are available; they should all respond to '-h':
+
+    setup                       1st run: initial setup; all runs: hook fixups
+    compile                     compile gitolite.conf
+    query-rc                    get values of rc variables
+=cut
+
+# ----------------------------------------------------------------------
+
+use FindBin;
+
+BEGIN { $ENV{GL_BINDIR} = $FindBin::Bin; }
+use lib $ENV{GL_BINDIR};
+use Gitolite::Common;
+
+use strict;
+use warnings;
+
+# ----------------------------------------------------------------------
+
+args();
+
+# ----------------------------------------------------------------------
+
+sub args {
+    my ( $command, @args ) = @ARGV;
+    usage() if not $command or $command eq '-h';
+
+    if ( $command eq 'setup' ) {
+        shift @ARGV;
+        require Gitolite::Commands::Setup;
+        Gitolite::Commands::Setup->import;
+        setup();
+    } elsif ( $command eq 'compile' ) {
+        shift @ARGV;
+        _die "'gitolite compile' does not take any arguments" if @ARGV;
+        require Gitolite::Conf;
+        Gitolite::Conf->import;
+        compile();
+    } elsif ( $command eq 'query-rc' ) {
+        shift @ARGV;
+        require Gitolite::Commands::QueryRc;
+        Gitolite::Commands::QueryRc->import;
+        query_rc();
+    }
+}

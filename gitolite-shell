@@ -1,0 +1,57 @@
+#!/usr/bin/perl
+
+# gitolite shell, invoked from ~/.ssh/authorized_keys
+# ----------------------------------------------------------------------
+
+BEGIN {
+    # find and set bin dir
+    $0 =~ m|^(/)?(.*)/| and $ENV{GL_BINDIR} = ( $1 || "$ENV{PWD}/" ) . $2;
+}
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+use strict;
+use warnings;
+print STDERR "TRACE: gsh(", join( ")(", @ARGV ), ")\n";
+print STDERR "TRACE: gsh(SOC=$ENV{SSH_ORIGINAL_COMMAND})\n";
+
+# ----------------------------------------------------------------------
+
+# XXX lots of stuff from gl-auth-command is missing for now...
+
+# set up the user
+my $user = $ENV{GL_USER} = shift;
+
+# set up the repo and the attempted access
+my ( $verb, $repo ) = split_soc();
+sanity($repo);
+$ENV{GL_REPO} = $repo;
+my $aa = ( $verb =~ 'upload' ? 'R' : 'W' );
+
+# a ref of 'unknown' signifies that this is a pre-git check, where we don't
+# yet know the ref that will be eventually pushed (and even that won't apply
+# if it's a read operation).  See the matching code in access() for more.
+my $ret = access( $repo, $user, $aa, 'unknown' );
+trace( 1, "access($repo, $user, $aa, 'unknown') -> $ret" );
+_die $ret if $ret =~ /DENIED/;
+
+$repo = "'$GL_REPO_BASE/$repo.git'";
+exec( "git", "shell", "-c", "$verb $repo" );
+
+# ----------------------------------------------------------------------
+
+sub split_soc {
+    my $soc = $ENV{SSH_ORIGINAL_COMMAND};
+    return ( $1, $2 ) if $soc =~ m(^(git-(?:upload|receive)-pack) '/?(.*?)(?:\.git)?'$);
+    _die "unknown command: $soc";
+}
+
+sub sanity {
+    my $repo = shift;
+    _die "'$repo' contains bad characters" if $repo !~ $REPONAME_PATT;
+    _die "'$repo' ends with a '/'"         if $repo =~ m(/$);
+    _die "'$repo' contains '..'"           if $repo =~ m(\.\.$);
+}

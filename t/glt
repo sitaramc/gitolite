@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+print STDERR "TRACE: glt(", join( ")(", @ARGV ), ")\n";
+
+my $cmd  = shift or die "need command";
+my $user = shift or die "need user";
+my $rc;
+
+$ENV{G3T_USER} = $user;
+if ( $cmd eq 'push' ) {
+    $rc = system( "git", $cmd, "--receive-pack=$ENV{HOME}/bin/gitolite-receive-pack", @ARGV );
+} else {
+    $rc = system( "git", $cmd, "--upload-pack=$ENV{HOME}/bin/gitolite-upload-pack", @ARGV );
+}
+
+if ( $? == -1 ) {
+    die "F: failed to execute: $!\n";
+} elsif ( $? & 127 ) {
+    printf STDERR "E: child died with signal %d\n", ( $? & 127 );
+    exit 1;
+} else {
+    printf STDERR "W: child exited with value %d\n", $? >> 8 if $? >> 8;
+    exit( $? >> 8 );
+}
+
+exit 0;
