@@ -195,10 +195,10 @@ sub store {
     trace(3);
 
     # first write out the ones for the physical repos
-    my @phy_repos = list_physical_repos(1);
-
     _chdir($GL_REPO_BASE);
-    for my $repo (@phy_repos) {
+    my $phy_repos = list_phy_repos(1);
+
+    for my $repo (@{ $phy_repos }) {
         store_1($repo);
     }
 
@@ -226,26 +226,6 @@ sub check_subconf_repo_disallowed {
 
     trace( 3, "disallowed: $subconf for $repo" );
     return 1;
-}
-
-{
-    my @phy_repos = ();
-
-    sub list_physical_repos {
-        trace(3);
-        _chdir($GL_REPO_BASE);
-
-        # use cached value only if it exists *and* no arg was received (i.e.,
-        # receiving *any* arg invalidates cache)
-        return @phy_repos if ( @phy_repos and not @_ );
-
-        for my $repo (`find . -name "*.git" -prune`) {
-            chomp($repo);
-            $repo =~ s(\./(.*)\.git$)($1);
-            push @phy_repos, $repo;
-        }
-        return @phy_repos;
-    }
 }
 
 sub store_1 {

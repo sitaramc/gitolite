@@ -6,7 +6,7 @@ package Gitolite::Common;
 #<<<
 @EXPORT = qw(
   print2  dbg     _mkdir  _open   ln_sf     tsh_rc      sort_u
-  say     _warn   _chdir  _print            tsh_text
+  say     _warn   _chdir  _print            tsh_text    list_phy_repos
   say2    _die            slurp             tsh_lines
           trace                             tsh_try
           usage                             tsh_run
@@ -142,6 +142,26 @@ sub sort_u {
     my @sort_u = sort keys %uniq;
     return \@sort_u;
 }
+
+{
+    my @phy_repos = ();
+
+    sub list_phy_repos {
+        trace(3);
+
+        # use cached value only if it exists *and* no arg was received (i.e.,
+        # receiving *any* arg invalidates cache)
+        return \@phy_repos if ( @phy_repos and not @_ );
+
+        for my $repo (`find . -name "*.git" -prune`) {
+            chomp($repo);
+            $repo =~ s(\./(.*)\.git$)($1);
+            push @phy_repos, $repo;
+        }
+        return sort_u(\@phy_repos);
+    }
+}
+
 # ----------------------------------------------------------------------
 
 # bare-minimum subset of 'Tsh' (see github.com/sitaramc/tsh)
