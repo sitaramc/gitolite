@@ -43,8 +43,8 @@ my $last_repo = '';
         trace( 4, "$repo" );
         if ( $repo ne $loaded_repo ) {
             trace( 3, "loading $repo..." );
-            _chdir("$GL_ADMIN_BASE"); load_common();
-            _chdir("$GL_REPO_BASE");  load_1($repo);
+            load_common();
+            load_1($repo);
             $loaded_repo = $repo;
         }
     }
@@ -86,6 +86,8 @@ sub access {
 
 sub load_common {
 
+    _chdir("$GL_ADMIN_BASE");
+
     # we take an unusual approach to caching this function!
     # (requires that first call to load_common is before first call to load_1)
     if ( $last_repo and $split_conf{$last_repo} ) {
@@ -109,6 +111,8 @@ sub load_common {
 sub load_1 {
     my $repo = shift;
     trace( 4, $repo );
+
+    _chdir("$GL_REPO_BASE");
 
     if ( $repo eq $last_repo ) {
         $repos{$repo} = $one_repo{$repo};
