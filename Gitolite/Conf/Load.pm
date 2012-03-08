@@ -8,6 +8,7 @@ package Gitolite::Conf::Load;
   access
 
   list_groups
+  list_users
 );
 
 use Exporter 'import';
@@ -186,6 +187,43 @@ sub list_groups {
         push @g, @{ $v };
     }
     return (sort_u(\@g));
+}
+
+sub list_users {
+    my $count = 0;
+    my $total = 0;
+
+    die "\nUsage:  gitolite list-users\n\n  - no options, no flags\n  - may be slow if you have thousands of repos\n\n" if @ARGV;
+
+    load_common();
+
+    my @u = map { keys %{ $_ } } values %repos;
+    $total = scalar(keys %split_conf);
+    warn "WARNING: you have $total repos to check; this could take some time!\n" if $total > 100;
+    for my $one ( keys %split_conf ) {
+        load_1($one);
+        $count++; print STDERR "$count / $total\r" if not ( $count % 100 ) and timer(5);
+        push @u, map { keys %{ $_ } } values %one_repo;
+    }
+    print STDERR "\n";
+    return (sort_u(\@u));
+}
+
+# ----------------------------------------------------------------------
+
+{
+    my $start_time = 0;
+
+    sub timer {
+        unless ($start_time) {
+            $start_time = time();
+            return 0;
+        }
+        my $elapsed = shift;
+        return 0 if time() - $start_time < $elapsed;
+        $start_time = time();
+        return 1;
+    }
 }
 
 1;
