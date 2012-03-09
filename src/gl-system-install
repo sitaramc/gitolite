@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use English;    # so I can say $EUID instead of $>
-use File::Path qw(make_path);
+use File::Path qw(mkpath);
 
 # install the gitolite software *system wide*.
 
@@ -75,7 +75,7 @@ sub argv_or_defaults {
 sub check_dirs {
     for my $dir ( $bin_dir, $conf_dir, $hooks_dir ) {
         die "$dir should be an absolute path\n" unless $dir =~ m(^/);
-        make_path($dir);
+        mkpath($dir);
         -d $dir or die "$dir does not exist and could not be created\n";
     }
 }
