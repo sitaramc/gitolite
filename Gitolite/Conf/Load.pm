@@ -69,13 +69,13 @@ sub access {
         trace( 4, "perm=$perm, refex=$refex" );
 
         # skip 'deny' rules if the ref is not (yet) known
-        next if $perm eq '-' and $ref eq 'unknown';
+        next if $perm eq '-' and $ref eq 'any';
 
-        # rule matches if ref matches or ref is unknown (see gitolite-shell)
-        next unless $ref =~ /^$refex/ or $ref eq 'unknown';
+        # rule matches if ref matches or ref is any (see gitolite-shell)
+        next unless $ref =~ /^$refex/ or $ref eq 'any';
 
         trace( 3, "DENIED by $refex" ) if $perm eq '-';
-        return "DENIED: $aa access to $repo by $user (rule: $refex)" if $perm eq '-';
+        return "$aa $ref $repo $user DENIED by $refex" if $perm eq '-';
 
         # $perm can be RW\+?(C|D|CD|DC)?M?.  $aa can be W, +, C or D, or
         # any of these followed by "M".
@@ -85,7 +85,7 @@ sub access {
         return $refex if ( $perm =~ /$aaq/ );
     }
     trace( 3, "DENIED by fallthru" );
-    return "DENIED: $aa access to $repo by $user (fallthru)";
+    return "$aa $ref $repo $user DENIED by fallthru";
 }
 
 # ----------------------------------------------------------------------

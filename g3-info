@@ -20,7 +20,7 @@ use warnings;
 
 my $user = shift or die;
 my $aa;
-my $ref = 'unknown';
+my $ref = 'any';
 
 my $ret;
 while (<>) {

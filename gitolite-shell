@@ -31,11 +31,11 @@ sanity($repo);
 $ENV{GL_REPO} = $repo;
 my $aa = ( $verb =~ 'upload' ? 'R' : 'W' );
 
-# a ref of 'unknown' signifies that this is a pre-git check, where we don't
+# a ref of 'any' signifies that this is a pre-git check, where we don't
 # yet know the ref that will be eventually pushed (and even that won't apply
 # if it's a read operation).  See the matching code in access() for more.
-my $ret = access( $repo, $user, $aa, 'unknown' );
-trace( 1, "access($repo, $user, $aa, 'unknown') -> $ret" );
+my $ret = access( $repo, $user, $aa, 'any' );
+trace( 1, "access($repo, $user, $aa, 'any') -> $ret" );
 _die $ret if $ret =~ /DENIED/;
 
 $repo = "'$rc{GL_REPO_BASE}/$repo.git'";

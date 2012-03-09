@@ -15,7 +15,7 @@ try "
     ## clone
     glt clone dev2 file://gitolite-admin
                                 !ok;    gsh
-                                        /FATAL: DENIED: R access to gitolite-admin by dev2 .fallthru./
+                                        /DENIED by fallthru/
                                         /fatal: The remote end hung up unexpectedly/
     glt clone admin --progress file://gitolite-admin
                                 ok;     gsh
@@ -40,13 +40,13 @@ try "
     git status -s;              ok;     /M  conf/gitolite.conf/
     git commit -m t01a;         ok;     /master.*t01a/
     glt push dev2 origin;       !ok;    gsh
-                                        /FATAL: DENIED: W access to gitolite-admin by dev2 .fallthru./
+                                        /DENIED by fallthru/
                                         /fatal: The remote end hung up unexpectedly/
     glt push admin origin;      ok;     /master -. master/
     tsh empty;                  ok;
     glt push admin origin master:mm
                                 !ok;    gsh
-                                        /FATAL: DENIED: W access to gitolite-admin by admin .rule: refs/heads/mm./
+                                        /DENIED by refs/heads/mm/
                                         /remote: error: hook declined to update refs/heads/mm/
                                         /To file://gitolite-admin/
                                         /remote rejected. master -. mm .hook declined./
@@ -79,7 +79,7 @@ try "
     ## clone
     cd ..;                      ok;
     glt clone u1 file://t1;     !ok;    gsh
-                                        /FATAL: DENIED: R access to t1 by u1 .fallthru./
+                                        /DENIED by fallthru/
                                         /fatal: The remote end hung up unexpectedly/
     glt clone u2 file://t1;     ok;     gsh
                                         /warning: You appear to have cloned an empty repository./
@@ -89,7 +89,7 @@ try "
     ## push
     test-commit tc1 tc2 tc2;    ok;     /f7153e3/
     glt push u2 origin;         !ok;    gsh
-                                        /FATAL: DENIED: W access to t1 by u2 .fallthru./
+                                        /DENIED by fallthru/
                                         /fatal: The remote end hung up unexpectedly/
     glt push u3 origin master;  ok;     gsh
                                         /master -. master/
@@ -100,7 +100,7 @@ try "
     glt push u3 origin;         !ok;    gsh
                                         /rejected.*master -. master.*non-fast-forward./
     glt push u3 -f origin;      !ok;    gsh
-                                        /FATAL: DENIED: \\+ access to t1 by u3 .fallthru./
+                                        /DENIED by fallthru/
                                         /remote: error: hook declined to update refs/heads/master/
                                         /To file://t1/
                                         /remote rejected. master -. master .hook declined./
