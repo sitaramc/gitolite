@@ -1,4 +1,4 @@
-package Gitolite::Commands::Setup;
+package Gitolite::Setup;
 
 # implements 'gitolite setup'
 # ----------------------------------------------------------------------

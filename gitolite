@@ -48,8 +48,8 @@ sub args {
 
     if ( $command eq 'setup' ) {
         shift @ARGV;
-        require Gitolite::Commands::Setup;
-        Gitolite::Commands::Setup->import;
+        require Gitolite::Setup;
+        Gitolite::Setup->import;
         setup();
     } elsif ( $command eq 'compile' ) {
         shift @ARGV;
