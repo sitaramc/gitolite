@@ -8,7 +8,7 @@ package Gitolite::Common;
   print2  dbg     _mkdir  _open   ln_sf     tsh_rc      sort_u
   say     _warn   _chdir  _print            tsh_text    list_phy_repos
   say2    _die            slurp             tsh_lines
-          trace                             tsh_try
+          trace           cleanup_conf_line tsh_try
           usage                             tsh_run
 );
 #>>>
@@ -141,6 +141,19 @@ sub sort_u {
     undef @uniq{ @{ $listref } }; # expect a listref
     my @sort_u = sort keys %uniq;
     return \@sort_u;
+}
+
+sub cleanup_conf_line {
+    my $line = shift;
+
+    # kill comments, but take care of "#" inside *simple* strings
+    $line =~ s/^((".*?"|[^#"])*)#.*/$1/;
+    # normalise whitespace; keeps later regexes very simple
+    $line =~ s/=/ = /;
+    $line =~ s/\s+/ /g;
+    $line =~ s/^ //;
+    $line =~ s/ $//;
+    return $line;
 }
 
 {
