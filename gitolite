@@ -59,8 +59,6 @@ sub args {
         compile();
     } elsif ( $command eq 'query-rc' ) {
         shift @ARGV;
-        require Gitolite::Commands::QueryRc;
-        Gitolite::Commands::QueryRc->import;
         query_rc();
     } elsif ( $command eq 'list-groups' ) {
         shift @ARGV;

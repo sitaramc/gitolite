@@ -6,6 +6,7 @@ package Gitolite::Rc;
 @EXPORT = qw(
   %rc
   glrc
+  query_rc
 
   $ADC_CMD_ARGS_PATT
   $REF_OR_FILENAME_PATT
@@ -15,9 +16,16 @@ package Gitolite::Rc;
 );
 
 use Exporter 'import';
+use Getopt::Long;
 
 use lib $ENV{GL_BINDIR};
 use Gitolite::Common;
+
+# ----------------------------------------------------------------------
+
+our %rc;
+
+# ----------------------------------------------------------------------
 
 # variables that are/could be/should be in the rc file
 # ----------------------------------------------------------------------
@@ -86,6 +94,61 @@ sub glrc {
 }
 
 # ----------------------------------------------------------------------
+# implements 'gitolite query-rc'
+# ----------------------------------------------------------------------
+
+=for usage
+
+Usage:  gitolite query-rc -a
+        gitolite query-rc <list of rc variables>
+
+Example:
+
+    gitolite query-rc GL_ADMIN_BASE GL_UMASK
+    # prints "/home/git/.gitolite<tab>0077" or similar
+
+    gitolite query-rc -a
+    # prints all known variables and values, one per line
+=cut
+
+# ----------------------------------------------------------------------
+
+my $all = 0;
+
+sub query_rc {
+    trace( 1, "rc file not found; default should be " . glrc('default-filename') ) if not glrc('filename');
+
+    my @vars = args();
+
+    no strict 'refs';
+
+    if ( $vars[0] eq '-a' ) {
+        for my $e (sort keys %rc) {
+            print "$e=" . ( defined($rc{$e}) ? $rc{$e} : 'undef' ) . "\n";
+        }
+        return;
+    }
+
+    our $GL_BINDIR = $ENV{GL_BINDIR};
+
+    print join( "\t", map { $rc{$_} } @vars ) . "\n" if @vars;
+}
+
+# ----------------------------------------------------------------------
+
+sub args {
+    my $help = 0;
+
+    GetOptions(
+        'all|a'  => \$all,
+        'help|h' => \$help,
+    ) or usage();
+
+    usage("'-a' cannot be combined with other arguments") if $all and @ARGV;
+    return '-a' if $all;
+    usage() if not @ARGV or $help;
+    return @ARGV;
+}
 
 1;
 
