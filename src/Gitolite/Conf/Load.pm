@@ -117,7 +117,7 @@ sub load_1 {
     my $repo = shift;
     trace( 4, $repo );
 
-    _chdir( $rc{GL_REPO_BASE} );
+    _chdir( "$rc{GL_REPO_BASE}/$repo.git" );
 
     if ( $repo eq $last_repo ) {
         $repos{$repo} = $one_repo{$repo};
@@ -125,10 +125,10 @@ sub load_1 {
         return;
     }
 
-    if ( -f "$repo.git/gl-conf" ) {
+    if ( -f "gl-conf" ) {
         _die "split conf not set, gl-conf present for $repo" if not $split_conf{$repo};
 
-        my $cc = "$repo.git/gl-conf";
+        my $cc = "gl-conf";
         _die "parse $cc failed: " . ( $! or $@ ) unless do $cc;
 
         $last_repo = $repo;
