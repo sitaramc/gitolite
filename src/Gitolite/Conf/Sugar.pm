@@ -1,3 +1,16 @@
+# and now for something completely different...
+
+package SugarBox;
+
+sub run_sugar_script {
+    my ($ss, $lref) = @_;
+    do $ss if -x $ss;
+    $lref = sugar_script($lref);
+    return $lref;
+}
+
+# ----------------------------------------------------------------------
+
 package Gitolite::Conf::Sugar;
 
 # syntactic sugar for the conf file, including site-local macros
@@ -35,9 +48,14 @@ sub sugar {
             _warn "bad syntax for specifying sugar scripts; see docs";
         } else {
             for my $s (@{ $rc{SYNTACTIC_SUGAR} }) {
-                _warn "ignoring unreadable sugar script $s" if not -r $s;
-                do $s if -r $s;
-                $lines = sugar_script($lines);
+
+                # perl-ism; apart from keeping the full path separate from the
+                # simple name, this also protects %rc from change by implicit
+                # aliasing, which would happen if you touched $s itself
+                my $sfp = "$ENV{GL_BINDIR}/syntactic-sugar/$s";
+
+                _warn("skipped sugar script '$s'"), next if not -x $sfp;
+                $lines = SugarBox::run_sugar_script($sfp, $lines);
                 $lines = [ grep /\S/, map { cleanup_conf_line($_) } @$lines ];
             }
         }
