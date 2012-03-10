@@ -45,10 +45,28 @@ sub sugar {
 
     # then our stuff:
 
+    $lines = option($lines);
     $lines = owner_desc($lines);
     # $lines = name_vref($lines);
 
     return $lines;
+}
+
+sub option {
+    my $lines = shift;
+    my @ret;
+
+    # option foo = bar
+    #   ->  config gitolite-options.foo = bar
+
+    for my $line (@$lines) {
+        if ( $line =~ /^option (\S+) = (\S.*)/ ) {
+            push @ret, "config gitolite-options.$1 = $2";
+        } else {
+            push @ret, $line;
+        }
+    }
+    return \@ret;
 }
 
 sub owner_desc {
