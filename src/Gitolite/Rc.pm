@@ -48,6 +48,7 @@ my $current_data_version = "3.0";
 
 my $rc = glrc('filename');
 do $rc if -r $rc;
+_die "$rc seems to be for older gitolite" if defined($GL_ADMINDIR);
 # let values specified in rc file override our internal ones
 @rc{ keys %RC } = values %RC;
 
