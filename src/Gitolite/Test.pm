@@ -8,6 +8,7 @@ package Gitolite::Test;
   try
   put
   text
+  dump
 );
 #>>>
 use Exporter 'import';
@@ -42,5 +43,12 @@ try "
     cd tsh_tempdir;
     gitolite setup -a admin
 " or die "could not setup the test environment; errors:\n\n" . text() . "\n\n";
+
+sub dump {
+    use Data::Dumper;
+    for my $i (@_) {
+        print STDERR "DBG: " . Dumper($i);
+    }
+}
 
 1;
