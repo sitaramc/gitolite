@@ -9,7 +9,6 @@ package Gitolite::Conf::Explode;
 
 use Exporter 'import';
 
-use lib $ENV{GL_BINDIR};
 use Gitolite::Common;
 
 use strict;

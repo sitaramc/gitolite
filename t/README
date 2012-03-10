@@ -1,0 +1,8 @@
+WARNING: THE TEST SUITE DELETES STUFF FIRST!
+
+Testing gitolite3 is now one command after the clone:
+
+    prove
+
+But because it starts by cleaning the slate, it's best to do it on a spare
+userid that you are ok to lose data on.

@@ -10,7 +10,6 @@ package Gitolite::Hooks::PostUpdate;
 
 use Exporter 'import';
 
-use lib $ENV{GL_BINDIR};
 use Gitolite::Rc;
 use Gitolite::Common;
 
@@ -30,7 +29,7 @@ sub post_update {
         local $ENV{GIT_WORK_TREE} = $rc{GL_ADMIN_BASE};
         tsh_try("git checkout -f --quiet master");
     }
-    system("$ENV{GL_BINDIR}/gitolite compile");
+    _system("$ENV{GL_BINDIR}/gitolite compile");
 
     exit 0;
 }

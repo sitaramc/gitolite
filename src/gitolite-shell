@@ -3,11 +3,9 @@
 # gitolite shell, invoked from ~/.ssh/authorized_keys
 # ----------------------------------------------------------------------
 
-BEGIN {
-    # find and set bin dir
-    $0 =~ m|^(/)?(.*)/| and $ENV{GL_BINDIR} = ( $1 || "$ENV{PWD}/" ) . $2;
-}
+use FindBin;
 
+BEGIN { $ENV{GL_BINDIR} = $FindBin::RealBin; }
 use lib $ENV{GL_BINDIR};
 use Gitolite::Rc;
 use Gitolite::Common;

@@ -10,7 +10,6 @@ package Gitolite::Hooks::Update;
 
 use Exporter 'import';
 
-use lib $ENV{GL_BINDIR};
 use Gitolite::Common;
 use Gitolite::Conf::Load;
 

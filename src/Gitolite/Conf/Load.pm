@@ -16,7 +16,6 @@ package Gitolite::Conf::Load;
 
 use Exporter 'import';
 
-use lib $ENV{GL_BINDIR};
 use Gitolite::Common;
 use Gitolite::Rc;
 
@@ -108,7 +107,7 @@ sub load_common {
     _die "parse $cc failed: " . ( $! or $@ ) unless do $cc;
 
     if ( data_version_mismatch() ) {
-        system("gitolite setup");
+        _system("gitolite setup");
         _die "parse $cc failed: " . ( $! or $@ ) unless do $cc;
         _die "data version update failed; this is serious" if data_version_mismatch();
     }

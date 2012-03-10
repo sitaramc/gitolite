@@ -7,7 +7,7 @@ package Gitolite::Common;
 @EXPORT = qw(
   print2  dbg     _mkdir  _open   ln_sf     tsh_rc      sort_u
   say     _warn   _chdir  _print            tsh_text    list_phy_repos
-  say2    _die            slurp             tsh_lines
+  say2    _die    _system slurp             tsh_lines
           trace           cleanup_conf_line tsh_try
           usage                             tsh_run
 );
@@ -95,6 +95,19 @@ sub _mkdir {
 
 sub _chdir {
     chdir( $_[0] || $ENV{HOME} ) or _die "chdir $_[0] failed: $!\n";
+}
+
+sub _system {
+    if ( system(@_) != 0 ) {
+        say2 "system @_ failed";
+        if ( $? == -1 ) {
+            die "failed to execute: $!\n";
+        } elsif ( $? & 127 ) {
+            die "child died with signal " . ( $? & 127 ) . "\n";
+        } else {
+            die "child exited with value " . ( $? >> 8 ) . "\n";
+        }
+    }
 }
 
 sub _open {

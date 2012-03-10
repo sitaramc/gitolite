@@ -1,0 +1,17 @@
+1.  Clone the repo and copy src somewhere (or leave it where it is, if you're
+    sure no one will 'git pull' on a running system!)
+
+        cp -a src /some/full/path
+
+2.  (Optional) Make a symlink for the single executable 'gitolite' to
+    somewhere in `$PATH`
+
+        ln -sf /full/path/to/some/damn/place/gitolite $HOME/bin
+
+3.  Run setup.  That is, either run:
+
+        gitolite setup -a YourName -pk /tmp/YourName.pub
+
+    or, if you did not do step 2, run:
+
+        /some/full/path/src/gitolite -a YourName -pk /tmp/YourName.pub

@@ -9,4 +9,4 @@ $repo =~ s/\.git$//;
 my $user = $ENV{G3T_USER} || 'no-such-user';
 
 $ENV{SSH_ORIGINAL_COMMAND} = "git-upload-pack '$repo'";
-exec( "$ENV{HOME}/bin/gitolite-shell", $user );
+exec( "$ENV{GL_BINDIR}/../src/gitolite-shell", $user );

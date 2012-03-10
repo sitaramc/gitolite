@@ -9,7 +9,6 @@ package Gitolite::Conf::Sugar;
 
 use Exporter 'import';
 
-use lib $ENV{GL_BINDIR};
 use Gitolite::Rc;
 use Gitolite::Common;
 use Gitolite::Conf::Explode;

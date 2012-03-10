@@ -22,7 +22,6 @@ use Data::Dumper;
 $Data::Dumper::Indent   = 1;
 $Data::Dumper::Sortkeys = 1;
 
-use lib $ENV{GL_BINDIR};
 use Gitolite::Common;
 use Gitolite::Rc;
 use Gitolite::Hooks::Update;
@@ -169,7 +168,7 @@ sub new_repo {
 
     _mkdir("$repo.git");
     _chdir("$repo.git");
-    system("git init --bare >&2");
+    _system("git init --bare >&2");
     _chdir( $rc{GL_REPO_BASE} );
     hook_1($repo);
 

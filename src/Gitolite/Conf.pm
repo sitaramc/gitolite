@@ -12,7 +12,6 @@ package Gitolite::Conf;
 use Exporter 'import';
 use Getopt::Long;
 
-use lib $ENV{GL_BINDIR};
 use Gitolite::Common;
 use Gitolite::Rc;
 use Gitolite::Conf::Sugar;

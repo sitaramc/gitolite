@@ -7,6 +7,7 @@ package Gitolite::Test;
 @EXPORT = qw(
   try
   put
+  text
 );
 #>>>
 use Exporter 'import';
@@ -17,6 +18,7 @@ BEGIN {
     require Gitolite::Test::Tsh;
     *{'try'} = \&Tsh::try;
     *{'put'} = \&Tsh::put;
+    *{'text'} = \&Tsh::text;
 }
 
 use strict;
@@ -30,11 +32,15 @@ try "
     DEF reject = /hook declined to update/; /remote rejected.*hook declined/; /error: failed to push some refs to/
 
     DEF AP_1 = cd ../gitolite-admin; ok or die cant find admin repo clone;
-    DEF AP_2 = AP_1; git add conf keydir; ok; git commit -m %1; ok; /master.* %1/
+    DEF AP_2 = AP_1; git add conf ; ok; git commit -m %1; ok; /master.* %1/
     DEF ADMIN_PUSH = AP_2 %1; glt push admin origin; ok; gsh; /master -> master/
 
-    ./g3-install -c admin
+    mkdir -p $ENV{HOME}/bin
+    ln -sf $ENV{PWD}/src/gitolite $ENV{PWD}/t/glt ~/bin
+    cd; rm -vrf .gito* gito* repositories
+
     cd tsh_tempdir;
-";
+    gitolite setup -a admin
+" or die "could not setup the test environment; errors:\n\n" . text() . "\n\n";
 
 1;

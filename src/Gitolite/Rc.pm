@@ -7,9 +7,8 @@ package Gitolite::Rc;
   %rc
   glrc
   query_rc
-  version
 
-  $REMOTE_COMMAND_PATT
+  $ADC_CMD_ARGS_PATT
   $REF_OR_FILENAME_PATT
   $REPONAME_PATT
   $REPOPATT_PATT
@@ -37,7 +36,7 @@ $rc{GL_REPO_BASE}  = "$ENV{HOME}/repositories";
 # variables that should probably never be changed
 # ----------------------------------------------------------------------
 
-$REMOTE_COMMAND_PATT  = qr(^[- 0-9a-zA-Z\@\%_=+:,./]*$);
+$ADC_CMD_ARGS_PATT    = qr(^[0-9a-zA-Z._\@/+:-]*$);
 $REF_OR_FILENAME_PATT = qr(^[0-9a-zA-Z][0-9a-zA-Z._\@/+ :,-]*$);
 $REPONAME_PATT        = qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@/+-]*$);
 $REPOPATT_PATT        = qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/,-]*$);
@@ -49,16 +48,8 @@ my $current_data_version = "3.0";
 
 my $rc = glrc('filename');
 do $rc if -r $rc;
-_die "$rc seems to be for older gitolite" if defined($GL_ADMINDIR);
 # let values specified in rc file override our internal ones
 @rc{ keys %RC } = values %RC;
-
-# testing sometimes requires all of it to be overridden silently; use an
-# env var that is highly unlikely to appear in real life :)
-do $ENV{G3T_RC} if exists $ENV{G3T_RC} and -r $ENV{G3T_RC};
-
-# fix PATH (TODO: do it only if 'gitolite' isn't in PATH)
-$ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}";
 
 # ----------------------------------------------------------------------
 
@@ -76,15 +67,19 @@ my $glrc_default_text = '';
 sub glrc {
     my $cmd = shift;
     if ( $cmd eq 'default-filename' ) {
+        trace( 1, "..should happen only on first run" );
         return "$ENV{HOME}/.gitolite.rc";
     } elsif ( $cmd eq 'default-text' ) {
+        trace( 1, "..should happen only on first run" );
         return $glrc_default_text if $glrc_default_text;
         _die "rc file default text not set; this should not happen!";
     } elsif ( $cmd eq 'filename' ) {
         # where is the rc file?
+        trace(4);
 
         # search $HOME first
         return "$ENV{HOME}/.gitolite.rc" if -f "$ENV{HOME}/.gitolite.rc";
+        trace( 2, "$ENV{HOME}/.gitolite.rc not found" );
 
         # XXX for fedora, we can add the following line, but I would really prefer
         # if ~/.gitolite.rc on each $HOME was just a symlink to /etc/gitolite.rc
@@ -99,68 +94,56 @@ sub glrc {
 }
 
 # ----------------------------------------------------------------------
-# implements 'gitolite query-rc' and 'version'
+# implements 'gitolite query-rc'
 # ----------------------------------------------------------------------
 
-# ----------------------------------------------------------------------
+=for usage
 
-my $all  = 0;
-my $nonl = 0;
-
-sub query_rc {
-
-    my @vars = args();
-
-    no strict 'refs';
-
-    if ($all) {
-        for my $e ( sort keys %rc ) {
-            print "$e=" . ( defined( $rc{$e} ) ? $rc{$e} : 'undef' ) . "\n";
-        }
-        return;
-    }
-
-    print join( "\t", map { $rc{$_} || '' } @vars ) . ( $nonl ? '' : "\n" ) if @vars;
-}
-
-sub version {
-    my $version = '';
-    $version = '(unknown)';
-    for ("$rc{GL_ADMIN_BASE}/VERSION") {
-        $version = slurp($_) if -r $_;
-    }
-    chomp($version);
-    return $version;
-}
-
-# ----------------------------------------------------------------------
-
-=for args
 Usage:  gitolite query-rc -a
-        gitolite query-rc [-n] <list of rc variables>
-
-    -a          print all variables and values
-    -n          do not append a newline
+        gitolite query-rc <list of rc variables>
 
 Example:
 
-    gitolite query-rc GL_ADMIN_BASE UMASK
+    gitolite query-rc GL_ADMIN_BASE GL_UMASK
     # prints "/home/git/.gitolite<tab>0077" or similar
 
     gitolite query-rc -a
     # prints all known variables and values, one per line
 =cut
 
+# ----------------------------------------------------------------------
+
+my $all = 0;
+
+sub query_rc {
+    trace( 1, "rc file not found; default should be " . glrc('default-filename') ) if not glrc('filename');
+
+    my @vars = args();
+
+    no strict 'refs';
+
+    if ( $vars[0] eq '-a' ) {
+        for my $e (sort keys %rc) {
+            print "$e=" . ( defined($rc{$e}) ? $rc{$e} : 'undef' ) . "\n";
+        }
+        return;
+    }
+
+    print join( "\t", map { $rc{$_} } @vars ) . "\n" if @vars;
+}
+
+# ----------------------------------------------------------------------
+
 sub args {
     my $help = 0;
 
     GetOptions(
         'all|a'  => \$all,
-        'nonl|n' => \$nonl,
         'help|h' => \$help,
     ) or usage();
 
     usage("'-a' cannot be combined with other arguments") if $all and @ARGV;
+    return '-a' if $all;
     usage() if not $all and not @ARGV or $help;
     return @ARGV;
 }
@@ -172,36 +155,14 @@ sub args {
 __DATA__
 # configuration variables for gitolite
 
-# This file is in perl syntax.  But you do NOT need to know perl to edit it --
-# just mind the commas and make sure the brackets and braces stay matched up!
+# PLEASE READ THE DOCUMENTATION BEFORE EDITING OR ASKING QUESTIONS
 
-# (Tip: perl allows a comma after the last item in a list also!)
+# this file is in perl syntax.  However, you do NOT need to know perl to edit
+# it; it should be fairly self-explanatory and easy to maintain
 
 %RC = (
     UMASK                       =>  0077,
     GL_GITCONFIG_KEYS           =>  "",
-
-    # comment out or uncomment as needed
-    # these will run in sequence during the conf file parse
-    SYNTACTIC_SUGAR             =>
-        [
-            # 'continuation-lines',
-        ],
-
-    # comment out or uncomment as needed
-    # these will run in sequence after post-update
-    POST_COMPILE                =>
-        [
-            'post-compile/ssh-authkeys',
-        ],
-
-    # comment out or uncomment as needed
-    # these are available to remote users
-    COMMANDS                    =>
-        {
-            'help'              =>  1,
-            'info'              =>  1,
-        },
 );
 
 # ------------------------------------------------------------------------------

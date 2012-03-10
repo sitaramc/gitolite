@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 # this is hardcoded; change it if needed
-use lib "$ENV{HOME}/bin";
+use lib "src";
 use Gitolite::Test;
 
 # basic tests
