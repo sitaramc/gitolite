@@ -101,7 +101,10 @@ sub glrc {
 =for usage
 
 Usage:  gitolite query-rc -a
-        gitolite query-rc <list of rc variables>
+        gitolite query-rc [-n] <list of rc variables>
+
+    -a          print all variables and values
+    -n          do not append a newline
 
 Example:
 
@@ -115,6 +118,7 @@ Example:
 # ----------------------------------------------------------------------
 
 my $all = 0;
+my $nonl = 0;
 
 sub query_rc {
     trace( 1, "rc file not found; default should be " . glrc('default-filename') ) if not glrc('filename');
@@ -123,14 +127,14 @@ sub query_rc {
 
     no strict 'refs';
 
-    if ( $vars[0] eq '-a' ) {
+    if ( $all ) {
         for my $e (sort keys %rc) {
             print "$e=" . ( defined($rc{$e}) ? $rc{$e} : 'undef' ) . "\n";
         }
         return;
     }
 
-    print join( "\t", map { $rc{$_} } @vars ) . "\n" if @vars;
+    print join( "\t", map { $rc{$_} || '' } @vars ) . ($nonl ? '' : "\n") if @vars;
 }
 
 # ----------------------------------------------------------------------
@@ -140,11 +144,11 @@ sub args {
 
     GetOptions(
         'all|a'  => \$all,
+        'nonl|n' => \$nonl,
         'help|h' => \$help,
     ) or usage();
 
     usage("'-a' cannot be combined with other arguments") if $all and @ARGV;
-    return '-a' if $all;
     usage() if not $all and not @ARGV or $help;
     return @ARGV;
 }
