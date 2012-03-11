@@ -95,9 +95,9 @@ sub parse_refs {
     # if no ref is given, this PERM applies to all refs
     @refs = qw(refs/.*) unless @refs;
 
-    # fully qualify refs that dont start with "refs/" or "NAME/" or "VREF/";
+    # fully qualify refs that dont start with "refs/" or "VREF/";
     # prefix them with "refs/heads/"
-    @refs = map { m(^(refs|NAME|VREF)/) or s(^)(refs/heads/); $_ } @refs;
+    @refs = map { m(^(refs|VREF)/) or s(^)(refs/heads/); $_ } @refs;
     # XXX what do we do? @refs = map { s(/USER/)(/\$gl_user/); $_ } @refs;
 
     return @refs;

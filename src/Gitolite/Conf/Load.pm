@@ -6,6 +6,7 @@ package Gitolite::Conf::Load;
 @EXPORT = qw(
   load
   access
+  vrefs
 
   list_groups
   list_users
@@ -139,26 +140,47 @@ sub load_1 {
     }
 }
 
-sub rules {
-    my ( $repo, $user ) = @_;
-    trace( 4, "repo=$repo, user=$user" );
-    my @rules = ();
+{
+    my $lastrepo = '';
+    my $lastuser = '';
+    my @cached = ();
 
-    my @repos = memberships($repo);
-    my @users = memberships($user);
-    trace( 4, "memberships: " . scalar(@repos) . " repos and " . scalar(@users) . " users found" );
+    sub rules {
+        my ( $repo, $user ) = @_;
+        trace( 4, "repo=$repo, user=$user" );
 
-    for my $r (@repos) {
-        for my $u (@users) {
-            push @rules, @{ $repos{$r}{$u} } if exists $repos{$r}{$u};
+        return @cached if ($lastrepo eq $repo and $lastuser eq $user and @cached);
+
+        my @rules = ();
+
+        my @repos = memberships($repo);
+        my @users = memberships($user);
+        trace( 4, "memberships: " . scalar(@repos) . " repos and " . scalar(@users) . " users found" );
+
+        for my $r (@repos) {
+            for my $u (@users) {
+                push @rules, @{ $repos{$r}{$u} } if exists $repos{$r}{$u};
+            }
         }
+
+        @rules = sort { $a->[0] <=> $b->[0] } @rules;
+
+        $lastrepo = $repo;
+        $lastuser = $user;
+        @cached = @rules;
+
+        return @rules;
     }
 
-    # dbg("before sorting rules:", \@rules);
-    @rules = sort { $a->[0] <=> $b->[0] } @rules;
-    # dbg("after sorting rules:", \@rules);
+    sub vrefs {
+        my ( $repo, $user ) = @_;
+        # fill the cache if needed
+        rules($repo, $user) unless ($lastrepo eq $repo and $lastuser eq $user and @cached);
 
-    return @rules;
+        my %seen;
+        my @vrefs = grep { /^VREF\// and not $seen{$_}++ } map { $_->[2] } @cached;
+        return @vrefs;
+    }
 }
 
 sub memberships {

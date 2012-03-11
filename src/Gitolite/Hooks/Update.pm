@@ -28,7 +28,48 @@ sub update {
     trace( 1, "access($ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref) -> $ret" );
     _die $ret if $ret =~ /DENIED/;
 
+    check_vrefs($ref, $oldsha, $newsha, $oldtree, $newtree, $aa);
+
     exit 0;
+}
+
+sub check_vrefs {
+    my($ref, $oldsha, $newsha, $oldtree, $newtree, $aa) = @_;
+    my $name_seen = 0;
+    for my $vref ( vrefs($ENV{GL_REPO}, $ENV{GL_USER}) ) {
+        trace(1, "vref=$vref");
+        if ($vref =~ m(^VREF/NAME/)) {
+            # this one is special; we process it right here, and only once
+            next if $name_seen++;
+
+            for my $ref ( map { chomp; s(^)(VREF/NAME/); $_; } `git diff --name-only $oldtree $newtree` ) {
+                check_vref($aa, $ref);
+            }
+        } else {
+            my($dummy, $pgm, @args) = split '/', $vref;
+            $pgm = "$ENV{GL_BINDIR}/VREF/$pgm";
+            -x $pgm or die "$vref: helper program missing or unexecutable\n";
+
+            open( my $fh, "-|", $pgm, @_, $vref, @args ) or die "$vref: can't spawn helper program: $!\n";
+            while (<$fh>) {
+                my ( $ref, $deny_message ) = split( ' ', $_, 2 );
+                check_vref($aa, $ref, $deny_message);
+            }
+            close($fh) or die $!
+              ? "Error closing sort pipe: $!"
+              : "$vref: helper program exit status $?";
+        }
+    }
+}
+
+sub check_vref {
+    my ($aa, $ref, $deny_message) = @_;
+
+    my $ret = access( $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref );
+    trace( 1, "access($ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref)", "-> $ret" );
+    _die "$ret" . ( $deny_message ? "\n$deny_message" : '' )
+        if $ret =~ /DENIED/ and $ret !~ /by fallthru/;
+    trace( 1, "remember, fallthru is success here!") if $ret =~ /by fallthru/;
 }
 
 {

@@ -65,7 +65,7 @@ sub sugar {
 
     $lines = option($lines);
     $lines = owner_desc($lines);
-    # $lines = name_vref($lines);
+    $lines = name_vref($lines);
 
     return $lines;
 }
@@ -128,6 +128,22 @@ sub owner_desc {
         } else {
             push @ret, $line;
         }
+    }
+    return \@ret;
+}
+
+sub name_vref {
+    my $lines = shift;
+    my @ret;
+
+    # <perm> NAME/foo = <user>
+    #   ->  <perm> VREF/NAME/foo = <user>
+
+    for my $line (@$lines) {
+        if ( $line =~ /^(-|R\S+) \S.* = \S.*/ ) {
+            $line =~ s( NAME/)( VREF/NAME/)g;
+        }
+        push @ret, $line;
     }
     return \@ret;
 }
