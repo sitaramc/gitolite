@@ -37,7 +37,7 @@ try "
     DEF ADMIN_PUSH = AP_2 %1; glt push admin origin; ok; gsh; /master -> master/
 
     DEF CS_1 = pwd; //tmp/tsh_tempdir.*gitolite-admin/; git remote -v; ok; /file://gitolite-admin/
-    DEF CHECK_SETUP = CS_1; git log; ok; /65a1b2acd78dd9a7a401fe81c25380c1ca90067c/
+    DEF CHECK_SETUP = CS_1; git log; ok; /6b18ec2ab0f765122ec133959b36c57f77d4565c/
 
     DEF CLONE = glt clone
     DEF PUSH  = glt push
@@ -46,6 +46,8 @@ try "
     mkdir -p $ENV{HOME}/bin
     ln -sf $ENV{PWD}/src/gitolite $ENV{PWD}/t/glt ~/bin
     cd; rm -vrf .gito* gito* repositories
+    git config --global user.name \"gitolite tester\"
+    git config --global user.email \"tester\@example.com\"
 
     # setup
     gitolite setup -a admin
