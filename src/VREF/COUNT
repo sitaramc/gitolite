@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# gitolite VREF to count number of changed/new files in a push
+
+# see gitolite docs for what the first 7 arguments mean
+
+# inputs:
+#   arg-8 is a number
+#   arg-9 is optional, and can be "NEWFILES"
+# outputs (STDOUT)
+#   arg-7 if the number of changed (or new, if arg-9 supplied) files is > arg-8
+#   otherwise nothing
+# exit status:
+#   always 0
+
+die() { echo "$@" >&2; exit 1; }
+[ -z "$8" ] && die "not meant to be run manually"
+
+newsha=$3
+oldtree=$4
+newtree=$5
+refex=$7
+
+max=$8
+
+nf=
+[ "$9" = "NEWFILES" ] && nf='--diff-filter=A'
+# NO_SIGNOFF implies NEWFILES
+[ "$9" = "NO_SIGNOFF" ] && nf='--diff-filter=A'
+
+# count files against all the other commits in the system not just $oldsha
+# (why?  consider what is $oldtree when you create a new branch, or what is
+# $oldsha when you update an old feature branch from master and then push it
+count=`git log --name-only $nf --format=%n $newtree --not --all | grep . | sort -u | wc -l`
+
+[[ $count -gt $max ]] && {
+    # count has been exceeded.  If $9 was NO_SIGNOFF there's still a chance
+    # for redemption -- if the top commit has a proper signed-off by line
+    [ "$9" = "NO_SIGNOFF" ] && {
+        author_email=$(git log --format=%ae -1 $newsha)
+        git cat-file -p $newsha |
+            egrep -i >/dev/null "^ *$count +new +files +signed-off by: *$author_email *$" && exit 0
+        echo $refex top commit message should include the text \'$count new files signed-off by: $author_email\'
+        exit 0
+    }
+    echo -n $refex "(too many "
+    [ -n "$nf" ] && echo -n "new " || echo -n "changed "
+    echo "files in this push)"
+}
+
+exit 0
