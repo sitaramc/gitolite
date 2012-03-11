@@ -15,6 +15,7 @@ package Gitolite::Conf::Store;
   new_repo
   hook_repos
   store
+  parse_done
 );
 
 use Exporter 'import';
@@ -203,6 +204,13 @@ sub store {
 
     _chdir( $rc{GL_ADMIN_BASE} );
     store_common();
+}
+
+sub parse_done {
+    for my $ig (sort keys %ignored)
+    {
+        _warn "$ig.conf attempting to set access for " . join (", ", sort keys %{ $ignored{$ig} });
+    }
 }
 
 # ----------------------------------------------------------------------

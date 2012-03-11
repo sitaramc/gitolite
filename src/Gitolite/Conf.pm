@@ -73,6 +73,7 @@ sub parse {
             _warn "?? $line";
         }
     }
+    parse_done();
 }
 
 1;
