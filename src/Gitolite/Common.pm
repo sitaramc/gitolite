@@ -127,7 +127,8 @@ sub _print {
 }
 
 sub slurp {
-    local $/ = undef;
+    return unless defined wantarray;
+    local $/ = undef unless wantarray;
     my $fh = _open( "<", $_[0] );
     return <$fh>;
 }
