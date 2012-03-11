@@ -39,10 +39,11 @@ sub say2 {
 sub trace {
     return unless defined( $ENV{D} );
 
-    my $level = shift;
+    my $level = shift; return if $ENV{D} < $level;
     my $args  = ''; $args = join( ", ", @_ ) if @_;
     my $sub   = ( caller 1 )[3] || ''; $sub =~ s/.*://; $sub .= ' ' x ( 32 - length($sub) );
-    say2 "TRACE $level $sub", $args if $ENV{D} >= $level;
+    say2 "TRACE $level $sub", (@_ ? shift : ());
+    say2("TRACE $level " . (" " x 32), $_)for @_;
 }
 
 sub dbg {
