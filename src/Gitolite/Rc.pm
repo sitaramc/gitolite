@@ -165,19 +165,28 @@ __DATA__
 
 # PLEASE READ THE DOCUMENTATION BEFORE EDITING OR ASKING QUESTIONS
 
-# this file is in perl syntax.  However, you do NOT need to know perl to edit
-# it; it should be fairly self-explanatory and easy to maintain.  Just mind
-# the commas, make sure the brackets and braces stay matched up!
+# This file is in perl syntax.
+
+# However, you do NOT need to know perl to edit it; it should be fairly
+# self-explanatory and easy to maintain.  Just mind the commas (perl is quite
+# happy to have an extra one at the end of the last item in any list, by the
+# way!).  And make sure the brackets and braces stay matched up!
 
 %RC = (
     UMASK                       =>  0077,
     GL_GITCONFIG_KEYS           =>  "",
 
-    # uncomment as needed
+    # comment out or uncomment as needed
     SYNTACTIC_SUGAR             =>
         [
             # 'continuation-lines',
-        ]
+        ],
+
+    # comment out or uncomment as needed
+    POST_COMPILE                =>
+        [
+            'ssh-authkeys',
+        ],
 );
 
 # ------------------------------------------------------------------------------

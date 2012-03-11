@@ -1,0 +1,129 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use File::Temp qw(tempfile);
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+
+$|++;
+
+# can be called directly, or as a post-update hook.  Since it ignores
+# arguments anyway, it hardly matters.
+
+my $ab      = `gitolite query-rc -n GL_ADMIN_BASE`;
+_warn("'keydir' not found in '$ab'"), exit if not -d "$ab/keydir";
+my $akfile  = "$ENV{HOME}/.ssh/authorized_keys";
+my $glshell = `gitolite query-rc -n GL_BINDIR` . "/gitolite-shell";
+# XXX gl-time not yet coded (GL_PERFLOGT)
+my $auth_options = auth_options();
+
+sanity();
+
+# ----------------------------------------------------------------------
+
+_chdir($ab);
+
+# old data
+my $old_ak = slurp($akfile);
+my @non_gl = grep { not /^# gito.*start/ .. /^# gito.*end/ } slurp($akfile);
+chomp(@non_gl);
+my %seen = map { $_ => 'a non-gitolite key' } ( fp(@non_gl) );
+# die 1;
+
+# pubkey files
+chomp( my @pubkeys = `find keydir -type f -name "*.pub" | sort` );
+my @gl_keys = ();
+for my $f (@pubkeys) {
+    my $fp = fp($f);
+    if ( $seen{$fp} ) {
+        _warn "$f duplicates $seen{$fp}, sshd will ignore it";
+    } else {
+        $seen{$fp} = $f;
+    }
+    push @gl_keys, grep { /./ } optionise($f);
+}
+
+# dump it out
+if (@gl_keys) {
+    my $out = join( "\n", map { my $_ = $_; chomp($_); $_ } @non_gl, "# gitolite start", @gl_keys, "# gitolite end" ) . "\n";
+
+    my $ak = slurp($akfile);
+    _die "$akfile changed between start and end of this program!" if $ak ne $old_ak;
+    _print( $akfile, $out );
+}
+
+# ----------------------------------------------------------------------
+
+sub sanity {
+    _warn "$akfile missing; creating a new one"                         if not -f $akfile;
+    _die "$glshell not found; this should NOT happen..."                if not -f $glshell;
+    _die "$glshell found but not readable; this should NOT happen..."   if not -r $glshell;
+    _die "$glshell found but not executable; this should NOT happen..." if not -x $glshell;
+
+    if ( not -f $akfile ) {
+        _print( $akfile, "" );
+        chmod 0700, $akfile;
+    }
+}
+
+sub auth_options {
+    my $auth_options = `gitolite query-rc AUTH_OPTIONS`;
+    chomp($auth_options);
+    $auth_options ||= "no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
+
+    return $auth_options;
+}
+
+sub fp {
+    # input: see below
+    # output: a (list of) FPs
+    my $in = shift || '';
+    if ( $in =~ /\.pub$/ ) {
+        # single pubkey file
+        return fp_file($in);
+    } elsif ( -f $in ) {
+        # an authkeys file
+        return map { fp_line($_) } grep { !/^#/ and /\S/ } slurp($in);
+    } else {
+        # one or more actual keys
+        return map { fp_line($_) } grep { !/^#/ and /\S/ } ($in, @_);
+    }
+}
+
+sub fp_file {
+    my $f  = shift;
+    my $fp = `ssh-keygen -l -f $f`;
+    chomp($fp);
+    _die "fingerprinting failed for $f" unless $fp =~ /([0-9a-f][0-9a-f](:[0-9a-f][0-9a-f])+)/;
+    $fp = $1;
+    return $fp;
+}
+
+sub fp_line {
+    my ( $fh, $fn ) = tempfile();
+    print $fh shift;
+    close $fh;
+    my $fp = fp_file($fn);
+    unlink $fn;
+    return $fp;
+}
+
+sub optionise {
+    my $f = shift;
+
+    my $user = $f;
+    $user =~ s(.*/)();                # foo/bar/baz.pub -> baz.pub
+    $user =~ s/(\@[^.]+)?\.pub$//;    # baz.pub, baz@home.pub -> baz
+
+    my @line = slurp($f);
+    if ( @line != 1 ) {
+        _warn "$f does not contain exactly 1 line; ignoring";
+        return '';
+    }
+    chomp(@line);
+    return "command=\"$glshell $user\",$auth_options $line[0]";
+}
+

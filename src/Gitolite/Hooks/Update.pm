@@ -19,7 +19,7 @@ use warnings;
 # ----------------------------------------------------------------------
 
 sub update {
-    trace( 3, @_ );
+    trace( 3, @ARGV );
     # this is the *real* update hook for gitolite
 
     my ( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa ) = args(@ARGV);
@@ -150,5 +150,5 @@ use Gitolite::Hooks::Update;
 # gitolite update hook
 # ----------------------------------------------------------------------
 
-update(@ARGV);          # is not expected to return
+update();               # is not expected to return
 exit 1;                 # so if it does, something is wrong

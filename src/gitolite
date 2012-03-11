@@ -6,7 +6,8 @@
 =for usage
 Usage:  gitolite [sub-command] [options]
 
-The following subcommands are available; they should all respond to '-h':
+The following subcommands are available; they should all respond to '-h' if
+you want further details on each:
 
     setup                       1st run: initial setup; all runs: hook fixups
     compile                     compile gitolite.conf
@@ -17,6 +18,7 @@ The following subcommands are available; they should all respond to '-h':
     list-phy-repos              list all repos actually on disk
     list-memberships            list all groups a name is a member of
     list-members                list all members of a group
+    post-compile                run a post-compile command
 
 Warnings:
   - list-users is disk bound and could take a while on sites with 1000s of repos
@@ -89,7 +91,35 @@ sub args {
         require Gitolite::Conf::Load;
         Gitolite::Conf::Load->import;
         print "$_\n" for ( @{ list_members() } );
+    } elsif ( $command eq 'post-compile' ) {
+        shift @ARGV;
+        post_compile();
     } else {
         _die "unknown gitolite sub-command";
     }
+}
+
+=for post-compile
+Usage:  gitolite post-compile [-l] [post-compile-scriptname] [script args...]
+
+    -l          list currently available post-compile scripts
+
+Run a post-compile script (which normally runs from the post-update hook in
+the gitolite-admin repo).
+=cut
+
+sub post_compile {
+    usage('', 'post-compile') if (@ARGV and $ARGV[0] eq '-h');
+
+    if (@ARGV and $ARGV[0] eq '-l') {
+        _chdir("$ENV{GL_BINDIR}/post-compile");
+        map { say2($_) } grep { -x } glob("*");
+        exit 0;
+    }
+
+    my $pgm = shift @ARGV;
+    my $fullpath = "$ENV{GL_BINDIR}/post-compile/$pgm";
+    _die "$pgm not found or not executable" if not -x $fullpath;
+    _system($fullpath, @ARGV);
+    exit 0;
 }

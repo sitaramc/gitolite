@@ -47,6 +47,7 @@ sub setup {
     }
 
     _system("$ENV{GL_BINDIR}/gitolite compile");
+    _system("$ENV{GL_BINDIR}/gitolite post-compile ssh-authkeys") if $pubkey;
 
     hook_repos();    # all of them, just to be sure
 }

@@ -2,6 +2,10 @@
 use strict;
 use warnings;
 
+BEGIN {
+    unlink "$ENV{HOME}/.ssh/authorized_keys";
+}
+
 # this is hardcoded; change it if needed
 use lib "src";
 use Gitolite::Test;
