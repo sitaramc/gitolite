@@ -75,10 +75,12 @@ sub _die {
 }
 
 sub usage {
-    _warn(shift) if @_;
+    my ($warn, $section) = @_;
+    _warn($warn) if $warn;
+    $section ||= 'usage';
     my $scriptname = ( caller() )[1];
     my $script     = slurp($scriptname);
-    $script =~ /^=for usage(.*?)^=cut/sm;
+    $script =~ /^=for $section(.*?)^=cut/sm;
     say2( $1 ? $1 : "...no usage message in $scriptname" );
     exit 1;
 }
