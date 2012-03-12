@@ -52,6 +52,9 @@ _die "$rc seems to be for older gitolite" if defined($GL_ADMINDIR);
 # let values specified in rc file override our internal ones
 @rc{ keys %RC } = values %RC;
 
+# fix PATH (TODO: do it only if 'gitolite' isn't in PATH)
+$ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}";
+
 # ----------------------------------------------------------------------
 
 use strict;
