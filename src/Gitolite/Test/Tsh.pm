@@ -259,8 +259,7 @@ sub rc_lines {
             $cmd = shift @cmds;
 
             # is the current command a "testing" command?
-            my $testing_cmd =
-              ( $cmd =~ m(^ok(?:\s+or\s+(.*))?$) or $cmd =~ m(^!ok(?:\s+or\s+(.*))?$) or $cmd =~ m(^/(.*?)/(?:\s+or\s+(.*))?$) or $cmd =~ m(^!/(.*?)/(?:\s+or\s+(.*))?$) );
+            my $testing_cmd = ( $cmd =~ m(^ok(?:\s+or\s+(.*))?$) or $cmd =~ m(^!ok(?:\s+or\s+(.*))?$) or $cmd =~ m(^/(.*?)/(?:\s+or\s+(.*))?$) or $cmd =~ m(^!/(.*?)/(?:\s+or\s+(.*))?$) );
 
             # warn if the previous command failed but rc is not being checked
             if ( $rc and not $testing_cmd ) {

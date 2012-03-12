@@ -8,7 +8,7 @@ package Gitolite::Rc;
   glrc
   query_rc
 
-  $ADC_CMD_ARGS_PATT
+  $REMOTE_COMMAND_PATT
   $REF_OR_FILENAME_PATT
   $REPONAME_PATT
   $REPOPATT_PATT
@@ -36,7 +36,7 @@ $rc{GL_REPO_BASE}  = "$ENV{HOME}/repositories";
 # variables that should probably never be changed
 # ----------------------------------------------------------------------
 
-$ADC_CMD_ARGS_PATT    = qr(^[0-9a-zA-Z._\@/+:-]*$);
+$REMOTE_COMMAND_PATT  = qr(^[- 0-9a-zA-Z\@\%_=+:,./]*$);
 $REF_OR_FILENAME_PATT = qr(^[0-9a-zA-Z][0-9a-zA-Z._\@/+ :,-]*$);
 $REPONAME_PATT        = qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@/+-]*$);
 $REPOPATT_PATT        = qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/,-]*$);
@@ -101,26 +101,9 @@ sub glrc {
 # implements 'gitolite query-rc'
 # ----------------------------------------------------------------------
 
-=for usage
-
-Usage:  gitolite query-rc -a
-        gitolite query-rc [-n] <list of rc variables>
-
-    -a          print all variables and values
-    -n          do not append a newline
-
-Example:
-
-    gitolite query-rc GL_ADMIN_BASE GL_UMASK
-    # prints "/home/git/.gitolite<tab>0077" or similar
-
-    gitolite query-rc -a
-    # prints all known variables and values, one per line
-=cut
-
 # ----------------------------------------------------------------------
 
-my $all = 0;
+my $all  = 0;
 my $nonl = 0;
 
 sub query_rc {
@@ -130,17 +113,37 @@ sub query_rc {
 
     no strict 'refs';
 
-    if ( $all ) {
-        for my $e (sort keys %rc) {
-            print "$e=" . ( defined($rc{$e}) ? $rc{$e} : 'undef' ) . "\n";
+    if ($all) {
+        for my $e ( sort keys %rc ) {
+            print "$e=" . ( defined( $rc{$e} ) ? $rc{$e} : 'undef' ) . "\n";
         }
-        return;
+        exit 0;
     }
 
-    print join( "\t", map { $rc{$_} || '' } @vars ) . ($nonl ? '' : "\n") if @vars;
+    my @res = map { $rc{$_} } grep { $rc{$_} } @vars;
+    print join( "\t", @res ) . ( $nonl ? '' : "\n" ) if @res;
+    # shell truth
+    exit 0 if @res;
+    exit 1;
 }
 
 # ----------------------------------------------------------------------
+
+=for args
+Usage:  gitolite query-rc -a
+        gitolite query-rc [-n] <list of rc variables>
+
+    -a          print all variables and values
+    -n          do not append a newline
+
+Example:
+
+    gitolite query-rc GL_ADMIN_BASE UMASK
+    # prints "/home/git/.gitolite<tab>0077" or similar
+
+    gitolite query-rc -a
+    # prints all known variables and values, one per line
+=cut
 
 sub args {
     my $help = 0;
@@ -163,30 +166,35 @@ sub args {
 __DATA__
 # configuration variables for gitolite
 
-# PLEASE READ THE DOCUMENTATION BEFORE EDITING OR ASKING QUESTIONS
+# This file is in perl syntax.  But you do NOT need to know perl to edit it --
+# just mind the commas and make sure the brackets and braces stay matched up!
 
-# This file is in perl syntax.
-
-# However, you do NOT need to know perl to edit it; it should be fairly
-# self-explanatory and easy to maintain.  Just mind the commas (perl is quite
-# happy to have an extra one at the end of the last item in any list, by the
-# way!).  And make sure the brackets and braces stay matched up!
+# (Tip: perl allows a comma after the last item in a list also!)
 
 %RC = (
     UMASK                       =>  0077,
     GL_GITCONFIG_KEYS           =>  "",
 
     # comment out or uncomment as needed
+    # these will run in sequence during the conf file parse
     SYNTACTIC_SUGAR             =>
         [
             # 'continuation-lines',
         ],
 
     # comment out or uncomment as needed
+    # these will run in sequence after post-update
     POST_COMPILE                =>
         [
             'ssh-authkeys',
         ],
+
+    # comment out or uncomment as needed
+    # these are available to remote users
+    COMMANDS                    =>
+        {
+            'info'              =>  1,
+        },
 );
 
 # ------------------------------------------------------------------------------

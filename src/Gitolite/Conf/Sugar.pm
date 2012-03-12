@@ -3,7 +3,7 @@
 package SugarBox;
 
 sub run_sugar_script {
-    my ($ss, $lref) = @_;
+    my ( $ss, $lref ) = @_;
     do $ss if -x $ss;
     $lref = sugar_script($lref);
     return $lref;
@@ -35,7 +35,7 @@ sub sugar {
     # gets a filename, returns a listref
 
     my @lines = ();
-    explode(shift, 'master', \@lines);
+    explode( shift, 'master', \@lines );
 
     my $lines;
     $lines = \@lines;
@@ -43,11 +43,11 @@ sub sugar {
     # run through the sugar stack one by one
 
     # first, user supplied sugar:
-    if (exists $rc{SYNTACTIC_SUGAR}) {
-        if (ref($rc{SYNTACTIC_SUGAR}) ne 'ARRAY') {
+    if ( exists $rc{SYNTACTIC_SUGAR} ) {
+        if ( ref( $rc{SYNTACTIC_SUGAR} ) ne 'ARRAY' ) {
             _warn "bad syntax for specifying sugar scripts; see docs";
         } else {
-            for my $s (@{ $rc{SYNTACTIC_SUGAR} }) {
+            for my $s ( @{ $rc{SYNTACTIC_SUGAR} } ) {
 
                 # perl-ism; apart from keeping the full path separate from the
                 # simple name, this also protects %rc from change by implicit
@@ -55,7 +55,7 @@ sub sugar {
                 my $sfp = "$ENV{GL_BINDIR}/syntactic-sugar/$s";
 
                 _warn("skipped sugar script '$s'"), next if not -x $sfp;
-                $lines = SugarBox::run_sugar_script($sfp, $lines);
+                $lines = SugarBox::run_sugar_script( $sfp, $lines );
                 $lines = [ grep /\S/, map { cleanup_conf_line($_) } @$lines ];
             }
         }

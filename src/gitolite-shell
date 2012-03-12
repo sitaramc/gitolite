@@ -13,38 +13,89 @@ use Gitolite::Conf::Load;
 
 use strict;
 use warnings;
-print STDERR "TRACE: gsh(", join( ")(", @ARGV ), ")\n";
-print STDERR "TRACE: gsh(SOC=$ENV{SSH_ORIGINAL_COMMAND})\n";
+
+# the main() sub expects ssh-ish things; set them up...
+if ( exists $ENV{G3T_USER} ) {
+    in_local();    # file:// masquerading as ssh:// for easy testing
+} elsif ( exists $ENV{SSH_CONNECTION} ) {
+    in_ssh();
+} elsif ( exists $ENV{REQUEST_URI} ) {
+    in_http();
+} else {
+    _die "who the *heck* are you?";
+}
+
+main();
+
+exit 0;
 
 # ----------------------------------------------------------------------
 
 # XXX lots of stuff from gl-auth-command is missing for now...
 
-# set up the user
-my $user = $ENV{GL_USER} = shift;
+sub in_local {
+    print STDERR "TRACE: gsh(", join( ")(", @ARGV ), ")\n";
+    print STDERR "TRACE: gsh(SOC=$ENV{SSH_ORIGINAL_COMMAND})\n";
+}
 
-# set up the repo and the attempted access
-my ( $verb, $repo ) = split_soc();
-sanity($repo);
-$ENV{GL_REPO} = $repo;
-my $aa = ( $verb =~ 'upload' ? 'R' : 'W' );
+sub in_http {
+    _die 'http not yet implemented...';
+}
 
-# a ref of 'any' signifies that this is a pre-git check, where we don't
-# yet know the ref that will be eventually pushed (and even that won't apply
-# if it's a read operation).  See the matching code in access() for more.
-my $ret = access( $repo, $user, $aa, 'any' );
-trace( 1, "access($repo, $user, $aa, 'any') -> $ret" );
-_die $ret if $ret =~ /DENIED/;
-
-$repo = "'$rc{GL_REPO_BASE}/$repo.git'";
-exec( "git", "shell", "-c", "$verb $repo" );
+sub in_ssh {
+}
 
 # ----------------------------------------------------------------------
 
-sub split_soc {
+# call this once you are sure arg-1 is the username and SSH_ORIGINAL_COMMAND
+# has been setup (even if it's not actually coming via ssh).
+sub main {
+    # set up the user
+    my $user = $ENV{GL_USER} = shift @ARGV;
+
+    # set up the repo and the attempted access
+    my ( $verb, $repo ) = parse_soc();  # returns only for git commands
+    sanity($repo);
+    $ENV{GL_REPO} = $repo;
+    my $aa = ( $verb =~ 'upload' ? 'R' : 'W' );
+
+    # a ref of 'any' signifies that this is a pre-git check, where we don't
+    # yet know the ref that will be eventually pushed (and even that won't
+    # apply if it's a read operation).  See the matching code in access() for
+    # more information.
+    my $ret = access( $repo, $user, $aa, 'any' );
+    trace( 1, "access($repo, $user, $aa, 'any') -> $ret" );
+    _die $ret if $ret =~ /DENIED/;
+
+    $repo = "'$rc{GL_REPO_BASE}/$repo.git'";
+    exec( "git", "shell", "-c", "$verb $repo" );
+}
+
+# ----------------------------------------------------------------------
+
+sub parse_soc {
     my $soc = $ENV{SSH_ORIGINAL_COMMAND};
-    return ( $1, $2 ) if $soc =~ m(^(git-(?:upload|receive)-pack) '/?(.*?)(?:\.git)?'$);
-    _die "unknown command: $soc";
+    $soc ||= 'info';
+
+    if ( $soc =~ m(^(git-(?:upload|receive)-pack) '/?(.*?)(?:\.git)?'$) ) {
+        # TODO git archive
+        my($verb, $repo) = ($1, $2);
+        _die "invalid repo name: '$repo'" if $repo !~ $REPONAME_PATT;
+        return ($verb, $repo);
+    }
+
+    # after this we should not return; caller expects us to handle it all here
+    # and exit out
+
+    _die "suspicious characters loitering about '$soc'" if $soc !~ $REMOTE_COMMAND_PATT;
+
+    my @words = split ' ', $soc;
+    if ($rc{COMMANDS}{$words[0]}) {
+        _system("gitolite", @words);
+        exit 0;
+    }
+
+    _die "unknown git/gitolite command: $soc";
 }
 
 sub sanity {

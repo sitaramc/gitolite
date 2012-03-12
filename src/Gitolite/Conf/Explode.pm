@@ -28,7 +28,7 @@ sub explode {
     # seed the 'seen' list if it's empty
     $included{ device_inode("conf/gitolite.conf") }++ unless %included;
 
-    my $fh    = _open( "<", $file );
+    my $fh = _open( "<", $file );
     while (<$fh>) {
         my $line = cleanup_conf_line($_);
         next unless $line =~ /\S/;

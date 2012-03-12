@@ -17,8 +17,8 @@ use Carp qw(carp cluck croak confess);
 
 BEGIN {
     require Gitolite::Test::Tsh;
-    *{'try'} = \&Tsh::try;
-    *{'put'} = \&Tsh::put;
+    *{'try'}  = \&Tsh::try;
+    *{'put'}  = \&Tsh::put;
     *{'text'} = \&Tsh::text;
 }
 

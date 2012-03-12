@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+=for usage
+Usage:  gitolite info
+
+  - list all repos/repo groups you can access
+  - no options, no flags
+=cut
+
+usage() if @ARGV;
+
+my $user = $ENV{GL_USER} or _die "GL_USER not set";
+my $ref = 'any';
+
+my $fn = lister_dispatch('list-repos');
+
+for ( @{ $fn->() } ) {
+    my $perm = '';
+    for my $aa (qw(R W ^C)) {
+        my $ret = access($_, $user, $aa, $ref);
+        $perm .= ( $ret =~ /DENIED/ ? "  " : " $aa" );
+    }
+    print "$perm\t$_\n" if $perm =~ /\S/;
+}

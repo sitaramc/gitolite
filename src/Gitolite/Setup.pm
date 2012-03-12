@@ -3,13 +3,14 @@ package Gitolite::Setup;
 # implements 'gitolite setup'
 # ----------------------------------------------------------------------
 
-=for usage
+=for args
 Usage:  gitolite setup [<at least one option>]
-
 
     -a, --admin <name>          admin user name
     -pk --pubkey <file>         pubkey file name
     -f, --fixup-hooks           fixup hooks
+
+Setup (first run only), then compile conf and fixup hooks.
 
 First run:
     -a      required

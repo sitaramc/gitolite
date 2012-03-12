@@ -24,12 +24,12 @@ use warnings;
 
 sub compile {
     trace(3);
-    # XXX assume we're in admin-base/conf
+    _die "'gitolite compile' does not take any arguments" if @_;
 
     _chdir( $rc{GL_ADMIN_BASE} );
     _chdir("conf");
 
-    parse(sugar('gitolite.conf'));
+    parse( sugar('gitolite.conf') );
 
     # the order matters; new repos should be created first, to give store a
     # place to put the individual gl-conf files
@@ -39,7 +39,7 @@ sub compile {
 
 sub parse {
     my $lines = shift;
-    trace(4, scalar(@$lines) . " lines incoming");
+    trace( 4, scalar(@$lines) . " lines incoming" );
 
     for my $line (@$lines) {
         # user or repo groups

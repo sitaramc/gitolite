@@ -19,7 +19,7 @@ use warnings;
 # ----------------------------------------------------------------------
 
 sub post_update {
-    trace(3, @ARGV);
+    trace( 3, @ARGV );
     # this is the *real* post_update hook for gitolite
 
     tsh_try("git ls-tree --name-only master");
@@ -32,11 +32,11 @@ sub post_update {
     _system("$ENV{GL_BINDIR}/gitolite compile");
 
     # now run optional post-compile features
-    if (exists $rc{POST_COMPILE}) {
-        if (ref($rc{POST_COMPILE}) ne 'ARRAY') {
+    if ( exists $rc{POST_COMPILE} ) {
+        if ( ref( $rc{POST_COMPILE} ) ne 'ARRAY' ) {
             _warn "bad syntax for specifying post compile scripts; see docs";
         } else {
-            for my $s (@{ $rc{POST_COMPILE} }) {
+            for my $s ( @{ $rc{POST_COMPILE} } ) {
 
                 # perl-ism; apart from keeping the full path separate from the
                 # simple name, this also protects %rc from change by implicit
@@ -44,7 +44,7 @@ sub post_update {
                 my $sfp = "$ENV{GL_BINDIR}/post-compile/$s";
 
                 _warn("skipped post-compile script '$s'"), next if not -x $sfp;
-                _system($sfp, @ARGV);   # they better all return with 0 exit codes!
+                _system( $sfp, @ARGV );    # they better all return with 0 exit codes!
             }
         }
     }

@@ -40,10 +40,10 @@ sub trace {
     return unless defined( $ENV{D} );
 
     my $level = shift; return if $ENV{D} < $level;
-    my $args  = ''; $args = join( ", ", @_ ) if @_;
-    my $sub   = ( caller 1 )[3] || ''; $sub =~ s/.*://; $sub .= ' ' x ( 32 - length($sub) );
-    say2 "TRACE $level $sub", (@_ ? shift : ());
-    say2("TRACE $level " . (" " x 32), $_)for @_;
+    my $args = ''; $args = join( ", ", @_ ) if @_;
+    my $sub = ( caller 1 )[3] || ''; $sub =~ s/.*://; $sub .= ' ' x ( 32 - length($sub) );
+    say2 "TRACE $level $sub", ( @_ ? shift : () );
+    say2( "TRACE $level " . ( " " x 32 ), $_ ) for @_;
 }
 
 sub dbg {
@@ -75,13 +75,17 @@ sub _die {
 }
 
 sub usage {
-    my ($warn, $section) = @_;
-    _warn($warn) if $warn;
-    $section ||= 'usage';
-    my $scriptname = ( caller() )[1];
-    my $script     = slurp($scriptname);
-    $script =~ /^=for $section(.*?)^=cut/sm;
-    say2( $1 ? $1 : "...no usage message in $scriptname" );
+    _warn(shift) if @_;
+    my ( $script, $function ) = ( caller(1) )[ 1, 3 ];
+    if (not $script) {
+        $script = ( caller ) [1];
+        $function = 'usage';
+    }
+    dbg( "u s a g e", $script, $function );
+    $function =~ s/.*:://;
+    my $code = slurp($script);
+    $code =~ /^=for $function(.*?)^=cut/sm;
+    say2( $1 ? $1 : "...no usage message in $script" );
     exit 1;
 }
 
@@ -154,8 +158,8 @@ sub ln_sf {
 sub sort_u {
     my %uniq;
     my $listref = shift;
-    return [] unless @{ $listref };
-    undef @uniq{ @{ $listref } }; # expect a listref
+    return [] unless @{$listref};
+    undef @uniq{ @{$listref} };    # expect a listref
     my @sort_u = sort keys %uniq;
     return \@sort_u;
 }
@@ -177,7 +181,6 @@ sub cleanup_conf_line {
     my @phy_repos = ();
 
     sub list_phy_repos {
-        _die "'gitolite list_phy_repos' takes no arguments" if @ARGV;
         trace(3);
 
         # use cached value only if it exists *and* no arg was received (i.e.,
@@ -189,7 +192,7 @@ sub cleanup_conf_line {
             $repo =~ s(\./(.*)\.git$)($1);
             push @phy_repos, $repo;
         }
-        return sort_u(\@phy_repos);
+        return sort_u( \@phy_repos );
     }
 }
 

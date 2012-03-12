@@ -3,7 +3,7 @@
 # all gitolite CLI tools run as sub-commands of this command
 # ----------------------------------------------------------------------
 
-=for usage
+=for args
 Usage:  gitolite [sub-command] [options]
 
 The following subcommands are available; they should all respond to '-h' if
@@ -11,14 +11,16 @@ you want further details on each:
 
     setup                       1st run: initial setup; all runs: hook fixups
     compile                     compile gitolite.conf
+
     query-rc                    get values of rc variables
+    post-compile                run a post-compile command
+
     list-groups                 list all group names in conf
     list-users                  list all users/user groups in conf
     list-repos                  list all repos/repo groups in conf
     list-phy-repos              list all repos actually on disk
     list-memberships            list all groups a name is a member of
     list-members                list all members of a group
-    post-compile                run a post-compile command
 
 Warnings:
   - list-users is disk bound and could take a while on sites with 1000s of repos
@@ -40,66 +42,56 @@ use warnings;
 
 # ----------------------------------------------------------------------
 
+my ( $command, @args ) = @ARGV;
 args();
+
+# the first two commands need options via @ARGV, as they have their own
+# GetOptions calls and older perls don't have 'GetOptionsFromArray'
+
+if ( $command eq 'setup' ) {
+    shift @ARGV;
+    require Gitolite::Setup;
+    Gitolite::Setup->import;
+    setup();
+
+} elsif ( $command eq 'query-rc' ) {
+    shift @ARGV;
+    query_rc();     # doesn't return
+
+# the rest don't need @ARGV per se
+
+} elsif ( $command eq 'compile' ) {
+    require Gitolite::Conf;
+    Gitolite::Conf->import;
+    compile(@args);
+
+} elsif ( $command eq 'post-compile' ) {
+    post_compile(@args);
+
+} elsif ( -x "$rc{GL_BINDIR}/commands/$command" ) {
+    run_command( $command, @args );
+
+} elsif ( $command eq 'list-phy-repos' ) {
+    _chdir( $rc{GL_REPO_BASE} );
+    print "$_\n" for ( @{ list_phy_repos(@args) } );
+
+} elsif ( $command =~ /^list-/ ) {
+    require Gitolite::Conf::Load;
+    Gitolite::Conf::Load->import;
+    my $fn = lister_dispatch($command);
+    print "$_\n" for ( @{ $fn->(@args) } );
+
+} else {
+    _die "unknown gitolite sub-command";
+}
+
+sub args {
+    usage() if not $command or $command eq '-h';
+}
 
 # ----------------------------------------------------------------------
 
-sub args {
-    my ( $command, @args ) = @ARGV;
-    usage() if not $command or $command eq '-h';
-
-    if ( $command eq 'setup' ) {
-        shift @ARGV;
-        require Gitolite::Setup;
-        Gitolite::Setup->import;
-        setup();
-    } elsif ( $command eq 'compile' ) {
-        shift @ARGV;
-        _die "'gitolite compile' does not take any arguments" if @ARGV;
-        require Gitolite::Conf;
-        Gitolite::Conf->import;
-        compile();
-    } elsif ( $command eq 'query-rc' ) {
-        shift @ARGV;
-        query_rc();
-    } elsif ( $command eq 'list-groups' ) {
-        shift @ARGV;
-        require Gitolite::Conf::Load;
-        Gitolite::Conf::Load->import;
-        print "$_\n" for ( @{ list_groups() } );
-    } elsif ( $command eq 'list-users' ) {
-        shift @ARGV;
-        require Gitolite::Conf::Load;
-        Gitolite::Conf::Load->import;
-        print "$_\n" for ( @{ list_users() } );
-    } elsif ( $command eq 'list-repos' ) {
-        shift @ARGV;
-        require Gitolite::Conf::Load;
-        Gitolite::Conf::Load->import;
-        print "$_\n" for ( @{ list_repos() } );
-    } elsif ( $command eq 'list-phy-repos' ) {
-        shift @ARGV;
-        _chdir( $rc{GL_REPO_BASE} );
-        print "$_\n" for ( @{ list_phy_repos() } );
-    } elsif ( $command eq 'list-memberships' ) {
-        shift @ARGV;
-        require Gitolite::Conf::Load;
-        Gitolite::Conf::Load->import;
-        print "$_\n" for ( @{ list_memberships() } );
-    } elsif ( $command eq 'list-members' ) {
-        shift @ARGV;
-        require Gitolite::Conf::Load;
-        Gitolite::Conf::Load->import;
-        print "$_\n" for ( @{ list_members() } );
-    } elsif ( $command eq 'post-compile' ) {
-        shift @ARGV;
-        post_compile();
-    } else {
-        _die "unknown gitolite sub-command";
-    }
-}
-
-=for post-compile
+=for post_compile
 Usage:  gitolite post-compile [-l] [post-compile-scriptname] [script args...]
 
     -l          list currently available post-compile scripts
@@ -109,17 +101,26 @@ the gitolite-admin repo).
 =cut
 
 sub post_compile {
-    usage('', 'post-compile') if (@ARGV and $ARGV[0] eq '-h');
+    usage() if ( not @_ or $_[0] eq '-h' );
 
-    if (@ARGV and $ARGV[0] eq '-l') {
-        _chdir("$ENV{GL_BINDIR}/post-compile");
+    run_subdir('post-compile', @_);
+}
+
+sub run_command {
+    run_subdir('commands', @_);
+}
+
+sub run_subdir {
+    my $subdir = shift;
+    if ( @_ and $_[0] eq '-l' ) {
+        _chdir("$ENV{GL_BINDIR}/$subdir");
         map { say2($_) } grep { -x } glob("*");
         exit 0;
     }
 
-    my $pgm = shift @ARGV;
-    my $fullpath = "$ENV{GL_BINDIR}/post-compile/$pgm";
+    my $pgm      = shift;
+    my $fullpath = "$ENV{GL_BINDIR}/$subdir/$pgm";
     _die "$pgm not found or not executable" if not -x $fullpath;
-    _system($fullpath, @ARGV);
+    _system( $fullpath, @_ );
     exit 0;
 }

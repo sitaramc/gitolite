@@ -7,12 +7,7 @@ package Gitolite::Conf::Load;
   load
   access
   vrefs
-
-  list_groups
-  list_users
-  list_repos
-  list_memberships
-  list_members
+  lister_dispatch
 );
 
 use Exporter 'import';
@@ -25,8 +20,6 @@ use warnings;
 
 # ----------------------------------------------------------------------
 
-my $subconf = 'master';
-
 # our variables, because they get loaded by a 'do'
 our $data_version = '';
 our %repos;
@@ -35,6 +28,16 @@ our %groups;
 our %configs;
 our %one_config;
 our %split_conf;
+
+my $subconf = 'master';
+
+my %listers = (
+    'list-groups'      => \&list_groups,
+    'list-users'       => \&list_users,
+    'list-repos'       => \&list_repos,
+    'list-memberships' => \&list_memberships,
+    'list-members'     => \&list_members,
+);
 
 # helps maintain the "cache" in both "load_common" and "load_1"
 my $last_repo = '';
@@ -118,7 +121,7 @@ sub load_1 {
     my $repo = shift;
     trace( 4, $repo );
 
-    _chdir( "$rc{GL_REPO_BASE}/$repo.git" );
+    _chdir("$rc{GL_REPO_BASE}/$repo.git");
 
     if ( $repo eq $last_repo ) {
         $repos{$repo} = $one_repo{$repo};
@@ -143,13 +146,13 @@ sub load_1 {
 {
     my $lastrepo = '';
     my $lastuser = '';
-    my @cached = ();
+    my @cached   = ();
 
     sub rules {
         my ( $repo, $user ) = @_;
         trace( 4, "repo=$repo, user=$user" );
 
-        return @cached if ($lastrepo eq $repo and $lastuser eq $user and @cached);
+        return @cached if ( $lastrepo eq $repo and $lastuser eq $user and @cached );
 
         my @rules = ();
 
@@ -167,7 +170,7 @@ sub load_1 {
 
         $lastrepo = $repo;
         $lastuser = $user;
-        @cached = @rules;
+        @cached   = @rules;
 
         return @rules;
     }
@@ -175,7 +178,7 @@ sub load_1 {
     sub vrefs {
         my ( $repo, $user ) = @_;
         # fill the cache if needed
-        rules($repo, $user) unless ($lastrepo eq $repo and $lastuser eq $user and @cached);
+        rules( $repo, $user ) unless ( $lastrepo eq $repo and $lastuser eq $user and @cached );
 
         my %seen;
         my @vrefs = grep { /^VREF\// and not $seen{$_}++ } map { $_->[2] } @cached;
@@ -200,15 +203,22 @@ sub data_version_mismatch {
 # api functions
 # ----------------------------------------------------------------------
 
-# list all groups
-sub list_groups {
-    die "
+sub lister_dispatch {
+    my $command = shift;
+
+    my $fn = $listers{$command} or _die "unknown gitolite sub-command";
+    return $fn;
+}
+
+=for list_groups
 Usage:  gitolite list-groups
 
   - lists all group names in conf
   - no options, no flags
+=cut
 
-" if @ARGV;
+sub list_groups {
+    usage() if @_;
 
     load_common();
 
@@ -219,18 +229,18 @@ Usage:  gitolite list-groups
     return ( sort_u( \@g ) );
 }
 
-sub list_users {
-    my $count = 0;
-    my $total = 0;
-
-    die "
+=for list_users
 Usage:  gitolite list-users
 
   - lists all users/user groups in conf
   - no options, no flags
   - WARNING: may be slow if you have thousands of repos
+=cut
 
-" if @ARGV;
+sub list_users {
+    usage() if @_;
+    my $count = 0;
+    my $total = 0;
 
     load_common();
 
@@ -242,19 +252,19 @@ Usage:  gitolite list-users
         $count++; print STDERR "$count / $total\r" if not( $count % 100 ) and timer(5);
         push @u, map { keys %{$_} } values %one_repo;
     }
-    print STDERR "\n";
+    print STDERR "\n" if $count >= 100;
     return ( sort_u( \@u ) );
 }
 
-sub list_repos {
-
-    die "
+=for list_repos
 Usage:  gitolite list-repos
 
   - lists all repos/repo groups in conf
   - no options, no flags
+=cut
 
-" if @ARGV;
+sub list_repos {
+    usage() if @_;
 
     load_common();
 
@@ -264,34 +274,34 @@ Usage:  gitolite list-repos
     return ( sort_u( \@r ) );
 }
 
-sub list_memberships {
-
-    die "
+=for list_memberships
 Usage:  gitolite list-memberships <name>
 
   - list all groups a name is a member of
   - takes one user/repo name
+=cut
 
-" if @ARGV and $ARGV[0] eq '-h' or not @ARGV and not @_;
+sub list_memberships {
+    usage() if @_ and $_[0] eq '-h' or not @_;
 
-    my $name = ( @_ ? shift @_ : shift @ARGV );
+    my $name = shift;
 
     load_common();
     my @m = memberships($name);
     return ( sort_u( \@m ) );
 }
 
-sub list_members {
-
-    die "
+=for list_members
 Usage:  gitolite list-members <group name>
 
   - list all members of a group
   - takes one group name
+=cut
 
-" if @ARGV and $ARGV[0] eq '-h' or not @ARGV and not @_;
+sub list_members {
+    usage() if @_ and $_[0] eq '-h' or not @_;
 
-    my $name = ( @_ ? shift @_ : shift @ARGV );
+    my $name = shift;
 
     load_common();
 

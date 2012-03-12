@@ -89,7 +89,7 @@ sub fp {
         return map { fp_line($_) } grep { !/^#/ and /\S/ } slurp($in);
     } else {
         # one or more actual keys
-        return map { fp_line($_) } grep { !/^#/ and /\S/ } ($in, @_);
+        return map { fp_line($_) } grep { !/^#/ and /\S/ } ( $in, @_ );
     }
 }
 

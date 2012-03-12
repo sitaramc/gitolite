@@ -18,10 +18,10 @@
 sub sugar_script {
     my $lines = shift;
 
-    my @out = ();
+    my @out  = ();
     my $keep = '';
     for my $l (@$lines) {
-        if ($l =~ s/\\$//) {
+        if ( $l =~ s/\\$// ) {
             $keep .= $l;
         } else {
             $l = $keep . $l if $keep;
