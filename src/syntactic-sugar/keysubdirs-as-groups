@@ -1,0 +1,31 @@
+# vim: syn=perl:
+
+# "sugar script" (syntactic sugar helper) for gitolite3
+
+# Enabling this script in the rc file allows you to use subdirectories in
+# keydir as group names.  The last component other than keydir itself will be
+# taken as the group name.
+
+sub sugar_script {
+    my $lines = shift;
+
+    my @out  = @{ $lines };
+    unshift @out, groupnames();
+
+    return \@out;
+}
+
+sub groupnames {
+    my @out = ();
+    my %members = ();
+    for my $pk (`find ../keydir/ -name "*.pub"`) {
+        next unless $pk =~ m(.*/([^/]+)/([^/]+)\.pub$);
+        next if $1 eq 'keydir';
+        $members{$1} .= " $2";
+    }
+    for my $m (sort keys %members) {
+        push @out, "\@$m =" . $members{$m};
+    }
+
+    return @out;
+}
