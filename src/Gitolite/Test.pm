@@ -9,11 +9,15 @@ package Gitolite::Test;
   put
   text
   dump
+  confreset
+  confadd
 );
 #>>>
 use Exporter 'import';
 use File::Path qw(mkpath);
 use Carp qw(carp cluck croak confess);
+
+use Gitolite::Common;
 
 BEGIN {
     require Gitolite::Test::Tsh;
@@ -63,6 +67,27 @@ sub dump {
     for my $i (@_) {
         print STDERR "DBG: " . Dumper($i);
     }
+}
+
+sub _confargs {
+    return @_ if ($_[1]);
+    return 'gitolite.conf', $_[0];
+}
+
+sub confreset {
+    system("rm", "-rf", "conf");
+    mkdir("conf");
+    put "conf/gitolite.conf", '
+        repo    gitolite-admin
+            RW+     =   admin
+        repo    testing
+            RW+     =   @all
+';
+}
+
+sub confadd {
+    my ($file, $string) = _confargs(@_);
+    put "|cat >> conf/$file", $string;
 }
 
 1;
