@@ -77,6 +77,11 @@ sub _confargs {
 sub confreset {
     system("rm", "-rf", "conf");
     mkdir("conf");
+    system("mv ~/repositories/gitolite-admin.git ~/repositories/.ga");
+    system("mv ~/repositories/testing.git        ~/repositories/.te");
+    system("find ~/repositories -name '*.git' |xargs rm -rf");
+    system("mv ~/repositories/.ga ~/repositories/gitolite-admin.git");
+    system("mv ~/repositories/.te ~/repositories/testing.git       ");
     put "conf/gitolite.conf", '
         repo    gitolite-admin
             RW+     =   admin
