@@ -49,6 +49,7 @@ my %ignored;
 sub add_to_group {
     my ( $lhs, @rhs ) = @_;
     _die "bad group '$lhs'" unless $lhs =~ $REPONAME_PATT;
+    map { _die "bad expansion '$_'" unless $_ =~ $REPOPATT_PATT } @rhs;
 
     # store the group association, but overload it to keep track of when
     # the group was *first* created by using $subconf as the *value*
@@ -115,6 +116,8 @@ sub parse_users {
 
 sub add_rule {
     my ( $perm, $ref, $user ) = @_;
+    _die "bad ref '$ref'" unless $ref =~ $REPOPATT_PATT;
+    _die "bad user '$user'" unless $user =~ $USERNAME_PATT;
 
     $ruleseq++;
     for my $repo (@repolist) {
@@ -140,6 +143,7 @@ sub add_rule {
 
 sub set_subconf {
     $subconf = shift;
+    _die "bad subconf '$subconf'" unless $subconf =~ /^[-\w.]+$/;
     trace( 1, $subconf );
 }
 
