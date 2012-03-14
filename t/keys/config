@@ -1,0 +1,20 @@
+host *
+    stricthostkeychecking no
+host admin
+        identityfile ~/.ssh/admin
+
+host u? admin
+	user %USER
+	hostname localhost
+host u1
+	identityfile ~/.ssh/u1
+host u2
+	identityfile ~/.ssh/u2
+host u3
+	identityfile ~/.ssh/u3
+host u4
+	identityfile ~/.ssh/u4
+host u5
+	identityfile ~/.ssh/u5
+host u6
+	identityfile ~/.ssh/u6
