@@ -19,7 +19,7 @@ usage() if @ARGV;
 my $user = $ENV{GL_USER} or _die "GL_USER not set";
 my $ref = 'any';
 
-print "hello $user, this is gitolite3 " . version() . " on git " . substr(`git --version`, 12) . "\n";
+print "hello $user, this is gitolite3 " . version() . " on git " . substr( `git --version`, 12 ) . "\n";
 
 my $lr = lister_dispatch('list-repos');
 my $lm = lister_dispatch('list-members');
@@ -27,7 +27,7 @@ my $lm = lister_dispatch('list-members');
 for ( @{ $lr->() } ) {
     my $perm = '';
     for my $aa (qw(R W ^C)) {
-        my $ret = access($_, $user, $aa, $ref);
+        my $ret = access( $_, $user, $aa, $ref );
         $perm .= ( $ret =~ /DENIED/ ? "  " : " $aa" );
     }
     next unless $perm =~ /\S/;

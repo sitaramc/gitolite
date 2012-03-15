@@ -9,21 +9,21 @@
 sub sugar_script {
     my $lines = shift;
 
-    my @out  = @{ $lines };
+    my @out = @{$lines};
     unshift @out, groupnames();
 
     return \@out;
 }
 
 sub groupnames {
-    my @out = ();
+    my @out     = ();
     my %members = ();
     for my $pk (`find ../keydir/ -name "*.pub"`) {
         next unless $pk =~ m(.*/([^/]+)/([^/]+)\.pub$);
         next if $1 eq 'keydir';
         $members{$1} .= " $2";
     }
-    for my $m (sort keys %members) {
+    for my $m ( sort keys %members ) {
         push @out, "\@$m =" . $members{$m};
     }
 

@@ -77,8 +77,8 @@ sub _die {
 sub usage {
     _warn(shift) if @_;
     my ( $script, $function ) = ( caller(1) )[ 1, 3 ];
-    if (not $script) {
-        $script = ( caller ) [1];
+    if ( not $script ) {
+        $script   = (caller)[1];
         $function = 'usage';
     }
     dbg( "u s a g e", $script, $function );
@@ -115,7 +115,7 @@ sub _system {
             die "child died with signal " . ( $? & 127 ) . "\n" if $ENV{D};
         } else {
             die "child exited with value " . ( $? >> 8 ) . "\n" if $ENV{D};
-            exit ( $? >> 8 );
+            exit( $? >> 8 );
         }
         exit 1;
     }

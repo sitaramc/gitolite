@@ -50,9 +50,9 @@ sub args {
     my $argv   = join( " ", @ARGV );
 
     GetOptions(
-        'admin|a=s'     => \$admin,
-        'pubkey|pk=s'   => \$pubkey,
-        'help|h'        => \$help,
+        'admin|a=s'   => \$admin,
+        'pubkey|pk=s' => \$pubkey,
+        'help|h'      => \$help,
     ) or usage();
 
     usage() if $help or ($pubkey and $admin);
@@ -79,9 +79,9 @@ sub setup_glrc {
 
 sub setup_gladmin {
     my ( $admin, $pubkey, $argv ) = @_;
-    trace( 1, $admin || '<no admin name given>');
+    trace( 1, $admin || '<no admin name given>' );
     _die "no existing conf file found, '-a' required"
-        if not $admin and not -f "$rc{GL_ADMIN_BASE}/conf/gitolite.conf";
+      if not $admin and not -f "$rc{GL_ADMIN_BASE}/conf/gitolite.conf";
 
     # reminder: 'admin files' are in ~/.gitolite, 'admin repo' is
     # $rc{GL_REPO_BASE}/gitolite-admin.git
@@ -96,7 +96,7 @@ sub setup_gladmin {
     _chdir( $rc{GL_ADMIN_BASE} );
 
     tsh_try("cd \$GL_BINDIR; git describe --tags --long --dirty=-dt 2>/dev/null")
-        and _print("VERSION", tsh_text());
+      and _print( "VERSION", tsh_text() );
 
     _mkdir("conf");
     my $conf;

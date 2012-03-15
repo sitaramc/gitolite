@@ -51,8 +51,8 @@ sub incsub {
     _die "subconf $subconf attempting to run 'subconf'\n" if $is_subconf and $subconf ne 'master';
 
     _die "invalid include/subconf file/glob '$include_glob'"
-        unless $include_glob =~ /^"(.+)"$/
-            or $include_glob =~ /^'(.+)'$/;
+      unless $include_glob =~ /^"(.+)"$/
+          or $include_glob =~ /^'(.+)'$/;
     $include_glob = $1;
 
     # XXX move this to Macros... substitute HOSTNAME word if GL_HOSTNAME defined, otherwise leave as is

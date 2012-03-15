@@ -473,13 +473,13 @@ sub fail {
 sub cmp {
     # compare input string with text()
     my $text = text();
-    my $in = shift;
+    my $in   = shift;
 
-    if ($text eq $in) {
+    if ( $text eq $in ) {
         ok();
     } else {
-        fail('cmp failed', '');
-        dbg(4, "\n\ntext = <<<$text>>>, in = <<<$in>>>\n\n");
+        fail( 'cmp failed', '' );
+        dbg( 4, "\n\ntext = <<<$text>>>, in = <<<$in>>>\n\n" );
     }
 }
 

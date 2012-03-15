@@ -13,7 +13,7 @@ $|++;
 # can be called directly, or as a post-update hook.  Since it ignores
 # arguments anyway, it hardly matters.
 
-my $ab      = `gitolite query-rc -n GL_ADMIN_BASE`;
+my $ab = `gitolite query-rc -n GL_ADMIN_BASE`;
 _warn("'keydir' not found in '$ab'"), exit if not -d "$ab/keydir";
 my $akfile  = "$ENV{HOME}/.ssh/authorized_keys";
 my $glshell = `gitolite query-rc -n GL_BINDIR` . "/gitolite-shell";

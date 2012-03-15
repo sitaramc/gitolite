@@ -103,11 +103,11 @@ the gitolite-admin repo).
 sub post_compile {
     usage() if ( not @_ or $_[0] eq '-h' );
 
-    run_subdir('post-compile', @_);
+    run_subdir( 'post-compile', @_ );
 }
 
 sub run_command {
-    run_subdir('commands', @_);
+    run_subdir( 'commands', @_ );
 }
 
 sub run_subdir {

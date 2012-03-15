@@ -54,7 +54,7 @@ sub main {
     my $user = $ENV{GL_USER} = shift @ARGV;
 
     # set up the repo and the attempted access
-    my ( $verb, $repo ) = parse_soc();  # returns only for git commands
+    my ( $verb, $repo ) = parse_soc();    # returns only for git commands
     sanity($repo);
     $ENV{GL_REPO} = $repo;
     my $aa = ( $verb =~ 'upload' ? 'R' : 'W' );
@@ -79,9 +79,9 @@ sub parse_soc {
 
     if ( $soc =~ m(^(git-(?:upload|receive)-pack) '/?(.*?)(?:\.git)?'$) ) {
         # TODO git archive
-        my($verb, $repo) = ($1, $2);
+        my ( $verb, $repo ) = ( $1, $2 );
         _die "invalid repo name: '$repo'" if $repo !~ $REPONAME_PATT;
-        return ($verb, $repo);
+        return ( $verb, $repo );
     }
 
     # after this we should not return; caller expects us to handle it all here
@@ -90,8 +90,8 @@ sub parse_soc {
     _die "suspicious characters loitering about '$soc'" if $soc !~ $REMOTE_COMMAND_PATT;
 
     my @words = split ' ', $soc;
-    if ($rc{COMMANDS}{$words[0]}) {
-        _system("gitolite", @words);
+    if ( $rc{COMMANDS}{ $words[0] } ) {
+        _system( "gitolite", @words );
         exit 0;
     }
 

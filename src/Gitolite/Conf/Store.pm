@@ -116,7 +116,7 @@ sub parse_users {
 
 sub add_rule {
     my ( $perm, $ref, $user ) = @_;
-    _die "bad ref '$ref'" unless $ref =~ $REPOPATT_PATT;
+    _die "bad ref '$ref'"   unless $ref  =~ $REPOPATT_PATT;
     _die "bad user '$user'" unless $user =~ $USERNAME_PATT;
 
     $ruleseq++;

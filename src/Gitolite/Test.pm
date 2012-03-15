@@ -25,7 +25,7 @@ BEGIN {
     *{'try'}  = \&Tsh::try;
     *{'put'}  = \&Tsh::put;
     *{'text'} = \&Tsh::text;
-    *{'cmp'} = \&Tsh::cmp;
+    *{'cmp'}  = \&Tsh::cmp;
 }
 
 use strict;
@@ -72,12 +72,12 @@ sub dump {
 }
 
 sub _confargs {
-    return @_ if ($_[1]);
+    return @_ if ( $_[1] );
     return 'gitolite.conf', $_[0];
 }
 
 sub confreset {
-    system("rm", "-rf", "conf");
+    system( "rm", "-rf", "conf" );
     mkdir("conf");
     system("mv ~/repositories/gitolite-admin.git ~/repositories/.ga");
     system("mv ~/repositories/testing.git        ~/repositories/.te");
@@ -93,7 +93,7 @@ sub confreset {
 }
 
 sub confadd {
-    my ($file, $string) = _confargs(@_);
+    my ( $file, $string ) = _confargs(@_);
     put "|cat >> conf/$file", $string;
 }
 

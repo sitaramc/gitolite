@@ -44,7 +44,7 @@ my $ret = '';
 
 $ret = access( $repo, $user, $aa, $ref );
 
-if ($ret =~ /DENIED/) {
+if ( $ret =~ /DENIED/ ) {
     print "$ret\n" unless $quiet;
     exit 1;
 }
