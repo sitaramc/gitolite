@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+=for usage
+Usage:  gitolite access [-q] <repo> <user> <perm> <ref>
+
+Check access rights for arguments given.  With '-q', returns only an exit code
+(shell truth, not perl truth -- 0 is success, any non-0 is failure).
+
+  - repo: mandatory
+  - user: mandatory
+  - perm: defauts to '+'.  Valid values: R, W, +, C, D, M
+  - ref:  defauts to 'any'.  See notes below
+
+Notes:
+
+  - ref: Any fully qualified ref ('refs/heads/master', not 'master') is fine.
+    The 'any' ref is special -- it ignores deny rules (see docs for what this
+    means and exceptions).
+=cut
+
+# TODO: deal with "C", call it ^C
+
+usage() if not @ARGV or $ARGV[0] eq '-h';
+my $quiet = 0;
+if ( $ARGV[0] eq '-q' ) { $quiet = 1; shift @ARGV; }
+
+my ( $repo, $user, $aa, $ref ) = @ARGV;
+$aa  ||= '+';
+$ref ||= 'any';
+# XXX the 4th one below might need fine tuning
+_die "invalid repo name" if not( $repo and $repo =~ $REPONAME_PATT );
+_die "invalid user name" if not( $user and $user =~ $USERNAME_PATT );
+_die "invalid perm"      if not( $aa   and $aa   =~ /^(R|W|\+|C|D|M)$/ );
+_die "invalid ref name"  if not( $ref  and $ref  =~ $REPONAME_PATT );
+
+my $ret = '';
+
+$ret = access( $repo, $user, $aa, $ref );
+
+if ($ret =~ /DENIED/) {
+    print "$ret\n" unless $quiet;
+    exit 1;
+}
+
+print "$ret\n" unless $quiet;
+exit 0;
