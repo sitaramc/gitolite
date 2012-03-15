@@ -105,15 +105,19 @@ sub _chdir {
 }
 
 sub _system {
+    # run system(), catch errors.  Be verbose only if $ENV{D} exists.  If not,
+    # exit with <rc of system()> if it applies, else just "exit 1".
     if ( system(@_) != 0 ) {
-        say2 "system @_ failed";
+        say2 "system @_ failed" if $ENV{D};
         if ( $? == -1 ) {
-            die "failed to execute: $!\n";
+            die "failed to execute: $!\n" if $ENV{D};
         } elsif ( $? & 127 ) {
-            die "child died with signal " . ( $? & 127 ) . "\n";
+            die "child died with signal " . ( $? & 127 ) . "\n" if $ENV{D};
         } else {
-            die "child exited with value " . ( $? >> 8 ) . "\n";
+            die "child exited with value " . ( $? >> 8 ) . "\n" if $ENV{D};
+            exit ( $? >> 8 );
         }
+        exit 1;
     }
 }
 
