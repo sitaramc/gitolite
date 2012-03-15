@@ -7,6 +7,7 @@ package Gitolite::Rc;
   %rc
   glrc
   query_rc
+  version
 
   $REMOTE_COMMAND_PATT
   $REF_OR_FILENAME_PATT
@@ -102,7 +103,7 @@ sub glrc {
 }
 
 # ----------------------------------------------------------------------
-# implements 'gitolite query-rc'
+# implements 'gitolite query-rc' and 'version'
 # ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -129,6 +130,16 @@ sub query_rc {
     # shell truth
     exit 0 if @res;
     exit 1;
+}
+
+sub version {
+    my $version = '';
+    $version = '(unknown)';
+    for ("$rc{GL_ADMIN_BASE}/VERSION") {
+        $version = slurp($_) if -r $_;
+    }
+    chomp($version);
+    return $version;
 }
 
 # ----------------------------------------------------------------------

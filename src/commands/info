@@ -19,6 +19,8 @@ usage() if @ARGV;
 my $user = $ENV{GL_USER} or _die "GL_USER not set";
 my $ref = 'any';
 
+print "hello $user, this is gitolite3 " . version() . " on git " . substr(`git --version`, 12) . "\n";
+
 my $lr = lister_dispatch('list-repos');
 my $lm = lister_dispatch('list-members');
 
