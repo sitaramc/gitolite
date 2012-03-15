@@ -6,12 +6,13 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
-try 'plan 35';
+try 'plan 45';
 
 try "## info";
 
 confreset;confadd '
-    repo    t1
+    @t1 = t1
+    repo    @t1
         RW              =   u1
         R               =   u2
     repo    t2
@@ -30,23 +31,31 @@ try "
 ";
 try "
     glt info u1;                ok;     gsh
-                                        /R W  *\tt1/
-                                        /R  *\tt2/
+                                        /R W  \t\@t1/
+                                        /R W  \tt1/
+                                        /R    \tt2/
                                         !/t3/
-                                        / R W  *\ttesting/
+                                        /R W  \ttesting/
     glt info u2;                ok;     gsh
-                                        /R  *\tt1/
-                                        /R W  *\tt2/
+                                        /R    \t\@t1/
+                                        /R    \tt1/
+                                        /R W  \tt2/
                                         !/t3/
-                                        / R W  *\ttesting/
+                                        /R W  \ttesting/
     glt info u3;                ok;     gsh
-                                        /R W  *\tt3/
-                                        !/t1/
-                                        !/t2/
-                                        / R W  *\ttesting/
+                                        /R W  \tt3/
+                                        !/\@t1/
+                                        !/t[12]/
+                                        /R W  \ttesting/
     glt info u4;                ok;     gsh
-                                        /R  *\tt3/
-                                        !/t1/
-                                        !/t2/
-                                        / R W  *\ttesting/
+                                        /R    \tt3/
+                                        !/\@t1/
+                                        !/t[12]/
+                                        /R W  \ttesting/
+    glt info u5;                ok;     gsh
+                                        !/t[123]/
+                                        /R W  \ttesting/
+    glt info u6;                ok;     gsh
+                                        !/t[123]/
+                                        /R W  \ttesting/
     " or die;

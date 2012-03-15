@@ -19,13 +19,23 @@ usage() if @ARGV;
 my $user = $ENV{GL_USER} or _die "GL_USER not set";
 my $ref = 'any';
 
-my $fn = lister_dispatch('list-repos');
+my $lr = lister_dispatch('list-repos');
+my $lm = lister_dispatch('list-members');
 
-for ( @{ $fn->() } ) {
+for ( @{ $lr->() } ) {
     my $perm = '';
     for my $aa (qw(R W ^C)) {
         my $ret = access($_, $user, $aa, $ref);
         $perm .= ( $ret =~ /DENIED/ ? "  " : " $aa" );
     }
-    print "$perm\t$_\n" if $perm =~ /\S/;
+    next unless $perm =~ /\S/;
+    if (/^\@/) {
+        print "\n$perm\t$_\n";
+        for ( @{ $lm->($_) } ) {
+            print "$perm\t$_\n";
+        }
+        print "\n";
+    } else {
+        print "$perm\t$_\n";
+    }
 }

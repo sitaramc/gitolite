@@ -119,6 +119,7 @@ sub load_common {
 
 sub load_1 {
     my $repo = shift;
+    return if $repo =~ /^\@/;
     trace( 4, $repo );
 
     _chdir("$rc{GL_REPO_BASE}/$repo.git");
