@@ -144,7 +144,6 @@ sub add_rule {
 sub set_subconf {
     $subconf = shift;
     _die "bad subconf '$subconf'" unless $subconf =~ /^[-\w.]+$/;
-    trace( 1, $subconf );
 }
 
 sub new_repos {
@@ -167,7 +166,7 @@ sub new_repos {
 
 sub new_repo {
     my $repo = shift;
-    trace( 4, $repo );
+    trace( 3, $repo );
 
     # XXX ignoring UMASK for now
 
@@ -221,6 +220,7 @@ sub parse_done {
 sub check_subconf_repo_disallowed {
     # trying to set access for $repo (='foo')...
     my ( $subconf, $repo ) = @_;
+    trace( 2, $subconf, $repo );
 
     # processing the master config, not a subconf
     return 0 if $subconf eq 'master';
@@ -234,14 +234,14 @@ sub check_subconf_repo_disallowed {
       sort keys %{ $groups{"\@$subconf"} };
     return 0 if @matched > 0;
 
-    trace( 3, "disallowed: $subconf for $repo" );
+    trace( 2, "-> disallowed" );
     return 1;
 }
 
 sub store_1 {
     # warning: writes and *deletes* it from %repos and %configs
     my ($repo) = shift;
-    trace( 4, $repo );
+    trace( 3, $repo );
     return unless $repos{$repo} and -d "$repo.git";
 
     my ( %one_repo, %one_config );
@@ -267,7 +267,7 @@ sub store_1 {
 }
 
 sub store_common {
-    trace(4);
+    trace(3);
     my $cc = "conf/gitolite.conf-compiled.pm";
     my $compiled_fh = _open( ">", "$cc.new" );
 
@@ -301,7 +301,7 @@ sub store_common {
 
     sub hook_1 {
         my $repo = shift;
-        trace( 4, $repo );
+        trace( 3, $repo );
 
         # reset the gitolite supplied hooks, in case someone fiddled with
         # them, but only once per run

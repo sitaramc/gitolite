@@ -19,7 +19,7 @@ use warnings;
 # ----------------------------------------------------------------------
 
 sub post_update {
-    trace( 3, @ARGV );
+    trace( 2, @ARGV );
     # this is the *real* post_update hook for gitolite
 
     tsh_try("git ls-tree --name-only master");
@@ -44,6 +44,7 @@ sub post_update {
                 my $sfp = "$ENV{GL_BINDIR}/post-compile/$s";
 
                 _warn("skipped post-compile script '$s'"), next if not -x $sfp;
+                trace( 2, "post-compile $s" );
                 _system( $sfp, @ARGV );    # they better all return with 0 exit codes!
             }
         }
@@ -56,7 +57,6 @@ sub post_update {
     my $text = '';
 
     sub post_update_hook {
-        trace(1);
         if ( not $text ) {
             local $/ = undef;
             $text = <DATA>;

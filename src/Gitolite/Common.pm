@@ -107,8 +107,9 @@ sub _chdir {
 sub _system {
     # run system(), catch errors.  Be verbose only if $ENV{D} exists.  If not,
     # exit with <rc of system()> if it applies, else just "exit 1".
+    trace( 2, @_ );
     if ( system(@_) != 0 ) {
-        say2 "system @_ failed" if $ENV{D};
+        trace( 1, "system() failed", @_, "-> $?" );
         if ( $? == -1 ) {
             die "failed to execute: $!\n" if $ENV{D};
         } elsif ( $? & 127 ) {
@@ -150,7 +151,7 @@ sub dos2unix {
 }
 
 sub ln_sf {
-    trace( 4, @_ );
+    trace( 3, @_ );
     my ( $srcdir, $glob, $dstdir ) = @_;
     for my $hook ( glob("$srcdir/$glob") ) {
         $hook =~ s/$srcdir\///;
@@ -185,8 +186,6 @@ sub cleanup_conf_line {
     my @phy_repos = ();
 
     sub list_phy_repos {
-        trace(3);
-
         # use cached value only if it exists *and* no arg was received (i.e.,
         # receiving *any* arg invalidates cache)
         return \@phy_repos if ( @phy_repos and not @_ );
@@ -196,6 +195,7 @@ sub cleanup_conf_line {
             $repo =~ s(\./(.*)\.git$)($1);
             push @phy_repos, $repo;
         }
+        trace( 2, scalar(@phy_repos) . " physical repos found" );
         return sort_u( \@phy_repos );
     }
 }
@@ -214,7 +214,7 @@ sub cleanup_conf_line {
         $text = `( $cmd ) 2>&1; echo -n RC=\$?`;
         if ( $text =~ s/RC=(\d+)$// ) {
             $rc = $1;
-            trace( 4, $text );
+            trace( 3, $text );
             return ( not $rc );
         }
         die "couldnt find RC= in result; this should not happen:\n$text\n\n...\n";
@@ -225,7 +225,7 @@ sub cleanup_conf_line {
         local $/ = undef; $text = <$fh>;
         close $fh; warn "pclose failed: $!" if $!;
         $rc = ( $? >> 8 );
-        trace( 4, $text );
+        trace( 3, $text );
         return $text;
     }
 }

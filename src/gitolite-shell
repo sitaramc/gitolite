@@ -64,7 +64,7 @@ sub main {
     # apply if it's a read operation).  See the matching code in access() for
     # more information.
     my $ret = access( $repo, $user, $aa, 'any' );
-    trace( 1, "access($repo, $user, $aa, 'any') -> $ret" );
+    trace( 1, "access($repo, $user, $aa, 'any')", "-> $ret" );
     _die $ret if $ret =~ /DENIED/;
 
     $repo = "'$rc{GL_REPO_BASE}/$repo.git'";
@@ -81,6 +81,7 @@ sub parse_soc {
         # TODO git archive
         my ( $verb, $repo ) = ( $1, $2 );
         _die "invalid repo name: '$repo'" if $repo !~ $REPONAME_PATT;
+        trace( 2, "git command", $soc );
         return ( $verb, $repo );
     }
 
@@ -91,6 +92,7 @@ sub parse_soc {
 
     my @words = split ' ', $soc;
     if ( $rc{COMMANDS}{ $words[0] } ) {
+        trace( 2, "gitolite command", $soc );
         _system( "gitolite", @words );
         exit 0;
     }

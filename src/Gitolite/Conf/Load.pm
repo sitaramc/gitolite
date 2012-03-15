@@ -49,9 +49,8 @@ my $last_repo = '';
 
     sub load {
         my $repo = shift or _die "load() needs a reponame";
-        trace( 4, "$repo" );
+        trace( 3, "$repo" );
         if ( $repo ne $loaded_repo ) {
-            trace( 3, "loading $repo..." );
             load_common();
             load_1($repo);
             $loaded_repo = $repo;
@@ -61,15 +60,14 @@ my $last_repo = '';
 
 sub access {
     my ( $repo, $user, $aa, $ref ) = @_;
-    trace( 3, "repo=$repo, user=$user, aa=$aa, ref=$ref" );
     load($repo);
 
     my @rules = rules( $repo, $user );
-    trace( 3, scalar(@rules) . " rules found" );
+    trace( 2, scalar(@rules) . " rules found" );
     for my $r (@rules) {
         my $perm = $r->[1];
         my $refex = $r->[2]; $refex =~ s(/USER/)(/$user/);
-        trace( 4, "perm=$perm, refex=$refex" );
+        trace( 3, "perm=$perm, refex=$refex" );
 
         # skip 'deny' rules if the ref is not (yet) known
         next if $perm eq '-' and $ref eq 'any';
@@ -77,7 +75,7 @@ sub access {
         # rule matches if ref matches or ref is any (see gitolite-shell)
         next unless $ref =~ /^$refex/ or $ref eq 'any';
 
-        trace( 3, "DENIED by $refex" ) if $perm eq '-';
+        trace( 2, "DENIED by $refex" ) if $perm eq '-';
         return "$aa $ref $repo $user DENIED by $refex" if $perm eq '-';
 
         # $perm can be RW\+?(C|D|CD|DC)?M?.  $aa can be W, +, C or D, or
@@ -87,7 +85,7 @@ sub access {
         # as far as *this* ref is concerned we're ok
         return $refex if ( $perm =~ /$aaq/ );
     }
-    trace( 3, "DENIED by fallthru" );
+    trace( 2, "DENIED by fallthru" );
     return "$aa $ref $repo $user DENIED by fallthru";
 }
 
@@ -105,7 +103,6 @@ sub load_common {
         return;
     }
 
-    trace(4);
     my $cc = "conf/gitolite.conf-compiled.pm";
 
     _die "parse $cc failed: " . ( $! or $@ ) unless do $cc;
@@ -120,7 +117,7 @@ sub load_common {
 sub load_1 {
     my $repo = shift;
     return if $repo =~ /^\@/;
-    trace( 4, $repo );
+    trace( 3, $repo );
 
     _chdir("$rc{GL_REPO_BASE}/$repo.git");
 
@@ -151,7 +148,7 @@ sub load_1 {
 
     sub rules {
         my ( $repo, $user ) = @_;
-        trace( 4, "repo=$repo, user=$user" );
+        trace( 3, "repo=$repo, user=$user" );
 
         return @cached if ( $lastrepo eq $repo and $lastuser eq $user and @cached );
 
@@ -159,7 +156,7 @@ sub load_1 {
 
         my @repos = memberships($repo);
         my @users = memberships($user);
-        trace( 4, "memberships: " . scalar(@repos) . " repos and " . scalar(@users) . " users found" );
+        trace( 3, "memberships: " . scalar(@repos) . " repos and " . scalar(@users) . " users found" );
 
         for my $r (@repos) {
             for my $u (@users) {

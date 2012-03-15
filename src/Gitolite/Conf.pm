@@ -23,7 +23,6 @@ use warnings;
 # ----------------------------------------------------------------------
 
 sub compile {
-    trace(3);
     _die "'gitolite compile' does not take any arguments" if @_;
 
     _chdir( $rc{GL_ADMIN_BASE} );
@@ -39,7 +38,7 @@ sub compile {
 
 sub parse {
     my $lines = shift;
-    trace( 4, scalar(@$lines) . " lines incoming" );
+    trace( 2, scalar(@$lines) . " lines incoming" );
 
     for my $line (@$lines) {
         # user or repo groups
@@ -68,6 +67,7 @@ sub parse {
             # XXX both $key and $value must satisfy a liberal but secure pattern
             add_config( 1, $key, $value );
         } elsif ( $line =~ /^subconf (\S+)$/ ) {
+            trace( 2, $line );
             set_subconf($1);
         } else {
             _warn "?? $line";

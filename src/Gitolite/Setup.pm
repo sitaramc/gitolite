@@ -73,13 +73,11 @@ sub args {
 }
 
 sub setup_glrc {
-    trace(1);
     _print( glrc('default-filename'), glrc('default-text') ) if not glrc('filename');
 }
 
 sub setup_gladmin {
     my ( $admin, $pubkey, $argv ) = @_;
-    trace( 1, $admin || '<no admin name given>' );
     _die "no existing conf file found, '-a' required"
       if not $admin and not -f "$rc{GL_ADMIN_BASE}/conf/gitolite.conf";
 

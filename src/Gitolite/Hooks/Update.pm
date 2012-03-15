@@ -19,13 +19,13 @@ use warnings;
 # ----------------------------------------------------------------------
 
 sub update {
-    trace( 3, @ARGV );
+    trace( 2, @ARGV );
     # this is the *real* update hook for gitolite
 
     my ( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa ) = args(@ARGV);
 
     my $ret = access( $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref );
-    trace( 1, "access($ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref) -> $ret" );
+    trace( 1, "access($ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref)", "-> $ret" );
     _die $ret if $ret =~ /DENIED/;
 
     check_vrefs( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa );
@@ -37,7 +37,6 @@ sub check_vrefs {
     my ( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa ) = @_;
     my $name_seen = 0;
     for my $vref ( vrefs( $ENV{GL_REPO}, $ENV{GL_USER} ) ) {
-        trace( 1, "vref=$vref" );
         if ( $vref =~ m(^VREF/NAME/) ) {
             # this one is special; we process it right here, and only once
             next if $name_seen++;
@@ -76,7 +75,6 @@ sub check_vref {
     my $text = '';
 
     sub update_hook {
-        trace(1);
         if ( not $text ) {
             local $/ = undef;
             $text = <DATA>;

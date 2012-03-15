@@ -22,7 +22,7 @@ my %included = ();
 my %prefixed_groupname = ();
 
 sub explode {
-    trace( 4, @_ );
+    trace( 3, @_ );
     my ( $file, $subconf, $out ) = @_;
 
     # seed the 'seen' list if it's empty
@@ -61,7 +61,7 @@ sub incsub {
     # XXX g2 diff: include glob is *implicitly* from $rc{GL_ADMIN_BASE}/conf, not *explicitly*
     # for my $file (glob($include_glob =~ m(^/) ? $include_glob : "$rc{GL_ADMIN_BASE}/conf/$include_glob")) {
 
-    trace( 3, $is_subconf, $include_glob );
+    trace( 2, $is_subconf, $include_glob );
 
     for my $file ( glob($include_glob) ) {
         _warn("included file not found: '$file'"), next unless -f $file;
@@ -93,7 +93,7 @@ sub prefix_groupnames {
     if ($lhs) {
         $line =~ s/^@\S+ = /"\@$subconf.$lhs = "/e;
         $prefixed_groupname{$subconf}{"\@$lhs"} = "\@$subconf.$lhs";
-        trace( 3, "prefixed_groupname.$subconf.\@$lhs = \@$subconf.$lhs" );
+        trace( 2, "prefixed_groupname.$subconf.\@$lhs = \@$subconf.$lhs" );
     }
 
     return $line;
@@ -106,13 +106,13 @@ sub already_included {
     return 0 unless $included{$file_id}++;
 
     _warn("$file already included");
-    trace( 3, "$file already included" );
+    trace( 2, "$file already included" );
     return 1;
 }
 
 sub device_inode {
     my $file = shift;
-    trace( 3, $file, ( stat $file )[ 0, 1 ] );
+    trace( 2, $file, ( stat $file )[ 0, 1 ] );
     return join( "/", ( stat $file )[ 0, 1 ] );
 }
 

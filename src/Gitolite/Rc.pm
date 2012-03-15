@@ -76,19 +76,15 @@ my $glrc_default_text = '';
 sub glrc {
     my $cmd = shift;
     if ( $cmd eq 'default-filename' ) {
-        trace( 1, "..should happen only on first run" );
         return "$ENV{HOME}/.gitolite.rc";
     } elsif ( $cmd eq 'default-text' ) {
-        trace( 1, "..should happen only on first run" );
         return $glrc_default_text if $glrc_default_text;
         _die "rc file default text not set; this should not happen!";
     } elsif ( $cmd eq 'filename' ) {
         # where is the rc file?
-        trace(4);
 
         # search $HOME first
         return "$ENV{HOME}/.gitolite.rc" if -f "$ENV{HOME}/.gitolite.rc";
-        trace( 2, "$ENV{HOME}/.gitolite.rc not found" );
 
         # XXX for fedora, we can add the following line, but I would really prefer
         # if ~/.gitolite.rc on each $HOME was just a symlink to /etc/gitolite.rc
@@ -112,7 +108,6 @@ my $all  = 0;
 my $nonl = 0;
 
 sub query_rc {
-    trace( 1, "rc file not found; default should be " . glrc('default-filename') ) if not glrc('filename');
 
     my @vars = args();
 

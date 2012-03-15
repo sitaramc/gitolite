@@ -69,6 +69,7 @@ if ( $command eq 'setup' ) {
     post_compile(@args);
 
 } elsif ( -x "$rc{GL_BINDIR}/commands/$command" ) {
+    trace( 2, "attempting gitolite command $command" );
     run_command( $command, @args );
 
 } elsif ( $command eq 'list-phy-repos' ) {
@@ -76,6 +77,7 @@ if ( $command eq 'setup' ) {
     print "$_\n" for ( @{ list_phy_repos(@args) } );
 
 } elsif ( $command =~ /^list-/ ) {
+    trace( 2, "attempting lister command $command" );
     require Gitolite::Conf::Load;
     Gitolite::Conf::Load->import;
     my $fn = lister_dispatch($command);
