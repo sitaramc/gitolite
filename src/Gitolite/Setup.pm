@@ -4,20 +4,12 @@ package Gitolite::Setup;
 # ----------------------------------------------------------------------
 
 =for args
-Usage:  gitolite setup [<at least one option>]
+Usage:  gitolite setup [<option>]
 
-    -a, --admin <name>          admin user name
-    -pk --pubkey <file>         pubkey file name
-    -f, --fixup-hooks           fixup hooks
+    -pk, --pubkey <file>        pubkey file name
 
-Setup (first run only), then compile conf and fixup hooks.
-
-First run:
-    -a      required
-    -pk     required for ssh mode install
-
-Later runs:
-    no options required; but '-f' can be specified for clarity
+Setup gitolite, compile conf, and fixup hooks.  The pubkey is required on the
+first run.
 =cut
 
 # ----------------------------------------------------------------------
@@ -40,12 +32,8 @@ use warnings;
 
 sub setup {
     my ( $admin, $pubkey, $argv ) = args();
-    # first time
-    if ( first_run() ) {
-        trace( 1, "..should happen only on first run" );
-        setup_glrc();
-        setup_gladmin( $admin, $pubkey, $argv );
-    }
+    setup_glrc();
+    setup_gladmin( $admin, $pubkey, $argv );
 
     _system("$ENV{GL_BINDIR}/gitolite compile");
     _system("$ENV{GL_BINDIR}/gitolite post-compile ssh-authkeys") if $pubkey;
@@ -55,36 +43,30 @@ sub setup {
 
 # ----------------------------------------------------------------------
 
-sub first_run {
-    # if the rc file could not be found, it's *definitely* a first run!
-    return not glrc('filename');
-}
-
 sub args {
     my $admin  = '';
     my $pubkey = '';
-    my $fixup  = 0;
     my $help   = 0;
     my $argv   = join( " ", @ARGV );
 
     GetOptions(
         'admin|a=s'     => \$admin,
         'pubkey|pk=s'   => \$pubkey,
-        'fixup-hooks|f' => \$fixup,
         'help|h'        => \$help,
     ) or usage();
 
-    usage() if $help;
-    usage("first run requires '-a'")     if first_run() and not($admin);
-    _warn("not setting up ssh...")       if first_run() and $admin and not $pubkey;
-    _warn("first run, ignoring '-f'...") if first_run() and $fixup;
-    _warn("not first run, ignoring '-a' / '-pk'...") if not first_run() and ( $admin or $pubkey );
+    usage() if $help or ($pubkey and $admin);
 
     if ($pubkey) {
         $pubkey =~ /\.pub$/ or _die "$pubkey name does not end in .pub";
+        $pubkey =~ /\@/    and _die "$pubkey name contains '\@'";
         tsh_try("cat $pubkey")              or _die "$pubkey not a readable file";
         tsh_lines() == 1                    or _die "$pubkey must have exactly one line";
         tsh_try("ssh-keygen -l -f $pubkey") or _die "$pubkey does not seem to be a valid ssh pubkey file";
+
+        $admin = $pubkey;
+        $admin =~ s(.*/)();
+        $admin =~ s/\.pub$//;
     }
 
     return ( $admin || '', $pubkey || '', $argv );
@@ -92,23 +74,21 @@ sub args {
 
 sub setup_glrc {
     trace(1);
-    _print( glrc('default-filename'), glrc('default-text') );
+    _print( glrc('default-filename'), glrc('default-text') ) if not glrc('filename');
 }
 
 sub setup_gladmin {
     my ( $admin, $pubkey, $argv ) = @_;
-    trace( 1, $admin );
+    trace( 1, $admin || '<no admin name given>');
+    _die "no existing conf file found, '-a' required"
+        if not $admin and not -f "$rc{GL_ADMIN_BASE}/conf/gitolite.conf";
 
     # reminder: 'admin files' are in ~/.gitolite, 'admin repo' is
     # $rc{GL_REPO_BASE}/gitolite-admin.git
 
     # grab the pubkey content before we chdir() away
-
     my $pubkey_content = '';
-    if ($pubkey) {
-        $pubkey_content = slurp($pubkey);
-        $pubkey =~ s(.*/)();    # basename
-    }
+    $pubkey_content = slurp($pubkey) if $pubkey;
 
     # set up the admin files in admin-base
 
@@ -123,11 +103,11 @@ sub setup_gladmin {
     }
     $conf =~ s/%ADMIN/$admin/g;
 
-    _print( "conf/gitolite.conf", $conf );
+    _print( "conf/gitolite.conf", $conf ) if not -f "conf/gitolite.conf";
 
     if ($pubkey) {
         _mkdir("keydir");
-        _print( "keydir/$pubkey", $pubkey_content );
+        _print( "keydir/$admin.pub", $pubkey_content );
     }
 
     # set up the admin repo in repo-base
@@ -136,7 +116,7 @@ sub setup_gladmin {
     _mkdir( $rc{GL_REPO_BASE} );
     _chdir( $rc{GL_REPO_BASE} );
 
-    new_repo("gitolite-admin");
+    new_repo("gitolite-admin") if not -d "gitolite-admin.git";
 
     # commit the admin files to the admin repo
 
