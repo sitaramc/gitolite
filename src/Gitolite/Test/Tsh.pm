@@ -17,7 +17,7 @@ package Tsh;
 
 use Exporter 'import';
 @EXPORT = qw(
-  try run AUTOLOAD
+  try run cmp AUTOLOAD
   rc error_count text lines error_list put
   cd tsh_tempdir
 
@@ -468,6 +468,19 @@ sub fail {
     dbg( 1, "exiting at cmd $cmd\n" );
 
     exit( $rc || 74 );
+}
+
+sub cmp {
+    # compare input string with text()
+    my $text = text();
+    my $in = shift;
+
+    if ($text eq $in) {
+        ok();
+    } else {
+        fail('cmp failed', '');
+        dbg(4, "\n\ntext = <<<$text>>>, in = <<<$in>>>\n\n");
+    }
 }
 
 sub expect {

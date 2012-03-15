@@ -11,6 +11,7 @@ package Gitolite::Test;
   dump
   confreset
   confadd
+  cmp
 );
 #>>>
 use Exporter 'import';
@@ -24,6 +25,7 @@ BEGIN {
     *{'try'}  = \&Tsh::try;
     *{'put'}  = \&Tsh::put;
     *{'text'} = \&Tsh::text;
+    *{'cmp'} = \&Tsh::cmp;
 }
 
 use strict;
