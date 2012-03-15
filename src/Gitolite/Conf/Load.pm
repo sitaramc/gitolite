@@ -68,7 +68,7 @@ sub access {
     trace( 3, scalar(@rules) . " rules found" );
     for my $r (@rules) {
         my $perm  = $r->[1];
-        my $refex = $r->[2];
+        my $refex = $r->[2];    $refex =~ s(/USER/)(/$user/);
         trace( 4, "perm=$perm, refex=$refex" );
 
         # skip 'deny' rules if the ref is not (yet) known
