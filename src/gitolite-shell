@@ -50,6 +50,8 @@ sub in_ssh {
 # call this once you are sure arg-1 is the username and SSH_ORIGINAL_COMMAND
 # has been setup (even if it's not actually coming via ssh).
 sub main {
+    umask $rc{UMASK};
+
     # set up the user
     my $user = $ENV{GL_USER} = shift @ARGV;
 
