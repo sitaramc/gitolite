@@ -60,11 +60,11 @@ sub parse {
             }
         } elsif ( $line =~ /^config (.+) = ?(.*)/ ) {
             my ( $key, $value ) = ( $1, $2 );
-            my @validkeys = split( ' ', ( $rc{GL_GITCONFIG_KEYS} || '' ) );
+            my @validkeys = split( ' ', ( $rc{GIT_CONFIG_KEYS} || '' ) );
             push @validkeys, "gitolite-options\\..*";
             my @matched = grep { $key =~ /^$_$/ } @validkeys;
-            # XXX move this also to add_config: _die "git config $key not allowed\ncheck GL_GITCONFIG_KEYS in the rc file for how to allow it" if (@matched < 1);
-            # XXX both $key and $value must satisfy a liberal but secure pattern
+            _die "git config $key not allowed\ncheck GIT_CONFIG_KEYS in the rc file" if (@matched < 1);
+            _die "bad value '$value'" if $value =~ $UNSAFE_PATT;
             add_config( 1, $key, $value );
         } elsif ( $line =~ /^subconf (\S+)$/ ) {
             trace( 2, $line );

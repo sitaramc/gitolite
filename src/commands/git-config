@@ -1,0 +1,80 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use Getopt::Long;
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+=for usage
+Usage:  gitolite git-config [-n] [-q] [-r] <repo> <key|pattern>
+
+Print git config keys and values for the given repo.  The key is either a full
+key, or, if '-r' is supplied, a regex that is applied to all available keys.
+
+    -q          exit code only (shell truth; 0 is success)
+    -n          suppress trailing newline when used as key (not pattern)
+    -r          treat key as regex pattern (unanchored)
+
+Examples:
+    gitolite git-config repo gitweb.owner
+    gitolite git-config -q repo gitweb.owner
+    gitolite git-config -r repo gitweb
+
+When the key is treated as a pattern, prints one key+value per line, tab
+separated:
+
+    reponame<tab>key<tab>value<newline>
+
+Otherwise the output is just the value.
+
+Finally, see the advanced use section of 'gitolite access -h' -- you can do
+something similar here also:
+
+    gitolite list-phy-repos | gitolite git-config -r % gitweb\\. | cut -f1 > ~/projects.list
+=cut
+
+usage() if not @ARGV;
+
+my ( $help, $nonl, $quiet, $regex ) = (0) x 4;
+GetOptions(
+    'n' => \$nonl,
+    'q' => \$quiet,
+    'r' => \$regex,
+    'h' => \$help,
+) or usage();
+
+my ( $repo, $key ) = @ARGV;
+usage() unless $key;
+
+my $ret = '';
+
+if ( $repo ne '%' and $key ne '%' ) {
+    # single repo, single key; no STDIN
+    $key = "^\Q$key\E\$" unless $regex;
+
+    $ret = git_config( $repo, $key );
+
+    # unlike access, there's nothing to print if we don't find any matching keys
+    exit 1 unless %$ret;
+
+    map { print "$repo\t$_\t" . $ret->{$_} . "\n" } sort keys %$ret unless $quiet;
+    exit 0;
+}
+
+$repo = '' if $repo eq '%';
+$key  = '' if $key  eq '%';
+
+_die "'-q' doesn't go with using a pipe" if $quiet;
+@ARGV = ();
+while (<>) {
+    my @in = split;
+    my $r  = $repo || shift @in;
+    my $k  = $key || shift @in;
+    $k = "^\Q$k\E\$" unless $regex;
+    $ret = git_config( $r, $k );
+    next unless %$ret;
+    map { print "$r\t$_\t" . $ret->{$_} . "\n" } sort keys %$ret;
+}

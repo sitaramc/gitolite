@@ -5,12 +5,14 @@ package Gitolite::Conf::Store;
 
 @EXPORT = qw(
   add_to_group
-  expand_list
   set_repolist
   parse_refs
   parse_users
   add_rule
+  add_config
   set_subconf
+
+  expand_list
   new_repos
   new_repo
   hook_repos
@@ -40,7 +42,7 @@ my %split_conf;
 
 my @repolist;    # current repo list; reset on each 'repo ...' line
 my $subconf = 'master';
-my $ruleseq = 0;
+my $nextseq = 0;
 my %ignored;
 # XXX you still have to "warn" if this has any entries
 
@@ -58,24 +60,6 @@ sub add_to_group {
 
     # create the group hash even if empty
     $groups{$lhs} = {} unless $groups{$lhs};
-}
-
-sub expand_list {
-    my @list     = @_;
-    my @new_list = ();
-
-    for my $item (@list) {
-        if ( $item =~ /^@/ and $item ne '@all' )    # nested group
-        {
-            _die "undefined group $item" unless $groups{$item};
-            # add those names to the list
-            push @new_list, sort keys %{ $groups{$item} };
-        } else {
-            push @new_list, $item;
-        }
-    }
-
-    return @new_list;
 }
 
 sub set_repolist {
@@ -119,7 +103,7 @@ sub add_rule {
     _die "bad ref '$ref'"   unless $ref  =~ $REPOPATT_PATT;
     _die "bad user '$user'" unless $user =~ $USERNAME_PATT;
 
-    $ruleseq++;
+    $nextseq++;
     for my $repo (@repolist) {
         if ( check_subconf_repo_disallowed( $subconf, $repo ) ) {
             my $repo = $repo;
@@ -128,7 +112,7 @@ sub add_rule {
             next;
         }
 
-        push @{ $repos{$repo}{$user} }, [ $ruleseq, $perm, $ref ];
+        push @{ $repos{$repo}{$user} }, [ $nextseq, $perm, $ref ];
 
         # XXX g2 diff: we're not doing a lint check for usernames versus pubkeys;
         # maybe we can add that later
@@ -141,9 +125,39 @@ sub add_rule {
     }
 }
 
+sub add_config {
+    my($n, $key, $value) = @_;
+
+    $nextseq++;
+    for my $repo (@repolist) {
+        # XXX should we check_subconf_repo_disallowed here?
+        push @{ $configs{$repo} }, [ $nextseq, $key, $value ];
+    }
+}
+
 sub set_subconf {
     $subconf = shift;
     _die "bad subconf '$subconf'" unless $subconf =~ /^[-\w.]+$/;
+}
+
+# ----------------------------------------------------------------------
+
+sub expand_list {
+    my @list     = @_;
+    my @new_list = ();
+
+    for my $item (@list) {
+        if ( $item =~ /^@/ and $item ne '@all' )    # nested group
+        {
+            _die "undefined group $item" unless $groups{$item};
+            # add those names to the list
+            push @new_list, sort keys %{ $groups{$item} };
+        } else {
+            push @new_list, $item;
+        }
+    }
+
+    return @new_list;
 }
 
 sub new_repos {

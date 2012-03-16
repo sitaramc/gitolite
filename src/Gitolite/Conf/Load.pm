@@ -6,6 +6,7 @@ package Gitolite::Conf::Load;
 @EXPORT = qw(
   load
   access
+  git_config
   vrefs
   lister_dispatch
 );
@@ -87,6 +88,44 @@ sub access {
     }
     trace( 2, "DENIED by fallthru" );
     return "$aa $ref $repo $user DENIED by fallthru";
+}
+
+sub git_config {
+    my ( $repo, $key ) = @_;
+    $key ||= '.';
+
+    load($repo);
+
+    # read comments bottom up
+    my %ret =
+      # and take the second and third elements to make up your new hash
+      map { $_->[1] => $_->[2] }
+      # keep only the ones where the second element matches your key
+      grep { $_->[1] =~ qr($key) }
+      # sort this list of listrefs by the first element in each list ref'd to
+      sort { $a->[0] <=> $b->[0] }
+      # dereference it (into a list of listrefs)
+      map  { @$_ }
+      # take the value of that entry
+      map { $configs{$_} }
+      # if it has an entry in %configs
+      grep { $configs{$_} }
+      # for each "repo" that represents us
+      memberships($repo);
+
+    # %configs looks like this (for each 'foo' that is in memberships())
+    # 'foo' => [ [ 6, 'foo.bar', 'repo' ], [ 7, 'foodbar', 'repoD' ], [ 8, 'foo.czar', 'jule' ] ],
+    # the first map gets you the value
+    #          [ [ 6, 'foo.bar', 'repo' ], [ 7, 'foodbar', 'repoD' ], [ 8, 'foo.czar', 'jule' ] ],
+    # the deref gets you
+    #            [ 6, 'foo.bar', 'repo' ], [ 7, 'foodbar', 'repoD' ], [ 8, 'foo.czar', 'jule' ]
+    # the sort rearranges it (in this case it's already sorted but anyway...)
+    # the grep gets you this, assuming the key is foo.bar (and "." is regex ".')
+    #            [ 6, 'foo.bar', 'repo' ], [ 7, 'foodbar', 'repoD' ]
+    # and the final map does this:
+    #                 'foo.bar'=>'repo'  ,      'foodbar'=>'repoD'
+
+    return \%ret;
 }
 
 # ----------------------------------------------------------------------
