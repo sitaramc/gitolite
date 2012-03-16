@@ -30,25 +30,7 @@ sub post_update {
         tsh_try("git checkout -f --quiet master");
     }
     _system("$ENV{GL_BINDIR}/gitolite compile");
-
-    # now run optional post-compile features
-    if ( exists $rc{POST_COMPILE} ) {
-        if ( ref( $rc{POST_COMPILE} ) ne 'ARRAY' ) {
-            _warn "bad syntax for specifying post compile scripts; see docs";
-        } else {
-            for my $s ( @{ $rc{POST_COMPILE} } ) {
-
-                # perl-ism; apart from keeping the full path separate from the
-                # simple name, this also protects %rc from change by implicit
-                # aliasing, which would happen if you touched $s itself
-                my $sfp = "$ENV{GL_BINDIR}/post-compile/$s";
-
-                _warn("skipped post-compile script '$s'"), next if not -x $sfp;
-                trace( 2, "post-compile $s" );
-                _system( $sfp, @ARGV );    # they better all return with 0 exit codes!
-            }
-        }
-    }
+    _system("$ENV{GL_BINDIR}/gitolite run-all POST_COMPILE");
 
     exit 0;
 }

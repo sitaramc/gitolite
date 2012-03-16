@@ -36,7 +36,7 @@ sub setup {
     setup_gladmin( $admin, $pubkey, $argv );
 
     _system("$ENV{GL_BINDIR}/gitolite compile");
-    _system("$ENV{GL_BINDIR}/gitolite post-compile ssh-authkeys") if $pubkey;
+    _system("$ENV{GL_BINDIR}/gitolite run-all POST_COMPILE");
 
     hook_repos();    # all of them, just to be sure
 }

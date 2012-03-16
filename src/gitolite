@@ -6,14 +6,13 @@
 =for args
 Usage:  gitolite [sub-command] [options]
 
-The following subcommands are available; they should all respond to '-h' if
-you want further details on each:
+The following built-in subcommands are available; they should all respond to
+'-h' if you want further details on each:
 
     setup                       1st run: initial setup; all runs: hook fixups
     compile                     compile gitolite.conf
 
     query-rc                    get values of rc variables
-    post-compile                run a post-compile command
 
     list-groups                 list all group names in conf
     list-users                  list all users/user groups in conf
@@ -26,6 +25,10 @@ Warnings:
   - list-users is disk bound and could take a while on sites with 1000s of repos
   - list-memberships does not check if the name is known; unknown names come
     back with 2 answers: the name itself and '@all'
+
+In addition, running 'gitolite help' should give you a list of custom commands
+available.  They may or may not respond to '-h', depending on how they were
+written.
 =cut
 
 # ----------------------------------------------------------------------
@@ -65,8 +68,8 @@ if ( $command eq 'setup' ) {
     Gitolite::Conf->import;
     compile(@args);
 
-} elsif ( $command eq 'post-compile' ) {
-    post_compile(@args);
+} elsif ( $command eq 'run-all' ) {
+    run_all(@args);
 
 } elsif ( -x "$rc{GL_BINDIR}/commands/$command" ) {
     trace( 2, "attempting gitolite command $command" );
@@ -93,36 +96,32 @@ sub args {
 
 # ----------------------------------------------------------------------
 
-=for post_compile
-Usage:  gitolite post-compile [-l] [post-compile-scriptname] [script args...]
-
-    -l          list currently available post-compile scripts
-
-Run a post-compile script (which normally runs from the post-update hook in
-the gitolite-admin repo).
-=cut
-
-sub post_compile {
-    usage() if ( not @_ or $_[0] eq '-h' );
-
-    run_subdir( 'post-compile', @_ );
-}
-
 sub run_command {
-    run_subdir( 'commands', @_ );
-}
-
-sub run_subdir {
-    my $subdir = shift;
-    if ( @_ and $_[0] eq '-l' ) {
-        _chdir("$ENV{GL_BINDIR}/$subdir");
-        map { say2($_) } grep { -x } glob("*");
-        exit 0;
-    }
-
     my $pgm      = shift;
-    my $fullpath = "$ENV{GL_BINDIR}/$subdir/$pgm";
+    my $fullpath = "$ENV{GL_BINDIR}/commands/$pgm";
     _die "$pgm not found or not executable" if not -x $fullpath;
     _system( $fullpath, @_ );
     exit 0;
+}
+
+sub run_all {
+    my $rc_section = shift;
+
+    if ( exists $rc{$rc_section} ) {
+        if ( ref( $rc{$rc_section} ) ne 'ARRAY' ) {
+            _warn "$rc_section section in rc file is not a perl list";
+        } else {
+            for my $s ( @{ $rc{$rc_section} } ) {
+
+                # perl-ism; apart from keeping the full path separate from the
+                # simple name, this also protects %rc from change by implicit
+                # aliasing, which would happen if you touched $s itself
+                my $sfp = "$ENV{GL_BINDIR}/commands/$s";
+
+                _warn("skipped command '$s'"), next if not -x $sfp;
+                trace( 2, "command: $s" );
+                _system( $sfp, @ARGV );    # they better all return with 0 exit codes!
+            }
+        }
+    }
 }

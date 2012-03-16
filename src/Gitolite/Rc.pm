@@ -196,13 +196,14 @@ __DATA__
     # these will run in sequence after post-update
     POST_COMPILE                =>
         [
-            'ssh-authkeys',
+            'post-compile/ssh-authkeys',
         ],
 
     # comment out or uncomment as needed
     # these are available to remote users
     COMMANDS                    =>
         {
+            'help'              =>  1,
             'info'              =>  1,
         },
 );

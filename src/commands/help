@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+
+=for usage
+Usage:  gitolite help
+
+Prints a list of custom commands available at this gitolite installation.
+=cut
+
+my $user = $ENV{GL_USER} || '';
+print "hello" . ( $user ? " $user" : "") . ", this is gitolite3 " . version() . " on git " . substr( `git --version`, 12 ) . "\n";
+
+_chdir("$ENV{GL_BINDIR}/commands");
+
+print "list of " . ($user ? "remote" : "gitolite" ) . " commands available:\n\n";
+
+for my $c (`find . -type f|sort`) {
+    chomp($c);
+    $c =~ s(^./)();
+    next unless -x $c;
+
+    # if it's from a remote client, show only what he is allowed
+    next if $user and not $rc{COMMANDS}{$c};
+
+    print "\t$c\n";
+}
+print "\n";
+
+exit 0;

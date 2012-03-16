@@ -14,7 +14,8 @@ $|++;
 # arguments anyway, it hardly matters.
 
 my $ab = `gitolite query-rc -n GL_ADMIN_BASE`;
-_warn("'keydir' not found in '$ab'"), exit if not -d "$ab/keydir";
+trace( 2, "'keydir' not found in '$ab'; exiting" ), exit if not -d "$ab/keydir";
+my $akdir   = "$ENV{HOME}/.ssh";
 my $akfile  = "$ENV{HOME}/.ssh/authorized_keys";
 my $glshell = `gitolite query-rc -n GL_BINDIR` . "/gitolite-shell";
 # XXX gl-time not yet coded (GL_PERFLOGT)
@@ -58,11 +59,14 @@ if (@gl_keys) {
 # ----------------------------------------------------------------------
 
 sub sanity {
-    _warn "$akfile missing; creating a new one"                         if not -f $akfile;
     _die "$glshell not found; this should NOT happen..."                if not -f $glshell;
     _die "$glshell found but not readable; this should NOT happen..."   if not -r $glshell;
     _die "$glshell found but not executable; this should NOT happen..." if not -x $glshell;
 
+    _warn "$akdir missing; creating a new one"                          if not -d $akdir;
+    _warn "$akfile missing; creating a new one"                         if not -f $akfile;
+
+    _mkdir($akdir, 0700) if not -d $akfile;
     if ( not -f $akfile ) {
         _print( $akfile, "" );
         chmod 0700, $akfile;

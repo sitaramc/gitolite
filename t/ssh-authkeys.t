@@ -11,15 +11,15 @@ $ENV{GL_BINDIR} = "$ENV{PWD}/src";
 my $ak = "$ENV{HOME}/.ssh/authorized_keys";
 my $kd = `gitolite query-rc -n GL_ADMIN_BASE` . "/keydir";
 
-try "plan 50";
+try "plan 49";
 
-my $pgm = "gitolite post-compile ssh-authkeys";
+my $pgm = "gitolite post-compile/ssh-authkeys";
 
 try "
     # prep
     rm -rf $ak;                 ok
 
-    $pgm;                       ok;    /'keydir' not found/
+    $pgm;                       ok
     mkdir $kd;                  ok
     cd $kd;                     ok
     $pgm;                       ok;     /authorized_keys missing/
