@@ -1,0 +1,31 @@
+## #write-types different types of write operations
+
+Git supplies enough information to the update hook to be able to distinguish
+several types of writes.
+
+The most common are:
+
+  * `RW` -- create a ref or fast-forward push a ref.  No rewinds or deletes.
+  * `RW+` -- create, fast-forward push, rewind push, or delete a ref.
+
+Sometimes you want to allow people to push, but not *create* a ref.  Or
+rewind, but not *delete* a ref.  The `C` and `D` qualifiers help here.
+
+  * when a rule specifies `RWC` or `RW+C`, then *rules that do NOT have the C
+    qualifier will no longer permit **creating** a ref*
+
+    <font color="gray">Please do not confuse this with the standalone `C`
+    permission that allows someone to [create][] a **repo**</font>
+
+  * when a rule specifies `RWD` or `RW+D`, then *rules that do NOT have the C
+    qualifier will no longer permit **deleting** a ref*
+
+Note: These two can be combined, so you can have `RWCD` and `RW+CD` as well.
+
+One very rare need is to reject merge commits (a commit series that is not a
+straight line of commits).  The `M` qualifier helps here:
+
+  * When a rule has `M` appended to the permissions, *rules that do NOT have
+    it will reject a commit sequence that contains a merge commit* (i.e., they
+    only accept a straight line series of commits).
+

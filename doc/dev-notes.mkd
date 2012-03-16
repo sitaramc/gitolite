@@ -1,0 +1,116 @@
+# notes for developers
+
+Gitolite has a huge bunch of existing features that gradually need to moved
+over.  Plus you may want to write your own programs to interact with it.
+
+Hints for developers wishing to help migrate features over from g2 are
+[here][dev-hints].
+
+Here are some random notes on developing hooks, commands, triggers, and sugar
+scripts.
+
+## environment variables
+
+In general, the following environment variables should always be available:
+
+    GL_BINDIR
+    GL_REPO_BASE
+    GL_ADMIN_BASE
+
+Commands invoked by a remote client will also have `GL_USER` set.  Hooks will
+have `GL_REPO` also set.
+
+## APIs
+
+### the shell API
+
+The following commands exist to help you write shell scripts that interact
+easily with gitolite.  Each of them responds to `h` so please run that for
+more info.
+
+  * `gitolite access` to check access rights given repo, user, type of access
+    (R, W, ...) and refname (optional).  Example use: src/commands/desc
+
+  * `gitolite creator` to get/check the creator of a repo.  Example use:
+    src/commands/desc
+
+  * `gitolite git-config` to check gitolite options or git config variables
+    directly from gitolite's "compiled output, (i.e., without looking at the
+    actual `repo.git/config` file or using the `git config` command).  Example
+    use: none yet
+
+  * `gitolite query-rc` to check the value of an RC variable.  Example use:
+    src/commands/desc.
+
+In addition, you can also look at the comments in src/Gitolite/Easy.pm (the
+perl API module) for ideas.
+
+### the perl API
+
+...is implemented by Gitolite::Easy; see src/Gitolite/Easy.pm.  This is a work
+in progress; for example it does not yet have the equivalent of `gitolite
+git-config`.  I'll add it when I or someone else needs it.
+
+## your own hooks
+
+### anything but the update hook
+
+If you want to add your own hook, it's easy as long as it's not the 'update'
+hook.  Just add it to `$HOME/.gitolite/hooks/common` and run `gitolite setup`.
+
+The rest is between you and 'man githooks' :-)
+
+### update hook
+
+If you want to add additional `update` hook functionality, do this:
+
+  * write and test your update hook separately from gitolite
+
+  * now add the code to src/VREF.  Let's say it is called "foo".
+
+  * to call your new update hook to all accesses for all repos, add this to
+    the end of your conf file:
+
+        repo @all
+            -       VREF/foo        =   @all
+
+As you probably guessed, you can now make your additional update hooks more
+selective, applying them only to some repos / users / combinations.
+
+Note: a normal update hook expects 3 arguments (ref, old SHA, new SHA).  A
+VREF will get those three, followed by at least 4 more.  Your VREF should just
+ignore the extra args.
+
+## your own commands
+
+You can add your own commands.  You can run them on the server (example,
+`gitolite access`).  Then you can enable certain commands to be allowed to run
+by a remote user by adding them to the "COMMANDS" hash of the [rc][] file.
+
+Commands are standalone programs, in any language you like.  They simply
+receive the arguments you append.  In addition, the env var `GL_USER` is
+available if it is being run remotely.  src/commands/desc is the best example
+at present.
+
+## your own trigger programs
+
+Trigger programs are just commands whose names have been added to the
+appropriate list in the [rc][] file.  Triggers get specific arguments
+depending on when they are called; see [here][triggers] for details.
+
+You can write programs that are both manually runnable as well as callable by
+trigger events, especially if they don't *need* any arguments.
+
+Look in the distributed [rc][] file for example programs; at this point there
+aren't many.
+
+## your own "sugar"
+
+Syntactic sugar helpers are NOT complete, standalone, programs.  They must
+include a perl sub called `sugar_script` that takes in a listref, and returns
+a listref.  The listrefs point to a list that contains the entire conf file
+(with all [include][] processing already done).  You create a new list with
+contents modified as you like and return a ref to it.
+
+There are a couple of examples in src/syntactic-sugar.
+

@@ -1,0 +1,64 @@
+# not a gitolite problem
+
+These are issues I do not want to be emailed about.  That does not mean you
+cannot get help -- in all cases, you're welcome to ask on [irc or the mailing
+list][contact].  Irc especially has people with much more patience than I
+have, God bless them...
+
+## specific clients, or specific server OSs
+
+These are things I can not support.  That does not mean they will not work
+with gitolite -- on the contrary, lots of people are using them.
+
+But I personally don't use them, and I won't use them, and in my admittedly
+limited experience they have given me good reason to stay well away.
+
+Please ask for help on the [mailing list or IRC][contact].  Please do not
+email me directly.
+
+  * putty/plink
+  * jgit/Eclipse
+  * Mac OS client or server
+  * windows as a server
+  * ...probably some more I forgot; will update this list as I remember...
+
+## ssh
+
+The *superstar* of the "not a gitolite problem" category is actually ssh.
+
+Surprised?  It is so common that it has [its own document][auth] to tell
+you why it is *not* a gitolite problem, while [another one][ssh] tries to
+help you anyway!
+
+Everything I know is in that latter link.  Please email me about ssh ONLY if
+you find something wrong or missing in those documents.
+
+## git
+
+Example 1: when a first `git push` to a new repo fails, it is not because of
+gitolite, it is because you need to say `git push origin master` or something.
+This is a git issue.
+
+There are several such examples.  Gitolite is designed to look like just
+another bare repo server to a client (except requiring public keys -- no
+passwords allowed).  It is *completely transparent* when there is no
+authorisation failure (i.e., when the access is allowed, the remote client has
+no way of knowing gitolite was even installed!)
+
+Even "on disk", apart from reserving the `update` hook for itself, gitolite
+does nothing to your bare repos unless you tell it to (for example, adding
+'gitweb.owner' and such to the config file).
+
+BEFORE you think gitolite is a problem, try the same thing with a normal bare
+repo.  In most cases you can play with it just by doing something like this:
+
+    mkdir /tmp/throwaway
+    cd    /tmp/throwaway
+    git clone --mirror <some repo you have a URL for> bare.git
+    git clone bare.git worktree
+    cd worktree
+    <...try stuff>
+
+----
+
+In addition, the original nagp has more funny stuff...

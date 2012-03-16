@@ -1,0 +1,90 @@
+# gitolite triggers
+
+## intro and sample rc excerpt
+
+Gitolite fires off external commands at six different times.  The [rc][] file
+specifies what commands to run at each trigger point, but for illustration,
+here's an excerpt:
+
+    %RC = (
+
+        <...several lines later...>
+
+        # comment out or uncomment as needed
+        # these will run in sequence after post-update
+        POST_COMPILE                =>
+            [
+                'post-compile/ssh-authkeys',
+                'post-compile/update-git-configs',
+                'post-compile/update-gitweb-access-list',
+                'post-compile/update-git-daemon-access-list',
+            ],
+
+        # comment out or uncomment as needed
+        # these will run in sequence after a new wild repo is created
+        POST_CREATE                 =>
+            [
+                'post-compile/update-git-configs',
+                'post-compile/update-gitweb-access-list',
+                'post-compile/update-git-daemon-access-list',
+            ],
+
+(As you can see, post-create runs 3 programs that also run from post-compile.
+This is perfectly fine, by the way)
+
+## manually firing triggers
+
+...from the server command line is easy.  For example:
+
+    gitolite trigger POST_COMPILE
+
+However if the triggered code depends on arguments (see next section) this
+won't work.  (The `POST_COMPILE` trigger programs all just happen to not
+require any arguments, so it works).
+
+## triggers and arguments
+
+All triggers receive the name of the trigger as a string (example,
+`"POST_COMPILE"`) as the first argument, so they can know who invoked them.
+(This allows you to write the same program and fire it from more than one
+trigger, as above).  In addition, they may receive other arguments pertaining
+to the event that happened.
+
+  * `ACCESS_CHECK`: this fires once after each access check.  The first is
+    just before invoking git-receive-pack or git-upload-pack.  The second,
+    which only applies to "write" operations, is from git's own 'update' hook.
+
+    Arguments: repo name, user name, [attempted access][perm], the ref being
+    updated, and the result of the access check.
+
+    The 'ref' is `any` for the first check, because at that point we don't
+    know what the actual ref is.  For the second check it could be, say,
+    `refs/heads/master` or some such.
+
+    The result is a text field that the `access()` function returned.
+    Programmatically, the only thing you should rely on is that if it contains
+    the upper case word "DENIED" then access was denied, otherwise it was
+    allowed.
+
+  * `PRE_GIT`: before running the git command.
+
+    Arguments: repo name, user name, [attempted access][perm], the string
+    `any`, and the git command ('git-receive-pack', 'git-upload-pack', or
+    'git-upload-archive') being invoked.
+
+  * `POST_GIT`: after the git command returns.
+
+    Arguments: same as for `PRE_GIT`, followed by the output of the perl
+    function "times" (i.e., 4 CPU times: user, system, cumulative user,
+    cumulative system)
+
+  * `POST_COMPILE`: after an admin push has successfully "compiled" the config
+    file.  By default, the next thing is to update the ssh authkeys file, then
+    all the 'git-config's, gitweb access, and daemon access.
+
+    Programs run by this trigger receive no extra arguments.
+
+  * `PRE_CREATE` and `POST_CREATE`: before and after a new "[wild][]" repo is
+    created by user action.
+
+    Arguments: repo name, user name.

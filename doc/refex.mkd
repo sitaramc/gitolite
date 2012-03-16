@@ -1,0 +1,30 @@
+## #refex matching a ref and a refex
+
+A refex is a word I made up to mean "a regex that matches a ref".  If you know
+[regular expressions][regex] you're halfway there.
+
+The only extra info you need is:
+
+  * for convenience, a refex not starting with `refs/` is assumed to start
+    with `refs/heads/`.  This means normal branches can be referred to like
+    this:
+
+        RW  master      =   alice
+        # becomes 'refs/heads/master' internally
+
+    while tags will need to be fully qualified
+
+        RW  refs/tags/v[0-9]    =   bob
+
+  * a refex is implicitly anchored at the start, but not at the end.  In
+    regular expression lingo, a `^` is assumed at the start (but no `$` at the
+    end is assumed).  So a refex of `master` will allow all these:
+
+        refs/heads/master
+        refs/heads/master1
+        refs/heads/master2
+        refs/heads/master/full
+
+    If you want to restrict to just the one specific ref, use
+
+        RW  master$     =   alice

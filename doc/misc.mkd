@@ -1,0 +1,80 @@
+# odds and ends
+
+Most of these items don't fit anywhere or fit in more than one place or are of
+the nature of background information.
+
+## #include include files
+
+Gitolite allows you to break up the configuration into multiple files and
+include them in the main file for convenience.
+
+    include     "foo.conf"
+
+will include the contents of the file "foo.conf" from the "conf" directory.
+
+Details:
+
+  * You can also use a glob (`include "*.conf"`), or put your include files
+    into subdirectories of "conf" (`include "foo/bar.conf"`), or both
+    (`include "repos/*.conf"`).
+
+  * Included files are always searched relative to the gitolite-admin repo's
+    "conf/" directory.
+
+  * If you ended up recursing, files that have been already processed once are
+    skipped, with a warning.
+
+<font color="gray">Advanced users: `subconf`, a command that is very closely
+related to `include`, is documented [here][subconf].</font>
+
+## #deny-rules applying deny rules at the pre-git access check
+
+The access [rules][] rules section describes the problem.  To recap, you want
+this:
+
+    @staff          =   alice bob wally ashok
+
+    repo foo
+        RW+         =   alice       # line 1
+        RW+ dev     =   bob         # line 2
+        -           =   wally       # line 3
+        RW  temp/   =   @staff      # line 4
+
+to deny Wally even *read* access.
+
+The way to do this is to add this line to the repo:
+
+    option deny-rules = 1
+
+If you want this for all your repos, just add this somewhere at the top of
+your conf file
+
+    repo @all
+        option deny-rules = 1
+
+## #rule-accum rule accumulation
+
+Gitolite was meant to collect rules from multiple places and apply them all.
+For example, this:
+
+    repo foo
+        RW  =   u1
+
+    @gr1 = foo bar
+
+    repo @gr1
+        RW  =   u2
+        R   =   u3
+
+    repo @all
+        R   =   gitweb
+
+is effectively the same as this, for repo foo:
+
+    repo foo
+        RW  =   u1
+        RW  =   u2
+        R   =   u3
+        R   =   gitweb
+
+This extends to patterns also, but I'll leave an example for later.

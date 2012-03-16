@@ -1,0 +1,45 @@
+# patches welcome :-)
+
+These are places where I could use some help, with hints about how you would
+go about it.  In addition, any of the items in [dev-status][] are up for
+grabs, if you wish to jump in.  But let me know before you start, and how you
+plan to go about it.
+
+## #pw2 rsync
+
+The crux of the old rsync ADC was an access check to a repo whose name starts
+with EXTCMD.  g2 would treat repos whose names start with EXTCMD as "don't
+create this repo".  g3 makes no such distinctions, but you can get the same
+effect by using a repo group name that does not exist:
+
+    repo @rsync-set1
+        ...rules...
+
+and check that in the script.  (It might mean adding one more function to
+Gitolite::Easy but that's... easy!)
+
+## #pw1 converting non-openssh pubkeys automatically
+
+Gitolite's [triggers][] has can be used to fix this.  Here's pseudo-code:
+
+    chdir $(gitolite query-rc -n GL_ADMIN_BASE)/keydir
+    for each *.pub file in this directory and its subdirectories
+        detect its format and convert it
+        # just overwrite it; the original is saved in git anyway
+
+Let's say the program is called "convert-non-openssh-keys".  You send it to me
+and I add it to src/commands/post-compile/.  Then I update the default rc file
+to look at least like this instead
+
+    POST_COMPILE                =>
+        [
+            # 'post-compile/convert-non-openssh-keys',
+            'post-compile/ssh-authkeys',
+                ...
+                ...
+        ],
+
+making sure to place it *before* ssh-authkeys, and anyone who needs it can
+just uncomment it.
+
+Done!

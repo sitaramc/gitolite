@@ -1,0 +1,26 @@
+# gitolite "commands"
+
+Gitolite comes with several commands that users can run.  Remote user run the
+commands by saying:
+
+    ssh git@host command-name [args...]
+
+while on the server you can run
+
+    gitolite command [args...]
+
+Very few commands are designed to be run both ways, but it can be done, by
+checking for the presence of env var `GL_USER`.
+
+You can get a **list of available commands** by using the `help` command.
+Naturally, a remote user will see only a subset of what the server user will
+see.
+
+You add commands to the "allowed from remote" list by adding its name (or
+uncommenting it if it's already added but commented out) to the COMMANDS hash
+in the [rc][] file.
+
+If you write your own commands, put them in src/commands.
+
+**Note that this is also the place that all triggered programs go**.  In fact,
+all standalone programs related to gitolite go here.

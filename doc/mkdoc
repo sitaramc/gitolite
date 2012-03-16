@@ -1,0 +1,88 @@
+#!/usr/bin/perl
+
+my $MKD = "$ENV{HOME}/Markdown.pl";
+
+# run this like so:
+
+#       $0 *.mkd >mt.mkd 2>mf
+
+use 5.10.0;
+use strict;
+use warnings;
+
+chomp(@ARGV = `cat list`) if not @ARGV;
+@ARGV = grep { $_ ne 'master-toc.mkd' and /./ } @ARGV;
+my @save = @ARGV;
+my $css = join("", <DATA>);
+
+my $mt = "# gitolite master table of contents/index\n";
+my $mf = '';
+my $fh;
+
+while (<>) {
+    $ARGV =~ /^(?:.*\/)?([^\/]+)\.mkd$/;
+    my $b = $1;
+
+    if (/^(#+) (?:#(\S+) )?(.*)/) {
+        if ( length($1) == 1 ) {
+            $mt .= "\n";
+            $mt .= "  * [$3][$b]\n";
+            $mf .= "[$b]: $b.html\n";
+        } else {
+            $mt .= " " x ( 4 * ( length($1) - 1 ) );
+            $mt .= "  * ";
+            $mt .= (
+                $2
+                ? "[$3][$2]"
+                : "$3"
+            );
+            $mt .= "\n";
+            $mf .= "[$2]: $b.html#$2\n" if $2;
+        }
+    }
+}
+
+open($fh, ">", "master-toc.mkd")
+  and print $fh $mt
+  and close $fh;
+
+# after this, do this for every mkd (including the master-toc.mkd)
+
+#       cat $css_block > $base.html
+#       cat $base.mkd $mf | $MKD >> $base.html
+
+for my $mkd ("master-toc.mkd", @save) {
+    $mkd =~ /^(?:.*\/)?([^\/]+)\.mkd$/;
+    my $b = $1;
+
+    open($fh, ">", "../html/$b.html")
+      and print $fh $css
+      and close $fh;
+
+    my $mkt = `cat $mkd`;
+    $mkt =~ s/^(#+) #(\S+) /$1 <a name="$2"><\/a> /mg;
+    open($fh, "|-", "$MKD >> ../html/$b.html")
+      and print $fh $mkt, $mf
+      and close $fh;
+}
+
+__DATA__
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>

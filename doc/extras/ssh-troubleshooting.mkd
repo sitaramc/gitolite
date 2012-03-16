@@ -1,0 +1,427 @@
+## #sshts ssh troubleshooting
+
+**This document must be read in full the first time.  If you start from some
+nice looking section in the middle it may not help you unless you're already
+an expert at ssh**.
+
+This document should help you troubleshoot ssh-related problems in installing
+and accessing gitolite.
+
+### IMPORTANT -- READ THIS FIRST
+
+#### caveats
+
+  * Before reading this document, it is **mandatory** to read and **completely
+    understand** [this][ssh], which is a very detailed look at how gitolite
+    uses ssh's features on the server side.  Don't assume you know all that;
+    if you knew it, you wouldn't be needing *this* document either!
+
+  * This document, and others linked from this, together comprise all the help
+    I can give you in terms of the ssh aspect of using gitolite.  If you're
+    installing gitolite, you're a "system admin", like it or not.  Ssh is
+    therefore a necessary skill.  Please take the time to learn at least
+    enough to get passwordless access working.
+
+  * Please note that authentication is not really gitolite's job at all.  I'd
+    rather spend time on actual gitolite features, code, and documentation
+    than authentication (i.e., ssh, in the common case).
+
+    Surprised?  [This][auth] might help explain better.
+
+#### naming conventions used
+
+  * Your workstation is the **client**.  Your userid on the client does not
+    matter, and it has no relation to your gitolite username.
+
+  * the server is called **server** and the "hosting user" is **git**.  If
+    this is an RPM/DEB install, the hosting user is probably called
+    "gitolite", however we will use "git" in this document.
+
+#### taking stock -- relevant files and directories
+
+  * the client has a `~/.ssh` containing a few keypairs.  It may also have a
+    `config` file.
+
+  * the client also has a clone of the "gitolite-admin" repo, which contains a
+    bunch of `*.pub` files in `keydir`.  We assume this clone is in `$HOME`;
+    if it is not, adjust instructions accordingly when needed.
+
+  * The git user on the server has a `~/.ssh/authorized_keys` file that the
+    ssh daemon uses to authenticate incoming users.  We often call this file
+    **authkeys** to save typing, and it always means the one on the server
+    (we're not interested in this file on the client side).
+
+  * the server also has a `~/.gitolite/keydir` which contains a bunch of
+    `*.pub` files.
+
+#### normal gitolite key handling
+
+Here's how normal gitolite key handling works:
+
+  * (on client) pub key changes like adding new ones, deleting old ones, etc.,
+    are done in the `keydir` directory in the gitolite-admin repo clone.  Then
+    the admin `git add`s and `git commit`s those changes, then `git push`es
+    them to the server.
+
+  * (on server) a successful push from the client makes git invoke the
+    post-update hook in the gitolite-admin repo.  This hook is installed by
+    gitolite, and it does a bunch of things which are quite transparent to
+    the admin, but we'll describe briefly here:
+
+      * the pubkey files from this push are checked-out into
+        `~/.gitolite/keydir` (and similarly the config files into
+        `~/.gitolite/conf`)
+
+      * the "compile" script then runs, which uses these files to populate
+        `~/.ssh/authorized_keys` on the server
+
+        The authkeys file may have other, (non-gitolite) keys also.  Those
+        lines are preserved.  Gitolite only touches lines that are found
+        between gitolite's "marker" lines (`# gitolite start` and `# gitolite
+        end`).
+
+### (Other resources)
+
+People who think installing gitolite is too hard should take a look at this
+[tutorial][tut] to **see how simple it *actually* is**.
+
+### common ssh problems
+
+Since I'm pretty sure at least some of you didn't bother to read the
+"IMPORTANT: PLEASE READ FIRST" section above, let me take a minute to point
+you there again.  Especially the first bullet.
+
+Done?  OK, read on...
+
+The following problem(s) indicate that pubkey access is not working at all, so
+you should start with [appendix 1][stsapp1_].  If that doesn't fix the problem, continue
+with the other appendices in sequence.
+
+  * running any git clone/fetch/ls-remote or just `ssh git@server info` asks
+    you for a password.
+
+The following problem(s) indicate that your pubkey is bypassing gitolite and
+going straight to a shell.  You should start with [appendix 2][stsapp2_] and continue with
+the rest in sequence.  [Appendix 5][stsapp5_] has some background info.
+
+  * running `ssh git@server info` gets you the output of the GNU 'info'
+    command instead of gitolite's version and access info.
+
+  * running `git clone git@server:repositories/reponame` (note presence of
+    `repositories/` in URL) works.
+
+    [A proper gitolite key will only let you `git clone git@server:reponame`
+    (note absence of `repositories/`)]
+
+  * you are able to clone repositories but are unable to push changes back
+    (the error complains about the `GL_RC` environment variable not being set,
+    and the `hooks/update` failing in some way).
+
+    [If you run `git remote -v` you will find that your clone URL included the
+    `repositories/` described above!]
+
+  * conversely, using the correct syntax, `git clone git@server:reponame`
+    (note absence of `repositories/` in the URL), gets you `fatal: 'reponame'
+    does not appear to be a git repository`, and yet you are sure 'reponame'
+    exists, you haven't mis-spelled it, etc.
+
+### step by step
+
+Since I'm pretty sure at least some of you didn't bother to read the
+"IMPORTANT: PLEASE READ FIRST" section above, let me take a minute to point
+you there again.  Especially the first bullet.
+
+Done?  OK, now the general outline for ssh troubleshooting is this:
+
+  * make sure the server's overall setup even *allows* pubkey based login.
+    I.e., check that git fetch/clone/ls-remote commands or a plain `ssh
+    git@server info` do NOT ask for a password.  If you do get asked for a
+    password, see [appendix 1][stsapp1_].
+
+  * match client-side pubkeys (`~/.ssh/*.pub`) with the server's authkeys
+    file.  To do this, run `sshkeys-lint`, which tells you in detail what key
+    has what access.  See [appendix 2][stsapp2_].
+
+  * at this point, we know that we have the right key, and that if sshd
+    receives that key, things will work.  But we're not done yet.  We still
+    need to make sure that this specific key is being offered/sent by the
+    client, instead of the default key.  See [appendix 3][stsapp3_] and [appendix 4][sshhostaliases].
+
+### random tips, tricks, and notes
+
+#### giving shell access to gitolite users
+
+We've managed (thanks to an idea from Jesse Keating) to make it possible for a
+single key to allow both gitolite access *and* shell access.
+
+This is done by copying the pubkey (to which you want to give shell access) to
+the server and running
+
+    gl-tool add-shell-user ~/foo.pub
+
+**IMPORTANT UPGRADE NOTE**: previous implementations of this feature were
+crap.  There was no easy/elegant way to ensure that someone who had repo admin
+access would not manage to get himself shell access.
+
+Giving someone shell access requires that you should have shell access in the
+first place, so the simplest way is to enable it from the server side only.
+
+#### losing your admin key
+
+If you lost the admin key, and need to re-establish ownership of the
+gitolite-admin repository with a fresh key, get a shell on the server and use
+the program called `gl-admin-push` that comes with gitolite.  See instructions
+[here][adminpush].
+
+#### simulating ssh-copy-id
+
+don't have `ssh-copy-id`?  This is broadly what that command does, if you want
+to replicate it manually.  The input is your pubkey, typically
+`~/.ssh/id_rsa.pub` from your client/workstation.
+
+  * it copies it to the server as some file
+
+  * it appends that file to `~/.ssh/authorized_keys` on the server
+    (creating it if it doesn't already exist)
+
+  * it then makes sure that all these files/directories have go-w perms
+    set (assuming user is "git"):
+
+        /home/git/.ssh/authorized_keys
+        /home/git/.ssh
+        /home/git
+
+[Actually, `sshd` requires that even directories *above* `~` (`/`, `/home`,
+typically) also must be `go-w`, but that needs root.  And typically
+they're already set that way anyway.  (Or if they're not, you've got
+bigger problems than gitolite install not working!)]
+
+#### problems with using non-openssh public keys
+
+Gitolite accepts public keys only in openssh format.  Trying to use an "ssh2"
+key (used by proprietary SSH software) results in:
+
+    WARNING: a pubkey file can only have one line (key); ignoring YourName.pub
+
+To convert ssh2-compatible keys to openssh run:
+
+    ssh-keygen -i -f /tmp/ssh2/YourName.pub > /tmp/openssh/YourName.pub
+
+then use the resulting pubkey as you normally would in gitolite.
+
+#### windows issues
+
+On windows, I have only used msysgit, and the openssh that comes with it.
+Over time, I have grown to distrust putty/plink due to the number of people
+who seem to have trouble when those beasts are involved (I myself have never
+used them for any kind of git access).  If you have unusual ssh problems that
+just don't seem to have any explanation, try removing all traces of
+putty/plink, including environment variables, etc., and then try again.
+
+Thankfully, someone contributed [contrib/putty.mkd][contrib_putty].
+
+### #stsapp1_ appendix 1: ssh daemon asks for a password
+
+>   **NOTE**: This section should be useful to anyone trying to get
+>   password-less access working.  It is not necessarily specific to gitolite,
+>   so keep that in mind if the wording feels a little more general than you
+>   were expecting.
+
+You have generated a keypair on your workstation (`ssh-keygen`) and copied the
+public part of it (`~/.ssh/id_rsa.pub`, by default) to the server.
+
+On the server you have appended this file to `~/.ssh/authorized_keys`.  Or you
+ran something, like the `gl-setup` step during a gitolite install, which
+should have done that for you.
+
+You now expect to log in without having to type in a password, but when you
+try, you are being asked for a password.
+
+This is a quick checklist:
+
+  * make sure you're being asked for a password and not a pass*phrase*.  Do
+    not confuse or mistake a prompt saying `Enter passphrase for key
+    '/home/sitaram/.ssh/id_rsa':` for a password prompt from the remote
+    server!
+
+    When you create an ssh keypair using `ssh-keygen`, you have the option of
+    protecting it with a passphrase.  When you subsequently use that keypair
+    to access a remote host, your *local* ssh client needs to unlock the
+    corresponding private key, and ssh will probably ask for the passphrase
+    you set when you created the keypair.
+
+    You have two choices to avoid this prompt every time you try to use the
+    private key.  The first is to create keypairs *without* a passphrase (just
+    hit enter when prompted for one).  **Be sure to add a passphrase later,
+    once everything is working, using `ssh-keygen -p`**.
+
+    The second is to use `ssh-agent` (or `keychain`, which in turn uses
+    `ssh-agent`) or something like that to manage your keys.  Other than
+    discussing one more potential trouble-spot with ssh-agent (see below),
+    further discussion of ssh-agent/keychain is out of scope of this document.
+
+  * ssh is very sensitive to permissions.  An extremely conservative setup is
+    given below, but be sure to do this on **both the client and the server**:
+
+        cd $HOME
+        chmod go-rwx .
+        chmod -R go-rwx .ssh
+
+  * actually, every component of the path to `~/.ssh/authorized_keys` all the
+    way upto the root directory must be at least `chmod go-w`.  So be sure to
+    check `/` and `/home` also.
+
+  * while you're doing this, make sure the owner and group info for each of
+    these components are correct.  `ls -ald ~ ~/.ssh ~/.ssh/authorized_keys`
+    will tell you what they are.
+
+  * you may also want to check `/etc/ssh/sshd_config` to see if the "git" user
+    is allowed to login at all.  For example, if that file contains an
+    `AllowUsers` config entry, then only users mentioned in that line are
+    allowed to log in!
+
+  * some OSs/distributions require that the "git" user should have a password
+    and/or not be a locked account.  You may want to check that as well.
+
+  * if all that fails, log onto the server as root, `cd /var/log`, and look
+    for a file called `auth.log` or `secure` or some such name.  Look inside
+    this file for messages matching the approximate time of your last attempt
+    to login, to see if they tell you what is the problem.
+
+### #stsapp2_ appendix 2: which key is which -- running sshkeys-lint
+
+Follow these steps on the client:
+
+  * get a copy of `~/.ssh/authorized_keys` from the server and put it in
+    `/tmp/foo` or something
+
+  * cd to `~/.ssh`
+
+  * run `sshkeys-lint *.pub < /tmp/foo`
+
+This tells you, for each pubkey, what type of access (if any) it has to the
+server.
+
+Note that it is not trying to log in or anything -- it's just comparing bits
+of text (the contents of STDIN taken as an authkeys file, and the contents of
+each of the `*.pub` files one by one).
+
+>   Note: It's also a stand-alone program, so even if your gitolite version is
+>   old, you can safely bring over just this program from a more recent
+>   gitolite and use it, without having to upgrade gitolite itself.
+
+If the pubkey file you're interested in appears to have the correct access to
+the server, you're done with this step.
+
+Otherwise you have to rename some keypairs and try again to get the effect you
+need.  Be careful:
+
+  * do not just rename the ".pub" file; you will have to rename the
+    corresponding private key also (the one with the same basename but without
+    an extension)
+
+  * if you're running ssh-agent, you may have to delete (using `ssh-add -D`)
+    and re-add identities for it to pick up the renamed ones correctly
+
+#### typical cause(s)
+
+The admin often has passwordless shell access to `git@server` already, and
+then used that same key to get access to gitolite (i.e., copied that same
+pubkey as YourName.pub and ran `gl-setup` on it).
+
+As a result, the same key appears twice in the authkeys file now, and since
+the ssh server will always use the first match, the second occurrence (which
+invokes gitolite) is ignored.
+
+To fix this, you have to use a different keypair for gitolite access.  The
+best way to do this is to create a new keypair, copy the pubkey to the server
+as YourName.pub, then run `gl-setup YourName.pub` on the server.  Remember to
+adjust your agent identities using ssh-add -D and ssh-add if you're using
+ssh-agent, otherwise these new keys may not work.
+
+### #stsapp3_ appendix 3: ssh client may not be offering the right key
+
+  * make sure the right private key is being offered.  Run ssh in very
+    verbose mode and look for the word "Offering", like so:
+
+        ssh -vvv user@host pwd 2> >(grep -i offer)
+
+    If some keys *are* being offered, but not the key that was supposed to be
+    used, you may be using ssh-agent (next bullet).  You may also need to
+    create some host aliases in `~/.ssh/config` ([appendix 4][sshhostaliases]).
+
+  * (ssh-agent issues) If `ssh-add -l` responds with either "The agent has no
+    identities." or "Could not open a connection to your authentication
+    agent.", then you can skip this bullet.
+
+    However, if `ssh-add -l` lists *any* keys at all, then something weird
+    happens.  Due to a quirk in ssh-agent, ssh will now *only* use one of
+    those keys, *even if you explicitly ask* for some other key to be used.
+
+    In that case, add the key you want using `ssh-add ~/.ssh/YourName` and try
+    the access again.
+
+### F=sshhostaliases appendix 4: host aliases
+
+(or "making git use the right options for ssh")
+
+The ssh command has several options for non-default items to be specified.
+Two common examples are `-p` for the port number if it is not 22, and `-i` for
+the public key file if you do not want to use just `~/.ssh/id_rsa` or such.
+
+Git has two ssh-based URL syntaxes, but neither allows specifying a
+non-default public key file.  And a port number is only allowed in one of
+them.  (See `man git-clone` for details).  Finally, hosts often have to be
+referred with IP addresses (such is life), or the name is very long, or hard
+to remember.
+
+Using a "host" para in `~/.ssh/config` lets you nicely encapsulate all this
+within ssh and give it a short, easy-to-remember, name.  Example:
+
+    host gitolite
+        user git
+        hostname a.long.server.name.or.annoying.IP.address
+        port 22
+        identityfile ~/.ssh/id_rsa
+
+Now you can simply use the one word `gitolite` (which is the host alias we
+defined here) and ssh will infer all those details defined under it -- just
+say `ssh gitolite` and `git clone gitolite:reponame` and things will work.
+
+(By the way, the 'port' and 'identityfile' lines are needed only if you have
+non-default values, although I put them in anyway just to be complete).
+
+If you have *more than one* pubkey with access to the *same* server, you
+**must** use this method to make git pick up the right key.  There is no other
+way to do this, as far as I know.
+
+[tut]: http://sites.google.com/site/senawario/home/gitolite-tutorial
+
+### #stsapp5_ appendix 5: why bypassing gitolite causes a problem
+
+When you bypass gitolite, you end up running your normal shell instead of the
+special gitolite entry point script `gl-auth-command`.
+
+This means commands (like 'info') are interpreted by the shell instead of
+gitolite.
+
+It also means git operations look for repos in `$HOME`.
+
+However, gitolite places all your repos in a subdirectory pointed to by
+`$REPO_BASE` in the rc file (default: `repositories`), and internally prefixes
+this before calling the actual git command you invoked.  Thus, the pathname of
+the repo that you use on the client is almost never the correct pathname on
+the server.  (This is by design.  Don't argue...)
+
+This means that, you get 2 kinds of errors if you bypass gitolite
+
+  * when you use `git@server:reponame` with a key that bypasses gitolite
+    (i.e., gets you a shell), this prefixing does not happen, and so the repo
+    is not found.  Neither a clone/fetch nor a push will work.
+
+  * conversely, consider `git@server:repositories/reponame.git`.  The clone
+    operation will work -- you're using the full Unix path, (assuming default
+    `$REPO_BASE` setting), and so the shell finds the repo where you said it
+    would be.  However, when you push, gitolite's **update hook** kicks in,
+    and fails to run because some of the environment variables it is expecting
+    are not present.

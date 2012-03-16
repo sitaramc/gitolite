@@ -1,0 +1,32 @@
+# minimum requirements for gitolite
+
+**Client**:
+
+  * git 1.6.6 or greater
+  * an ssh client that can talk to an openssh server, and can generate keys in
+    openssh's default format (the pubkey is just one long line).  Gitolite
+    will [not currently][pw1] convert such keys.
+
+For people still using Windows, msysgit works fine.  If you're using
+[putty/plink][ens], God bless you.  (It'll work, but I still want him to bless
+you).
+
+TODO: when smart http support works, ssh will no longer be a *requirement*,
+merely a *strong* suggestion :-)
+
+**Server**
+
+  * git 1.6.6 or greater
+  * perl 5.8.8 or greater
+  * an ssh server compatible with openssh, especially it's authorized keys
+    file format and features.
+  * any Unix or Unix like OS.  That said, I've occasionally had some weird
+    reports from [Mac OSX servers][ens]; good luck.
+  * a single, dedicated, userid to host it (usually 'git' or 'gitolite').
+
+These version numbers are subject to fine-tuning as I get feedback and make
+fixes where possible and needed.
+
+Sshd must be configured so that each users authkeys file is in the user's
+`$HOME`, inside `.ssh/authorized_keys`, and not in some central
+/var/something.

@@ -1,0 +1,20 @@
+# the "rc" file ($HOME/.gitolite.rc)
+
+The rc file for g3 is quite different from that of g2.  It has been designed
+to be (a) the only thing unique to your site, for most installations and (b)
+easy to extend when new needs show up, without having to touch core gitolite.
+
+g2 had a nasty rc file where every variable had to be declared.  As a result,
+ADCs that needed their own settings could not use it.
+
+Now it's a perl hash, and you can add any keys you want.
+
+Please look at the rc file that gets installed when you setup gitolite.  As
+you can see there are 3 types of variables in it:
+
+  * simple variables (like UMASK)
+  * lists (like `POST_COMPILE`, `POST_CREATE`)
+  * hashes (like `ROLES`, `COMMANDS`)
+
+Their purposes are to be found in each of their individual documentation files
+around; start with [customising gitolite][cust].

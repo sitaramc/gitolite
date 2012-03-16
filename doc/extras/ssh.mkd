@@ -1,0 +1,11 @@
+# ssh
+
+There are two documents you need to read, in order:
+
+  * [gitolite and ssh][glssh] -- this explains how gitolite uses openssh's
+    features to provide any number of virtual users over just one actual
+    (unix) user, and so on
+
+  * [ssh troubleshooting][sshts] -- this is a rather long document but as far
+    as I know almost every known ssh related issue is in here.  If you find
+    something missing, send me an email with details.

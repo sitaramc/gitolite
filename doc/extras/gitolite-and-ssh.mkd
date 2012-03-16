@@ -1,0 +1,145 @@
+## #glssh how gitolite uses ssh
+
+Although other forms of authentications exist (see the document on
+[authentication versus authorisation][auth]), ssh is the one that most git
+users use.
+
+***Therefore, gitolite is (usually) heavily dependent on ssh***.
+
+Most people didn't realise this, and even if they did they don't know ssh
+well enough to help themselves.  If you don't understand how ssh public key
+authentication works, or how the `~/.ssh/authorized_keys` file can be used to
+restrict users, etc., you will have endless amounts of trouble getting
+gitolite to work, because you'll be attacking the wrong problem.
+
+So please please please understand this before tearing your hair out and
+blaming ***git/gitolite*** for whatever is going wrong with your setup :-)
+
+### ssh basics
+
+Let's start with some basics, focusing *only* on the pieces relevant to
+`gitolite`.  If this is not detailed enough, please use google and learn more
+from somewhere, or maybe buy the OReilly ssh book.
+
+  * You can login to an ssh server by typing a password, but ssh can also use
+    ***public-private keys*** (also called "key pairs") for authentication.
+    `gitolite` *requires* you to use this mechanism for your users -- they
+    cannot log in using passwords.  Hopefully by the time you finish reading
+    this document you will understand why :-)
+
+    The way you set this up is you generate a key pair on your workstation,
+    and give the server the public key.  (I need not add that the "private"
+    key must be, well, kept *private*!)
+
+  * **generating a key pair on your workstation** is done by running the
+    command `ssh-keygen -t rsa`.  This produces two files in `~/.ssh`.  One is
+    `id_rsa`; this is the **private** key -- ***never*** let it out of your
+    machine.  The other is `id_rsa.pub`, which is the corresponding public
+    key.  This public key is usually just one long line of text.
+
+    * on Windows machines with msysgit installed, you should do this from
+      within a "git bash" window.  The command will report the full path where
+      the files have been written; make a note of this, and use those files in
+      any of the description that follows
+
+  * **adding your public key to the server**'s `~/.ssh/authorized_keys`
+    file is how ssh uses pubkeys to authenticate users.  Let's say
+    sita@work.station is trying to log in as git@serv.er.  What you have to do
+    is take the `~/.ssh/id_rsa.pub` file for user sita on work.station and
+    append its contents (remember it's only one line) to
+    `~/.ssh/authorized_keys` for user git on serv.er.
+
+    The `authorized_keys` file can have multiple public keys (from many
+    different people) added to it so any of them can log in to git@serv.er.
+
+    In the normal case (not gitolite, but your normal everyday shell access),
+    there's a command that does this, `ssh-copy-id`, which also fixes up
+    permissions etc., as needed, since sshd is a little picky about allowing
+    pubkey access if permissions on the server are loose.  Or you can do it
+    manually, as long as you know what you're doing and you're careful not to
+    erase or overwrite the existing contents of `~/.ssh/authorized_keys` on
+    the server!
+
+    But in the gitolite case, it's different; we'll get to that in a minute.
+
+    * **troubleshooting pubkey authentication failures**: if you are unable to
+      get ssh access to the server after doing all this, you'll have to look
+      in `/var/log/secure` or `/var/log/auth.log` or some such file on the
+      server to see what specific error `sshd` is complaining about.
+
+  * **restricting users to specific commands** is very important for gitolite.
+    If you read `man sshd` and look for `authorized_keys file format`, you'll
+    see a lot of options you can add to the public key line, which restrict
+    the incoming user in various ways.  In particular, note the `command=`
+    option, which means "regardless of what the incoming user is asking to do,
+    forcibly run this command instead".
+
+    Also note that when there are many public keys (i.e., lines) in the
+    `authorized_keys` file, each line can have a *different* set of options
+    and `command=` values.
+
+    Without this `command=` option, the ssh daemon will simply give you a
+    shell, which is not what we want for our gitolite keys (although we may
+    well have other keys which we use to get a shell).
+
+    **This is the backbone of what makes gitolite work; please make sure you
+    understand this**.
+
+### how does gitolite use all this ssh magic?
+
+These are two different questions you ought to be having by now: 
+
+  * how does it distinguish between me and someone else, since we're all
+    logging in as the same remote user "git"
+  * how does it restrict what I can do within a repository
+
+#### restricting shell access/distinguishing one user from another
+
+The answer to the first question is the `command=` we talked about before.  If
+you look in the `authorized_keys` file, you'll see entries like this (I chopped
+off the ends of course; they're pretty long lines):
+
+    command="[path]/gl-auth-command sitaram",[more options] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA18S2t...
+    command="[path]/gl-auth-command usertwo",[more options] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEArXtCT...
+
+First, it finds out which of the public keys in this file match the incoming
+login.  That's crypto stuff, and I won't go into it.  Once the match has been
+found, it will run the command given on that line; e.g., if I logged in, it
+would run `[path]/gl-auth-command sitaram`.  So the first thing to note is
+that such users do not get "shell access", which is good!
+
+Before running the command, however, sshd sets up an environment variable
+called `SSH_ORIGINAL_COMMAND` which contains the actual git command that your
+workstation sent out.  This is the command that *would have run* if you did
+not have the `command=` part in the authorised keys file.
+
+When `gl-auth-command` gets control, it looks at the first argument
+("sitaram", "usertwo", etc) to determine who you are.  It then looks at the
+`SSH_ORIGINAL_COMMAND` variable to find out which repository you want to
+access, and whether you're reading or writing.
+
+Now that it has a user, repository, and access requested (read/write), gitolite looks
+at its config file, and either allows or rejects the request.
+
+But this cannot differentiate between different branches within a repo; that
+has to be done separately.
+
+#### restricting branch level actions
+
+[If you look inside the git source tree, there's a file among the "howto"s in
+there called `update-hook-example.txt`, which was the inspiration for this
+part of gitolite.]
+
+Git allows you to specify many "hooks", which get control as various events
+happen -- see `git help hooks` for details.  One of those hooks is the
+`update` hook, which, if it is present, is invoked just before a branch or a
+tag is about to be updated.  The hook is passed the name of the branch or tag,
+the old SHA1 value, and the new SHA1 value, as arguments.  Hooks that are
+called *before* an action happens are allowed to prevent that action from
+happening by returning an error code.
+
+When gitolite is told to create a new repository (by the admin), it installs
+a special update hook.  This hook takes all the information presented, looks
+at the config file, and decides to allow or reject the update.
+
+And that's basically it.

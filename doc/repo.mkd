@@ -1,0 +1,23 @@
+## #repo repo definitions
+
+Example:
+
+    repo gitolite tsh gitpod
+        RW+     =   sitaram
+        RW  dev =   alice bob
+        R       =   @all
+
+The "repo" line can have any number of repo names or repo group names in it.
+However, it can only be one line; this will not work
+
+    repo foo
+    repo bar    # WRONG; 'foo' is now forgotten
+        RW      =   alice
+
+If you have too many, use a group name:
+
+    @myrepos    =   foo
+    @myrepos    =   bar
+
+    repo @myrepos
+        RW      =   alice

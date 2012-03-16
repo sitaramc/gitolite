@@ -1,0 +1,31 @@
+# testing gitolite
+
+Here's how to *run* the tests:
+
+    git clone git://github.com/sitaramc/gitolite
+    cd gitolite
+    git checkout -f g3
+
+    # if you're not ok with your ~/.ssh getting clobbered
+    prove
+
+    # if you're ok with your ~/.ssh getting clobbered
+    # prove t/*.t t/ssh*
+
+Gitolite's test suite is mostly written using [tsh][] -- the "testing shell".
+Take a look at some of the scripts and you will see what it looks like.  It
+has a few quirks and nuances; if you really care, email me.
+
+[tsh]: http://github.com/sitaramc/tsh
+
+The tests also use a somewhat convoluted system of environment variables in
+order to run *entirely* as a local user, without going through ssh at all.
+This lets a complete test suite run in about a fifth or less of the time it
+would otherwise take.
+
+If you think that defeats the purpose of the testing, you haven't read
+[this][auth] yet.
+
+There are 2 specific tests that deal with ssh though, which are run only on
+request, as you can see above, because they clobber your `~/.ssh`.  You have
+been warned.

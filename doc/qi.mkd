@@ -1,0 +1,26 @@
+# getting started
+
+The quickest install, assuming your `$PATH` contains `$HOME/bin`, is:
+
+  * get the software
+
+        git clone git://github.com/sitaramc/gitolite
+
+        # (until this becomes "master")
+        cd gitolite
+        git checkout -f g3
+
+  * install it
+
+        ln -sf $PWD/src/gitolite $HOME/bin
+
+If you don't like that, there are [other install methods][install].
+
+Once the install is done, setup:
+
+    gitolite setup -pk your-name.pub
+
+And that's it.
+
+Next steps are usually [adding][add] users and repos and learning about
+[access control][conf].

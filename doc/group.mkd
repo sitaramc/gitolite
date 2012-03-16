@@ -1,0 +1,32 @@
+# parts of the conf file
+
+## #group group definitions
+
+You can group repos or users for convenience.  The syntax is the same for both
+and does not distinguish; until you *use* the group name it could really be
+either.
+
+Here's an example:
+
+    @developers     =   dilbert alice wally
+
+Group definitions accumulate; this is the same as the above:
+
+    @developers     =   dilbert
+    @developers     =   alice
+    @developers     =   wally
+
+You can use one group in another group definition; the values will be expanded
+right there (meaning later additions will not appear in the second group).
+
+    @developers     =   dilbert alice
+    @interns        =   ashok
+    @staff          =   @interns @developers
+    @developers     =   wally
+
+    # wally is NOT part of @staff
+
+### special group `@all`
+
+`@all` is a special group name that is often convenient to use if you really
+mean "all repos" or "all users".

@@ -1,0 +1,35 @@
+## #dev-status g3 development status
+
+Not yet done (will be tackled in this order unless someone asks):
+
+  * detailed documentation for new features
+  * querying the outside world for group info (see gl-get-membership-program
+    in g2)
+  * mirroring
+  * pulling in documentation for things that are the same in g2
+  * "unrestricted arguments" for some ADCs (like git-annexe)
+  * smart http
+  * special features (no-create-repos, shell-access, gl-all-read-all, etc)
+
+Help needed:
+
+  * I'd like distro packagers to play with it and help with migration advice
+    for distro-upgrades
+  * [rsync][pw2], htpasswd
+  * git-annexe support (but this has a pre-requisite in the previous list)
+
+Won't be done unless someone asks (saw no evidence that anyone used them in g2
+anyway!):
+
+  * mob branches
+  * password access
+  * specific ADCs -- there are too many for me to bother without applying
+    Pareto somewhere, so I choose to not do any and wait for people to ask :-)
+
+Done:
+
+  * core code
+  * test suite
+  * some documentation
+  * distro packaging instructions
+  * migration advice for common cases

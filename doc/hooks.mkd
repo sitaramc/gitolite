@@ -1,0 +1,9 @@
+# hooks and gitolite
+
+Gitolite uses the `update` hook for all repos.  In addition, it uses the
+`post-update` hook for the gitolite-admin repo.
+
+If you want to add your own hook, it's easy as long as it's not the 'update'
+hook.  Just add it to `$HOME/.gitolite/hooks/common` and run `gitolite setup`.
+
+The rest is between you and 'man githooks' :-)

@@ -1,0 +1,58 @@
+# different ways to install gitolite
+
+Gitolite has only one server side "command" now, much like git itself.  And
+it's been designed so that you don't even really have to *install* it, as you
+will see.
+
+## simplest
+
+1.  Put all of `src` in one place, doesn't matter where; let's call it
+    /foo/bar.
+
+2.  Use the full path to run any gitolite commands, for example:
+
+        /foo/bar/gitolite setup -pk sitaram.pub
+
+## almost as simple
+
+1.  (same as above)
+
+2.  Symlink /foo/bar/gitolite to some directory that is on your PATH.  For
+    example:
+
+        ln -sf /foo/bar/gitolite ~/bin
+
+    Now you can just say
+
+        gitolite setup -pk sitaram.pub
+
+## packagers
+
+1.  Put src/Gitolite in `/usr/share/perl5/vendor_perl` or some such place.
+
+2.  Put the rest of src anywhere your distro policy allows.  (Fedora keeps
+    git's 150 executables in /usr/libexec/git-core, so maybe
+    /usr/libexec/gitolite?)
+
+3.  Symlink 'gitolite' to /usr/bin or something, similar to step 2 above,
+
+    OR
+
+    Put it directly in /usr/bin, and hardcode `GL_BINDIR` into it to tell it
+    where the others are.  I'd prefer it if you did not do this but you can.
+
+----
+
+Bottom line:
+
+  * `GL_BINDIR` must point to a place that contains `commands`, `VREF`, and
+    `syntactic-sugar` (so they must all be sibling directories).
+  * The `Gitolite` directory can also be there, or it can be anywhere in
+    perl's `@INC` path.
+
+## upgrading
+
+Just put the new version on top of wherever you kept the old one.  That's it.
+
+If you feel it should require a little more effort, pretend I said "you have
+to then run `gitolite setup`".  Can't hurt...

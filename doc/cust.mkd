@@ -1,0 +1,23 @@
+# customising gitolite
+
+Here are the ways you can customise gitolite on the server.
+
+First, learn about:
+
+  * [git hooks][hooks] and [virtual refs][vref]
+
+  * [commands][] for your [users][] to run own][dev-notes]
+
+  * [triggers][] to be run by gitolite as various points in its execution
+
+  * [syntactic sugar][sugar] to change the conf language for your convenience
+
+For all of the above:
+
+  * [edit the rc file][rc] to enable optional features that are shipped in a
+    disabled state
+
+  * [write your own][dev-notes]
+
+(Note: "trigger" is the same concept as "hook", applied to gitolite; I just
+chose a different name to avoid constant ambiguity in documentation).
