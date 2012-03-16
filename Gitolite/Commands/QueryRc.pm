@@ -40,7 +40,7 @@ my $all = 0;
 # ----------------------------------------------------------------------
 
 sub query_rc {
-    trace( 1, "rc file not found; default should be " . glrc_default_filename() ) if not glrc_filename();
+    trace( 1, "rc file not found; default should be " . glrc('default-filename') ) if not glrc('filename');
 
     my @vars = args();
 

@@ -38,7 +38,7 @@ my $ret = access( $repo, $user, $aa, 'unknown' );
 trace( 1, "access($repo, $user, $aa, 'unknown') -> $ret" );
 _die $ret if $ret =~ /DENIED/;
 
-$repo = "'$GL_REPO_BASE/$repo.git'";
+$repo = "'$rc{GL_REPO_BASE}/$repo.git'";
 exec( "git", "shell", "-c", "$verb $repo" );
 
 # ----------------------------------------------------------------------

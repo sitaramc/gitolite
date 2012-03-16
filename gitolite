@@ -79,7 +79,7 @@ sub args {
         print "$_\n" for ( @{ list_repos() } );
     } elsif ( $command eq 'list-phy-repos' ) {
         shift @ARGV;
-        _chdir($GL_REPO_BASE);
+        _chdir( $rc{GL_REPO_BASE} );
         print "$_\n" for ( @{ list_phy_repos() } );
     } elsif ( $command eq 'list-memberships' ) {
         shift @ARGV;

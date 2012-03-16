@@ -27,7 +27,7 @@ sub post_update {
     _die "no files/dirs called 'hooks' or 'logs' are allowed" if tsh_text() =~ /^(hooks|logs)$/;
 
     {
-        local $ENV{GIT_WORK_TREE} = $GL_ADMIN_BASE;
+        local $ENV{GIT_WORK_TREE} = $rc{GL_ADMIN_BASE};
         tsh_try("git checkout -f --quiet master");
     }
     system("$ENV{GL_BINDIR}/gitolite compile");

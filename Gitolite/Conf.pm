@@ -34,7 +34,7 @@ sub compile {
     trace(3);
     # XXX assume we're in admin-base/conf
 
-    _chdir($GL_ADMIN_BASE);
+    _chdir( $rc{GL_ADMIN_BASE} );
     _chdir("conf");
 
     explode( 'gitolite.conf', 'master', \&parse );
@@ -99,7 +99,7 @@ sub parse {
         }
     } elsif ( $line =~ /^config (.+) = ?(.*)/ ) {
         my ( $key, $value ) = ( $1, $2 );
-        my @validkeys = split( ' ', ( $GL_GITCONFIG_KEYS || '' ) );
+        my @validkeys = split( ' ', ( $rc{GL_GITCONFIG_KEYS} || '' ) );
         push @validkeys, "gitolite-options\\..*";
         my @matched = grep { $key =~ /^$_$/ } @validkeys;
         # XXX move this also to add_config: _die "git config $key not allowed\ncheck GL_GITCONFIG_KEYS in the rc file for how to allow it" if (@matched < 1);
@@ -123,8 +123,8 @@ sub incsub {
     # XXX move this to Macros... substitute HOSTNAME word if GL_HOSTNAME defined, otherwise leave as is
     # $include_glob =~ s/\bHOSTNAME\b/$GL_HOSTNAME/ if $GL_HOSTNAME;
 
-    # XXX g2 diff: include glob is *implicitly* from $GL_ADMIN_BASE/conf, not *explicitly*
-    # for my $file (glob($include_glob =~ m(^/) ? $include_glob : "$GL_ADMIN_BASE/conf/$include_glob")) {
+    # XXX g2 diff: include glob is *implicitly* from $rc{GL_ADMIN_BASE}/conf, not *explicitly*
+    # for my $file (glob($include_glob =~ m(^/) ? $include_glob : "$rc{GL_ADMIN_BASE}/conf/$include_glob")) {
 
     trace( 3, $is_subconf, $include_glob );
 

@@ -56,7 +56,7 @@ sub setup {
 
 sub first_run {
     # if the rc file could not be found, it's *definitely* a first run!
-    return not glrc_filename();
+    return not glrc('filename');
 }
 
 sub args {
@@ -91,7 +91,7 @@ sub args {
 
 sub setup_glrc {
     trace(1);
-    _print( glrc_default_filename(), glrc_default_text() );
+    _print( glrc('default-filename'), glrc('default-text') );
 }
 
 sub setup_gladmin {
@@ -99,7 +99,7 @@ sub setup_gladmin {
     trace( 1, $admin );
 
     # reminder: 'admin files' are in ~/.gitolite, 'admin repo' is
-    # $GL_REPO_BASE/gitolite-admin.git
+    # $rc{GL_REPO_BASE}/gitolite-admin.git
 
     # grab the pubkey content before we chdir() away
 
@@ -111,8 +111,8 @@ sub setup_gladmin {
 
     # set up the admin files in admin-base
 
-    _mkdir($GL_ADMIN_BASE);
-    _chdir($GL_ADMIN_BASE);
+    _mkdir( $rc{GL_ADMIN_BASE} );
+    _chdir( $rc{GL_ADMIN_BASE} );
 
     _mkdir("conf");
     my $conf;
@@ -132,15 +132,15 @@ sub setup_gladmin {
     # set up the admin repo in repo-base
 
     _chdir();
-    _mkdir($GL_REPO_BASE);
-    _chdir($GL_REPO_BASE);
+    _mkdir( $rc{GL_REPO_BASE} );
+    _chdir( $rc{GL_REPO_BASE} );
 
     new_repo("gitolite-admin");
 
     # commit the admin files to the admin repo
 
-    $ENV{GIT_WORK_TREE} = $GL_ADMIN_BASE;
-    _chdir("$GL_REPO_BASE/gitolite-admin.git");
+    $ENV{GIT_WORK_TREE} = $rc{GL_ADMIN_BASE};
+    _chdir("$rc{GL_REPO_BASE}/gitolite-admin.git");
     system("git add conf/gitolite.conf");
     system("git add keydir") if $pubkey;
     tsh_try("git config --get user.email") or tsh_run( "git config user.email $ENV{USER}\@" . `hostname` );

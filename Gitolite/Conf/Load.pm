@@ -92,7 +92,7 @@ sub access {
 
 sub load_common {
 
-    _chdir("$GL_ADMIN_BASE");
+    _chdir( $rc{GL_ADMIN_BASE} );
 
     # we take an unusual approach to caching this function!
     # (requires that first call to load_common is before first call to load_1)
@@ -118,7 +118,7 @@ sub load_1 {
     my $repo = shift;
     trace( 4, $repo );
 
-    _chdir("$GL_REPO_BASE");
+    _chdir( $rc{GL_REPO_BASE} );
 
     if ( $repo eq $last_repo ) {
         $repos{$repo} = $one_repo{$repo};
@@ -172,7 +172,7 @@ sub memberships {
 }
 
 sub data_version_mismatch {
-    return $data_version ne $current_data_version;
+    return $data_version ne glrc('current-data-version');
 }
 
 # ----------------------------------------------------------------------
@@ -192,10 +192,10 @@ Usage:  gitolite list-groups
     load_common();
 
     my @g = ();
-    while (my ($k, $v) = each ( %groups )) {
-        push @g, @{ $v };
+    while ( my ( $k, $v ) = each(%groups) ) {
+        push @g, @{$v};
     }
-    return (sort_u(\@g));
+    return ( sort_u( \@g ) );
 }
 
 sub list_users {
@@ -213,18 +213,17 @@ Usage:  gitolite list-users
 
     load_common();
 
-    my @u = map { keys %{ $_ } } values %repos;
-    $total = scalar(keys %split_conf);
+    my @u = map { keys %{$_} } values %repos;
+    $total = scalar( keys %split_conf );
     warn "WARNING: you have $total repos to check; this could take some time!\n" if $total > 100;
     for my $one ( keys %split_conf ) {
         load_1($one);
-        $count++; print STDERR "$count / $total\r" if not ( $count % 100 ) and timer(5);
-        push @u, map { keys %{ $_ } } values %one_repo;
+        $count++; print STDERR "$count / $total\r" if not( $count % 100 ) and timer(5);
+        push @u, map { keys %{$_} } values %one_repo;
     }
     print STDERR "\n";
-    return (sort_u(\@u));
+    return ( sort_u( \@u ) );
 }
-
 
 sub list_repos {
 
@@ -241,7 +240,7 @@ Usage:  gitolite list-repos
     my @r = keys %repos;
     push @r, keys %split_conf;
 
-    return (sort_u(\@r));
+    return ( sort_u( \@r ) );
 }
 
 sub list_memberships {
@@ -258,7 +257,7 @@ Usage:  gitolite list-memberships <name>
 
     load_common();
     my @m = memberships($name);
-    return (sort_u(\@m));
+    return ( sort_u( \@m ) );
 }
 
 sub list_members {
@@ -276,13 +275,13 @@ Usage:  gitolite list-members <group name>
     load_common();
 
     my @m = ();
-    while (my ($k, $v) = each ( %groups )) {
-        for my $g ( @{ $v } ) {
+    while ( my ( $k, $v ) = each(%groups) ) {
+        for my $g ( @{$v} ) {
             push @m, $k if $g eq $name;
         }
     }
 
-    return (sort_u(\@m));
+    return ( sort_u( \@m ) );
 }
 
 # ----------------------------------------------------------------------

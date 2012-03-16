@@ -145,14 +145,14 @@ sub set_subconf {
 
 sub new_repos {
     trace(3);
-    _chdir($GL_REPO_BASE);
+    _chdir( $rc{GL_REPO_BASE} );
 
     # normal repos
     my @repos = grep { $_ =~ $REPONAME_PATT and not /^@/ } sort keys %repos;
     # add in members of repo groups
     map { push @repos, keys %{ $groups{$_} } } grep { /^@/ } keys %repos;
 
-    for my $repo ( @{ sort_u(\@repos) } ) {
+    for my $repo ( @{ sort_u( \@repos ) } ) {
         next unless $repo =~ $REPONAME_PATT;    # skip repo patterns
         next if $repo =~ m(^\@|EXTCMD/);        # skip groups and fake repos
 
@@ -170,7 +170,7 @@ sub new_repo {
     _mkdir("$repo.git");
     _chdir("$repo.git");
     system("git init --bare >&2");
-    _chdir($GL_REPO_BASE);
+    _chdir( $rc{GL_REPO_BASE} );
     hook_1($repo);
 
     # XXX ignoring creator for now
@@ -180,7 +180,7 @@ sub new_repo {
 sub hook_repos {
     trace(3);
     # all repos, all hooks
-    _chdir($GL_REPO_BASE);
+    _chdir( $rc{GL_REPO_BASE} );
 
     # XXX g2 diff: we now don't care if it's a symlink -- it's upto the admin
     # on the server to make sure things are kosher
@@ -195,14 +195,14 @@ sub store {
     trace(3);
 
     # first write out the ones for the physical repos
-    _chdir($GL_REPO_BASE);
+    _chdir( $rc{GL_REPO_BASE} );
     my $phy_repos = list_phy_repos(1);
 
-    for my $repo (@{ $phy_repos }) {
+    for my $repo ( @{$phy_repos} ) {
         store_1($repo);
     }
 
-    _chdir($GL_ADMIN_BASE);
+    _chdir( $rc{GL_ADMIN_BASE} );
     store_common();
 }
 
@@ -261,7 +261,7 @@ sub store_common {
     my $cc = "conf/gitolite.conf-compiled.pm";
     my $compiled_fh = _open( ">", "$cc.new" );
 
-    my $data_version = $current_data_version;
+    my $data_version = glrc('current-data-version');
     trace( 1, "data_version = $data_version" );
     print $compiled_fh Data::Dumper->Dump( [$data_version], [qw(*data_version)] );
 
@@ -296,20 +296,20 @@ sub store_common {
         # reset the gitolite supplied hooks, in case someone fiddled with
         # them, but only once per run
         if ( not $hook_reset ) {
-            _mkdir("$GL_ADMIN_BASE/hooks/common");
-            _mkdir("$GL_ADMIN_BASE/hooks/gitolite-admin");
-            _print( "$GL_ADMIN_BASE/hooks/common/update",              update_hook() );
-            _print( "$GL_ADMIN_BASE/hooks/gitolite-admin/post-update", post_update_hook() );
-            chmod 0755, "$GL_ADMIN_BASE/hooks/common/update";
-            chmod 0755, "$GL_ADMIN_BASE/hooks/gitolite-admin/post-update";
+            _mkdir("$rc{GL_ADMIN_BASE}/hooks/common");
+            _mkdir("$rc{GL_ADMIN_BASE}/hooks/gitolite-admin");
+            _print( "$rc{GL_ADMIN_BASE}/hooks/common/update",              update_hook() );
+            _print( "$rc{GL_ADMIN_BASE}/hooks/gitolite-admin/post-update", post_update_hook() );
+            chmod 0755, "$rc{GL_ADMIN_BASE}/hooks/common/update";
+            chmod 0755, "$rc{GL_ADMIN_BASE}/hooks/gitolite-admin/post-update";
             $hook_reset++;
         }
 
         # propagate user hooks
-        ln_sf( "$GL_ADMIN_BASE/hooks/common", "*", "$repo.git/hooks" );
+        ln_sf( "$rc{GL_ADMIN_BASE}/hooks/common", "*", "$repo.git/hooks" );
 
         # propagate admin hook
-        ln_sf( "$GL_ADMIN_BASE/hooks/gitolite-admin", "*", "$repo.git/hooks" ) if $repo eq 'gitolite-admin';
+        ln_sf( "$rc{GL_ADMIN_BASE}/hooks/gitolite-admin", "*", "$repo.git/hooks" ) if $repo eq 'gitolite-admin';
 
         # g2 diff: no "site-wide" hooks (the stuff in between gitolite hooks
         # and user hooks) anymore.  I don't think anyone used them anyway...
