@@ -10,8 +10,9 @@ use Gitolite::Conf::Load;
 =for usage
 Usage:  gitolite access [-q] <repo> <user> <perm> <ref>
 
-Check access rights for arguments given.  With '-q', returns only an exit code
-(shell truth, not perl truth -- 0 is success, any non-0 is failure).
+Print access rights for arguments given.  The string printed has the word
+DENIED in it if access was denied.  With '-q', returns only an exit code
+(shell truth, not perl truth -- 0 is success).
 
   - repo: mandatory
   - user: mandatory
@@ -19,10 +20,26 @@ Check access rights for arguments given.  With '-q', returns only an exit code
   - ref:  defauts to 'any'.  See notes below
 
 Notes:
-
   - ref: Any fully qualified ref ('refs/heads/master', not 'master') is fine.
     The 'any' ref is special -- it ignores deny rules (see docs for what this
     means and exceptions).
+
+Advanced use (examples only):
+
+    gitolite list-phy-repos | gitolite access % gitweb R | grep -v DENIED | cut -f1 > ~/projects.list
+    # now people can stop thinking gitolite has anything to do with gitweb!
+
+    gitolite list-phy-repos | grep foo |
+        perl -lne 'print "$_ gitweb\n$_ daemon"' |
+        gitolite access % % R | grep -v DENIED | cut -f1 > insecure.repos
+
+For each case where access is not denied, one line is printed like this:
+
+    reponame<tab>username<tab>access rights
+
+This is orders of magnitude faster than running the command multiple times;
+you'll notice if you have more than a hundred or so repos.
+
 =cut
 
 # TODO: deal with "C", call it ^C
@@ -35,19 +52,35 @@ my ( $repo, $user, $aa, $ref ) = @ARGV;
 $aa  ||= '+';
 $ref ||= 'any';
 # XXX the 4th one below might need fine tuning
-_die "invalid repo name" if not( $repo and $repo =~ $REPONAME_PATT );
-_die "invalid user name" if not( $user and $user =~ $USERNAME_PATT );
-_die "invalid perm"      if not( $aa   and $aa   =~ /^(R|W|\+|C|D|M)$/ );
-_die "invalid ref name"  if not( $ref  and $ref  =~ $REPONAME_PATT );
+_die "invalid perm" if not( $aa and $aa =~ /^(R|W|\+|C|D|M)$/ );
+_die "invalid ref name" if not( $ref and $ref =~ $REPONAME_PATT );
 
 my $ret = '';
 
-$ret = access( $repo, $user, $aa, $ref );
+if ( $repo ne '%' and $user ne '%' ) {
+    # single repo, single user; no STDIN
+    _die "invalid repo name" if not( $repo and $repo =~ $REPONAME_PATT );
+    _die "invalid user name" if not( $user and $user =~ $USERNAME_PATT );
+    $ret = access( $repo, $user, $aa, $ref );
 
-if ( $ret =~ /DENIED/ ) {
+    if ( $ret =~ /DENIED/ ) {
+        print "$ret\n" unless $quiet;
+        exit 1;
+    }
+
     print "$ret\n" unless $quiet;
-    exit 1;
+    exit 0;
 }
 
-print "$ret\n" unless $quiet;
-exit 0;
+$repo = '' if $repo eq '%';
+$user = '' if $user eq '%';
+
+_die "'-q' doesn't go with using a pipe" if $quiet;
+@ARGV = ();
+while (<>) {
+    my @in = split;
+    my $r  = $repo || shift @in;
+    my $u  = $user || shift @in;
+    $ret = access( $r, $u, $aa, $ref );
+    print "$r\t$u\t$ret\n";
+}
