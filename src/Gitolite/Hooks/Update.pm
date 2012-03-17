@@ -109,26 +109,24 @@ sub args {
     # non-ff push to ref (including ref delete)
     $aa = '+' if $oldsha ne $merge_base;
 
-    # XXX $aa = 'D' if ( $repos{$ENV{GL_REPO}}{DELETE_IS_D} or $repos{'@all'}{DELETE_IS_D} ) and $newsha eq '0' x 40;
-    # XXX $aa = 'C' if ( $repos{$ENV{GL_REPO}}{CREATE_IS_C} or $repos{'@all'}{CREATE_IS_C} ) and $oldsha eq '0' x 40;
+    $aa = 'D' if ( option( $ENV{GL_REPO}, 'DELETE_IS_D' ) ) and $newsha eq '0' x 40;
+    $aa = 'C' if ( option( $ENV{GL_REPO}, 'CREATE_IS_C' ) ) and $oldsha eq '0' x 40;
 
-    # and now "M" commits.  This presents a bit of a problem.  All the other
-    # accesses (W, +, C, D) were mutually exclusive in some sense.  Sure a W could
-    # be a C or a + could be a D but that's by design.  A merge commit, however,
-    # could still be any of the others (except a "D").
+    # and now "M" commits.  All the other accesses (W, +, C, D) were mutually
+    # exclusive in some sense.  Sure a W could be a C or a + could be a D but
+    # that's by design.  A merge commit, however, could still be any of the
+    # others (except a "D").
 
     # so we have to *append* 'M' to $aa (if the repo has MERGE_CHECK in
     # effect and this push contains a merge inside)
 
-=for XXX
-    if ( $repos{ $ENV{GL_REPO} }{MERGE_CHECK} or $repos{'@all'}{MERGE_CHECK} ) {
+    if ( option( $ENV{GL_REPO}, 'MERGE_CHECK' ) ) {
         if ( $oldsha eq '0' x 40 or $newsha eq '0' x 40 ) {
-            warn "ref create/delete ignored for purposes of merge-check\n";
+            _warn "ref create/delete ignored for purposes of merge-check\n";
         } else {
             $aa .= 'M' if `git rev-list -n 1 --merges $oldsha..$newsha` =~ /./;
         }
     }
-=cut
 
     return ( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa );
 }
