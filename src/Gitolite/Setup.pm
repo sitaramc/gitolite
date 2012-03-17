@@ -97,6 +97,7 @@ sub setup_gladmin {
       and _print( "VERSION", tsh_text() );
 
     _mkdir("conf");
+    _mkdir("logs");
     my $conf;
     {
         local $/ = undef;

@@ -46,6 +46,7 @@ use warnings;
 # ----------------------------------------------------------------------
 
 my ( $command, @args ) = @ARGV;
+gl_log( 'gitolite', @ARGV ) if -d $rc{GL_ADMIN_BASE};
 args();
 
 # the first two commands need options via @ARGV, as they have their own

@@ -50,6 +50,7 @@ sub in_ssh {
 # call this once you are sure arg-1 is the username and SSH_ORIGINAL_COMMAND
 # has been setup (even if it's not actually coming via ssh).
 sub main {
+    gl_log( 'gitolite-shell', @ARGV, $ENV{SSH_ORIGINAL_COMMAND} );
     umask $rc{UMASK};
 
     # set up the user
@@ -66,6 +67,7 @@ sub main {
         require Gitolite::Conf::Store;
         Gitolite::Conf::Store->import;
         new_wild_repo( $repo, $user );
+        gl_log( 'gitolite-shell:new_wild_repo', $repo, $user );
     }
 
     # a ref of 'any' signifies that this is a pre-git check, where we don't
@@ -74,6 +76,7 @@ sub main {
     # more information.
     my $ret = access( $repo, $user, $aa, 'any' );
     trace( 1, "access($repo, $user, $aa, 'any')", "-> $ret" );
+    gl_log( 'gitolite-shell:check', $repo, $user, $aa, 'any', '->', $ret );
     _die $ret if $ret =~ /DENIED/;
 
     $repo = "'$rc{GL_REPO_BASE}/$repo.git'";

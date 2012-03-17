@@ -28,14 +28,16 @@ our %rc;
 
 # ----------------------------------------------------------------------
 
-# variables that are/could be/should be in the rc file
+# variables that could be overridden by the rc file
 # ----------------------------------------------------------------------
 
-$rc{GL_BINDIR}     = $ENV{GL_BINDIR};
-$rc{GL_ADMIN_BASE} = "$ENV{HOME}/.gitolite";
-$rc{GL_REPO_BASE}  = "$ENV{HOME}/repositories";
+$rc{GL_BINDIR}    = $ENV{GL_BINDIR};
+$rc{GL_REPO_BASE} = "$ENV{HOME}/repositories";
 
-# variables that should probably never be changed
+$rc{GL_ADMIN_BASE} = "$ENV{HOME}/.gitolite";
+$rc{LOG_TEMPLATE}  = "$ENV{HOME}/.gitolite/logs/gitolite-%y-%m.log";
+
+# variables that should probably never be changed but someone will want to, I'll bet...
 # ----------------------------------------------------------------------
 
 $REMOTE_COMMAND_PATT  = qr(^[- 0-9a-zA-Z\@\%_=+:,./]*$);
@@ -47,6 +49,9 @@ $UNSAFE_PATT          = qr([`~#\$\&()|;<>]);
 
 # ----------------------------------------------------------------------
 
+# find the rc file and 'do' it
+# ----------------------------------------------------------------------
+
 my $current_data_version = "3.0";
 
 my $rc = glrc('filename');
@@ -55,12 +60,21 @@ _die "$rc seems to be for older gitolite" if defined($GL_ADMINDIR);
 # let values specified in rc file override our internal ones
 @rc{ keys %RC } = values %RC;
 
-# testing sometimes requires all of it to be overridden silently; use an
-# env var that is highly unlikely to appear in real life :)
+# (testing only) testing sometimes requires all of it to be overridden
+# silently; use an env var that is highly unlikely to appear in real life :)
 do $ENV{G3T_RC} if exists $ENV{G3T_RC} and -r $ENV{G3T_RC};
+
+# fix some env vars, setup gitolite internal "env" vars (aka rc vars)
+# ----------------------------------------------------------------------
 
 # fix PATH (TODO: do it only if 'gitolite' isn't in PATH)
 $ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}";
+
+{
+    my ( $ts, $lfn ) = gen_ts_lfn( $rc{LOG_TEMPLATE} );
+    $rc{GL_LOGFILE} = $ENV{GL_LOGFILE} = $lfn;
+    $rc{GL_TS}      = $ENV{GL_TS}      = $ts;
+}
 
 # ----------------------------------------------------------------------
 

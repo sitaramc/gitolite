@@ -20,15 +20,18 @@ use warnings;
 
 sub update {
     trace( 2, @ARGV );
+    gl_log( 'update', @ARGV );
     # this is the *real* update hook for gitolite
 
     my ( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa ) = args(@ARGV);
 
     my $ret = access( $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref );
     trace( 1, "access($ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref)", "-> $ret" );
+    gl_log( 'update:check', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref, '->', $ret );
     _die $ret if $ret =~ /DENIED/;
 
     check_vrefs( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa );
+    gl_log( 'update:OK', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV );
 
     exit 0;
 }

@@ -10,6 +10,8 @@ package Gitolite::Common;
   say2    _die    _system slurp             tsh_lines
           trace           cleanup_conf_line tsh_try
           usage                             tsh_run
+          gen_ts_lfn
+          gl_log
 );
 #>>>
 use Exporter 'import';
@@ -65,6 +67,7 @@ sub _warn {
 }
 
 sub _die {
+    gl_log("_die:", @_);
     if ( $ENV{D} and $ENV{D} >= 3 ) {
         confess "FATAL: " . join( ",", @_ ) . "\n" if defined( $ENV{D} );
     } elsif ( defined( $ENV{D} ) ) {
@@ -108,6 +111,7 @@ sub _system {
     # run system(), catch errors.  Be verbose only if $ENV{D} exists.  If not,
     # exit with <rc of system()> if it applies, else just "exit 1".
     trace( 2, @_ );
+    gl_log("_system:", @_);
     if ( system(@_) != 0 ) {
         trace( 1, "system() failed", @_, "-> $?" );
         if ( $? == -1 ) {
@@ -198,6 +202,51 @@ sub cleanup_conf_line {
         trace( 2, scalar(@phy_repos) . " physical repos found" );
         return sort_u( \@phy_repos );
     }
+}
+
+# generate a timestamp.  If a template is passed generate a log file name
+# based on it also
+sub gen_ts_lfn {
+    my ($s, $min, $h, $d, $m, $y) = (localtime)[0..5];
+    $y += 1900; $m++;               # usual adjustments
+    for ($s, $min, $h, $d, $m) {
+        $_ = "0$_" if $_ < 10;
+    }
+    my $ts = "$y-$m-$d.$h:$min:$s";
+
+    return $ts unless @_;
+
+    my($template) = shift;
+    # substitute template parameters and set the logfile name
+    $template =~ s/%y/$y/g;
+    $template =~ s/%m/$m/g;
+    $template =~ s/%d/$d/g;
+
+    return ($ts, $template);
+}
+
+sub gl_log {
+    # the log filename and the timestamp come from the environment.  If we get
+    # called even before they are set, we have no choice but to dump to STDERR
+    # (and probably call "logger").
+    my $msg = join("\t", @_);
+
+    my $ts = $ENV{GL_TS} || gen_ts_lfn();
+
+    my $fh;
+    logger_plus_stderr("$ts no GL_LOGFILE env var", "$ts $msg") if not $ENV{GL_LOGFILE};
+    open my $lfh, ">>", $ENV{GL_LOGFILE} or logger_plus_stderr("open log failed: $!", $msg);
+    print $lfh "$ts\t$msg\n";
+    close $lfh;
+}
+
+sub logger_plus_stderr {
+    open my $fh, "|-", "logger" or confess "it's really not my day is it...?\n";
+    for ( "FATAL: have errors but logging failed!\n", @_ ) {
+        print STDERR "$_\n";
+        print $fh "$_\n";
+    }
+    exit 1;
 }
 
 # ----------------------------------------------------------------------
