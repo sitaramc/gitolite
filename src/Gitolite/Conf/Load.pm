@@ -7,6 +7,7 @@ package Gitolite::Conf::Load;
   load
   access
   git_config
+  option
   repo_missing
   vrefs
   lister_dispatch
@@ -130,6 +131,14 @@ sub git_config {
     return \%ret;
 }
 
+sub option {
+    my ( $repo, $option ) = @_;
+    $option = "gitolite-options.$option";
+    my $ret = git_config( $repo, "^\Q$option\E\$" );
+    return '' unless %$ret;
+    return $ret->{$option};
+}
+
 sub repo_missing {
     my $repo = shift;
     return not -d "$rc{GL_REPO_BASE}/$repo.git";
@@ -236,7 +245,7 @@ sub load_1 {
 
 sub memberships {
     trace( 3, @_ );
-    my ($type, $base, $repo) = @_;
+    my ( $type, $base, $repo ) = @_;
     my $base2 = '';
 
     my @ret = ( $base, '@all' );
@@ -264,7 +273,7 @@ sub memberships {
         # find the roles this user has when accessing this repo and add those
         # in as groupnames he is a member of.  You need the already existing
         # memberships for this; see below this function for an example
-        push @ret, user_roles($base, $repo, @ret);
+        push @ret, user_roles( $base, $repo, @ret );
     }
 
     @ret = @{ sort_u( \@ret ) };
@@ -293,32 +302,32 @@ sub data_version_mismatch {
 }
 
 sub user_roles {
-    my ($user, $repo, @eg) = @_;
+    my ( $user, $repo, @eg ) = @_;
 
     # eg == existing groups (that user is already known to be a member of)
     my %eg = map { $_ => 1 } @eg;
 
     my %ret = ();
-    my $f = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
+    my $f   = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
     if ( -f $f ) {
-        my $fh = _open("<", $f);
+        my $fh = _open( "<", $f );
         while (<$fh>) {
             chomp;
             # READERS u3 u4 @g1
             s/^\s+//; s/ +$//; s/=/ /; s/\s+/ /g; s/\@//;
-            my ($role, @members) = split;
+            my ( $role, @members ) = split;
             # role = READERS, members = u3, u4, @g1
-            if (not $rc{ROLES}{$role}) {
+            if ( not $rc{ROLES}{$role} ) {
                 _warn "role '$role' not allowed, ignoring";
                 next;
             }
             for my $m (@members) {
-                if ($m !~ $USERNAME_PATT) {
+                if ( $m !~ $USERNAME_PATT ) {
                     _warn "ignoring '$m' in perms line";
                     next;
                 }
                 # if user eq u3/u4, or is a member of @g1, he has role READERS
-                $ret{'@' . $role} = 1 if $m eq $user or $eg{$m};
+                $ret{ '@' . $role } = 1 if $m eq $user or $eg{$m};
             }
         }
     }
@@ -326,9 +335,9 @@ sub user_roles {
 }
 
 sub generic_name {
-    my $base = shift;
+    my $base  = shift;
     my $base2 = '';
-    my $f = "$rc{GL_REPO_BASE}/$base.git/gl-creator";
+    my $f     = "$rc{GL_REPO_BASE}/$base.git/gl-creator";
     if ( -f $f ) {
         my $creator;
         chomp( $creator = slurp($f) );
