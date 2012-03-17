@@ -6,14 +6,14 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
-# basic tests
+# some more basic tests
 # ----------------------------------------------------------------------
 
 try "
     plan 218
     CHECK_SETUP
 
-    ## subtest 1
+    # subtest 1
     cd ..
     CLONE dev2 file://gitolite-admin ga2
                                 !ok;    gsh
@@ -67,7 +67,7 @@ put "conf/gitolite.conf", "
 ";
 
 try "
-    ## subtest 2
+    # subtest 2
     ADMIN_PUSH t01b
 
     # clone
@@ -124,7 +124,7 @@ put "../gitolite-admin/conf/i1.conf", "
 ";
 
 try "
-    ## subtest 3
+    # subtest 3
     ADMIN_PUSH t01c
 
     cd ..;                      ok
@@ -239,7 +239,7 @@ put "| cat >> ../gitolite-admin/conf/gitolite.conf", "
 ";
 
 try "
-    ## subtest 4
+    # subtest 4
     ADMIN_PUSH t01d
 
     cd ..;                      ok
@@ -266,7 +266,7 @@ put "| cat >> ../gitolite-admin/conf/gitolite.conf", "
 ";
 
 try "
-    ## subtest 5
+    # subtest 5
     ADMIN_PUSH t01e
 
     cd ..;                      ok

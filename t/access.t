@@ -6,7 +6,7 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
-# basic tests
+# test 'gitolite access'
 # ----------------------------------------------------------------------
 
 try "plan 185";
