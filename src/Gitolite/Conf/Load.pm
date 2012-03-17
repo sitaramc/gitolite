@@ -205,7 +205,7 @@ sub load_1 {
         my @rules = ();
 
         my @repos = memberships( 'repo', $repo );
-        my @users = memberships( 'user', $user );
+        my @users = memberships( 'user', $user, $repo );
         trace( 3, "memberships: " . scalar(@repos) . " repos and " . scalar(@users) . " users found" );
 
         for my $r (@repos) {
@@ -235,33 +235,36 @@ sub load_1 {
 }
 
 sub memberships {
-    my $type  = shift;
-    my $item  = shift;
-    my $item2 = '';
-    trace( 3, $type, $item );
+    trace( 3, @_ );
+    my ($type, $base, $repo) = @_;
+    my $base2 = '';
 
-    my @ret = ( $item, '@all' );
+    my @ret = ( $base, '@all' );
 
     if ( $type eq 'repo' ) {
-        my $f = "$rc{GL_REPO_BASE}/$item.git/gl-creator";
-        if ( -f $f ) {
-            my $creator;
-            chomp( $creator = slurp($f) );
-            ( $item2 = $item ) =~ s(/$creator/)(/CREATOR/);
-            $item2 = '' if $item2 eq $item;    # no change
-        }
+        # first, if a repo, say, pub/sitaram/project, has a gl-creator file
+        # that says "sitaram", find memberships for pub/CREATOR/project also
+        $base2 = generic_name($base);
+
+        # second, you need to check in %repos also
         for my $i ( keys %repos ) {
-            if ( $item eq $i or $item =~ /^$i$/ or $item2 and ( $item2 eq $i or $item2 =~ /^$i$/ ) ) {
+            if ( $base eq $i or $base =~ /^$i$/ or $base2 and ( $base2 eq $i or $base2 =~ /^$i$/ ) ) {
                 push @ret, $i;
             }
         }
-
     }
 
     for my $i ( keys %groups ) {
-        if ( $item eq $i or $item =~ /^$i$/ or $item2 and ( $item2 eq $i or $item2 =~ /^$i$/ ) ) {
+        if ( $base eq $i or $base =~ /^$i$/ or $base2 and ( $base2 eq $i or $base2 =~ /^$i$/ ) ) {
             push @ret, @{ $groups{$i} };
         }
+    }
+
+    if ( $type eq 'user' and $repo ) {
+        # find the roles this user has when accessing this repo and add those
+        # in as groupnames he is a member of.  You need the already existing
+        # memberships for this; see below this function for an example
+        push @ret, user_roles($base, $repo, @ret);
     }
 
     @ret = @{ sort_u( \@ret ) };
@@ -269,8 +272,70 @@ sub memberships {
     return @ret;
 }
 
+=for example
+
+conf/gitolite.conf:
+    @g1 = u1
+    @g2 = u1
+    # now user is a member of both g1 and g2
+
+gl-perms for repo being accessed:
+    READERS @g1
+
+This should result in @READERS being added to the memberships that u1 has
+(when accessing this repo).  So we send the current list (@g1, @g2) to
+user_roles(), otherwise it has to redo that logic.
+
+=cut
+
 sub data_version_mismatch {
     return $data_version ne glrc('current-data-version');
+}
+
+sub user_roles {
+    my ($user, $repo, @eg) = @_;
+
+    # eg == existing groups (that user is already known to be a member of)
+    my %eg = map { $_ => 1 } @eg;
+
+    my %ret = ();
+    my $f = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
+    if ( -f $f ) {
+        my $fh = _open("<", $f);
+        while (<$fh>) {
+            chomp;
+            # READERS u3 u4 @g1
+            s/^\s+//; s/ +$//; s/=/ /; s/\s+/ /g; s/\@//;
+            my ($role, @members) = split;
+            # role = READERS, members = u3, u4, @g1
+            if (not $rc{ROLES}{$role}) {
+                _warn "role '$role' not allowed, ignoring";
+                next;
+            }
+            for my $m (@members) {
+                if ($m !~ $USERNAME_PATT) {
+                    _warn "ignoring '$m' in perms line";
+                    next;
+                }
+                # if user eq u3/u4, or is a member of @g1, he has role READERS
+                $ret{'@' . $role} = 1 if $m eq $user or $eg{$m};
+            }
+        }
+    }
+    return keys %ret;
+}
+
+sub generic_name {
+    my $base = shift;
+    my $base2 = '';
+    my $f = "$rc{GL_REPO_BASE}/$base.git/gl-creator";
+    if ( -f $f ) {
+        my $creator;
+        chomp( $creator = slurp($f) );
+        ( $base2 = $base ) =~ s(/$creator/)(/CREATOR/);
+        $base2 = '' if $base2 eq $base;    # if there was no change
+    }
+    return $base2;
 }
 
 # ----------------------------------------------------------------------

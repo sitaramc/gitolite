@@ -200,7 +200,7 @@ sub new_wild_repo {
     _chdir( $rc{GL_REPO_BASE} );
     new_repo($repo);
     _print( "$repo.git/gl-creator", $user );
-    # XXX _print("$repo.git/gl-perms", "$rc{WILDREPOS_DEFAULT_PERMS}\n") if $rc{WILDREPOS_DEFAULT_PERMS};
+    _print( "$repo.git/gl-perms", "$rc{DEFAULT_ROLE_PERMS}\n" ) if $rc{DEFAULT_ROLE_PERMS};
     # XXX git config, daemon, web...
     # XXX pre-create, post-create
     _chdir( $rc{GL_ADMIN_BASE} );

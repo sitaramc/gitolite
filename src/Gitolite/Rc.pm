@@ -179,13 +179,23 @@ __DATA__
 # configuration variables for gitolite
 
 # This file is in perl syntax.  But you do NOT need to know perl to edit it --
-# just mind the commas and make sure the brackets and braces stay matched up!
+# just mind the commas, use single quotes unless you know what you're doing,
+# and make sure the brackets and braces stay matched up!
 
 # (Tip: perl allows a comma after the last item in a list also!)
 
 %RC = (
     UMASK                       =>  0077,
-    GIT_CONFIG_KEYS             =>  "",
+    GIT_CONFIG_KEYS             =>  '',
+
+    # add more roles (like MANAGER, TESTER, ...) here
+    ROLES                       =>
+        {
+            READERS             =>  1,
+            WRITERS             =>  1,
+        },
+    # uncomment (and change) this if you wish
+    # DEFAULT_ROLE_PERMS          =>  'READERS @all',
 
     # comment out or uncomment as needed
     # these will run in sequence during the conf file parse
