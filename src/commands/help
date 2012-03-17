@@ -13,11 +13,11 @@ Prints a list of custom commands available at this gitolite installation.
 =cut
 
 my $user = $ENV{GL_USER} || '';
-print "hello" . ( $user ? " $user" : "") . ", this is gitolite3 " . version() . " on git " . substr( `git --version`, 12 ) . "\n";
+print "hello" . ( $user ? " $user" : "" ) . ", this is gitolite3 " . version() . " on git " . substr( `git --version`, 12 ) . "\n";
 
 _chdir("$ENV{GL_BINDIR}/commands");
 
-print "list of " . ($user ? "remote" : "gitolite" ) . " commands available:\n\n";
+print "list of " . ( $user ? "remote" : "gitolite" ) . " commands available:\n\n";
 
 for my $c (`find . -type f|sort`) {
     chomp($c);

@@ -123,5 +123,7 @@ sub run_all {
                 _system( $sfp, @ARGV );    # they better all return with 0 exit codes!
             }
         }
+        return;
     }
+    trace( 2, "'$rc_section' not found in rc" );
 }

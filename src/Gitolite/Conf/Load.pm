@@ -126,6 +126,7 @@ sub git_config {
     # and the final map does this:
     #                 'foo.bar'=>'repo'  ,      'foodbar'=>'repoD'
 
+    trace( 3, map { ( "$_" => "-> $ret{$_}" ) } ( sort keys %ret ) );
     return \%ret;
 }
 
@@ -165,7 +166,7 @@ sub load_1 {
     trace( 3, $repo );
 
     if ( repo_missing($repo) ) {
-        trace( 3, "repo '$repo' missing" );
+        trace( 2, "repo '$repo' missing" );
         return;
     }
     _chdir("$rc{GL_REPO_BASE}/$repo.git");
@@ -237,6 +238,7 @@ sub memberships {
     my $type  = shift;
     my $item  = shift;
     my $item2 = '';
+    trace( 3, $type, $item );
 
     my @ret = ( $item, '@all' );
 
@@ -263,6 +265,7 @@ sub memberships {
     }
 
     @ret = @{ sort_u( \@ret ) };
+    trace( 3, sort @ret );
     return @ret;
 }
 
