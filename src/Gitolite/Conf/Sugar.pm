@@ -63,11 +63,36 @@ sub sugar {
 
     # then our stuff:
 
-    $lines = option($lines);
+    $lines = rw_cdm($lines);
+    $lines = option($lines);       # must come after rw_cdm
     $lines = owner_desc($lines);
     $lines = name_vref($lines);
 
     return $lines;
+}
+
+sub rw_cdm {
+    my $lines = shift;
+    my @ret;
+
+    # repo foo <...> RWC = ...
+    #   ->  option CREATE_IS_C = 1
+    # (and similarly DELETE_IS_D and MERGE_CHECK)
+    # but only once per repo of course
+
+    my %seen = ();
+    for my $line (@$lines) {
+        push @ret, $line;
+        if ( $line =~ /^repo / ) {
+            %seen = ();
+        } elsif ( $line =~ /^(-|C|R|RW\+?(?:C?D?|D?C?)M?) (.* )?= (.+)/ ) {
+            my $perms = $1;
+            push @ret, "option DELETE_IS_D = 1" if $perms =~ /D/     and not $seen{D}++;
+            push @ret, "option CREATE_IS_C = 1" if $perms =~ /RW.*C/ and not $seen{C}++;
+            push @ret, "option MERGE_CHECK = 1" if $perms =~ /M/     and not $seen{M}++;
+        }
+    }
+    return \@ret;
 }
 
 sub option {
