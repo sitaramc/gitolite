@@ -53,7 +53,7 @@ my $cmd;     # the current command
 
 my $testnum;     # current test number, for info in TAP output
 my $testname;    # current test name, for error info to user
-my $line;        # current line number
+my $line;        # current line number and text
 
 my $err_count;   # count of test failures
 my @errors_in;   # list of testnames that errored
@@ -115,7 +115,7 @@ sub tsh {
 # (later) handles single commands
 
 sub try {
-    $rc = $err_count = 0;
+    $line = $rc = $err_count = 0;
     @errors_in = ();
 
     # break up multiline arguments into separate lines
@@ -238,11 +238,13 @@ sub rc_lines {
         my $_ = shift @lines;
         chomp; $_ = trim_ws($_);
 
+        $line++;
+
         # this also sets $testname
         next if is_comment_or_empty($_);
 
         dbg( 2, "L: $_" );
-        $line = $_;    # save line for printing with 'FAIL:'
+        $line .= ": $_";    # save line for printing with 'FAIL:'
 
         # a DEF has to be on a line by itself
         if (/^DEF\s+([-.\w]+)\s*=\s*(\S.*)$/) {

@@ -77,6 +77,7 @@ sub _confargs {
 }
 
 sub confreset {
+    chdir("../gitolite-admin") or die "in `pwd`, could not cd ../g-a";
     system( "rm", "-rf", "conf" );
     mkdir("conf");
     system("mv ~/repositories/gitolite-admin.git ~/repositories/.ga");
@@ -93,6 +94,7 @@ sub confreset {
 }
 
 sub confadd {
+    chdir("../gitolite-admin") or die "in `pwd`, could not cd ../g-a";
     my ( $file, $string ) = _confargs(@_);
     put "|cat >> conf/$file", $string;
 }
