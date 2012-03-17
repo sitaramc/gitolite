@@ -15,6 +15,7 @@ package Gitolite::Conf::Store;
   expand_list
   new_repos
   new_repo
+  new_wild_repo
   hook_repos
   store
   parse_done
@@ -126,7 +127,7 @@ sub add_rule {
 }
 
 sub add_config {
-    my($n, $key, $value) = @_;
+    my ( $n, $key, $value ) = @_;
 
     $nextseq++;
     for my $repo (@repolist) {
@@ -192,6 +193,17 @@ sub new_repo {
 
     # XXX ignoring creator for now
     # XXX ignoring gl-post-init for now
+}
+
+sub new_wild_repo {
+    my ( $repo, $user ) = @_;
+    _chdir( $rc{GL_REPO_BASE} );
+    new_repo($repo);
+    _print( "$repo.git/gl-creator", $user );
+    # XXX _print("$repo.git/gl-perms", "$rc{WILDREPOS_DEFAULT_PERMS}\n") if $rc{WILDREPOS_DEFAULT_PERMS};
+    # XXX git config, daemon, web...
+    # XXX pre-create, post-create
+    _chdir( $rc{GL_ADMIN_BASE} );
 }
 
 sub hook_repos {

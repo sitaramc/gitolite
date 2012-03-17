@@ -7,6 +7,7 @@ package Gitolite::Conf::Load;
   load
   access
   git_config
+  repo_missing
   vrefs
   lister_dispatch
 );
@@ -105,13 +106,13 @@ sub git_config {
       # sort this list of listrefs by the first element in each list ref'd to
       sort { $a->[0] <=> $b->[0] }
       # dereference it (into a list of listrefs)
-      map  { @$_ }
+      map { @$_ }
       # take the value of that entry
       map { $configs{$_} }
       # if it has an entry in %configs
       grep { $configs{$_} }
       # for each "repo" that represents us
-      memberships('repo', $repo);
+      memberships( 'repo', $repo );
 
     # %configs looks like this (for each 'foo' that is in memberships())
     # 'foo' => [ [ 6, 'foo.bar', 'repo' ], [ 7, 'foodbar', 'repoD' ], [ 8, 'foo.czar', 'jule' ] ],
@@ -126,6 +127,11 @@ sub git_config {
     #                 'foo.bar'=>'repo'  ,      'foodbar'=>'repoD'
 
     return \%ret;
+}
+
+sub repo_missing {
+    my $repo = shift;
+    return not -d "$rc{GL_REPO_BASE}/$repo.git";
 }
 
 # ----------------------------------------------------------------------
@@ -158,6 +164,10 @@ sub load_1 {
     return if $repo =~ /^\@/;
     trace( 3, $repo );
 
+    if ( repo_missing($repo) ) {
+        trace( 3, "repo '$repo' missing" );
+        return;
+    }
     _chdir("$rc{GL_REPO_BASE}/$repo.git");
 
     if ( $repo eq $last_repo ) {
@@ -193,8 +203,8 @@ sub load_1 {
 
         my @rules = ();
 
-        my @repos = memberships('repo', $repo);
-        my @users = memberships('user', $user);
+        my @repos = memberships( 'repo', $repo );
+        my @users = memberships( 'user', $user );
         trace( 3, "memberships: " . scalar(@repos) . " repos and " . scalar(@users) . " users found" );
 
         for my $r (@repos) {
@@ -224,36 +234,35 @@ sub load_1 {
 }
 
 sub memberships {
-    my $type = shift;
-    my $item = shift;
+    my $type  = shift;
+    my $item  = shift;
     my $item2 = '';
 
     my @ret = ( $item, '@all' );
 
-    if ($type eq 'repo') {
+    if ( $type eq 'repo' ) {
         my $f = "$rc{GL_REPO_BASE}/$item.git/gl-creator";
-        if (-f $f) {
+        if ( -f $f ) {
             my $creator;
-            chomp($creator = slurp($f));
-            ($item2 = $item) =~ s(/$creator/)(/CREATOR/);
-            $item2 = '' if $item2 eq $item; # no change
+            chomp( $creator = slurp($f) );
+            ( $item2 = $item ) =~ s(/$creator/)(/CREATOR/);
+            $item2 = '' if $item2 eq $item;    # no change
         }
-        for my $i (keys %repos) {
-            if ($item eq $i or $item =~ /^$i$/ or $item2 and ( $item2 eq $i or $item2 =~ /^$i$/ )) {
+        for my $i ( keys %repos ) {
+            if ( $item eq $i or $item =~ /^$i$/ or $item2 and ( $item2 eq $i or $item2 =~ /^$i$/ ) ) {
                 push @ret, $i;
             }
         }
 
     }
 
-    for my $i (keys %groups) {
-        if ($item eq $i or $item =~ /^$i$/ or $item2 and ( $item2 eq $i or $item2 =~ /^$i$/ )) {
+    for my $i ( keys %groups ) {
+        if ( $item eq $i or $item =~ /^$i$/ or $item2 and ( $item2 eq $i or $item2 =~ /^$i$/ ) ) {
             push @ret, @{ $groups{$i} };
         }
     }
 
-    @ret = @{ sort_u(\@ret) };
-    dbg(\@ret);
+    @ret = @{ sort_u( \@ret ) };
     return @ret;
 }
 
@@ -349,7 +358,7 @@ sub list_memberships {
     my $name = shift;
 
     load_common();
-    my @m = memberships('', $name);
+    my @m = memberships( '', $name );
     return ( sort_u( \@m ) );
 }
 

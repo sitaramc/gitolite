@@ -61,6 +61,13 @@ sub main {
     $ENV{GL_REPO} = $repo;
     my $aa = ( $verb =~ 'upload' ? 'R' : 'W' );
 
+    # auto-create?
+    if ( repo_missing($repo) and access( $repo, $user, '^C', 'any' ) !~ /DENIED/ ) {
+        require Gitolite::Conf::Store;
+        Gitolite::Conf::Store->import;
+        new_wild_repo( $repo, $user );
+    }
+
     # a ref of 'any' signifies that this is a pre-git check, where we don't
     # yet know the ref that will be eventually pushed (and even that won't
     # apply if it's a read operation).  See the matching code in access() for
