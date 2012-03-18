@@ -67,6 +67,7 @@ sub sugar {
     $lines = option($lines);       # must come after rw_cdm
     $lines = owner_desc($lines);
     $lines = name_vref($lines);
+    $lines = role_names($lines);
 
     return $lines;
 }
@@ -169,6 +170,31 @@ sub name_vref {
             $line =~ s( NAME/)( VREF/NAME/)g;
         }
         push @ret, $line;
+    }
+    return \@ret;
+}
+
+sub role_names {
+    my $lines = shift;
+    my @ret;
+
+    # <perm> [<ref>] = <user list containing CREATOR|READERS|WRITERS>
+    #   ->  same but with "@" prepended to rolenames
+
+    for my $line (@$lines) {
+        if ( $line =~ /^(-|C|R|RW\+?(?:C?D?|D?C?)M?) (.* )?= (.+)/ ) {
+            my($p, $r) = ($1, $2);
+            my $u = '';
+            for (split ' ', $3) {
+                $_ = "\@$_" if $_ eq 'CREATOR' or $rc{ROLES}{$_};
+                $u .= " $_";
+            }
+            $r ||= '';
+            # mind the spaces (or play safe and run cleanup_conf_line again)
+            push @ret, cleanup_conf_line("$p $r = $u");
+        } else {
+            push @ret, $line;
+        }
     }
     return \@ret;
 }

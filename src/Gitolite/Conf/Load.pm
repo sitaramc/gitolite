@@ -229,6 +229,9 @@ sub load_1 {
         $lastuser = $user;
         @cached   = @rules;
 
+        # however if the repo was missing, invalidate the cache
+        $lastrepo = '' if repo_missing($repo);
+
         return @rules;
     }
 
@@ -309,42 +312,58 @@ sub user_roles {
 
     my %ret = ();
     my $f   = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
+    my @roles = ();
     if ( -f $f ) {
         my $fh = _open( "<", $f );
-        while (<$fh>) {
-            chomp;
-            # READERS u3 u4 @g1
-            s/^\s+//; s/ +$//; s/=/ /; s/\s+/ /g; s/\@//;
-            my ( $role, @members ) = split;
-            # role = READERS, members = u3, u4, @g1
-            if ( not $rc{ROLES}{$role} ) {
-                _warn "role '$role' not allowed, ignoring";
+        chomp(@roles = <$fh>);
+    }
+    push @roles, "CREATOR = " . creator($repo);
+    for (@roles) {
+        # READERS u3 u4 @g1
+        s/^\s+//; s/ +$//; s/=/ /; s/\s+/ /g; s/^\@//;
+        my ( $role, @members ) = split;
+        # role = READERS, members = u3, u4, @g1
+        if ( $role ne 'CREATOR' and not $rc{ROLES}{$role} ) {
+            _warn "role '$role' not allowed, ignoring";
+            next;
+        }
+        for my $m (@members) {
+            if ( $m !~ $USERNAME_PATT ) {
+                _warn "ignoring '$m' in perms line";
                 next;
             }
-            for my $m (@members) {
-                if ( $m !~ $USERNAME_PATT ) {
-                    _warn "ignoring '$m' in perms line";
-                    next;
-                }
-                # if user eq u3/u4, or is a member of @g1, he has role READERS
-                $ret{ '@' . $role } = 1 if $m eq $user or $eg{$m};
-            }
+            # if user eq u3/u4, or is a member of @g1, he has role READERS
+            $ret{ '@' . $role } = 1 if $m eq $user or $eg{$m};
         }
     }
+
     return keys %ret;
 }
 
 sub generic_name {
     my $base  = shift;
     my $base2 = '';
-    my $f     = "$rc{GL_REPO_BASE}/$base.git/gl-creator";
-    if ( -f $f ) {
-        my $creator;
-        chomp( $creator = slurp($f) );
-        ( $base2 = $base ) =~ s(/$creator/)(/CREATOR/);
-        $base2 = '' if $base2 eq $base;    # if there was no change
-    }
+    my $creator;
+
+    # get the creator name.  For not-yet-born repos this is $ENV{GL_USER},
+    # which should be set in all cases that we care about, viz., where we are
+    # checking ^C permissions before new_wild_repo(), and the info command.
+    # In particular, 'gitolite access' can't be used to check ^C perms.
+    $creator = creator($base);
+
+    ( $base2 = $base ) =~ s(/$creator/)(/CREATOR/) if $creator;
+    $base2 = '' if $base2 eq $base;    # if there was no change
+
     return $base2;
+}
+
+sub creator {
+    my $repo = shift;
+    return ( $ENV{GL_USER} || '' ) if repo_missing($repo);
+    my $f       = "$rc{GL_REPO_BASE}/$repo.git/gl-creator";
+    my $creator = '';
+    chomp( $creator = slurp($f) ) if -f $f;
+    return $creator;
 }
 
 # ----------------------------------------------------------------------
