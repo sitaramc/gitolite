@@ -1,0 +1,89 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+=for usage
+Usage:  ssh git@host perms -l <repo>
+        ssh git@host perms <repo> - <rolename> <username>
+        ssh git@host perms <repo> + <rolename> <username>
+
+List or set permissions for user-created ("wild") repo.  The first usage shown
+will list the current contents of the permissions file.  The other two will
+change permissions, adding or removing a user from a role.
+
+Examples:
+    ssh git@host perms foo + READERS user1
+    ssh git@host perms foo + READERS user2
+    ssh git@host perms foo + READERS user3
+
+(Note: a legacy mode of piping in the entire permissions text directly is also
+supported.  If you want to use it, don't mix it with the new "+/-" modes).
+=cut
+
+usage() if not @ARGV or $ARGV[0] eq '-h';
+
+my $list = 0;
+if ( $ARGV[0] eq '-l' ) {
+    $list++;
+    shift;
+    getperms(@ARGV);    # doesn't return
+}
+
+setperms(@ARGV);
+
+# ----------------------------------------------------------------------
+
+sub getperms {
+    my $repo = shift;
+    _die "repo '$repo' missing" if repo_missing($repo);
+    my $pf = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
+
+    print slurp($pf) if -f $pf;
+
+    exit 0;
+}
+
+sub setperms {
+    my $repo = shift;
+    _die "repo '$repo' missing" if repo_missing($repo);
+    my $pf = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
+
+    if ( not @_ ) {
+        # legacy mode; pipe data in
+        @ARGV = ();
+        _print( $pf, <> );
+        exit;
+    }
+
+    _die "Invalid syntax.  Please re-run with '-h' for detailed usage" if @_ != 3;
+    my ( $op, $role, $user ) = @_;
+    _die "Invalid syntax.  Please re-run with '-h' for detailed usage" if $op ne '+' and $op ne '-';
+    _die "Invalid role '$role'; check the rc file" if not $rc{ROLES}{$role};
+
+    my $text = '';
+    my @text = slurp($pf) if -f $pf;
+
+    my $present = grep { $_ eq "$role $user\n" } @text;
+
+    if ( $op eq '-' ) {
+        if ( not $present ) {
+            _warn "'$role $user' was not present in file";
+        } else {
+            @text = grep { $_ ne "$role $user\n" } @text;
+            _print( $pf, @text );
+        }
+    } else {
+        if ($present) {
+            _warn "'$role $user' already present in file";
+        } else {
+            push @text, "$role $user\n";
+            @text = sort @text;
+            _print( $pf, @text );
+        }
+    }
+}
