@@ -34,8 +34,10 @@ exit 0;
 # XXX lots of stuff from gl-auth-command is missing for now...
 
 sub in_local {
-    print STDERR "TRACE: gsh(", join( ")(", @ARGV ), ")\n";
-    print STDERR "TRACE: gsh(SOC=$ENV{SSH_ORIGINAL_COMMAND})\n";
+    if ($ENV{SSH_ORIGINAL_COMMAND} =~ /git-\w+-pack/) {
+        print STDERR "TRACE: gsh(", join( ")(", @ARGV ), ")\n";
+        print STDERR "TRACE: gsh(SOC=$ENV{SSH_ORIGINAL_COMMAND})\n";
+    }
 }
 
 sub in_http {
