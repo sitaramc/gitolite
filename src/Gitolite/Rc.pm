@@ -216,6 +216,7 @@ __DATA__
     SYNTACTIC_SUGAR             =>
         [
             # 'continuation-lines',
+            'legacy-delegation-abort',
         ],
 
     # comment out or uncomment as needed

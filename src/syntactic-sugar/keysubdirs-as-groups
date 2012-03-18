@@ -7,7 +7,7 @@
 # taken as the group name.
 
 sub sugar_script {
-    trace( 2, "running 'keysubdirs-as-groups' sugar script..." );
+    Gitolite::Common::trace( 2, "running 'keysubdirs-as-groups' sugar script..." );
     my $lines = shift;
 
     my @out = @{$lines};

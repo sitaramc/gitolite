@@ -1,0 +1,26 @@
+# vim: syn=perl:
+
+# "sugar script" (syntactic sugar helper) for gitolite3
+
+# Aborts if you appear to be using legacy delegation.
+
+# Note: you cannot fix this using sugar; subconf processing has already
+# happened by the time it gets to this point.
+
+# TODO: supply doc keyword, and that doc should tell people to add this to the
+# end of the main conf file:
+
+#       repo gitolite-admin
+#           -   NAME/       =   @all
+#       subconf "fragments/*.conf"
+
+sub sugar_script {
+    Gitolite::Common::trace( 2, "running 'legacy-delegation-warn' sugar script..." );
+    my $lines = shift;
+
+    my $text = join("\n", @$lines);
+    if ($text =~ m(NAME/conf/fragments/) and $text !~ /^subconf /m) {
+        die "\t**** ABORT ****\nYou may be using legacy delegation; see docs\n";
+    }
+    return $lines;
+}
