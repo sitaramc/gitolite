@@ -65,6 +65,14 @@ sub access {
     my ( $repo, $user, $aa, $ref ) = @_;
     load($repo);
 
+    # when a real repo doesn't exist, ^C is a pre-requisite for any other
+    # check to give valid results.
+    if ( $aa ne '^C' and $repo !~ /^\@/ and $repo =~ $REPONAME_PATT and repo_missing($repo) ) {
+        my $iret = access( $repo, $user, '^C', $ref );
+        $iret =~ s/\^C/$aa/;
+        return $iret if $iret =~ /DENIED/;
+    }
+
     my @rules = rules( $repo, $user );
     trace( 2, scalar(@rules) . " rules found" );
     for my $r (@rules) {
@@ -310,12 +318,12 @@ sub user_roles {
     # eg == existing groups (that user is already known to be a member of)
     my %eg = map { $_ => 1 } @eg;
 
-    my %ret = ();
-    my $f   = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
+    my %ret   = ();
+    my $f     = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
     my @roles = ();
     if ( -f $f ) {
         my $fh = _open( "<", $f );
-        chomp(@roles = <$fh>);
+        chomp( @roles = <$fh> );
     }
     push @roles, "CREATOR = " . creator($repo);
     for (@roles) {
