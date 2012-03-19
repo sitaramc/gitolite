@@ -34,7 +34,7 @@ exit 0;
 # XXX lots of stuff from gl-auth-command is missing for now...
 
 sub in_local {
-    if ($ENV{SSH_ORIGINAL_COMMAND} =~ /git-\w+-pack/) {
+    if ( $ENV{SSH_ORIGINAL_COMMAND} =~ /git-\w+-pack/ ) {
         print STDERR "TRACE: gsh(", join( ")(", @ARGV ), ")\n";
         print STDERR "TRACE: gsh(SOC=$ENV{SSH_ORIGINAL_COMMAND})\n";
     }
@@ -79,13 +79,13 @@ sub main {
     my $ret = access( $repo, $user, $aa, 'any' );
     trace( 1, "access($repo, $user, $aa, 'any')", "-> $ret" );
     gl_log( 'gitolite-shell:check', $repo, $user, $aa, 'any', '->', $ret );
-    trigger('ACCESS_CHECK', $repo, $user, $aa, 'any', $ret);
+    trigger( 'ACCESS_CHECK', $repo, $user, $aa, 'any', $ret );
     _die $ret if $ret =~ /DENIED/;
 
     $repo = "'$rc{GL_REPO_BASE}/$repo.git'";
-    trigger('PRE_GIT', $repo, $user, $aa, 'any', $verb);
+    trigger( 'PRE_GIT', $repo, $user, $aa, 'any', $verb );
     _system( "git", "shell", "-c", "$verb $repo" );
-    trigger('POST_GIT', $repo, $user, $aa, 'any', $verb);
+    trigger( 'POST_GIT', $repo, $user, $aa, 'any', $verb );
 }
 
 # ----------------------------------------------------------------------

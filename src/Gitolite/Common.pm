@@ -44,8 +44,8 @@ sub trace {
     my $level = shift; return if $ENV{D} < $level;
     my $args = ''; $args = join( ", ", @_ ) if @_;
     my $sub = ( caller 1 )[3] || ''; $sub =~ s/.*://;
-    if (not $sub) {
-        $sub = ( caller )[1];
+    if ( not $sub ) {
+        $sub = (caller)[1];
         $sub =~ s(.*/(.*))(($1));
     }
     $sub .= ' ' x ( 32 - length($sub) );
@@ -72,7 +72,7 @@ sub _warn {
 }
 
 sub _die {
-    gl_log("_die:", @_);
+    gl_log( "_die:", @_ );
     if ( $ENV{D} and $ENV{D} >= 3 ) {
         confess "FATAL: " . join( ",", @_ ) . "\n" if defined( $ENV{D} );
     } elsif ( defined( $ENV{D} ) ) {
@@ -116,7 +116,7 @@ sub _system {
     # run system(), catch errors.  Be verbose only if $ENV{D} exists.  If not,
     # exit with <rc of system()> if it applies, else just "exit 1".
     trace( 2, @_ );
-    gl_log("_system:", @_);
+    gl_log( "_system:", @_ );
     if ( system(@_) != 0 ) {
         trace( 1, "system() failed", @_, "-> $?" );
         if ( $? == -1 ) {
@@ -212,35 +212,35 @@ sub cleanup_conf_line {
 # generate a timestamp.  If a template is passed generate a log file name
 # based on it also
 sub gen_ts_lfn {
-    my ($s, $min, $h, $d, $m, $y) = (localtime)[0..5];
-    $y += 1900; $m++;               # usual adjustments
-    for ($s, $min, $h, $d, $m) {
+    my ( $s, $min, $h, $d, $m, $y ) = (localtime)[ 0 .. 5 ];
+    $y += 1900; $m++;    # usual adjustments
+    for ( $s, $min, $h, $d, $m ) {
         $_ = "0$_" if $_ < 10;
     }
     my $ts = "$y-$m-$d.$h:$min:$s";
 
     return $ts unless @_;
 
-    my($template) = shift;
+    my ($template) = shift;
     # substitute template parameters and set the logfile name
     $template =~ s/%y/$y/g;
     $template =~ s/%m/$m/g;
     $template =~ s/%d/$d/g;
 
-    return ($ts, $template);
+    return ( $ts, $template );
 }
 
 sub gl_log {
     # the log filename and the timestamp come from the environment.  If we get
     # called even before they are set, we have no choice but to dump to STDERR
     # (and probably call "logger").
-    my $msg = join("\t", @_);
+    my $msg = join( "\t", @_ );
 
     my $ts = $ENV{GL_TS} || gen_ts_lfn();
 
     my $fh;
-    logger_plus_stderr("$ts no GL_LOGFILE env var", "$ts $msg") if not $ENV{GL_LOGFILE};
-    open my $lfh, ">>", $ENV{GL_LOGFILE} or logger_plus_stderr("open log failed: $!", $msg);
+    logger_plus_stderr( "$ts no GL_LOGFILE env var", "$ts $msg" ) if not $ENV{GL_LOGFILE};
+    open my $lfh, ">>", $ENV{GL_LOGFILE} or logger_plus_stderr( "open log failed: $!", $msg );
     print $lfh "$ts\t$msg\n";
     close $lfh;
 }

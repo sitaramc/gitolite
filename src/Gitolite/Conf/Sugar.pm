@@ -183,9 +183,9 @@ sub role_names {
 
     for my $line (@$lines) {
         if ( $line =~ /^(-|C|R|RW\+?(?:C?D?|D?C?)M?) (.* )?= (.+)/ ) {
-            my($p, $r) = ($1, $2);
+            my ( $p, $r ) = ( $1, $2 );
             my $u = '';
-            for (split ' ', $3) {
+            for ( split ' ', $3 ) {
                 $_ = "\@$_" if $_ eq 'CREATOR' or $rc{ROLES}{$_};
                 $u .= " $_";
             }
