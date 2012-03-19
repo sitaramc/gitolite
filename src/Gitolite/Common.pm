@@ -43,7 +43,12 @@ sub trace {
 
     my $level = shift; return if $ENV{D} < $level;
     my $args = ''; $args = join( ", ", @_ ) if @_;
-    my $sub = ( caller 1 )[3] || ''; $sub =~ s/.*://; $sub .= ' ' x ( 32 - length($sub) );
+    my $sub = ( caller 1 )[3] || ''; $sub =~ s/.*://;
+    if (not $sub) {
+        $sub = ( caller )[1];
+        $sub =~ s(.*/(.*))(($1));
+    }
+    $sub .= ' ' x ( 32 - length($sub) );
     say2 "TRACE $level $sub", ( @_ ? shift : () );
     say2( "TRACE $level " . ( " " x 32 ), $_ ) for @_;
 }

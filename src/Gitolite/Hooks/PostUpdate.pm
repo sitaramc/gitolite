@@ -31,7 +31,7 @@ sub post_update {
         tsh_try("git checkout -f --quiet master");
     }
     _system("$ENV{GL_BINDIR}/gitolite compile");
-    _system("$ENV{GL_BINDIR}/gitolite run-all POST_COMPILE");
+    _system("$ENV{GL_BINDIR}/gitolite trigger POST_COMPILE");
 
     exit 0;
 }

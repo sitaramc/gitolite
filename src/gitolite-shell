@@ -79,10 +79,13 @@ sub main {
     my $ret = access( $repo, $user, $aa, 'any' );
     trace( 1, "access($repo, $user, $aa, 'any')", "-> $ret" );
     gl_log( 'gitolite-shell:check', $repo, $user, $aa, 'any', '->', $ret );
+    trigger('ACCESS_CHECK', $repo, $user, $aa, 'any', $ret);
     _die $ret if $ret =~ /DENIED/;
 
     $repo = "'$rc{GL_REPO_BASE}/$repo.git'";
-    exec( "git", "shell", "-c", "$verb $repo" );
+    trigger('PRE_GIT', $repo, $user, $aa, 'any', $verb);
+    _system( "git", "shell", "-c", "$verb $repo" );
+    trigger('POST_GIT', $repo, $user, $aa, 'any', $verb);
 }
 
 # ----------------------------------------------------------------------

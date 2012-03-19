@@ -8,6 +8,7 @@ package Gitolite::Rc;
   glrc
   query_rc
   version
+  trigger
 
   $REMOTE_COMMAND_PATT
   $REF_OR_FILENAME_PATT
@@ -114,10 +115,7 @@ sub glrc {
     }
 }
 
-# ----------------------------------------------------------------------
-# implements 'gitolite query-rc' and 'version'
-# ----------------------------------------------------------------------
-
+# exported functions
 # ----------------------------------------------------------------------
 
 my $all  = 0;
@@ -151,6 +149,30 @@ sub version {
     }
     chomp($version);
     return $version;
+}
+
+sub trigger {
+    my $rc_section = shift;
+
+    if ( exists $rc{$rc_section} ) {
+        if ( ref( $rc{$rc_section} ) ne 'ARRAY' ) {
+            _die "$rc_section section in rc file is not a perl list";
+        } else {
+            for my $s ( @{ $rc{$rc_section} } ) {
+
+                # perl-ism; apart from keeping the full path separate from the
+                # simple name, this also protects %rc from change by implicit
+                # aliasing, which would happen if you touched $s itself
+                my $sfp = "$ENV{GL_BINDIR}/commands/$s";
+
+                _warn("skipped command '$s'"), next if not -x $sfp;
+                trace( 2, "command: $s" );
+                _system( $sfp, @_ );    # they better all return with 0 exit codes!
+            }
+        }
+        return;
+    }
+    trace( 2, "'$rc_section' not found in rc" );
 }
 
 # ----------------------------------------------------------------------

@@ -36,7 +36,7 @@ sub setup {
     setup_gladmin( $admin, $pubkey, $argv );
 
     _system("$ENV{GL_BINDIR}/gitolite compile");
-    _system("$ENV{GL_BINDIR}/gitolite run-all POST_COMPILE");
+    _system("$ENV{GL_BINDIR}/gitolite trigger POST_COMPILE");
 
     hook_repos();    # all of them, just to be sure
 }

@@ -69,8 +69,8 @@ if ( $command eq 'setup' ) {
     Gitolite::Conf->import;
     compile(@args);
 
-} elsif ( $command eq 'run-all' ) {
-    run_all(@args);
+} elsif ( $command eq 'trigger' ) {
+    trigger(@args);
 
 } elsif ( -x "$rc{GL_BINDIR}/commands/$command" ) {
     trace( 2, "attempting gitolite command $command" );
@@ -103,28 +103,4 @@ sub run_command {
     _die "$pgm not found or not executable" if not -x $fullpath;
     _system( $fullpath, @_ );
     exit 0;
-}
-
-sub run_all {
-    my $rc_section = shift;
-
-    if ( exists $rc{$rc_section} ) {
-        if ( ref( $rc{$rc_section} ) ne 'ARRAY' ) {
-            _warn "$rc_section section in rc file is not a perl list";
-        } else {
-            for my $s ( @{ $rc{$rc_section} } ) {
-
-                # perl-ism; apart from keeping the full path separate from the
-                # simple name, this also protects %rc from change by implicit
-                # aliasing, which would happen if you touched $s itself
-                my $sfp = "$ENV{GL_BINDIR}/commands/$s";
-
-                _warn("skipped command '$s'"), next if not -x $sfp;
-                trace( 2, "command: $s" );
-                _system( $sfp, @ARGV );    # they better all return with 0 exit codes!
-            }
-        }
-        return;
-    }
-    trace( 2, "'$rc_section' not found in rc" );
 }
