@@ -2,19 +2,35 @@
 use strict;
 use warnings;
 
+use Getopt::Long;
+
 use lib $ENV{GL_BINDIR};
 use Gitolite::Rc;
 use Gitolite::Common;
 use Gitolite::Conf::Load;
 
 =for usage
-Usage:  gitolite info
+Usage:  gitolite info [-p] [optional repo name pattern]
 
-  - list all repos/repo groups you can access
-  - no options, no flags
+List all repos/repo groups you can access.  By default, it shows you what the
+conf file specified, which means group names and wild card patterns may show
+up.
+
+With '-p' it looks at actual (physical) repos instead.
+
+The optional pattern is an unanchored regex that will limit the repos
+searched, in both cases.  It might speed up things a little if you have more
+than a few thousand repos.
 =cut
 
-usage() if @ARGV;
+my ( $help, $phy, $patt ) = ('') x 3;
+GetOptions(
+    'p' => \$phy,
+    'h' => \$help,
+) or usage();
+
+usage() if @ARGV > 1;
+$patt = shift || '.';
 
 my $user = $ENV{GL_USER} or _die "GL_USER not set";
 my $ref = 'any';
@@ -22,22 +38,24 @@ my $ref = 'any';
 print "hello $user, this is gitolite3 " . version() . " on git " . substr( `git --version`, 12 ) . "\n";
 
 my $lr = lister_dispatch('list-repos');
-my $lm = lister_dispatch('list-members');
 
-for ( @{ $lr->() } ) {
+my $perm;
+my $repos;
+
+if ($phy) {
+    _chdir( $rc{GL_REPO_BASE} );
+    $repos = list_phy_repos(1);
+} else {
+    $repos = $lr->();
+}
+
+for my $repo (@$repos) {
+    next unless $repo =~ /$patt/;
     my $perm = '';
     for my $aa (qw(R W ^C)) {
-        my $ret = access( $_, $user, $aa, $ref );
+        my $ret = access( $repo, $user, $aa, $ref );
         $perm .= ( $ret =~ /DENIED/ ? "  " : " $aa" );
     }
-    next unless $perm =~ /\S/;
-    if (/^\@/) {
-        print "\n$perm\t$_\n";
-        for ( @{ $lm->($_) } ) {
-            print "$perm\t$_\n";
-        }
-        print "\n";
-    } else {
-        print "$perm\t$_\n";
-    }
+    $perm =~ s/\^//;
+    print "$perm\t$repo\n" if $perm =~ /\S/;
 }
