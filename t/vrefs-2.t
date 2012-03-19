@@ -6,6 +6,9 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
+# VREFs - part 2
+# ----------------------------------------------------------------------
+
 try "plan 74";
 
 put "../gitolite-admin/conf/gitolite.conf", "

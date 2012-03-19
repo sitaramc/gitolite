@@ -7,6 +7,9 @@ use lib "src";
 use Gitolite::Common;
 use Gitolite::Test;
 
+# basic tests using ssh
+# ----------------------------------------------------------------------
+
 my $bd = `gitolite query-rc -n GL_BINDIR`;
 my $h  = $ENV{HOME};
 my $ab = `gitolite query-rc -n GL_ADMIN_BASE`;

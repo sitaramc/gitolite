@@ -6,6 +6,9 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
+# the info command
+# ----------------------------------------------------------------------
+
 try 'plan 39';
 
 try "## info";

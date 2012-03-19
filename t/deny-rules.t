@@ -6,7 +6,7 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
-# branch permissions test
+# deny rules
 # ----------------------------------------------------------------------
 
 try "plan 11";

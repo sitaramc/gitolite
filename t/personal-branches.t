@@ -6,7 +6,7 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
-# basic tests
+# personal branches
 # ----------------------------------------------------------------------
 
 try "plan 39";

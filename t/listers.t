@@ -6,6 +6,9 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
+# the various list-* commands
+# ----------------------------------------------------------------------
+
 try 'plan 30';
 
 try "## info";

@@ -6,7 +6,7 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
-# basic tests
+# wild repos - part 1
 # ----------------------------------------------------------------------
 
 try "plan 66";

@@ -6,6 +6,9 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
+# include and subconf
+# ----------------------------------------------------------------------
+
 try 'plan 37';
 
 confreset; confadd '

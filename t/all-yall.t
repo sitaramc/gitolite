@@ -6,7 +6,7 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
-# basic tests
+# could anything be clearer than "all y'all"?
 # ----------------------------------------------------------------------
 
 try "plan 26";

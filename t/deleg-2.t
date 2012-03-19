@@ -6,7 +6,7 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
-# basic tests
+# delegation tests -- part 2
 # ----------------------------------------------------------------------
 
 try "plan 56";

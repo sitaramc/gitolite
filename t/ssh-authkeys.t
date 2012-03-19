@@ -6,6 +6,9 @@ use warnings;
 use lib "src";
 use Gitolite::Test;
 
+# testing the (separate) authkeys handler
+# ----------------------------------------------------------------------
+
 $ENV{GL_BINDIR} = "$ENV{PWD}/src";
 
 my $ak = "$ENV{HOME}/.ssh/authorized_keys";
