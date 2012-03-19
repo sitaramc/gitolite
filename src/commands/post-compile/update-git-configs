@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+
+# update git-config entries in each repo
+# ----------------------------------------------------------------------
+
+use FindBin;
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+use strict;
+use warnings;
+
+# ----------------------------------------------------------------------
+
+my $RB = $rc{GL_REPO_BASE};
+_chdir ($RB);
+my $lpr = list_phy_repos();
+
+for my $pr (@$lpr) {
+    my $gc = git_config($pr, '.');
+    while ( my ($key, $value) = each(%{ $gc }) ) {
+        next if $key =~ /^gitolite-options\./;
+        if ($value ne "") {
+            $value =~ s/^['"](.*)["']$/$1/;
+            $value =~ s/%GL_REPO/$pr/g;
+            system("git", "config", "--file", "$RB/$pr.git/config", $key, $value);
+        } else {
+            system("git", "config", "--file", "$RB/$pr.git/config", "--unset-all", $key);
+        }
+    }
+}

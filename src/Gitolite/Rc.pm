@@ -246,6 +246,7 @@ __DATA__
     POST_COMPILE                =>
         [
             'post-compile/ssh-authkeys',
+            'post-compile/update-git-configs',
             'post-compile/update-gitweb-access-list',
             'post-compile/update-git-daemon-access-list',
         ],
@@ -254,6 +255,7 @@ __DATA__
     # these will run in sequence after a new wild repo is created
     POST_CREATE                 =>
         [
+            # 'post-compile/update-git-configs',
             # 'post-compile/update-gitweb-access-list',
             # 'post-compile/update-git-daemon-access-list',
         ],
