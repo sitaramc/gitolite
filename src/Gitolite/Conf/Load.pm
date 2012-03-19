@@ -63,6 +63,7 @@ my $last_repo = '';
 
 sub access {
     my ( $repo, $user, $aa, $ref ) = @_;
+    my $deny_rules = option($repo, 'deny-rules');
     load($repo);
 
     # when a real repo doesn't exist, ^C is a pre-requisite for any other
@@ -81,7 +82,7 @@ sub access {
         trace( 3, "perm=$perm, refex=$refex" );
 
         # skip 'deny' rules if the ref is not (yet) known
-        next if $perm eq '-' and $ref eq 'any';
+        next if $perm eq '-' and $ref eq 'any' and not $deny_rules;
 
         # rule matches if ref matches or ref is any (see gitolite-shell)
         next unless $ref =~ /^$refex/ or $ref eq 'any';
