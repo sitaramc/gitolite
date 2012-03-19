@@ -195,7 +195,7 @@ sub load_1 {
     }
 
     if ( -f "gl-conf" ) {
-        _die "split conf not set, gl-conf present for $repo" if not $split_conf{$repo};
+        _warn "split conf not set, gl-conf present for $repo" if not $split_conf{$repo};
 
         my $cc = "gl-conf";
         _die "parse $cc failed: " . ( $! or $@ ) unless do $cc;
