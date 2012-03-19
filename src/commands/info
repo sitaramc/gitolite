@@ -29,7 +29,7 @@ GetOptions(
     'h' => \$help,
 ) or usage();
 
-usage() if @ARGV > 1;
+usage() if @ARGV > 1 or $help;
 $patt = shift || '.';
 
 my $user = $ENV{GL_USER} or _die "GL_USER not set";

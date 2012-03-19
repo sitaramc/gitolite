@@ -24,15 +24,6 @@ Notes:
     The 'any' ref is special -- it ignores deny rules (see docs for what this
     means and exceptions).
 
-Advanced use (examples only):
-
-    gitolite list-phy-repos | gitolite access % gitweb R | grep -v DENIED | cut -f1 > ~/projects.list
-    # now people can stop thinking gitolite has anything to do with gitweb!
-
-    gitolite list-phy-repos | grep foo |
-        perl -lne 'print "$_ gitweb\n$_ daemon"' |
-        gitolite access % % R | grep -v DENIED | cut -f1 > insecure.repos
-
 For each case where access is not denied, one line is printed like this:
 
     reponame<tab>username<tab>access rights
@@ -40,6 +31,8 @@ For each case where access is not denied, one line is printed like this:
 This is orders of magnitude faster than running the command multiple times;
 you'll notice if you have more than a hundred or so repos.
 
+Advanced uses: see src/commands/post-compile/update-git-daemon-access-list for
+a good example.
 =cut
 
 # TODO: deal with "C", call it ^C

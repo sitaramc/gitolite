@@ -84,15 +84,11 @@ sub _die {
 
 sub usage {
     _warn(shift) if @_;
-    my ( $script, $function ) = ( caller(1) )[ 1, 3 ];
-    if ( not $script ) {
-        $script   = (caller)[1];
-        $function = 'usage';
-    }
-    dbg( "u s a g e", $script, $function );
+    my $script = (caller)[1];
+    my $function = ( ( ( caller(1) )[3] ) || ( ( caller(0) )[3] ) );
     $function =~ s/.*:://;
     my $code = slurp($script);
-    $code =~ /^=for $function(.*?)^=cut/sm;
+    $code =~ /^=for $function\b(.*?)^=cut/sm;
     say2( $1 ? $1 : "...no usage message in $script" );
     exit 1;
 }
