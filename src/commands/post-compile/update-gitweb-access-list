@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# this is literally the simplest gitweb update possible.  You are free to add
+# whatever you want and contribute it back, as long as it is upward
+# compatible.
+
+plf=$(gitolite query-rc GITWEB_PROJECTS_LIST)
+[ -z "$plf" ] && plf=$HOME/projects.list
+
+gitolite list-phy-repos | gitolite access % gitweb R any | grep -v DENIED | cut -f1 | sed -e 's/$/.git/' > $plf
+

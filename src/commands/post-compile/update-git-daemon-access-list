@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# this is probably the *fastest* git-daemon update possible.
+
+export EO=git-daemon-export-ok
+export RB=$(gitolite query-rc GL_REPO_BASE)
+
+gitolite list-phy-repos | gitolite access % daemon R any |
+    perl -lane '
+        unlink "$ENV{RB}/$F[0].git/$ENV{EO}" if /DENIED/;
+        print $F[0] unless /DENIED/
+    ' |
+    while read r
+    do
+        > $RB/$r.git/$EO
+    done
+
+# A bit of explanation may be in order.  The gitolite output looks somewhat
+# like this:
+
+#   bar^Idaemon^IR any bar daemon DENIED by fallthru$
+#   foo^Idaemon^Irefs/.*$
+#   fubar^Idaemon^Irefs/.*$
+#   gitolite-admin^Idaemon^IR any gitolite-admin daemon DENIED by fallthru$
+#   testing^Idaemon^Irefs/.*$
+
+# where I've type "^I" to denote a tab.
+
+# Shell has to fork 'rm' to delete a file but perl doesn't.  So removing the
+# export-ok file from repos where needed is done in perl.
+
+# On the other hand, perls requires a bit more *code* to even create an empty
+# file.  Shell can do it with just "> file", and it doesn't fork for this.  So
+# that part is handled in shell.
+
+# You'll also see that the perl part is taking what it needs from the input
+# and passing the rest on, so the shell part doesn't have to do any grepping,
+# which would be a horrible slowdown.
+
+# $F and the rest is the magic of perl's flags (man perlrun).
