@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+=for usage
+Usage:  gitolite creator [-n] <reponame> [<username>]
+
+Print the creator name for the repo.  A '-n' suppresses the newline.
+
+When an optional username is supplied, it checks if the user is the creator of
+the repo and returns an exit code (shell truth, 0 for success) instead of
+printing anything, which makes it possible to do this in shell:
+
+    if gitolite creator someRepo someUser
+    then
+        ...
+=cut
+
+usage() if not @ARGV or $ARGV[0] eq '-h';
+my $nl = "\n";
+if ($ARGV[0] eq '-n') {
+    $nl = '';
+    shift;
+}
+my $repo = shift;
+my $user = shift || '';
+
+my $creator = '';
+$creator = creator($repo) if not repo_missing($repo);
+if ($user) {
+    exit 0 if $creator eq $user;
+    exit 1;
+}
+return ($creator eq $user) if $user;
+print "$creator$nl";

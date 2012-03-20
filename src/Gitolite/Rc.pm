@@ -77,6 +77,11 @@ $ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}";
     $rc{GL_TS}      = $ENV{GL_TS}      = $ts;
 }
 
+# these two are meant to help externally written commands (see
+# src/commands/writes for an example)
+$ENV{GL_REPO_BASE}  = $rc{GL_REPO_BASE};
+$ENV{GL_ADMIN_BASE} = $rc{GL_ADMIN_BASE};
+
 # ----------------------------------------------------------------------
 
 use strict;
@@ -267,6 +272,7 @@ __DATA__
             'help'              =>  1,
             'info'              =>  1,
             'perms'             =>  1,
+            'writes'            =>  1,
         },
 );
 

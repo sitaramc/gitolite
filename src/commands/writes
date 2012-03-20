@@ -3,9 +3,7 @@ use strict;
 use warnings;
 
 use lib $ENV{GL_BINDIR};
-use Gitolite::Rc;
-use Gitolite::Common;
-use Gitolite::Conf::Load;
+use Gitolite::Easy;
 
 =for usage
 Usage: gitolite writes on|off <reponame>|@all
@@ -24,6 +22,12 @@ my $on = ( shift eq 'on' );
 
 my $repo = shift;
 
+if ( $repo eq '@all' ) {
+    die "you are not authorized\n" if $ENV{GL_USER} and not is_admin();
+} else {
+    die "you are not authorized\n" if $ENV{GL_USER} and not owns($repo);
+}
+
 my $msg = join( " ", @ARGV );
 # try STDIN only if no msg found in args *and* it's an 'off' command
 if ( not $msg and not $on ) {
@@ -32,7 +36,7 @@ if ( not $msg and not $on ) {
 }
 
 my $sf = ".gitolite.down";
-my $rb = $rc{GL_REPO_BASE};
+my $rb = $ENV{GL_REPO_BASE};
 
 if ( $repo eq '@all' ) {
     target( $ENV{HOME} );

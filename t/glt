@@ -13,6 +13,7 @@ my %extcmds = (
     help        => 1,
     info        => 1,
     perms       => 1,
+    writes      => 1,
 );
 
 $ENV{G3T_USER} = $user;
