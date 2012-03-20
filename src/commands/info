@@ -53,12 +53,15 @@ my $lr = lister_dispatch('list-repos');
 
 my $perm;
 my $repos;
+my @aa;
 
 if ($phy) {
     _chdir( $rc{GL_REPO_BASE} );
     $repos = list_phy_repos(1);
+    @aa = qw(R W);
 } else {
     $repos = $lr->();
+    @aa = qw(R W ^C);
 }
 
 my $creator = '';
@@ -66,7 +69,8 @@ for my $repo (@$repos) {
     next unless $repo =~ /$patt/;
     my $perm = '';
     $creator = creator($repo) if $lc;
-    for my $aa (qw(R W ^C)) {
+
+    for my $aa (@aa) {
         my $ret = access( $repo, $user, $aa, $ref );
         $perm .= ( $ret =~ /DENIED/ ? "  " : " $aa" );
     }

@@ -71,33 +71,33 @@ try "
 
 try "
     glt info u1 -p; ok; GS u1
-        /R W  \tt1/
-        /R    \tt2/
-        /R W  \ttesting/
-        !/R W  \tt3/
+        /R W *\tt1/
+        /R   *\tt2/
+        /R W *\ttesting/
+        !/R W *\tt3/
     glt info u2 -p; ok; GS u2
-        /R    \tt1/
-        /R W  \tt2/
-        /R W  \ttesting/
-        !/R W  \tt3/
+        /R   *\tt1/
+        /R W *\tt2/
+        /R W *\ttesting/
+        !/R W *\tt3/
     glt info u3 -p; ok; GS u3
-        /R W  \tt3/
-        /R W  \ttesting/
-        !/R    \tt1/
-        !/R W  \tt2/
+        /R W *\tt3/
+        /R W *\ttesting/
+        !/R   *\tt1/
+        !/R W *\tt2/
     glt info u4 -p; ok; GS u4
-        /R    \tt3/
-        /R W  \ttesting/
-        !/R    \tt1/
-        !/R W  \tt2/
+        /R   *\tt3/
+        /R W *\ttesting/
+        !/R   *\tt1/
+        !/R W *\tt2/
     glt info u5 -p; ok; GS u5
-        /R W  \ttesting/
-        !/R    \tt1/
-        !/R W  \tt2/
-        !/R W  \tt3/
+        /R W *\ttesting/
+        !/R   *\tt1/
+        !/R W *\tt2/
+        !/R W *\tt3/
     glt info u6 -p; ok; GS u6
-        /R W  \ttesting/
-        !/R    \tt1/
-        !/R W  \tt2/
-        !/R W  \tt3/
+        /R W *\ttesting/
+        !/R   *\tt1/
+        !/R W *\tt2/
+        !/R W *\tt3/
 ";

@@ -38,8 +38,8 @@ try "
         /WRITERS u2/
     # expand
     glt info u2 -p
-        /R W  \tfoo/u1/bar/
-        /R W  \ttesting/
+        /R W *\tfoo/u1/bar/
+        /R W *\ttesting/
 
     # push
     cd ..
@@ -81,8 +81,8 @@ try "
         /WRITERS u2/
     # expand
     glt info u2 -p
-        /R W  \tfoo/u1/bar/
-        /R W  \ttesting/
+        /R W *\tfoo/u1/bar/
+        /R W *\ttesting/
 
     # push
     cd ..
