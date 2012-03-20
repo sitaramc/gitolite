@@ -71,6 +71,9 @@ sub access {
     my $deny_rules = option($repo, 'deny-rules');
     load($repo);
 
+    # sanity check the only piece the user can control
+    _die "invalid characters in ref or filename: $ref\n" unless $ref =~ $REF_OR_FILENAME_PATT;
+
     # when a real repo doesn't exist, ^C is a pre-requisite for any other
     # check to give valid results.
     if ( $aa ne '^C' and $repo !~ /^\@/ and $repo =~ $REPONAME_PATT and repo_missing($repo) ) {

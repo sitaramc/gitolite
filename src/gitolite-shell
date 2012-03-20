@@ -45,6 +45,10 @@ sub in_http {
 }
 
 sub in_ssh {
+    $ENV{SSH_ORIGINAL_COMMAND} ||= '';
+    my $soc = $ENV{SSH_ORIGINAL_COMMAND};
+    $soc =~ s/[\n\r]+/<<newline>>/g;
+    _die "I don't like newlines in the command: $soc\n" if $ENV{SSH_ORIGINAL_COMMAND} ne $soc;
 }
 
 # ----------------------------------------------------------------------
