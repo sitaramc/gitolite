@@ -82,9 +82,9 @@ sub main {
     trigger( 'ACCESS_CHECK', $repo, $user, $aa, 'any', $ret );
     _die $ret if $ret =~ /DENIED/;
 
-    $repo = "'$rc{GL_REPO_BASE}/$repo.git'";
     trigger( 'PRE_GIT', $repo, $user, $aa, 'any', $verb );
-    _system( "git", "shell", "-c", "$verb $repo" );
+    my $repodir = "'$rc{GL_REPO_BASE}/$repo.git'";
+    _system( "git", "shell", "-c", "$verb $repodir" );
     trigger( 'POST_GIT', $repo, $user, $aa, 'any', $verb );
 }
 
