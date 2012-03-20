@@ -7,9 +7,12 @@ use Gitolite::Rc;
 use Gitolite::Common;
 
 =for usage
-Usage:  gitolite help
+Usage:  ssh git@host help       # via ssh
+        gitolite help           # directly on server command line
 
 Prints a list of custom commands available at this gitolite installation.
+
+Each command has its own help, accessed by passing it '-h' again.
 =cut
 
 usage() if @ARGV;

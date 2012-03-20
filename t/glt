@@ -10,6 +10,7 @@ my $user = shift or die "need user";
 my $rc;
 
 my %extcmds = (
+    help        => 1,
     info        => 1,
     perms       => 1,
 );
