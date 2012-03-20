@@ -282,7 +282,7 @@ sub memberships {
         }
     }
 
-    if ( $type eq 'user' and $repo ) {
+    if ( $type eq 'user' and $repo and not repo_missing($repo)  ) {
         # find the roles this user has when accessing this repo and add those
         # in as groupnames he is a member of.  You need the already existing
         # memberships for this; see below this function for an example
@@ -361,7 +361,9 @@ sub generic_name {
     # In particular, 'gitolite access' can't be used to check ^C perms.
     $creator = creator($base);
 
-    ( $base2 = $base ) =~ s(/$creator/)(/CREATOR/) if $creator;
+    $base2 = $base;
+    $base2 =~ s(/$creator/)(/CREATOR/) if $creator;
+    $base2 =~ s(^$creator/)(CREATOR/)  if $creator;
     $base2 = '' if $base2 eq $base;    # if there was no change
 
     return $base2;
