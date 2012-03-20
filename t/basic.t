@@ -15,11 +15,11 @@ try "
 
     # subtest 1
     cd ..
-    CLONE dev2 file://gitolite-admin ga2
+    CLONE dev2 gitolite-admin ga2
                                 !ok;    gsh
                                         /DENIED by fallthru/
                                         /fatal: The remote end hung up unexpectedly/
-    CLONE admin --progress file://gitolite-admin ga2
+    glt clone admin --progress file:///gitolite-admin ga2
                                 ok;     gsh
                                         /Counting/; /Compressing/; /Total/
     cd gitolite-admin;          ok
@@ -41,12 +41,12 @@ try "
     git add conf;               ok
     git status -s;              ok;     /M  conf/gitolite.conf/
     git commit -m t01a;         ok;     /master.*t01a/
-    PUSH dev2 origin;           !ok;    gsh
+    PUSH dev2;                  !ok;    gsh
                                         /DENIED by fallthru/
                                         /fatal: The remote end hung up unexpectedly/
-    PUSH admin origin;          ok;     /master -> master/
+    PUSH admin;                 ok;     /master -> master/
     tsh empty;                  ok;
-    PUSH admin origin master:mm
+    PUSH admin master:mm
                                 !ok;    gsh
                                         /DENIED by refs/heads/mm/
                                         reject
@@ -72,31 +72,31 @@ try "
 
     # clone
     cd ..;                      ok;
-    CLONE u1 file://t1;         !ok;    gsh
+    CLONE u1 t1;                !ok;    gsh
                                         /DENIED by fallthru/
                                         /fatal: The remote end hung up unexpectedly/
-    CLONE u2 file://t1;         ok;     gsh
+    CLONE u2 t1;                ok;     gsh
                                         /warning: You appear to have cloned an empty repository./
     ls -al t1;                  ok;     /$ENV{USER}.*$ENV{USER}.*\.git/
     cd t1;                      ok;
 
     # push
     test-commit tc1 tc2 tc2;    ok;     /a530e66/
-    PUSH u2 origin;             !ok;    gsh
+    PUSH u2;                    !ok;    gsh
                                         /DENIED by fallthru/
                                         /fatal: The remote end hung up unexpectedly/
-    PUSH u3 origin master;      ok;     gsh
+    PUSH u3 master;             ok;     gsh
                                         /master -> master/
 
     # rewind
     reset-h HEAD^;              ok;     /HEAD is now at aa2b5c5 tc2/
     test-tick; test-commit tc3; ok;     /3ffced1/
-    PUSH u3 origin;             !ok;    gsh
+    PUSH u3;                    !ok;    gsh
                                         /rejected.*master -> master.*non-fast-forward./
-    PUSH u3 -f origin;          !ok;    gsh
+    PUSH u3 -f;                 !ok;    gsh
                                         reject
                                         /DENIED by fallthru/
-    PUSH u4 origin +master;     ok;     gsh
+    PUSH u4 +master;            ok;     gsh
                                         / \\+ a530e66...3ffced1 master -> master.*forced update./
 ";
 
@@ -131,12 +131,12 @@ try "
 ";
 
 try "
-    CLONE u1 file://aa;         ok;     gsh
+    CLONE u1 aa;                ok;     gsh
     cd aa;                      ok
     test-commit set3 t1 t2 t3 t4 t5 t6 t7 t8 t9
                                 ok
-    PUSH u1 origin HEAD;        ok;     gsh
-                                        /To file://aa/
+    PUSH u1 HEAD;               ok;     gsh
+                                        /To file:///aa/
                                         /\\* \\[new branch\\]      HEAD -> master/
     branch dev;                 ok
     branch foo;                 ok
@@ -144,52 +144,52 @@ try "
     # u1 rewind master ok
     reset-h HEAD^;              ok
     test-commit r1;             ok
-    PUSH u1 origin +master;     ok;     gsh
-                                        /To file://aa/
+    PUSH u1 +master;            ok;     gsh
+                                        /To file:///aa/
                                         /\\+ 27ed463...05adfb0 master -> master .forced update./
 
     # u2 rewind master !ok
     reset-h HEAD^;              ok
     test-commit r2;             ok
-    PUSH u2 origin +master;     !ok;    gsh
+    PUSH u2 +master;            !ok;    gsh
                                         reject
                                         /DENIED by fallthru/
 
     # u3 rewind master ok
     reset-h HEAD^;              ok
     test-commit r3;             ok
-    PUSH u3 origin +master;     ok;     gsh
-                                        /To file://aa/
+    PUSH u3 +master;            ok;     gsh
+                                        /To file:///aa/
                                         /\\+ 05adfb0...6a532fe master -> master .forced update./
 
     # u4 push master ok
     test-commit u4;             ok
-    PUSH u4 origin master;      ok;     gsh
-                                        /To file://aa/
+    PUSH u4 master;             ok;     gsh
+                                        /To file:///aa/
                                         /6a532fe..f929773 +master -> master/
 
     # u4 rewind master !ok
     reset-h HEAD^;              ok
-    PUSH u4 origin +master;     !ok;    gsh
+    PUSH u4 +master;            !ok;    gsh
                                         reject
                                         /DENIED by fallthru/
 
     # u3,u4 push other branches !ok
-    PUSH u3 origin dev;         !ok;    gsh
+    PUSH u3 dev;                !ok;    gsh
                                         reject
                                         /DENIED by fallthru/
-    PUSH u4 origin dev;         !ok;    gsh
+    PUSH u4 dev;                !ok;    gsh
                                         reject
                                         /DENIED by fallthru/
-    PUSH u3 origin foo;         !ok;    gsh
+    PUSH u3 foo;                !ok;    gsh
                                         reject
                                         /DENIED by fallthru/
-    PUSH u4 origin foo;         !ok;    gsh
+    PUSH u4 foo;                !ok;    gsh
                                         reject
                                         /DENIED by fallthru/
 
     # clean up for next set
-    PUSH u1 -f origin master dev foo
+    glt push u1 -f origin master dev foo
                                 ok;     gsh
                                         /f929773...6a532fe master -> master .forced update./
                                         /new branch.*dev -> dev/
@@ -197,18 +197,18 @@ try "
 
     # u5 push master !ok
     test-commit u5
-    PUSH u5 origin master;      !ok;    gsh
+    PUSH u5 master;             !ok;    gsh
                                         reject
                                         /DENIED by refs/heads/master/
 
     # u5 rewind dev ok
-    PUSH u5 origin +dev^:dev
+    PUSH u5 +dev^:dev
                                 ok;     gsh
                                         /\\+ 27ed463...1ad477a dev\\^ -> dev .forced update./
 
 
     # u5 rewind foo !ok
-    PUSH u5 origin +foo^:foo
+    PUSH u5 +foo^:foo
                                 !ok;    gsh
                                         reject
                                         /remote: FATAL: \\+ refs/heads/foo aa u5 DENIED by fallthru/
@@ -218,15 +218,15 @@ try "
     /Switched to branch 'foo'/
 
     test-commit u5
-    PUSH u5 origin foo;         ok;     gsh
+    PUSH u5 foo;                ok;     gsh
                                         /27ed463..83da62c *foo -> foo/
 
     # u1 delete dev ok
-    PUSH u1 origin :dev;        ok;     gsh
+    PUSH u1 :dev;               ok;     gsh
                                         / - \\[deleted\\] *dev/
 
     # push it back
-    PUSH u1 origin dev;         ok;     gsh
+    PUSH u1 dev;                ok;     gsh
                                         /\\* \\[new branch\\] *dev -> dev/
 
 ";
@@ -244,15 +244,15 @@ try "
 
     cd ..;                      ok
 
-    CLONE tester file://r1;     ok;     gsh
+    CLONE tester r1;            ok;     gsh
                                         /Cloning into 'r1'.../
     cd r1;                      ok
     test-commit r1a r1b r1c r1d r1e r1f
                                 ok
-    PUSH tester origin HEAD;    ok;     gsh
+    PUSH tester HEAD;           ok;     gsh
                                         /\\* \\[new branch\\] *HEAD -> master/
     git branch v1
-    PUSH tester origin v1;      ok;     gsh
+    PUSH tester v1;             ok;     gsh
                                         /\\* \\[new branch\\] *v1 -> v1/
 
 ";
@@ -271,14 +271,14 @@ try "
 
     cd ..;                      ok
 
-    CLONE tester file://r2;     ok;     gsh
+    CLONE tester r2;            ok;     gsh
                                         /Cloning into 'r2'.../
     cd r2;                      ok
     test-commit r2a r2b r2c r2d r2e r2f
                                 ok
-    PUSH tester origin HEAD;    ok;     gsh
+    PUSH tester HEAD;           ok;     gsh
                                         /\\* \\[new branch\\] *HEAD -> master/
     git branch v1
-    PUSH tester origin v1;      !ok;    gsh
+    PUSH tester v1;             !ok;    gsh
                                         /W refs/heads/v1 r2 tester DENIED by refs/heads/v\\[0-9\\]/
 "

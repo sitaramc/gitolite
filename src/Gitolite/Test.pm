@@ -45,8 +45,8 @@ try "
     DEF CS_1 = pwd; //tmp/tsh_tempdir.*gitolite-admin/; git remote -v; ok; /file://gitolite-admin/
     DEF CHECK_SETUP = CS_1; git log; ok; /6b18ec2ab0f765122ec133959b36c57f77d4565c/
 
-    DEF CLONE = glt clone
-    DEF PUSH  = glt push
+    DEF CLONE = glt clone %1 file:///%2
+    DEF PUSH  = glt push %1 origin
 
     # clean install
     mkdir -p $ENV{HOME}/bin
