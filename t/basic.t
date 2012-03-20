@@ -45,7 +45,7 @@ try "
                                         /DENIED by fallthru/
                                         /fatal: The remote end hung up unexpectedly/
     PUSH admin;                 ok;     /master -> master/
-    tsh empty;                  ok;
+    empty;                      ok;
     PUSH admin master:mm
                                 !ok;    gsh
                                         /DENIED by refs/heads/mm/

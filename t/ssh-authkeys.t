@@ -12,6 +12,7 @@ use Gitolite::Test;
 $ENV{GL_BINDIR} = "$ENV{PWD}/src";
 
 my $ak = "$ENV{HOME}/.ssh/authorized_keys";
+mkdir("$ENV{HOME}/.ssh", 0700) if not -d "$ENV{HOME}/.ssh";
 my $kd = `gitolite query-rc -n GL_ADMIN_BASE` . "/keydir";
 
 try "plan 49";

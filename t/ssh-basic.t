@@ -24,6 +24,9 @@ try "
     cp $bd/../t/keys/u[1-6]* $h/.ssh;       ok or die 2
     cp $bd/../t/keys/admin*  $h/.ssh;       ok or die 3
     cp $bd/../t/keys/config  $h/.ssh;       ok or die 4
+        cat $h/.ssh/config
+        perl s/%USER/$ENV{USER}/
+        put $h/.ssh/config
 
     mkdir                  $ab/keydir;      ok or die 5
     cp $bd/../t/keys/*.pub $ab/keydir;      ok or die 6
