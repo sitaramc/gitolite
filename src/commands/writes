@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+=for usage
+Usage: gitolite writes on|off <reponame>|@all
+
+'on' enables, 'off' disables, writes (pushes) to the named repo or all repos.
+
+With 'off', any subsequent text is taken to be the message to be shown to
+users when their pushes get rejected.  If it is not supplied, it will take it
+from STDIN; this allows longer messages.
+=cut
+
+usage() if not @ARGV or @ARGV < 2 or $ARGV[0] eq '-h';
+
+usage() if $ARGV[0] ne 'on' and $ARGV[0] ne 'off';
+my $on = ( shift eq 'on' );
+
+my $repo = shift;
+
+my $msg = join( " ", @ARGV );
+# try STDIN only if no msg found in args *and* it's an 'off' command
+if ( not $msg and not $on ) {
+    say2 "...please type the message to be shown to users:";
+    $msg = join( "", <> );
+}
+
+my $sf = ".gitolite.down";
+my $rb = $rc{GL_REPO_BASE};
+
+if ( $repo eq '@all' ) {
+    target( $ENV{HOME} );
+} else {
+    target("$rb/$repo.git");
+}
+
+sub target {
+    my $repodir = shift;
+    if ($on) {
+        unlink "$repodir/$sf";
+    } else {
+        _print( "$repodir/$sf", $msg );
+    }
+}
