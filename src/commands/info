@@ -10,25 +10,37 @@ use Gitolite::Common;
 use Gitolite::Conf::Load;
 
 =for usage
-Usage:  gitolite info [-p] [optional repo name pattern]
+Usage:  gitolite info [-p [-lc] [<repo name pattern>]
 
 List all repos/repo groups you can access.  By default, it shows you what the
 conf file specified, which means group names and wild card patterns may show
-up.
+up.  Example, if the conf file looked like this:
 
-With '-p' it looks at actual (physical) repos instead.
+    @oss = git gitolite linux
+    repo @oss
+        RW+ =   YourName
+
+then running 'ssh git@host info' will only show you '@oss'.
+
+'-p' looks at actual (physical) repos instead; in our example this will show
+you git, gitolite, and linux.
+
+'-lc' lists creators as an additional field at the end; this option is only
+available with '-p'.
 
 The optional pattern is an unanchored regex that will limit the repos
 searched, in both cases.  It might speed up things a little if you have more
 than a few thousand repos.
 =cut
 
-my ( $help, $phy, $patt ) = ('') x 3;
+my ( $help, $phy, $lc, $patt ) = ('') x 4;
 GetOptions(
-    'p' => \$phy,
-    'h' => \$help,
+    'lc' => \$lc,
+    'p'  => \$phy,
+    'h'  => \$help,
 ) or usage();
 
+usage("'-lc' requires '-p'") if $lc and not $phy;
 usage() if @ARGV > 1 or $help;
 $patt = shift || '.';
 
@@ -49,13 +61,18 @@ if ($phy) {
     $repos = $lr->();
 }
 
+my $creator = '';
 for my $repo (@$repos) {
     next unless $repo =~ /$patt/;
     my $perm = '';
+    $creator = creator($repo) if $lc;
     for my $aa (qw(R W ^C)) {
         my $ret = access( $repo, $user, $aa, $ref );
         $perm .= ( $ret =~ /DENIED/ ? "  " : " $aa" );
     }
     $perm =~ s/\^//;
-    print "$perm\t$repo\n" if $perm =~ /\S/;
+    next unless $perm =~ /\S/;
+    print "$perm\t$repo";
+    print "\t$creator" if $lc;
+    print "\n";
 }

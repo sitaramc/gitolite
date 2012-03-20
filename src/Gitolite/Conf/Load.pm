@@ -9,6 +9,7 @@ package Gitolite::Conf::Load;
   git_config
   option
   repo_missing
+  creator
   vrefs
   lister_dispatch
 );
