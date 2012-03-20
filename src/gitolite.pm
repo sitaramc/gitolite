@@ -476,6 +476,7 @@ sub setup_git_configs
             next if $key =~ /^gitolite-options\./;
             if ($value ne "") {
                 $value =~ s/^['"](.*)["']$/$1/;
+                $value =~ s/%GL_REPO/$ENV{GL_REPO}/;
                 system("git", "config", $key, $value);
             } else {
                 system("git", "config", "--unset-all", $key);
