@@ -40,7 +40,7 @@ setperms(@ARGV);
 
 sub getperms {
     my $repo = shift;
-    _die "repo '$repo' missing" if repo_missing($repo);
+    _die "sorry you are not authorised" if repo_missing($repo) or creator($repo) ne $ENV{GL_USER};
     my $pf = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
 
     print slurp($pf) if -f $pf;
@@ -50,13 +50,18 @@ sub getperms {
 
 sub setperms {
     my $repo = shift;
-    _die "repo '$repo' missing" if repo_missing($repo);
+    _die "sorry you are not authorised" if repo_missing($repo) or creator($repo) ne $ENV{GL_USER};
     my $pf = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
 
     if ( not @_ ) {
         # legacy mode; pipe data in
         @ARGV = ();
-        _print( $pf, <> );
+        my @a;
+        for (<>) {
+            _die "Invalid role '$1'; check the rc file" if /(\S+)/ and not $rc{ROLES}{$1};
+            push @a, $_;
+        }
+        _print( $pf, @a );
         exit;
     }
 
