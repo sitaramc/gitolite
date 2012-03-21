@@ -87,6 +87,7 @@ sub fp {
     my $in = shift || '';
     if ( $in =~ /\.pub$/ ) {
         # single pubkey file
+        _die "bad pubkey file '$in'" unless $in =~ $REPONAME_PATT;
         return fp_file($in);
     } elsif ( -f $in ) {
         # an authkeys file
@@ -99,7 +100,7 @@ sub fp {
 
 sub fp_file {
     my $f  = shift;
-    my $fp = `ssh-keygen -l -f $f`;
+    my $fp = `ssh-keygen -l -f '$f'`;
     chomp($fp);
     _die "fingerprinting failed for $f" unless $fp =~ /([0-9a-f][0-9a-f](:[0-9a-f][0-9a-f])+)/;
     $fp = $1;

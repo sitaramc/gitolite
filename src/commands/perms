@@ -69,6 +69,7 @@ sub setperms {
     my ( $op, $role, $user ) = @_;
     _die "Invalid syntax.  Please re-run with '-h' for detailed usage" if $op ne '+' and $op ne '-';
     _die "Invalid role '$role'; check the rc file" if not $rc{ROLES}{$role};
+    _die "Invalid user '$user'" if not $user =~ $USERNAME_PATT;
 
     my $text = '';
     my @text = slurp($pf) if -f $pf;

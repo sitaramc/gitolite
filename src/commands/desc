@@ -16,14 +16,18 @@ repo=$1; shift
 
 # this shell script takes arguments that are completely under the user's
 # control, so make sure you quote those suckers!
-
 gitolite creator "$repo" $GL_USER || die You are not authorised
+# if it passes, $repo is a valid repo name so it is known to contain only sane
+# characters.  This is because 'gitolite creator' return true only if there
+# *is* a repo of that name and it has a gl-creator file that contains the same
+# text as $GL_USER.
+
 descfile=`gitolite query-rc GL_REPO_BASE`/"$repo".git/description
 
 if [ -z "$1" ]
 then
-    [ -r $descfile ] && cat $descfile
+    [ -r "$descfile" ] && cat "$descfile"
     exit 0
 fi
 
-echo "$*" > $descfile
+echo "$*" > "$descfile"
