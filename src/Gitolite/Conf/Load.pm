@@ -113,6 +113,7 @@ sub git_config {
     my ( $repo, $key ) = @_;
     $key ||= '.';
 
+    return {} if repo_missing($repo);
     load($repo);
 
     # read comments bottom up
