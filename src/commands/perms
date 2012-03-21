@@ -35,6 +35,7 @@ if ( $ARGV[0] eq '-l' ) {
 }
 
 setperms(@ARGV);
+_system("gitolite", "trigger", "POST_CREATE");
 
 # ----------------------------------------------------------------------
 
@@ -62,7 +63,7 @@ sub setperms {
             push @a, $_;
         }
         _print( $pf, @a );
-        exit;
+        return;
     }
 
     _die "Invalid syntax.  Please re-run with '-h' for detailed usage" if @_ != 3;
