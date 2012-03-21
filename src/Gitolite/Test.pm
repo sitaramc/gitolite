@@ -85,7 +85,7 @@ sub confreset {
     system("find ~/repositories -name '*.git' |xargs rm -rf");
     system("mv ~/repositories/.ga ~/repositories/gitolite-admin.git");
     system("mv ~/repositories/.te ~/repositories/testing.git       ");
-    put "conf/gitolite.conf", '
+    put "|cut -c9- > conf/gitolite.conf", '
         repo    gitolite-admin
             RW+     =   admin
         repo    testing

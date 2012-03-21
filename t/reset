@@ -9,4 +9,25 @@ BEGIN {
 # this is hardcoded; change it if needed
 use lib "src";
 use Gitolite::Test;
-try 'put';
+
+use Cwd;
+my $workdir = getcwd();
+
+confreset;confadd '
+    repo foo/..*
+        C   =   u1 u2 u3
+        RW+ =   CREATOR
+        RW  =   WRITERS
+        R   =   READERS
+';
+
+try "ADMIN_PUSH set1; !/FATAL/" or die text();
+
+try "
+    mkdir -p keydir
+    cp \$HOME/.ssh/u*.pub keydir
+    cp \$HOME/.ssh/admin.pub keydir
+    git add keydir
+    git commit -m 6k
+    glt push admin origin
+";
