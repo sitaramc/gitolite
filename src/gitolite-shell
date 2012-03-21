@@ -15,17 +15,20 @@ use strict;
 use warnings;
 
 # the main() sub expects ssh-ish things; set them up...
+my $id = '';
 if ( exists $ENV{G3T_USER} ) {
-    in_local();    # file:// masquerading as ssh:// for easy testing
+    $id = in_local();    # file:// masquerading as ssh:// for easy testing
 } elsif ( exists $ENV{SSH_CONNECTION} ) {
-    in_ssh();
+    $id = in_ssh();
 } elsif ( exists $ENV{REQUEST_URI} ) {
-    in_http();
+    $id = in_http();
 } else {
     _die "who the *heck* are you?";
 }
 
-main();
+main($id);
+
+gl_log( '==end==' ) if $$ == $ENV{GL_TID};
 
 exit 0;
 
@@ -38,6 +41,7 @@ sub in_local {
         print STDERR "TRACE: gsh(", join( ")(", @ARGV ), ")\n";
         print STDERR "TRACE: gsh(SOC=$ENV{SSH_ORIGINAL_COMMAND})\n";
     }
+    return 'local';
 }
 
 sub in_http {
@@ -49,6 +53,10 @@ sub in_ssh {
     my $soc = $ENV{SSH_ORIGINAL_COMMAND};
     $soc =~ s/[\n\r]+/<<newline>>/g;
     _die "I don't like newlines in the command: $soc\n" if $ENV{SSH_ORIGINAL_COMMAND} ne $soc;
+
+    my $ip;
+    ($ip = $ENV{SSH_CONNECTION} || '(no-IP)') =~ s/ .*//;
+    return $ip;
 }
 
 # ----------------------------------------------------------------------
@@ -56,7 +64,9 @@ sub in_ssh {
 # call this once you are sure arg-1 is the username and SSH_ORIGINAL_COMMAND
 # has been setup (even if it's not actually coming via ssh).
 sub main {
-    gl_log( 'gitolite-shell', @ARGV, $ENV{SSH_ORIGINAL_COMMAND} );
+    my $id = shift;
+
+    gl_log( 'remote', $id, @ARGV, $ENV{SSH_ORIGINAL_COMMAND} );
     umask $rc{UMASK};
 
     # set up the user
@@ -73,7 +83,7 @@ sub main {
         require Gitolite::Conf::Store;
         Gitolite::Conf::Store->import;
         new_wild_repo( $repo, $user );
-        gl_log( 'gitolite-shell:new_wild_repo', $repo, $user );
+        gl_log( 'create', $repo, $user );
     }
 
     # a ref of 'any' signifies that this is a pre-git check, where we don't
@@ -82,9 +92,9 @@ sub main {
     # more information.
     my $ret = access( $repo, $user, $aa, 'any' );
     trace( 1, "access($repo, $user, $aa, 'any')", "-> $ret" );
-    gl_log( 'gitolite-shell:check', $repo, $user, $aa, 'any', '->', $ret );
+    gl_log( 'check1', $repo, $user, $aa, 'any', '->', $ret );
     trigger( 'ACCESS_CHECK', $repo, $user, $aa, 'any', $ret );
-    _die $ret if $ret =~ /DENIED/;
+    _die $ret . "\n(or you mis-spelled the reponame)" if $ret =~ /DENIED/;
 
     check_repo_write_enabled($repo) if $aa eq 'W';
     trigger( 'PRE_GIT', $repo, $user, $aa, 'any', $verb );

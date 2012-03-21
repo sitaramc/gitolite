@@ -28,20 +28,21 @@ sub update {
 
     my $ret = access( $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref );
     trace( 1, "access($ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref)", "-> $ret" );
-    gl_log( 'update:check', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref, '->', $ret );
     trigger( 'ACCESS_CHECK', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref, $ret );
     _die $ret if $ret =~ /DENIED/;
 
     check_vrefs( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa );
-    gl_log( 'update:OK', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV );
 
+    gl_log( 'check2', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV, '->', $ret );
     exit 0;
 }
 
 sub check_vrefs {
     my ( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa ) = @_;
     my $name_seen = 0;
+    my $n_vrefs = 0;
     for my $vref ( vrefs( $ENV{GL_REPO}, $ENV{GL_USER} ) ) {
+        $n_vrefs++;
         if ( $vref =~ m(^VREF/NAME/) ) {
             # this one is special; we process it right here, and only once
             next if $name_seen++;
@@ -64,6 +65,7 @@ sub check_vrefs {
               : "$vref: helper program exit status $?";
         }
     }
+    return $n_vrefs;
 }
 
 sub check_vref {

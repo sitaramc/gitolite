@@ -46,7 +46,7 @@ use warnings;
 # ----------------------------------------------------------------------
 
 my ( $command, @args ) = @ARGV;
-gl_log( 'gitolite', @ARGV ) if -d $rc{GL_ADMIN_BASE};
+gl_log( 'command', @ARGV ) if -d $rc{GL_ADMIN_BASE};
 args();
 
 # the first two commands need options via @ARGV, as they have their own
@@ -90,6 +90,8 @@ if ( $command eq 'setup' ) {
 } else {
     _die "unknown gitolite sub-command";
 }
+
+gl_log( '==end==' ) if $$ == $ENV{GL_TID};
 
 sub args {
     usage() if not $command or $command eq '-h';

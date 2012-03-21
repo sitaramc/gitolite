@@ -20,7 +20,7 @@ use warnings;
 
 sub post_update {
     trace( 2, @ARGV );
-    gl_log( 'post-update', @ARGV );
+    gl_log( 'post-up', @ARGV );
     # this is the *real* post_update hook for gitolite
 
     tsh_try("git ls-tree --name-only master");

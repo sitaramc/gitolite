@@ -10,7 +10,7 @@ package Gitolite::Common;
   say2    _die    _system slurp             tsh_lines
           trace           cleanup_conf_line tsh_try
           usage                             tsh_run
-          gen_ts_lfn
+          gen_lfn
           gl_log
 );
 #>>>
@@ -72,7 +72,7 @@ sub _warn {
 }
 
 sub _die {
-    gl_log( "_die:", @_ );
+    gl_log( 'die', @_ );
     if ( $ENV{D} and $ENV{D} >= 3 ) {
         confess "FATAL: " . join( ",", @_ ) . "\n" if defined( $ENV{D} );
     } elsif ( defined( $ENV{D} ) ) {
@@ -112,7 +112,7 @@ sub _system {
     # run system(), catch errors.  Be verbose only if $ENV{D} exists.  If not,
     # exit with <rc of system()> if it applies, else just "exit 1".
     trace( 2, @_ );
-    gl_log( "_system:", @_ );
+    gl_log( 'system', @_ );
     if ( system(@_) != 0 ) {
         trace( 1, "system() failed", @_, "-> $?" );
         if ( $? == -1 ) {
@@ -205,9 +205,8 @@ sub cleanup_conf_line {
     }
 }
 
-# generate a timestamp.  If a template is passed generate a log file name
-# based on it also
-sub gen_ts_lfn {
+# generate a timestamp
+sub gen_ts {
     my ( $s, $min, $h, $d, $m, $y ) = (localtime)[ 0 .. 5 ];
     $y += 1900; $m++;    # usual adjustments
     for ( $s, $min, $h, $d, $m ) {
@@ -215,7 +214,16 @@ sub gen_ts_lfn {
     }
     my $ts = "$y-$m-$d.$h:$min:$s";
 
-    return $ts unless @_;
+    return $ts;
+}
+
+# generate a log file name
+sub gen_lfn {
+    my ( $s, $min, $h, $d, $m, $y ) = (localtime)[ 0 .. 5 ];
+    $y += 1900; $m++;    # usual adjustments
+    for ( $s, $min, $h, $d, $m ) {
+        $_ = "0$_" if $_ < 10;
+    }
 
     my ($template) = shift;
     # substitute template parameters and set the logfile name
@@ -223,7 +231,7 @@ sub gen_ts_lfn {
     $template =~ s/%m/$m/g;
     $template =~ s/%d/$d/g;
 
-    return ( $ts, $template );
+    return $template;
 }
 
 sub gl_log {
@@ -231,13 +239,15 @@ sub gl_log {
     # called even before they are set, we have no choice but to dump to STDERR
     # (and probably call "logger").
     my $msg = join( "\t", @_ );
+    $msg =~ s/[\n\r]+/<<newline>>/g;
 
-    my $ts = $ENV{GL_TS} || gen_ts_lfn();
+    my $ts  = gen_ts();
+    my $tid = $ENV{GL_TID} ||= $$;
 
     my $fh;
     logger_plus_stderr( "$ts no GL_LOGFILE env var", "$ts $msg" ) if not $ENV{GL_LOGFILE};
     open my $lfh, ">>", $ENV{GL_LOGFILE} or logger_plus_stderr( "open log failed: $!", $msg );
-    print $lfh "$ts\t$msg\n";
+    print $lfh "$ts\t$tid\t$msg\n";
     close $lfh;
 }
 

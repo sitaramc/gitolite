@@ -72,9 +72,12 @@ do $ENV{G3T_RC} if exists $ENV{G3T_RC} and -r $ENV{G3T_RC};
 $ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}";
 
 {
-    my ( $ts, $lfn ) = gen_ts_lfn( $rc{LOG_TEMPLATE} );
-    $rc{GL_LOGFILE} = $ENV{GL_LOGFILE} = $lfn;
-    $rc{GL_TS}      = $ENV{GL_TS}      = $ts;
+    $rc{GL_TID} = $ENV{GL_TID} ||= $$;
+    # TID: loosely, transaction ID.  The first PID at the entry point passes
+    # it down to all its children so you can track each access, across all the
+    # various commands it spawns and actions it generates.
+
+    $rc{GL_LOGFILE} = $ENV{GL_LOGFILE} ||= gen_lfn( $rc{LOG_TEMPLATE} );
 }
 
 # these two are meant to help externally written commands (see
