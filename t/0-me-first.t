@@ -9,13 +9,17 @@ use Gitolite::Test;
 # initial smoke tests
 # ----------------------------------------------------------------------
 
-try "plan 55";
+try "plan 65";
 
 # basic push admin repo
 confreset;confadd '
     repo aa
         RW+     =   u1
         RW      =   u2 u3
+
+    repo cc/..*
+        C       =   u4
+        RW+     =   CREATOR u5
 ';
 
 try "ADMIN_PUSH set1; !/FATAL/" or die text();
@@ -64,4 +68,11 @@ try "
     tc d-485;                       ok;     /master 1c01d32. d-485/
     glt push u2 -f origin HEAD;     !ok;    reject
                                             /\\+ refs/heads/master aa u2 DENIED by fallthru/
+
+    # non-existent repos etc
+    glt ls-remote u4 file:///bb;    !ok;    /DENIED by fallthru/
+    glt ls-remote u4 file:///cc/1;  ok;     /Initialized empty/
+    glt ls-remote u5 file:///cc/1;  ok;     perl s/TRACE.*//g; !/\\S/
+    glt ls-remote u5 file:///cc/2;  !ok;    /DENIED by fallthru/
+    glt ls-remote u6 file:///cc/2;  !ok;    /DENIED by fallthru/
 ";
