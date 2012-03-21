@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# Usage:    ssh git@host desc <repo>
+#           ssh git@host desc <repo> <description string>
+#
+# Show or set description for user-created ("wild") repo.
+
+die() { echo "$@" >&2; exit 1; }
+usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
+[ -z "$1" ] && usage
+[ "$1" = "-h" ] && usage
+[ -z "$GL_USER" ] && die GL_USER not set
+
+# ----------------------------------------------------------------------
+repo=$1; shift
+
+# this shell script takes arguments that are completely under the user's
+# control, so make sure you quote those suckers!
+
+gitolite creator "$repo" $GL_USER || die You are not authorised
+descfile=`gitolite query-rc GL_REPO_BASE`/"$repo".git/description
+
+if [ -z "$1" ]
+then
+    [ -r $descfile ] && cat $descfile
+    exit 0
+fi
+
+echo "$*" > $descfile

@@ -271,6 +271,7 @@ __DATA__
         {
             'help'              =>  1,
             'info'              =>  1,
+            'desc'              =>  1,
             'perms'             =>  1,
             'writes'            =>  1,
         },
