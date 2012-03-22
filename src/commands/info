@@ -80,3 +80,5 @@ for my $repo (@$repos) {
     print "\t$creator" if $lc;
     print "\n";
 }
+
+print "\n$rc{SITE_INFO}\n" if $rc{SITE_INFO};

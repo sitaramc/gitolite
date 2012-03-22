@@ -238,6 +238,18 @@ __DATA__
     UMASK                       =>  0077,
     GIT_CONFIG_KEYS             =>  '',
 
+    # settings used by external programs; uncomment and change as needed.  You
+    # can add your own variables for use in your own external programs; take a
+    # look at the cpu-time and desc commands for perl and shell samples.
+
+    # used by the cpu-time command
+    # DISPLAY_CPU_TIME          =>  1,
+    # CPU_TIME_WARN_LIMIT       =>  0.1,
+    # used by the desc command
+    # WRITER_CAN_UPDATE_DESC    =>  1,
+    # used by the info command
+    # SITE_INFO                 =>  'Please see http://blahblah/gitolite for more help',
+
     # add more roles (like MANAGER, TESTER, ...) here
     ROLES                       =>
         {
@@ -283,6 +295,14 @@ __DATA__
             'perms'             =>  1,
             'writes'            =>  1,
         },
+
+    # comment out or uncomment as needed
+    # these will run in sequence at the end, after a git operation has ended
+    POST_GIT                    =>
+        [
+            # if you use this, make this the last item in the list
+            # 'cpu-time',
+        ],
 );
 
 # ------------------------------------------------------------------------------

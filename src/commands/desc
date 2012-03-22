@@ -16,7 +16,17 @@ repo=$1; shift
 
 # this shell script takes arguments that are completely under the user's
 # control, so make sure you quote those suckers!
-gitolite creator "$repo" $GL_USER || die You are not authorised
+
+# kernel.org needs 'desc' to be available to people who have "RW" or above,
+# not just the "creator".  In fact they need it for non-wild repos so there
+# *is* no creator.
+if gitolite query-rc -q WRITER_CAN_UPDATE_DESC
+then
+    gitolite access -q "$repo" $GL_USER W any || die You are not authorised
+else
+    gitolite creator "$repo" $GL_USER || die You are not authorised
+fi
+
 # if it passes, $repo is a valid repo name so it is known to contain only sane
 # characters.  This is because 'gitolite creator' return true only if there
 # *is* a repo of that name and it has a gl-creator file that contains the same
