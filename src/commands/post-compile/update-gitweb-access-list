@@ -7,5 +7,9 @@
 plf=$(gitolite query-rc GITWEB_PROJECTS_LIST)
 [ -z "$plf" ] && plf=$HOME/projects.list
 
-gitolite list-phy-repos | gitolite access % gitweb R any | grep -v DENIED | cut -f1 | sed -e 's/$/.git/' > $plf
+(
+    gitolite list-phy-repos | gitolite access % gitweb R any | grep -v DENIED
+    gitolite list-phy-repos | gitolite git-config -r % gitweb\\.
+) |
+    cut -f1 | sort -u | sed -e 's/$/.git/' > $plf
 
