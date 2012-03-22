@@ -57,7 +57,13 @@ my $current_data_version = "3.0";
 
 my $rc = glrc('filename');
 do $rc if -r $rc;
-_die "$rc seems to be for older gitolite" if defined($GL_ADMINDIR);
+if (defined($GL_ADMINDIR)) {
+    say2 "";
+    say2 "FATAL: $rc seems to be for older gitolite; checking compat";
+    require Gitolite::Compat;
+
+    exit 1;
+}
 # let values specified in rc file override our internal ones
 @rc{ keys %RC } = values %RC;
 
@@ -246,7 +252,6 @@ __DATA__
     SYNTACTIC_SUGAR             =>
         [
             # 'continuation-lines',
-            'legacy-delegation-abort',
         ],
 
     # comment out or uncomment as needed

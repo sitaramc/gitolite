@@ -9,7 +9,7 @@ use Gitolite::Test;
 # delegation tests -- part 1
 # ----------------------------------------------------------------------
 
-try "plan 55";
+try "plan 53";
 
 try "
     DEF SP_1 = git add conf ; ok; git commit -m %1; ok; /master.* %1/
@@ -33,7 +33,6 @@ confreset;confadd '
         subconf "fragments/*.conf"
 ';
 try "ADMIN_PUSH set1; !/FATAL/" or die text();
-try "/ABORT/; /legacy delegation/";
 
 mkdir "conf/fragments";
 put   "conf/fragments/u1r.conf", '
