@@ -51,8 +51,6 @@ sub parse {
             my @refs  = parse_refs( $2 || '' );
             my @users = parse_users($3);
 
-            # XXX what do we do? s/\bCREAT[EO]R\b/~\$creator/g for @users;
-
             for my $ref (@refs) {
                 for my $user (@users) {
                     add_rule( $perm, $ref, $user );

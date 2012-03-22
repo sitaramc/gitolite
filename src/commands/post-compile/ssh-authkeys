@@ -18,7 +18,6 @@ trace( 2, "'keydir' not found in '$ab'; exiting" ), exit if not -d "$ab/keydir";
 my $akdir   = "$ENV{HOME}/.ssh";
 my $akfile  = "$ENV{HOME}/.ssh/authorized_keys";
 my $glshell = `gitolite query-rc -n GL_BINDIR` . "/gitolite-shell";
-# XXX gl-time not yet coded (GL_PERFLOGT)
 my $auth_options = auth_options();
 
 sanity();

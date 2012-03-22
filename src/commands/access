@@ -35,8 +35,6 @@ Advanced uses: see src/commands/post-compile/update-git-daemon-access-list for
 a good example.
 =cut
 
-# TODO: deal with "C", call it ^C
-
 usage() if not @ARGV or $ARGV[0] eq '-h';
 my $quiet = 0;
 if ( $ARGV[0] eq '-q' ) { $quiet = 1; shift @ARGV; }
@@ -44,7 +42,6 @@ if ( $ARGV[0] eq '-q' ) { $quiet = 1; shift @ARGV; }
 my ( $repo, $user, $aa, $ref ) = @ARGV;
 $aa  ||= '+';
 $ref ||= 'any';
-# XXX the 4th one below might need fine tuning
 _die "invalid perm" if not( $aa and $aa =~ /^(R|W|\+|C|D|M)$/ );
 _die "invalid ref name" if not( $ref and $ref =~ $REPONAME_PATT );
 

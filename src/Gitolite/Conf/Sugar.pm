@@ -117,11 +117,6 @@ sub owner_desc {
     my $lines = shift;
     my @ret;
 
-    # XXX compat breakage: (1) adding repo/owner does not automatically add an
-    # entry to projects.list -- we need a post-procesor for that, and (2)
-    # removing the 'repo' line no longer suffices to remove the config entry
-    # from projects.list.  Maybe the post-procesor should do that as well?
-
     # owner = "owner name"
     #   ->  config gitweb.owner = owner name
     # description = "some long description"
@@ -138,10 +133,6 @@ sub owner_desc {
     for my $line (@$lines) {
         if ( $line =~ /^(\S+)(?: "(.*?)")? = "(.*)"$/ ) {
             my ( $repo, $owner, $desc ) = ( $1, $2, $3 );
-            # XXX these two checks should go into add_config
-            # _die "bad repo name '$repo'" unless $repo =~ $REPONAME_PATT;
-            # _die "$fragment attempting to set description for $repo"
-            #   if check_fragment_repo_disallowed( $fragment, $repo );
             push @ret, "repo $repo";
             push @ret, "config gitweb.description = $desc";
             push @ret, "config gitweb.owner = $owner" if $owner;

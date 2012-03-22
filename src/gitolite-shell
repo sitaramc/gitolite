@@ -34,8 +34,6 @@ exit 0;
 
 # ----------------------------------------------------------------------
 
-# XXX lots of stuff from gl-auth-command is missing for now...
-
 sub in_local {
     if ( $ENV{SSH_ORIGINAL_COMMAND} =~ /git-\w+-pack/ ) {
         print STDERR "TRACE: gsh(", join( ")(", @ARGV ), ")\n";
@@ -109,8 +107,8 @@ sub parse_soc {
     my $soc = $ENV{SSH_ORIGINAL_COMMAND};
     $soc ||= 'info';
 
-    if ( $soc =~ m(^(git-(?:upload|receive)-pack) '/?(.*?)(?:\.git(\d)?)?'$) ) {
-        # TODO git archive
+    my $git_commands = "git-upload-pack|git-receive-pack|git-upload-archive";
+    if ( $soc =~ m(^($git_commands) '/?(.*?)(?:\.git(\d)?)?'$) ) {
         my ( $verb, $repo, $trace_level ) = ( $1, $2, $3 );
         $ENV{D} = $trace_level if $trace_level;
         _die "invalid repo name: '$repo'" if $repo !~ $REPONAME_PATT;

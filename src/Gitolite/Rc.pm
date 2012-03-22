@@ -74,7 +74,6 @@ do $ENV{G3T_RC} if exists $ENV{G3T_RC} and -r $ENV{G3T_RC};
 # fix some env vars, setup gitolite internal "env" vars (aka rc vars)
 # ----------------------------------------------------------------------
 
-# fix PATH (TODO: do it only if 'gitolite' isn't in PATH)
 $ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}";
 
 {
@@ -116,10 +115,6 @@ sub glrc {
 
         # search $HOME first
         return "$ENV{HOME}/.gitolite.rc" if -f "$ENV{HOME}/.gitolite.rc";
-
-        # XXX for fedora, we can add the following line, but I would really prefer
-        # if ~/.gitolite.rc on each $HOME was just a symlink to /etc/gitolite.rc
-        # XXX return "/etc/gitolite.rc" if -f "/etc/gitolite.rc";
 
         return '';
     } elsif ( $cmd eq 'current-data-version' ) {

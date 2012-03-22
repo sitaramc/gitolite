@@ -45,7 +45,6 @@ my @repolist;    # current repo list; reset on each 'repo ...' line
 my $subconf = 'master';
 my $nextseq = 0;
 my %ignored;
-# XXX you still have to "warn" if this has any entries
 
 # ----------------------------------------------------------------------
 
@@ -71,7 +70,6 @@ sub set_repolist {
         _warn "explicit '.git' extension ignored for $_.git" if s/\.git$//;
         _die "bad reponame '$_'" if $_ !~ $REPOPATT_PATT;
     }
-    # XXX -- how do we deal with this? s/\bCREAT[EO]R\b/\$creator/g for @{ $repos_p };
 }
 
 sub parse_refs {
@@ -85,7 +83,6 @@ sub parse_refs {
     # fully qualify refs that dont start with "refs/" or "VREF/";
     # prefix them with "refs/heads/"
     @refs = map { m(^(refs|VREF)/) or s(^)(refs/heads/); $_ } @refs;
-    # XXX what do we do? @refs = map { s(/USER/)(/\$gl_user/); $_ } @refs;
 
     return @refs;
 }
@@ -114,15 +111,6 @@ sub add_rule {
         }
 
         push @{ $repos{$repo}{$user} }, [ $nextseq, $perm, $ref ];
-
-        # XXX g2 diff: we're not doing a lint check for usernames versus pubkeys;
-        # maybe we can add that later
-
-        # XXX to do: C/R/W, then CREATE_IS_C, etc
-        # XXX to do: also NAME_LIMITS
-        # XXX and hacks like $creator -> "$creatror - wild"
-
-        # XXX consider if you want to use rurp_seen; initially no
     }
 }
 
@@ -131,7 +119,6 @@ sub add_config {
 
     $nextseq++;
     for my $repo (@repolist) {
-        # XXX should we check_subconf_repo_disallowed here?
         push @{ $configs{$repo} }, [ $nextseq, $key, $value ];
     }
 }
@@ -174,7 +161,6 @@ sub new_repos {
         next unless $repo =~ $REPONAME_PATT;    # skip repo patterns
         next if $repo =~ m(^\@|EXTCMD/);        # skip groups and fake repos
 
-        # XXX how do we deal with GL_NO_CREATE_REPOS?
         new_repo($repo) if not -d "$repo.git";
     }
 }
@@ -183,16 +169,11 @@ sub new_repo {
     my $repo = shift;
     trace( 3, $repo );
 
-    # XXX ignoring UMASK for now
-
     _mkdir("$repo.git");
     _chdir("$repo.git");
     _system("git init --bare >&2");
     _chdir( $rc{GL_REPO_BASE} );
     hook_1($repo);
-
-    # XXX ignoring creator for now
-    # XXX ignoring gl-post-init for now
 }
 
 sub new_wild_repo {
@@ -203,8 +184,6 @@ sub new_wild_repo {
     new_repo($repo);
     _print( "$repo.git/gl-creator", $user );
     _print( "$repo.git/gl-perms", "$rc{DEFAULT_ROLE_PERMS}\n" ) if $rc{DEFAULT_ROLE_PERMS};
-    # XXX git config, daemon, web...
-    # XXX pre-create, post-create
     trigger( 'POST_CREATE', $repo, $user );
 
     _chdir( $rc{GL_ADMIN_BASE} );
@@ -215,8 +194,6 @@ sub hook_repos {
     # all repos, all hooks
     _chdir( $rc{GL_REPO_BASE} );
 
-    # XXX g2 diff: we now don't care if it's a symlink -- it's upto the admin
-    # on the server to make sure things are kosher
     for my $repo (`find . -name "*.git" -prune`) {
         chomp($repo);
         $repo =~ s/\.git$//;
@@ -288,8 +265,6 @@ sub store_1 {
         $dumped_data .= Data::Dumper->Dump( [ \%one_config ], [qw(*one_config)] );
     }
 
-    # XXX deal with this better now
-    # $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
     print $compiled_fh $dumped_data;
     close $compiled_fh;
 
@@ -308,16 +283,11 @@ sub store_common {
     my $dumped_data = Data::Dumper->Dump( [ \%repos ], [qw(*repos)] );
     $dumped_data .= Data::Dumper->Dump( [ \%configs ], [qw(*configs)] ) if %configs;
 
-    # XXX and again...
-    # XXX $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
-
     print $compiled_fh $dumped_data;
 
     if (%groups) {
         my %groups = %{ inside_out( \%groups ) };
         $dumped_data = Data::Dumper->Dump( [ \%groups ], [qw(*groups)] );
-        # XXX $dumped_data =~ s/\bCREAT[EO]R\b/\$creator/g;
-        # XXX $dumped_data =~ s/'(?=[^']*\$(?:creator|gl_user))~?(.*?)'/"$1"/g;
         print $compiled_fh $dumped_data;
     }
     print $compiled_fh Data::Dumper->Dump( [ \%split_conf ], [qw(*split_conf)] ) if %split_conf;

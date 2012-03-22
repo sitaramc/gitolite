@@ -55,12 +55,6 @@ sub incsub {
           or $include_glob =~ /^'(.+)'$/;
     $include_glob = $1;
 
-    # XXX move this to Macros... substitute HOSTNAME word if GL_HOSTNAME defined, otherwise leave as is
-    # $include_glob =~ s/\bHOSTNAME\b/$GL_HOSTNAME/ if $GL_HOSTNAME;
-
-    # XXX g2 diff: include glob is *implicitly* from $rc{GL_ADMIN_BASE}/conf, not *explicitly*
-    # for my $file (glob($include_glob =~ m(^/) ? $include_glob : "$rc{GL_ADMIN_BASE}/conf/$include_glob")) {
-
     trace( 2, $is_subconf, $include_glob );
 
     for my $file ( glob($include_glob) ) {
@@ -74,7 +68,6 @@ sub incsub {
             push @{$out}, "subconf $basename";
             explode( $file, $basename, $out );
             push @{$out}, "subconf $subconf";
-            # XXX g2 delegaton compat: deal with this: $subconf_seen++;
         } else {
             explode( $file, $subconf, $out );
         }
