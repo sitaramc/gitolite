@@ -177,7 +177,7 @@ sub trigger {
 
                 _warn("skipped command '$s'"), next if not -x $sfp;
                 trace( 2, "command: $s" );
-                _system( $sfp, @_ );    # they better all return with 0 exit codes!
+                _system( $sfp, $rc_section, @_ );    # they better all return with 0 exit codes!
             }
         }
         return;
