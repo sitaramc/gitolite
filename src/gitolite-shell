@@ -98,7 +98,7 @@ sub main {
     trigger( 'PRE_GIT', $repo, $user, $aa, 'any', $verb );
     my $repodir = "'$rc{GL_REPO_BASE}/$repo.git'";
     _system( "git", "shell", "-c", "$verb $repodir" );
-    trigger( 'POST_GIT', $repo, $user, $aa, 'any', $verb );
+    trigger( 'POST_GIT', $repo, $user, $aa, 'any', $verb, times() );
 }
 
 # ----------------------------------------------------------------------
