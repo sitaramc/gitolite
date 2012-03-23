@@ -57,7 +57,7 @@ my $current_data_version = "3.0";
 
 my $rc = glrc('filename');
 do $rc if -r $rc;
-if (defined($GL_ADMINDIR)) {
+if ( defined($GL_ADMINDIR) ) {
     say2 "";
     say2 "FATAL: $rc seems to be for older gitolite; checking compat";
     require Gitolite::Compat;
@@ -127,8 +127,9 @@ sub glrc {
 # exported functions
 # ----------------------------------------------------------------------
 
-my $all  = 0;
-my $nonl = 0;
+my $all   = 0;
+my $nonl  = 0;
+my $quiet = 0;
 
 sub query_rc {
 
@@ -144,7 +145,7 @@ sub query_rc {
     }
 
     my @res = map { $rc{$_} } grep { $rc{$_} } @vars;
-    print join( "\t", @res ) . ( $nonl ? '' : "\n" ) if @res;
+    print join( "\t", @res ) . ( $nonl ? '' : "\n" ) if not $quiet and @res;
     # shell truth
     exit 0 if @res;
     exit 1;
@@ -192,6 +193,7 @@ Usage:  gitolite query-rc -a
 
     -a          print all variables and values
     -n          do not append a newline
+    -q          exit code only (shell truth; 0 is success)
 
 Example:
 
@@ -200,18 +202,21 @@ Example:
 
     gitolite query-rc -a
     # prints all known variables and values, one per line
+
+Note: '-q' is best used with only one variable.
 =cut
 
 sub args {
     my $help = 0;
 
     GetOptions(
-        'all|a'  => \$all,
-        'nonl|n' => \$nonl,
-        'help|h' => \$help,
+        'all|a'   => \$all,
+        'nonl|n'  => \$nonl,
+        'quiet|q' => \$quiet,
+        'help|h'  => \$help,
     ) or usage();
 
-    usage("'-a' cannot be combined with other arguments") if $all and @ARGV;
+    usage("'-a' cannot be combined with other arguments or options") if $all and ( @ARGV or $nonl or $quiet );
     usage() if not $all and not @ARGV or $help;
     return @ARGV;
 }
