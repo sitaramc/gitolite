@@ -426,24 +426,31 @@ sub list_groups {
 }
 
 =for list_users
-Usage:  gitolite list-users
+Usage:  gitolite list-users [<repo name pattern>]
 
-  - lists all users/user groups in conf
-  - no options, no flags
-  - WARNING: may be slow if you have thousands of repos
+List all users and groups explicitly named in a rule.  User names not
+mentioned in an access rule will not show up; you have to run 'list-members'
+on each group name yourself to see them.
+
+WARNING: may be slow if you have thousands of repos.  The optional repo name
+pattern is an unanchored regex; it can speed things up if you're interested
+only in users of a matching set of repos.  This is only an optimisation, not
+an actual access list; you will still have to pipe it to 'gitolite access'
+with appropriate arguments to get an actual access list.
 =cut
 
 sub list_users {
-    usage() if @_;
+    my $patt = shift || '.';
+    usage() if $patt eq '-h' or @_;
     my $count = 0;
     my $total = 0;
 
     load_common();
 
     my @u = map { keys %{$_} } values %repos;
-    $total = scalar( keys %split_conf );
+    $total = scalar( grep { /$patt/ } keys %split_conf );
     warn "WARNING: you have $total repos to check; this could take some time!\n" if $total > 100;
-    for my $one ( keys %split_conf ) {
+    for my $one ( grep { /$patt/ } keys %split_conf ) {
         load_1($one);
         $count++; print STDERR "$count / $total\r" if not( $count % 100 ) and timer(5);
         push @u, map { keys %{$_} } values %one_repo;
