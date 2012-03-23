@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# this is a wee bit expensive in terms of forks etc., compared to doing it in
+# perl, but I wanted to show how *easy* it actually is now.  And really,
+# you'll only notice if you access this repo like a hundred times a minute or
+# something so don't sweat it.
+
+# given a repo and a user, check if option('partialCopyOf') is set, and if so,
+# fetch all allowed branches from there.
+
+die() { echo "$@" >&2; exit 1; }
+
+# make sure we're being called from the pre_git trigger
+[ "$1" = "PRE_GIT" ] || die I must be called from PRE_GIT, not "$1"
+shift
+
+repo=$1
+user=$2
+main=`git config --file $GL_REPO_BASE/$repo.git/config --get gitolite.partialCopyOf`;
+[ -z "$main" ] && exit 0
+
+# "we", "our repo"  =>  the partial copy
+# "main", "pco"     =>  the one which we are a "partial copy of"
+
+cd $GL_REPO_BASE/$main.git
+
+for ref in `git for-each-ref refs/heads '--format=%(refname)'`
+do
+    gitolite access -q $repo $user R $ref &&
+    cd $GL_REPO_BASE/$repo.git
+
+    git fetch -f $GL_REPO_BASE/$main.git $ref:$ref
+done
+
+exit 0
