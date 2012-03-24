@@ -1,0 +1,54 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>parts of the conf file</h1>
+
+<h2><a name="group"></a> group definitions</h2>
+
+<p>You can group repos or users for convenience.  The syntax is the same for both
+and does not distinguish; until you <em>use</em> the group name it could really be
+either.</p>
+
+<p>Here's an example:</p>
+
+<pre><code>@developers     =   dilbert alice wally
+</code></pre>
+
+<p>Group definitions accumulate; this is the same as the above:</p>
+
+<pre><code>@developers     =   dilbert
+@developers     =   alice
+@developers     =   wally
+</code></pre>
+
+<p>You can use one group in another group definition; the values will be expanded
+right there (meaning later additions will not appear in the second group).</p>
+
+<pre><code>@developers     =   dilbert alice
+@interns        =   ashok
+@staff          =   @interns @developers
+@developers     =   wally
+
+# wally is NOT part of @staff
+</code></pre>
+
+<h3>special group <code>@all</code></h3>
+
+<p><code>@all</code> is a special group name that is often convenient to use if you really
+mean "all repos" or "all users".</p>

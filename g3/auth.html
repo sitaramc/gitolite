@@ -1,0 +1,110 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>authentication versus authorisation</h1>
+
+<p>This document will explain why an "ssh issue" is almost never a "gitolite
+issue", and, indirectly, why I dont get too excited about the former.</p>
+
+<p>Note: for actual ssh troubleshooting see [this][ssh-troubleshooting].</p>
+
+<p>Here is a fundamental point: <font color="red"><strong>Gitolite does not do
+authentication.  It only does authorisation</strong>.</font></p>
+
+<p>So first, let's loosely define these words:</p>
+
+<blockquote>
+  <p><strong>Authentication</strong> is the process of verifying that you are who you claim
+  to be.  An authentication system will establish that I am the user
+  "sitaram" on my work system.  The one behind gmail will similarly
+  establish that I am "sitaramc".  And so on...</p>
+
+<p><strong>Authorisation</strong> is the process of asking what you want to do and
+  deciding if you're allowed to do it or not.</p>
+</blockquote>
+
+<p>Now, if you managed to read about [gitolite and ssh][gitolite-and-ssh], you
+know that gitolite is meant to be invoked as:</p>
+
+<pre><code>/full/path/to/gl-auth-command some-authenticated-gitolite-username
+</code></pre>
+
+<p>(where the "gitolite username" is a "virtual" username; it does not have to
+be, and usually <em>isn't</em>, an actual <em>unix</em> username).</p>
+
+<p>As you can see, authentication happens before gitolite is called.</p>
+
+<h2>but... but... you have all that ssh stuff in there!</h2>
+
+<p>The default mode of using gitolite does use ssh keys, but all it's doing is
+helping you <strong>setup</strong> ssh-based authentication <strong>as a convenience to you</strong>.</p>
+
+<p>You don't have to use it, though.  And many people don't.  The examples I know
+are [smart http][http], and ldap-backed sshd.  In both cases, gitolite has no
+role to play in creating users, setting up their passwords/keys, etc.  There's
+even a <code>GL_NO_SETUP_AUTHKEYS</code> option to make sure gitolite doesn't meddle with
+the authkeys file in such installations.</p>
+
+<h2>so you're basically saying you won't support "X"</h2>
+
+<p>(where "X" is some ssh related behaviour change or feature)</p>
+
+<p>Well, if it's not a security issue I <em>probably</em> won't.  I'm willing to change
+my mind if enough people convince me they need it.  (There's a mailing list if
+you want to find others who also need the same thing.)</p>
+
+<p>While we're on the subject, locking someone out is <em>not</em> a security issue.
+Even if you locked yourself (the admin) out, the docs tell you how to recover
+from such errors.  You do need some password based method to get a shell
+command line on the server, of course.</p>
+
+<h2>appendix: how to use other authentication systems with gitolite</h2>
+
+<p>The bottom line in terms of how to invoke gitolite has been described above,
+and as long as you manage to do that gitolite won't even know how the
+authentication was done.  Which in turn means you can use whatever
+authentication scheme you want.</p>
+
+<p>It also expects the <code>SSH_ORIGINAL_COMMAND</code> environment variable to contain the
+full command (typically starting with git-receive-pack or git-upload-pack)
+that the client sent.  Also, when using [smart http][http], things are somewhat
+different: gitolite uses certain environment variables that it expects httpd
+to have set up.  Even the user name comes from the <code>REMOTE_USER</code> environment
+variable instead of as a command line argument in this case.</p>
+
+<p>However, it has to be an authentication system that is compatible with sshd or
+httpd in some form.  Why?  Because the git <em>client</em> accessing the server only
+knows those 2 protocols to "speak git".  (Well, the <code>git://</code> protocol is
+unauthenticated, and <code>file://</code> doesn't really apply to this discussion, so
+we're ignoring those).</p>
+
+<p>For example, let's say you have an LDAP-based authentication system somewhere.
+It is possible to make apache use that to authenticate users, so when a user
+accesses a git url using <code>http://sitaram:password@git.example.com/repo</code>, it is
+LDAP that does the actual authentication.  [I wouldn't know how to do it but I
+know it is possible.  Patches to this doc explaining how are welcome!]</p>
+
+<p>There are also ssh daemons that use LDAP to store the authorised keys (instead
+of putting them all in <code>~/.ssh/authorized_keys</code>).  The clients will still need
+to generate keypairs and send them to the admin, but they can be more
+centrally stored and perhaps used by other programs or tools simultaneously,
+which can be useful.</p>
+
+<p>Finally, gitolite allows you to store <em>group</em> information externally too.  See
+[here][ldap] for more on this.</p>

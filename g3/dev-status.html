@@ -1,0 +1,62 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h2><a name="dev-status"></a> g3 development status</h2>
+
+<p>Not yet done (will be tackled in this order unless someone asks):</p>
+
+<ul>
+<li>detailed documentation for new features</li>
+<li>querying the outside world for group info (see gl-get-membership-program
+in g2)</li>
+<li>mirroring</li>
+<li>pulling in documentation for things that are the same in g2</li>
+<li>"unrestricted arguments" for some ADCs (like git-annexe)</li>
+<li>smart http</li>
+<li>special features (no-create-repos, shell-access, gl-all-read-all, etc)</li>
+</ul>
+
+<p>Help needed:</p>
+
+<ul>
+<li>I'd like distro packagers to play with it and help with migration advice
+for distro-upgrades</li>
+<li><a href="pw.html#pw2">rsync</a>, htpasswd</li>
+<li>git-annexe support (but this has a pre-requisite in the previous list)</li>
+</ul>
+
+<p>Won't be done unless someone asks (saw no evidence that anyone used them in g2
+anyway!):</p>
+
+<ul>
+<li>mob branches</li>
+<li>password access</li>
+<li>specific ADCs -- there are too many for me to bother without applying
+Pareto somewhere, so I choose to not do any and wait for people to ask :-)</li>
+</ul>
+
+<p>Done:</p>
+
+<ul>
+<li>core code</li>
+<li>test suite</li>
+<li>some documentation</li>
+<li>distro packaging instructions</li>
+<li>migration advice for common cases</li>
+</ul>

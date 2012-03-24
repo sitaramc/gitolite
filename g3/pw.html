@@ -1,0 +1,67 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>patches welcome :-)</h1>
+
+<p>These are places where I could use some help, with hints about how you would
+go about it.  In addition, any of the items in <a href="dev-status.html#dev-status">dev-status</a> are up for
+grabs, if you wish to jump in.  But let me know before you start, and how you
+plan to go about it.</p>
+
+<h2><a name="pw2"></a> rsync</h2>
+
+<p>The crux of the old rsync ADC was an access check to a repo whose name starts
+with EXTCMD.  g2 would treat repos whose names start with EXTCMD as "don't
+create this repo".  g3 makes no such distinctions, but you can get the same
+effect by using a repo group name that does not exist:</p>
+
+<pre><code>repo @rsync-set1
+    ...rules...
+</code></pre>
+
+<p>and check that in the script.  (It might mean adding one more function to
+Gitolite::Easy but that's... easy!)</p>
+
+<h2><a name="pw1"></a> converting non-openssh pubkeys automatically</h2>
+
+<p>Gitolite's <a href="triggers.html">triggers</a> has can be used to fix this.  Here's pseudo-code:</p>
+
+<pre><code>chdir $(gitolite query-rc -n GL_ADMIN_BASE)/keydir
+for each *.pub file in this directory and its subdirectories
+    detect its format and convert it
+    # just overwrite it; the original is saved in git anyway
+</code></pre>
+
+<p>Let's say the program is called "convert-non-openssh-keys".  You send it to me
+and I add it to src/commands/post-compile/.  Then I update the default rc file
+to look at least like this instead</p>
+
+<pre><code>POST_COMPILE                =&gt;
+    [
+        # 'post-compile/convert-non-openssh-keys',
+        'post-compile/ssh-authkeys',
+            ...
+            ...
+    ],
+</code></pre>
+
+<p>making sure to place it <em>before</em> ssh-authkeys, and anyone who needs it can
+just uncomment it.</p>
+
+<p>Done!</p>

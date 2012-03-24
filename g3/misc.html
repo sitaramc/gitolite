@@ -1,0 +1,105 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>odds and ends</h1>
+
+<p>Most of these items don't fit anywhere or fit in more than one place or are of
+the nature of background information.</p>
+
+<h2><a name="include"></a> include files</h2>
+
+<p>Gitolite allows you to break up the configuration into multiple files and
+include them in the main file for convenience.</p>
+
+<pre><code>include     "foo.conf"
+</code></pre>
+
+<p>will include the contents of the file "foo.conf" from the "conf" directory.</p>
+
+<p>Details:</p>
+
+<ul>
+<li><p>You can also use a glob (<code>include "*.conf"</code>), or put your include files
+into subdirectories of "conf" (<code>include "foo/bar.conf"</code>), or both
+(<code>include "repos/*.conf"</code>).</p></li>
+<li><p>Included files are always searched relative to the gitolite-admin repo's
+"conf/" directory.</p></li>
+<li><p>If you ended up recursing, files that have been already processed once are
+skipped, with a warning.</p></li>
+</ul>
+
+<p><font color="gray">Advanced users: <code>subconf</code>, a command that is very closely
+related to <code>include</code>, is documented [here][subconf].</font></p>
+
+<h2><a name="deny-rules"></a> applying deny rules at the pre-git access check</h2>
+
+<p>The access <a href="rules.html#rules">rules</a> rules section describes the problem.  To recap, you want
+this:</p>
+
+<pre><code>@staff          =   alice bob wally ashok
+
+repo foo
+    RW+         =   alice       # line 1
+    RW+ dev     =   bob         # line 2
+    -           =   wally       # line 3
+    RW  temp/   =   @staff      # line 4
+</code></pre>
+
+<p>to deny Wally even <em>read</em> access.</p>
+
+<p>The way to do this is to add this line to the repo:</p>
+
+<pre><code>option deny-rules = 1
+</code></pre>
+
+<p>If you want this for all your repos, just add this somewhere at the top of
+your conf file</p>
+
+<pre><code>repo @all
+    option deny-rules = 1
+</code></pre>
+
+<h2><a name="rule-accum"></a> rule accumulation</h2>
+
+<p>Gitolite was meant to collect rules from multiple places and apply them all.
+For example, this:</p>
+
+<pre><code>repo foo
+    RW  =   u1
+
+@gr1 = foo bar
+
+repo @gr1
+    RW  =   u2
+    R   =   u3
+
+repo @all
+    R   =   gitweb
+</code></pre>
+
+<p>is effectively the same as this, for repo foo:</p>
+
+<pre><code>repo foo
+    RW  =   u1
+    RW  =   u2
+    R   =   u3
+    R   =   gitweb
+</code></pre>
+
+<p>This extends to patterns also, but I'll leave an example for later.</p>

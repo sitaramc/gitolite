@@ -1,0 +1,109 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>gitolite triggers</h1>
+
+<h2>intro and sample rc excerpt</h2>
+
+<p>Gitolite fires off external commands at six different times.  The <a href="rc.html">rc</a> file
+specifies what commands to run at each trigger point, but for illustration,
+here's an excerpt:</p>
+
+<pre><code>%RC = (
+
+    &lt;...several lines later...&gt;
+
+    # comment out or uncomment as needed
+    # these will run in sequence after post-update
+    POST_COMPILE                =&gt;
+        [
+            'post-compile/ssh-authkeys',
+            'post-compile/update-git-configs',
+            'post-compile/update-gitweb-access-list',
+            'post-compile/update-git-daemon-access-list',
+        ],
+
+    # comment out or uncomment as needed
+    # these will run in sequence after a new wild repo is created
+    POST_CREATE                 =&gt;
+        [
+            'post-compile/update-git-configs',
+            'post-compile/update-gitweb-access-list',
+            'post-compile/update-git-daemon-access-list',
+        ],
+</code></pre>
+
+<p>(As you can see, post-create runs 3 programs that also run from post-compile.
+This is perfectly fine, by the way)</p>
+
+<h2>manually firing triggers</h2>
+
+<p>...from the server command line is easy.  For example:</p>
+
+<pre><code>gitolite trigger POST_COMPILE
+</code></pre>
+
+<p>However if the triggered code depends on arguments (see next section) this
+won't work.  (The <code>POST_COMPILE</code> trigger programs all just happen to not
+require any arguments, so it works).</p>
+
+<h2>triggers and arguments</h2>
+
+<p>All triggers receive the name of the trigger as a string (example,
+<code>"POST_COMPILE"</code>) as the first argument, so they can know who invoked them.
+(This allows you to write the same program and fire it from more than one
+trigger, as above).  In addition, they may receive other arguments pertaining
+to the event that happened.</p>
+
+<ul>
+<li><p><code>ACCESS_CHECK</code>: this fires once after each access check.  The first is
+just before invoking git-receive-pack or git-upload-pack.  The second,
+which only applies to "write" operations, is from git's own 'update' hook.</p>
+
+<p>Arguments: repo name, user name, [attempted access][perm], the ref being
+updated, and the result of the access check.</p>
+
+<p>The 'ref' is <code>any</code> for the first check, because at that point we don't
+know what the actual ref is.  For the second check it could be, say,
+<code>refs/heads/master</code> or some such.</p>
+
+<p>The result is a text field that the <code>access()</code> function returned.
+Programmatically, the only thing you should rely on is that if it contains
+the upper case word "DENIED" then access was denied, otherwise it was
+allowed.</p></li>
+<li><p><code>PRE_GIT</code>: before running the git command.</p>
+
+<p>Arguments: repo name, user name, [attempted access][perm], the string
+<code>any</code>, and the git command ('git-receive-pack', 'git-upload-pack', or
+'git-upload-archive') being invoked.</p></li>
+<li><p><code>POST_GIT</code>: after the git command returns.</p>
+
+<p>Arguments: same as for <code>PRE_GIT</code>, followed by the output of the perl
+function "times" (i.e., 4 CPU times: user, system, cumulative user,
+cumulative system)</p></li>
+<li><p><code>POST_COMPILE</code>: after an admin push has successfully "compiled" the config
+file.  By default, the next thing is to update the ssh authkeys file, then
+all the 'git-config's, gitweb access, and daemon access.</p>
+
+<p>Programs run by this trigger receive no extra arguments.</p></li>
+<li><p><code>PRE_CREATE</code> and <code>POST_CREATE</code>: before and after a new "[wild][]" repo is
+created by user action.</p>
+
+<p>Arguments: repo name, user name.</p></li>
+</ul>

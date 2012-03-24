@@ -1,0 +1,49 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>testing gitolite</h1>
+
+<p>Here's how to <em>run</em> the tests:</p>
+
+<pre><code>git clone git://github.com/sitaramc/gitolite
+cd gitolite
+git checkout -f g3
+
+# if you're not ok with your ~/.ssh getting clobbered
+prove
+
+# if you're ok with your ~/.ssh getting clobbered
+# prove t/*.t t/ssh*
+</code></pre>
+
+<p>Gitolite's test suite is mostly written using <a href="http://github.com/sitaramc/tsh">tsh</a> -- the "testing shell".
+Take a look at some of the scripts and you will see what it looks like.  It
+has a few quirks and nuances; if you really care, email me.</p>
+
+<p>The tests also use a somewhat convoluted system of environment variables in
+order to run <em>entirely</em> as a local user, without going through ssh at all.
+This lets a complete test suite run in about a fifth or less of the time it
+would otherwise take.</p>
+
+<p>If you think that defeats the purpose of the testing, you haven't read
+<a href="auth.html">this</a> yet.</p>
+
+<p>There are 2 specific tests that deal with ssh though, which are run only on
+request, as you can see above, because they clobber your <code>~/.ssh</code>.  You have
+been warned.</p>

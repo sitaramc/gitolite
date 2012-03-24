@@ -1,0 +1,133 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h2><a name="g2migr"></a> migrating from g2</h2>
+
+<p><font color="red"></p>
+
+<p><strong>This document is a <em>MUST</em> read if you are currently using g2 and want to
+move to g3.</strong></p>
+
+<p></font></p>
+
+<p>First things first: g2 will be supported for a good long time.  My current
+<em>expert</em> users do not cause me any load anyway.</p>
+
+<p>Migration should be straightforward, but it is not automatic.  When you first
+run "gitolite setup [...]", gitolite3 will try to detect at least the big
+problems.  However, converting the RC file and the conf files is (as of now)
+still a manual exercise, though not very difficult.</p>
+
+<p>You must first read about <a href="g2incompat.html#g2incompat">incompatible</a> features and
+<a href="g2dropped.html#g2dropped">dropped</a> features.  Some features have been replaced with
+<a href="g2alt.html#g2alt">alternatives</a>.</p>
+
+<p>Since the majority of changes are in the rc file, we list them all here.</p>
+
+<h3>rc file differences</h3>
+
+<p><strong>DROPPED</strong> variables (possible high impact): these could be show-stoppers for
+migration, at least for now.</p>
+
+<ul>
+<li><p><code>BIG_INFO_CAP</code> -- if you think you must have this, try it without and see
+if there's a difference.  If you <em>know</em> you need this, convince me.</p></li>
+<li><p><code>GL_ALL_READ_ALL</code> -- same</p></li>
+<li><p><code>GL_NO_CREATE_REPOS</code> -- if you think you need this, email me.  I know one
+group who does need this so I will be putting it in eventually but not
+right away.</p></li>
+<li><p><code>HTPASSWD_FILE</code>, <code>RSYNC_BASE</code>, <code>SVNSERVE</code> -- need work.  Email me if you
+are using any of these.</p></li>
+<li><p><code>GL_GET_MEMBERSHIPS_PGM</code> -- is on my todo list</p></li>
+<li><p><code>GL_LOGT</code> -- is now fixed; you can't change it.  Email me if this is a
+problem.</p></li>
+</ul>
+
+<p><strong>DROPPED</strong> variables (medium impact): these have alternative implementations
+or mechanisms, but you have to do some setup work.</p>
+
+<ul>
+<li><p><code>GL_ADMINDIR</code> -- this is now at a fixed location: <code>~/.gitolite</code>.  If you
+want it somewhere else go ahead and move it, then place a symlink from the
+assumed location to the real one.</p></li>
+<li><p><code>REPO_BASE</code> -- this is now at a fixed location: <code>~/repositories</code>.  If you
+want it somewhere else go ahead and move it, then place a symlink from the
+assumed location to the real one.</p></li>
+<li><p><code>PROJECTS_LIST</code> -- it's called <code>GITWEB_PROJECTS_LIST</code> now, but more
+importantly, it is only used by update-gitweb-access-list in
+src/commands/post-compile.  This variable now has nothing to do with
+gitolite core, and the rc is just helping to store settings for external
+programs like that one.</p>
+
+<p><code>WEB_INTERFACE</code> and <code>GITWEB_URI_ESCAPE</code> are also gone; patches to the
+update program to directly do those things are welcome.</p></li>
+<li><p><code>GL_NO_DAEMON_NO_GITWEB</code> -- uncomment the appropriate lines in the rc
+file, in both the <code>POST_COMPILE</code> and <code>POST_CREATE</code> trigger sections.</p></li>
+<li><p><code>NICE_VALUE</code> -- use the <code>PRE_GIT</code> trigger to attach a program that renices
+the pid given by $GL_TID (that's the pid of the initial gitolite entry
+point, usually gitolite-shell, and propagates from there once set).</p>
+
+<p>You may have to add this list to the rc file; if you don't know perl use
+one of the others as a model or ask me.</p></li>
+<li><p><code>GIT_PATH</code> -- gone, not needed.  Just add these lines to the end of the rc
+file:</p>
+
+<pre><code>$ENV{PATH}="...whatever you want...";
+1;
+</code></pre></li>
+<li><p><code>GL_NO_SETUP_AUTHKEYS</code> -- comment out the lines that call ssh-authkeys, in
+the rc file.</p></li>
+<li><p><code>GL_WILDREPOS_DEFPERMS</code> -- if you need this, add a <code>POST_CREATE</code> script
+that does it.  Or email me and I will write it for you.</p></li>
+<li><p><code>UPDATE_CHAINS_TO</code> -- use a <a href="vref.html">vref</a> instead.  You can directly use the
+chained-to script as a VREF; it'll work.</p></li>
+<li><p><code>ADMIN_POST_UPDATE_CHAINS_TO</code> -- add your script to the <code>POST_COMPILE</code>
+trigger chain.  You won't be getting any arguments but for the admin repo
+the only argument that ever comes in is "refs/heads/master" anyway.</p></li>
+<li><p><code>GL_ADC_PATH</code> -- obsolete; use <a href="commands.html">commands</a> or add <a href="dev-notes.html">your own</a>.</p></li>
+<li><p><code>GL_ALL_INCLUDES_SPECIAL</code> -- obsolete; @all always includes gitweb and
+daemon now.  Use <a href="misc.html#deny-rules">deny-rules</a> if you want to say <code>R = @all</code> but not have
+it be visible to gitweb or daemon.</p></li>
+<li><p><code>GL_PERFLOGT</code> -- see the entry for "gl-time" in the <a href="g2alt.html#g2alt">alternative
+implementations</a> page.</p></li>
+</ul>
+
+<p><strong>DROPPED</strong> variables (no impact/low impact): these variables should not
+actually affect anything anyway, so even if you had them set you should not
+feel their loss.</p>
+
+<ul>
+<li><code>GL_CONF</code>, <code>GL_KEYDIR</code>, and <code>GL_CONF_COMPILED</code> -- you had no business
+touching these anyway; if you did, move them into the expected default
+locations before attempting to run <code>gitolite setup</code></li>
+<li><code>GL_PACKAGE_HOOKS</code> -- not needed anymore, but check if you had any custom
+hooks set there and copy them across.</li>
+<li><code>GL_WILDREPOS</code> -- dropped; this feature is default now.</li>
+<li><code>GL_BIG_CONFIG</code> -- dropped; this feature is default now.</li>
+</ul>
+
+<p><strong>RENAMED</strong> variables (no impact): these are functionally the same but are
+renamed.</p>
+
+<ul>
+<li><code>REPO_UMASK</code> is now <code>UMASK</code></li>
+<li><code>GL_GITCONFIG_KEYS</code> is now <code>GITCONFIG_KEYS</code></li>
+<li><code>GL_WILDREPOS_PERM_CATS</code> is now the ROLES hash in the rc file</li>
+<li><code>GL_SITE_INFO</code> is not <code>SITE_INFO</code></li>
+</ul>

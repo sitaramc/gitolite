@@ -1,0 +1,218 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>gitolite master table of contents/index</h1>
+
+<ul>
+<li><p><a href="index.html">Hosting git repositories</a></p>
+
+<ul>
+<li><a href="index.html#what">What is gitolite?</a></li>
+<li><a href="index.html#contact">contact</a></li>
+<li><a href="index.html#license">license</a></li>
+</ul></li>
+<li><p><a href="why.html">Why is gitolite needed?</a></p></li>
+<li><p><a href="g3why.html">why a completely new version?</a></p>
+
+<ul>
+<li><a href="dev-status.html#dev-status">g3 development status</a></li>
+<li><a href="g2migr.html#g2migr">migrating from g2</a>
+<ul>
+<li>rc file differences</li>
+</ul></li>
+<li><a href="g2incompat.html#g2incompat">compatibility with g2</a>
+<ul>
+<li>fallthru in NAME rules</li>
+<li>subconf command in admin repo</li>
+</ul></li>
+<li><a href="g2dropped.html#g2dropped">g2 features dropped</a></li>
+<li><a href="g2alt.html#g2alt">alternate implementations for some g2 features</a>
+<ul>
+<li>gl-time for performance measurement</li>
+</ul></li>
+</ul></li>
+<li><p><a href="minreq.html">minimum requirements for gitolite</a></p></li>
+<li><p><a href="qi.html">getting started</a></p></li>
+<li><p><a href="install.html">different ways to install gitolite</a></p>
+
+<ul>
+<li>simplest</li>
+<li>almost as simple</li>
+<li>packagers</li>
+<li>upgrading</li>
+</ul></li>
+<li><p><a href="add.html">adding users and repos</a></p></li>
+<li><p><a href="conf.html">the gitolite.conf file</a></p></li>
+<li><p><a href="users.html">what users (not admins) need to know about gitolite</a></p>
+
+<ul>
+<li>accessing gitolite</li>
+<li><a href="users.html#info">the info command</a></li>
+<li>digression: two kinds of repos</li>
+<li>other commands
+<ul>
+<li><a href="users.html#perms">set/get additional permissions for repos you created</a></li>
+<li><a href="users.html#desc">adding a description to repos you created</a></li>
+</ul></li>
+<li>"site-local" commands</li>
+</ul></li>
+<li><p><a href="rc.html">the "rc" file ($HOME/.gitolite.rc)</a></p></li>
+<li><p><a href="cust.html">customising gitolite</a></p></li>
+<li><p><a href="group.html#group">parts of the conf file</a></p>
+
+<ul>
+<li><a href="group.html#group">group definitions</a>
+<ul>
+<li>special group <code>@all</code></li>
+</ul></li>
+<li><a href="repo.html#repo">repo definitions</a></li>
+<li><a href="rules.html#rules">access rules</a>
+<ul>
+<li>when does gitolite check access</li>
+<li>how is a particular rule line matched</li>
+<li>summary of permissions</li>
+</ul></li>
+<li><a href="refex.html#refex">matching a ref and a refex</a></li>
+<li><a href="write-types.html#write-types">different types of write operations</a></li>
+</ul></li>
+<li><p><a href="dev-notes.html">notes for developers</a></p>
+
+<ul>
+<li>environment variables</li>
+<li>APIs
+<ul>
+<li>the shell API</li>
+<li>the perl API</li>
+</ul></li>
+<li>your own hooks
+<ul>
+<li>anything but the update hook</li>
+<li>update hook</li>
+</ul></li>
+<li>your own commands</li>
+<li>your own trigger programs</li>
+<li>your own "sugar"</li>
+</ul></li>
+<li><p><a href="commands.html">gitolite "commands"</a></p></li>
+<li><p><a href="hooks.html">hooks and gitolite</a></p></li>
+<li><p><a href="triggers.html">gitolite triggers</a></p>
+
+<ul>
+<li>intro and sample rc excerpt</li>
+<li>manually firing triggers</li>
+<li>triggers and arguments</li>
+</ul></li>
+<li><p><a href="sugar.html">syntactic sugar</a></p></li>
+<li><p><a href="vref.html">virtual refs</a></p>
+
+<ul>
+<li>rule matching recap</li>
+<li>what is a virtual ref</li>
+<li>fallthru is success here</li>
+<li>how it works -- overview</li>
+<li>how it works -- details
+<ul>
+<li>arguments passed to the vref code</li>
+</ul></li>
+<li>what (else) can the vref code pass back</li>
+<li>VREFs shipped with gitolite
+<ul>
+<li>number of new files</li>
+<li>advanced filetype detection</li>
+<li>checking author email</li>
+<li>catching duplicate pubkeys</li>
+</ul></li>
+<li>other ideas -- code welcome!
+<ul>
+<li>"no non-merge first-parents"</li>
+<li>other ideas for VREFs</li>
+</ul></li>
+</ul></li>
+<li><p><a href="misc.html">odds and ends</a></p>
+
+<ul>
+<li><a href="misc.html#include">include files</a></li>
+<li><a href="misc.html#deny-rules">applying deny rules at the pre-git access check</a></li>
+<li><a href="misc.html#rule-accum">rule accumulation</a></li>
+</ul></li>
+<li><p><a href="pw.html">patches welcome :-)</a></p>
+
+<ul>
+<li><a href="pw.html#pw2">rsync</a></li>
+<li><a href="pw.html#pw1">converting non-openssh pubkeys automatically</a></li>
+</ul></li>
+<li><p><a href="testing.html">testing gitolite</a></p></li>
+<li><p><a href="auth.html">authentication versus authorisation</a></p>
+
+<ul>
+<li>but... but... you have all that ssh stuff in there!</li>
+<li>so you're basically saying you won't support "X"</li>
+<li>appendix: how to use other authentication systems with gitolite</li>
+</ul></li>
+<li><p><a href="nagp.html">not a gitolite problem</a></p>
+
+<ul>
+<li>specific clients, or specific server OSs</li>
+<li>ssh</li>
+<li>git</li>
+</ul></li>
+<li><p><a href="regex.html">extremely brief regex overview</a></p></li>
+<li><p><a href="ssh.html">ssh</a></p>
+
+<ul>
+<li><a href="gitolite-and-ssh.html#glssh">how gitolite uses ssh</a>
+<ul>
+<li>ssh basics</li>
+<li>how does gitolite use all this ssh magic?
+<ul>
+<li>restricting shell access/distinguishing one user from another</li>
+<li>restricting branch level actions</li>
+</ul></li>
+</ul></li>
+<li><a href="ssh-troubleshooting.html#sshts">ssh troubleshooting</a>
+<ul>
+<li>IMPORTANT -- READ THIS FIRST
+<ul>
+<li>caveats</li>
+<li>naming conventions used</li>
+<li>taking stock -- relevant files and directories</li>
+<li>normal gitolite key handling</li>
+</ul></li>
+<li>(Other resources)</li>
+<li>common ssh problems</li>
+<li>step by step</li>
+<li>random tips, tricks, and notes
+<ul>
+<li>giving shell access to gitolite users</li>
+<li>losing your admin key</li>
+<li>simulating ssh-copy-id</li>
+<li>problems with using non-openssh public keys</li>
+<li>windows issues</li>
+</ul></li>
+<li><a href="ssh-troubleshooting.html#stsapp1_">appendix 1: ssh daemon asks for a password</a></li>
+<li><a href="ssh-troubleshooting.html#stsapp2_">appendix 2: which key is which -- running sshkeys-lint</a>
+<ul>
+<li>typical cause(s)</li>
+</ul></li>
+<li><a href="ssh-troubleshooting.html#stsapp3_">appendix 3: ssh client may not be offering the right key</a></li>
+<li>F=sshhostaliases appendix 4: host aliases</li>
+<li><a href="ssh-troubleshooting.html#stsapp5_">appendix 5: why bypassing gitolite causes a problem</a></li>
+</ul></li>
+</ul></li>
+</ul>

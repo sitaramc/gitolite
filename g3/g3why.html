@@ -1,0 +1,117 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>why a completely new version?</h1>
+
+<p>Gitolite started life as 400 lines of perl written on a weekend because I was
+quickly losing control of my projects at work, exacerbated by git newbies
+doing all the wrong things.  I really needed it!</p>
+
+<p>That little 400 line thing is now a huge bunch of programs that do all sorts
+of things (I mean, rsync access control in a git related program?  WTF!),
+because it kinda just <em>grew</em> while I wasn't looking.</p>
+
+<p>So, briefly, here are the advantages of g3:</p>
+
+<ul>
+<li><p>compile versus everything else</p>
+
+<p>g2's "compile" script was doing way, way too much.  For example, dealing
+with gitweb and git-daemon was a good chunk of code in g2.  In contrast,
+here's how g3 generates gitweb's projects.list file:</p>
+
+<pre><code>(
+    gitolite list-phy-repos | gitolite access % gitweb R any | grep -v DENIED
+    gitolite list-phy-repos | gitolite git-config -r % gitweb\\.
+) |
+    cut -f1 | sort -u | sed -e 's/$/.git/' &gt; $plf
+</code></pre></li>
+<li><p>core versus non-core</p>
+
+<p>That's just the tip of the iceberg.  The commands above run from a script
+that is itself outside gitolite, and can be enabled and disabled from the
+rc file.  There are six different "events" within gitolite that can
+trigger external programs, with specific arguments passed to them, much
+like git's own hooks.  The example you saw is called from the
+"POST_COMPILE" trigger.</p>
+
+<p>And as you can see, these programs be in any language.</p></li>
+<li><p>get/set perms/desc, and ADCs</p>
+
+<p>I've always wanted to kick setperms out of core and make it an ADC.
+Sadly, it couldn't be done because when you update your repo's permissions
+using setperms, that can affect gitweb/daemon access, which -- you guessed
+right -- feeds back into the main code in complex ways.  It <em>had</em> to be an
+"inside job".</p>
+
+<p>But now, the new 'perms' program is quite external to gitolite.  And how
+does it fix up gitweb/daemon permissions after it is done updating the
+"gl-perms" file?</p>
+
+<pre><code>system("gitolite", "trigger", "POST_CREATE");
+</code></pre></li>
+<li><p>syntax versus semantics</p>
+
+<p>I got tired of people asking things like "why can't I have
+backslash-escaped continuation lines?"  I designed it differently because
+I don't like them but perhaps it's reasonable for some people.</p>
+
+<p>Someone else wanted to use subdirectories of 'keydir' as group names.  Why
+not?</p>
+
+<p>G3 comes with a stackable set of "syntactic sugar" helpers.  And you can
+write your own, though they do have to be in perl (because they're not
+standalone programs).</p>
+
+<p>Once the code is written and placed in the right place, all a site has to
+do to enable it is to uncomment some lines in the rc file:</p>
+
+<pre><code># these will run in sequence during the conf file parse
+SYNTACTIC_SUGAR             =&gt;
+    [
+        # 'continuation-lines',
+        # 'keysubdirs-as-groups',
+    &lt;etc&gt;
+</code></pre></li>
+<li><p>roll your own</p>
+
+<p>Having a decent shell API helps enormously.  You saw an example above but
+how about if your boss asks you "I need a list of everyone who <em>currently</em>
+has read access to the 'foo' repo"?</p>
+
+<p>Sure you could look in conf/gitolite.conf, all its include files (if you
+have any), and if the repo is user-created, then in its gl-perms.</p>
+
+<p>Or you could do something like this:</p>
+
+<pre><code>gitolite list-users | gitolite access foo % R any | cut -f1
+</code></pre></li>
+<li><p>over-engineered</p>
+
+<p>g2 was, to some extent, over-engineered.  One of the best examples is the
+documentation on hook-propagation in g2, which required even a <em>picture</em>
+to make clear (always a bad sign).  In g3, the <a href="hooks.html">hooks</a> section is 4
+sentences.</p></li>
+</ul>
+
+<p>Anyway you get the idea.</p>
+
+<p>The point is not that you can do all these cool tricks.  The point is they are
+possible because of the redesign.  There is no way on God's green earth I
+could have done this with the old code.</p>

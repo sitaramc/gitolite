@@ -1,0 +1,284 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>virtual refs</h1>
+
+<p>Here's an example to start you off.</p>
+
+<pre><code>repo    r1
+    RW+                         =   lead_dev dev2 dev3
+    -   VREF/COUNT/9            =   dev2 dev3
+    -   VREF/COUNT/3/NEWFILES   =   dev2 dev3
+</code></pre>
+
+<p>Now dev2 and dev3 cannot push changes that affect more than 9 files at a time,
+nor those that have more than 3 new files.</p>
+
+<p>Another example is detecting duplicate pubkeys in a push to the admin repo:</p>
+
+<pre><code>repo gitolite-admin
+    # ... normal rules ...
+    -   VREF/DUPKEYS            =   @all
+</code></pre>
+
+<hr />
+
+<h2>rule matching recap</h2>
+
+<p>You won't get any joy out of this if you don't understand at least
+<a href="refex.html#refex">refex</a>es and how <a href="rules.html#rules">rules</a> are processed.</p>
+
+<p>But VREFs have one <strong>very important difference</strong> from normal rules.  With
+VREFs, a <strong>fallthru results in success</strong>.  You'll see why this is more
+convenient as you read on.</p>
+
+<hr />
+
+<h2>what is a virtual ref</h2>
+
+<p>A ref like <code>refs/heads/master</code> is the main property of a push that gitolite
+uses to make its yes/no decision.  I call this a "real" ref.</p>
+
+<p>Any <em>other</em> property of the push that you want to use to help in the decision
+is therefore a <em>virtual</em> ref.  This could be a property that git knows about,
+like in the example above, or comes from outside git like, say, the current
+time; see examples section later for some ideas.</p>
+
+<h2>fallthru is success here</h2>
+
+<p>Notice that you didn't need to add an <code>RW+ VREF/...</code> rule for user <code>lead_dev</code>
+in our example.  This section explains why.</p>
+
+<p><strong>Virtual refs are best used as additional "deny" rules</strong>, performing extra
+checks that core gitolite cannot.</p>
+
+<p>Making fallthru be a "fail" forces you to add rules for all users, instead of
+just the ones who should have those extra checks.  Worse, since every virtual
+ref involves calling an external program, many of these calls may be wasted.</p>
+
+<p>There's another advantage to doing it this way: a VREF can choose to simply
+die if things look bad, and it will have the same effect, assuming you used
+the VREF only in [deny][] rules.</p>
+
+<p>This in turn means any existing update hook can be used as a VREF <em>as-is</em>, as
+long as it (a) prints nothing on success and (b) dies on failure.  See the
+email-check and dupkeys examples later.</p>
+
+<h2>how it works -- overview</h2>
+
+<p>Briefly, a refex starting with <code>VREF/FOO</code> triggers a call to a program called
+<code>FOO</code> in <code>$GL_BINDIR/VREF</code>.</p>
+
+<p>That program is expected to print zero or more lines to its STDOUT; each line
+is taken by gitolite as a new "ref" to be matched against all the refexes for
+this user in the config.  Including the refex that caused the vref call, of
+course.</p>
+
+<p>Normally, you send back the refex itself, if the test determines that the rule
+should be matched, otherwise nothing.  So, in our example, we print
+<code>VREF/COUNT/9</code> if the count was indeed greater than 9.  Otherwise we just
+exit.</p>
+
+<h2>how it works -- details</h2>
+
+<ul>
+<li><p>the VREF code is only called if there are any VREF rules for the user,
+which means when the lead developer pushes, the VREF is not called at all.</p>
+
+<p>Side note: this is enormously more efficient than adding additional
+<code>update</code> hooks, which will get executed whether they are needed or not,
+for every repo and every user!</p></li>
+<li><p>when dev2 or dev3 push, gitolite first checks the real ref
+(<code>ref/heads/master</code> or whatever).  After this it looks at VREF rules, and
+calls an external program for every one it finds.  Specifically, in a line
+like</p>
+
+<pre><code>   -   VREF/COUNT/3/NEWFILES    =   user
+</code></pre>
+
+<p>COUNT is the vref name, so the program called is
+<code>$GL_BINDIR/VREF/COUNT</code>.</p>
+
+<p>The program is passed <strong>nine arguments</strong> in this case (see next section
+for details).</p></li>
+<li><p>the script can print anything it wants to STDOUT; the first word in each
+such line will be treated as a virtual ref to be matched against all the
+rules, while the rest, if any, is a message to be added to the standard
+"...DENIED..." message that gitolite prints if that refex matches.</p>
+
+<p>Usually it only makes sense to either</p>
+
+<ul>
+<li>print nothing -- if you don't want the rule that triggered it to match
+(ie., whatever condition being tested was not violated; like if the
+count of changed files did not exceed 9, in our earlier example)</li>
+<li>print the refex itself (plus an optional message), so that it matches
+the line which invoked it</li>
+</ul></li>
+</ul>
+
+<h3>arguments passed to the vref code</h3>
+
+<ul>
+<li><p>arguments <strong>1, 2, 3</strong>: the 'ref', 'oldsha', and 'newsha' that git passed
+to the update hook (see 'man githooks')</p>
+
+<p>This, combined with the fact that non-zero exits are detected, mean that
+you can simply use an existing update.secondary as a new VREF as-is, no
+changes needed.</p></li>
+<li><p>arguments <strong>4 and 5</strong>: the 'oldtree' and 'newtree' SHAs.  These are the
+same as the oldsha and newsha values, except if one of them is all-0.
+(indicating a ref creation or deletion).  In that case the corresponding
+'tree' SHA is set (by gitolite, as a courtesy) to the special SHA
+<code>4b825dc642cb6eb9a060e54bf8d69288fbee4904</code>, which is the hash of an empty
+tree.</p>
+
+<p>(None of these shenanigans would have been needed if <code>git diff $oldsha
+$newsha</code> would not error out when passed an all-0 SHA.)</p></li>
+<li><p>argument <strong>6</strong>: the attempted access flag.  Typically <code>W</code> or <code>+</code>, but
+could also be <code>C</code>, <code>D</code>, or any of these 4 followed by <code>M</code>.  If you have to
+ask what they mean, you haven't read enough gitolite documentation to be
+able to make virtual refs work.</p></li>
+<li><p>argument <strong>7</strong>: is the entire refex; in our example
+<code>VREF/COUNT/3/NEWFILES</code>.</p></li>
+<li><p>arguments <strong>8 onward</strong>: are the split out (by <code>/</code>) portions of the refex,
+excluding the first two components.  In our example they would be <code>3</code>
+followed by <code>NEWFILES</code>.</p></li>
+</ul>
+
+<p>Yes, argument 7 is redundant if you have 8 and 9.  It's meant to make it easy
+to write vref scripts in any language.  See script examples in source.</p>
+
+<h2>what (else) can the vref code pass back</h2>
+
+<p>Actually, the vref code can pass anything back; each line in its output will
+be matched against all the rules as usual (with the exception that fallthru is
+not failure).</p>
+
+<p>For example, you could have a ruleset like this:</p>
+
+<pre><code>repo r1
+    # ... normal rules ...
+
+    -   VREF/TIME/WEEKEND       =   @interns
+    -   VREF/TIME/WEEKNIGHT     =   @interns
+    -   VREF/TIME/HOLIDAY       =   @interns
+</code></pre>
+
+<p>and you could write the TIME vref code to passback any or all
+of the times that match.  Then if an intern tried to access the system, each
+rule would trigger a call to gl-bindir/VREF/TIME.</p>
+
+<p>The script should send back any of the applicable times (even more than one,
+or none at all, as the case may be).  So even if it was invoked using the
+first rule, it might pass back (to gitolite) a virtual ref saying
+'VREF/TIME/HOLIDAY', which would promptly cause the request to be denied.</p>
+
+<h2>VREFs shipped with gitolite</h2>
+
+<h3>number of new files</h3>
+
+<p>If a dev pushes more than 2 <em>new</em> files, the top commit needs to have a
+signed-off by line in its commit message.  For example if he has 4 new files
+this text should be:</p>
+
+<pre><code>4 new files signed-off by: &lt;top commit author's email&gt;
+</code></pre>
+
+<p>The config entry for this is below (<code>NO_SIGNOFF</code> applies only to, and thus
+implies, <code>NEWFILES</code>):</p>
+
+<pre><code> RW+ VREF/COUNT/2/NO_SIGNOFF         =   sitaram
+ -   VREF/COUNT/2/NO_SIGNOFF         =   @all
+</code></pre>
+
+<p>Notice how the refex in both cases is <em>exactly</em> the same.  If you make it
+different (even change the number on my access line), things won't work.</p>
+
+<p>Junior devs can't push more than 10 new files, even with a signed-off by line:</p>
+
+<pre><code> -   VREF/COUNT/10/NEWFILES          =   @junior_devs
+</code></pre>
+
+<h3>advanced filetype detection</h3>
+
+<p>Note: this is more for illustration than use; it's rather specific to one of
+the projects I manage but the idea is the important thing.</p>
+
+<p>Sometimes a file has a standard extension (that cannot be 'gitignore'd), but
+it is actually automatically generated.  Here's one way to catch it:</p>
+
+<pre><code> -   VREF/FILETYPE/AUTOGENERATED     =   @all
+</code></pre>
+
+<p>You can look at <code>src/VREF/FILETYPE</code> to see how it handles the
+'AUTOGENERATED' option.  You could also have a more generic option, like
+perhaps BINARY, and handle that in the FILETYPE vref too.</p>
+
+<h3>checking author email</h3>
+
+<p>Some people want to ensure that "you can only push your own commits".</p>
+
+<p>If you force it on everyone, this is a very silly idea (see "Philosophical
+Notes" section of <code>src/VREF/EMAIL-CHECK</code>).</p>
+
+<p>But there may be value in enforcing it just for the junior developers.</p>
+
+<p>The neat thing is that the existing <code>contrib/update.email-check</code> was just
+copied to <code>src/VREF/EMAIL-CHECK</code> and it works, because VREFs get
+the same first 3 arguments and those are all that it cares about.  (Note: you
+have to change one subroutine in that script if you want to use it)</p>
+
+<h3>catching duplicate pubkeys</h3>
+
+<p>We covered this as a teaser example at the start.</p>
+
+<h2>other ideas -- code welcome!</h2>
+
+<h3>"no non-merge first-parents"</h3>
+
+<p>Shruggar on #gitolite wanted this.  Possible code to implement it would be
+something like this (untested)</p>
+
+<pre><code>[ -z "$(git rev-list --first-parent --no-merges $2..$3)" ]
+</code></pre>
+
+<p>This can be implemented using <code>src/VREF/MERGE-CHECK</code> as a model.
+That script does what the 'in core' feature called [merge check][mergecheck]
+does, although the syntax to be used in conf/gitolite will be quite different.</p>
+
+<h3>other ideas for VREFs</h3>
+
+<p>Here are some more ideas:</p>
+
+<ul>
+<li>number of commits (<code>git rev-list --count $old $new</code>)</li>
+<li>number of binary files in commit (currently I only know to count
+occurrences of <code>Bin</code> in the output of <code>git diff --stat</code></li>
+<li>number of <em>new</em> binary files (count <code>Bin 0 -&gt;</code> in <code>git diff --stat</code>
+output)</li>
+<li>time of day/day of week (see example snippet somewhere above)</li>
+<li>IP address</li>
+<li>phase of the moon</li>
+</ul>
+
+<p>Note that pretty much anything that involves <code>$oldsha..$newsha</code> will have to
+deal with the issue that when you push a new tag or branch, the "old" part
+is all 0's, and unless you consider <code>--all</code> existing branches and tags it
+becomes meaningless in terms of "number of new files" etc.</p>

@@ -1,0 +1,135 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>notes for developers</h1>
+
+<p>Gitolite has a huge bunch of existing features that gradually need to moved
+over.  Plus you may want to write your own programs to interact with it.</p>
+
+<p>Hints for developers wishing to help migrate features over from g2 are
+[here][dev-hints].</p>
+
+<p>Here are some random notes on developing hooks, commands, triggers, and sugar
+scripts.</p>
+
+<h2>environment variables</h2>
+
+<p>In general, the following environment variables should always be available:</p>
+
+<pre><code>GL_BINDIR
+GL_REPO_BASE
+GL_ADMIN_BASE
+</code></pre>
+
+<p>Commands invoked by a remote client will also have <code>GL_USER</code> set.  Hooks will
+have <code>GL_REPO</code> also set.</p>
+
+<h2>APIs</h2>
+
+<h3>the shell API</h3>
+
+<p>The following commands exist to help you write shell scripts that interact
+easily with gitolite.  Each of them responds to <code>h</code> so please run that for
+more info.</p>
+
+<ul>
+<li><p><code>gitolite access</code> to check access rights given repo, user, type of access
+(R, W, ...) and refname (optional).  Example use: src/commands/desc</p></li>
+<li><p><code>gitolite creator</code> to get/check the creator of a repo.  Example use:
+src/commands/desc</p></li>
+<li><p><code>gitolite git-config</code> to check gitolite options or git config variables
+directly from gitolite's "compiled output, (i.e., without looking at the
+actual <code>repo.git/config</code> file or using the <code>git config</code> command).  Example
+use: none yet</p></li>
+<li><p><code>gitolite query-rc</code> to check the value of an RC variable.  Example use:
+src/commands/desc.</p></li>
+</ul>
+
+<p>In addition, you can also look at the comments in src/Gitolite/Easy.pm (the
+perl API module) for ideas.</p>
+
+<h3>the perl API</h3>
+
+<p>...is implemented by Gitolite::Easy; see src/Gitolite/Easy.pm.  This is a work
+in progress; for example it does not yet have the equivalent of <code>gitolite
+git-config</code>.  I'll add it when I or someone else needs it.</p>
+
+<h2>your own hooks</h2>
+
+<h3>anything but the update hook</h3>
+
+<p>If you want to add your own hook, it's easy as long as it's not the 'update'
+hook.  Just add it to <code>$HOME/.gitolite/hooks/common</code> and run <code>gitolite setup</code>.</p>
+
+<p>The rest is between you and 'man githooks' :-)</p>
+
+<h3>update hook</h3>
+
+<p>If you want to add additional <code>update</code> hook functionality, do this:</p>
+
+<ul>
+<li><p>write and test your update hook separately from gitolite</p></li>
+<li><p>now add the code to src/VREF.  Let's say it is called "foo".</p></li>
+<li><p>to call your new update hook to all accesses for all repos, add this to
+the end of your conf file:</p>
+
+<pre><code>repo @all
+    -       VREF/foo        =   @all
+</code></pre></li>
+</ul>
+
+<p>As you probably guessed, you can now make your additional update hooks more
+selective, applying them only to some repos / users / combinations.</p>
+
+<p>Note: a normal update hook expects 3 arguments (ref, old SHA, new SHA).  A
+VREF will get those three, followed by at least 4 more.  Your VREF should just
+ignore the extra args.</p>
+
+<h2>your own commands</h2>
+
+<p>You can add your own commands.  You can run them on the server (example,
+<code>gitolite access</code>).  Then you can enable certain commands to be allowed to run
+by a remote user by adding them to the "COMMANDS" hash of the <a href="rc.html">rc</a> file.</p>
+
+<p>Commands are standalone programs, in any language you like.  They simply
+receive the arguments you append.  In addition, the env var <code>GL_USER</code> is
+available if it is being run remotely.  src/commands/desc is the best example
+at present.</p>
+
+<h2>your own trigger programs</h2>
+
+<p>Trigger programs are just commands whose names have been added to the
+appropriate list in the <a href="rc.html">rc</a> file.  Triggers get specific arguments
+depending on when they are called; see <a href="triggers.html">here</a> for details.</p>
+
+<p>You can write programs that are both manually runnable as well as callable by
+trigger events, especially if they don't <em>need</em> any arguments.</p>
+
+<p>Look in the distributed <a href="rc.html">rc</a> file for example programs; at this point there
+aren't many.</p>
+
+<h2>your own "sugar"</h2>
+
+<p>Syntactic sugar helpers are NOT complete, standalone, programs.  They must
+include a perl sub called <code>sugar_script</code> that takes in a listref, and returns
+a listref.  The listrefs point to a list that contains the entire conf file
+(with all <a href="misc.html#include">include</a> processing already done).  You create a new list with
+contents modified as you like and return a ref to it.</p>
+
+<p>There are a couple of examples in src/syntactic-sugar.</p>

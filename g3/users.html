@@ -1,0 +1,117 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>what users (not admins) need to know about gitolite</h1>
+
+<p>...written for the one guy in the world no one will think of as "just a normal
+user" ;-)</p>
+
+<p>This document has some text, and a lot of links.  Most of this info <em>is</em>
+available in the rest of the documentation, but it's scattered and sparse.
+Collecting all of it, or at least links to it, in one place sounds useful.</p>
+
+<h2>accessing gitolite</h2>
+
+<p>The most common setup is based on ssh, where your admin asks you to send him
+your public key, and uses that to setup your access.</p>
+
+<p>Your actual access is either a git command (like <code>git clone
+git@server:reponame</code>, and we won't be discussing these any more in this
+document), or an ssh command (like <code>ssh git@server info</code>).</p>
+
+<p>Note that you do <em>not</em> get a shell on the server -- the whole point of
+gitolite is to prevent that!</p>
+
+<h2><a name="info"></a> the info command</h2>
+
+<p>The only command that is <em>always</em> available to every user is the <code>info</code>
+command (run <code>ssh git@host info -h</code> for help), which tells you what version of
+gitolite and git are on the server, and what repositories you have access to.
+The list of repos is very useful if you have doubts about the spelling of some
+new repo that you know was setup.</p>
+
+<h2>digression: two kinds of repos</h2>
+
+<p>Gitolite has two kinds of repos.  Normal repos are specified by their full
+names in the config file.  "Wildcard" repos are specified by a regex in the
+config file.  Try the <a href="users.html#info"><code>info</code> command</a> and see if it shows any lines
+that look like regex patterns, (with a "C" permission in addition to the "R"
+and the "W").</p>
+
+<p>If you see any, it means you are allowed to create brand new repos whose names
+fit that pattern.  When you create such a repo, your "ownership" of it (as far
+as gitolite is concerned) is <em>automatically</em> recorded by gitolite.</p>
+
+<h2>other commands</h2>
+
+<h3><a name="perms"></a> set/get additional permissions for repos you created</h3>
+
+<p>The gitolite config may have several permissions lines for your repo, like so:</p>
+
+<pre><code>repo pub/CREATOR/..*
+    RW+     =   CREATOR
+    RW      =   user1 user2
+    R       =   user3
+</code></pre>
+
+<p>If that's all it had, you really can't do much.  Any changes to access must be
+done by the administrator.  (Note that "CREATOR" is a reserved word that gets
+expanded to your userid in some way, so the admin can literally add just the
+first two lines, and <em>every</em> authenticated user now has his own personal repo
+namespace, starting with <code>pub/&lt;username&gt;/</code>).</p>
+
+<p>To give some flexibility to users, the admin could add rules like this:</p>
+
+<pre><code>    RW      =   WRITERS
+    R       =   READERS
+</code></pre>
+
+<p>(he could also add other roles but then he needs to read the documentation).</p>
+
+<p>Once he does this, you can then use the <code>perms</code> command (run <code>ssh git@host
+perms -h</code> for help) to set permissions for other users by specifying which
+users are in the list of "READERS", and which in "WRITERS".</p>
+
+<p>If you think of READERS and WRITERS as "roles", it will help.  You can't
+change what access a role has, but you <em>can</em> say which users have that role.</p>
+
+<p><strong>Note</strong>: there isn't a way for you to see the actual rule set unless you're
+given read access to the special 'gitolite-admin' repo.  Sorry.  The idea is
+that your admin will tell you what "roles" he added into rules for your repos,
+and what permissions those roles have.</p>
+
+<h3><a name="desc"></a> adding a description to repos you created</h3>
+
+<p>The <code>desc</code> command is extremely simple.  Run <code>ssh git@host desc -h</code> for help.</p>
+
+<h2>"site-local" commands</h2>
+
+<p>The main purpose of gitolite is to prevent you from getting a shell.  But
+there are commands that you often need to run on the server (i.e., cannot be
+done by pushing something to a repo).</p>
+
+<p>To enable this, gitolite allows the admin to setup scripts in a special
+directory that users can then run.  Gitolite comes with a set of working
+scripts that your admin may install, or may use as a starting point for his
+own, if he chooses.</p>
+
+<p>Think of these commands as equivalent to those in <code>COMMAND_DIR</code> in <code>man
+git-shell</code>.</p>
+
+<p>You can get a list of available commands by running <code>ssh git@host help</code>.</p>

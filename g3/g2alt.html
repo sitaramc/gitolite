@@ -1,0 +1,29 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h2><a name="g2alt"></a> alternate implementations for some g2 features</h2>
+
+<p>The following g2 features have been dropped but suitable (or better)
+alternatives exist.</p>
+
+<h3>gl-time for performance measurement</h3>
+
+<p>Take a look at the 'cpu-time' program that you can set to run from the
+<code>POST_GIT</code> trigger.  Just set it to run as the last program in that sequence
+so it covers all previous programs.</p>

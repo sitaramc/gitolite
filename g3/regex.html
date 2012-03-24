@@ -1,0 +1,53 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>extremely brief regex overview</h1>
+
+<p>Regexes are powerful.  Gitolite uses that power as much as it can.  If you
+can't handle that power, hire someone who can and become a manager.</p>
+
+<p>That said, here's a very quick overview of the highlights.</p>
+
+<p><code>^</code> and <code>$</code> are called "anchors".  They anchor the match to the beginning and
+end of the string respectively.</p>
+
+<pre><code>^foo    matches any string starting with 'foo'
+foo$    matches any string ending with 'foo'
+^foo$   matches exact string 'foo'.
+</code></pre>
+
+<p>To be precise, the last one is "any string starting and ending with <em>the same</em>
+'foo'".  "foofoo" does not match.</p>
+
+<p><code>[0-9]</code> is an example of a character class; it matches any single digit.
+<code>[a-z]</code> matches any lower case alpha, and <code>[0-9a-f]</code> is the range of hex
+characters.  You should now guess what <code>[a-zA-Z0-9_]</code> does.</p>
+
+<p><code>.</code> (the period) is special -- it matches any character.  If you want to match
+an actual period, you need to say <code>\.</code>.</p>
+
+<p><code>*</code>, <code>?</code>, and <code>+</code> are quantifiers.  They apply to the previous token.  <code>a*</code>
+means "zero or more 'a' characters".  Similarly <code>a+</code> means "one or more", and
+<code>a?</code> means "zero or one".</p>
+
+<p>As a result, <code>.*</code> means "any number (including zero) of any character".</p>
+
+<p>The previous token need not be a single character; you can use parens to make
+it longer.  <code>(foo)+</code> matches one or more "foo", (like "foo", "foofoo",
+"foofoofoo", etc.)</p>

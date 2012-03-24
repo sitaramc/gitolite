@@ -1,0 +1,49 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>getting started</h1>
+
+<p>The quickest install, assuming your <code>$PATH</code> contains <code>$HOME/bin</code>, is:</p>
+
+<ul>
+<li><p>get the software</p>
+
+<pre><code>git clone git://github.com/sitaramc/gitolite
+
+# (until this becomes "master")
+cd gitolite
+git checkout -f g3
+</code></pre></li>
+<li><p>install it</p>
+
+<pre><code>ln -sf $PWD/src/gitolite $HOME/bin
+</code></pre></li>
+</ul>
+
+<p>If you don't like that, there are <a href="install.html">other install methods</a>.</p>
+
+<p>Once the install is done, setup:</p>
+
+<pre><code>gitolite setup -pk your-name.pub
+</code></pre>
+
+<p>And that's it.</p>
+
+<p>Next steps are usually <a href="add.html">adding</a> users and repos and learning about
+<a href="conf.html">access control</a>.</p>

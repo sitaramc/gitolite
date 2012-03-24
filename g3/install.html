@@ -1,0 +1,84 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>different ways to install gitolite</h1>
+
+<p>Gitolite has only one server side "command" now, much like git itself.  And
+it's been designed so that you don't even really have to <em>install</em> it, as you
+will see.</p>
+
+<h2>simplest</h2>
+
+<ol>
+<li><p>Put all of <code>src</code> in one place, doesn't matter where; let's call it
+/foo/bar.</p></li>
+<li><p>Use the full path to run any gitolite commands, for example:</p>
+
+<pre><code>/foo/bar/gitolite setup -pk sitaram.pub
+</code></pre></li>
+</ol>
+
+<h2>almost as simple</h2>
+
+<ol>
+<li><p>(same as above)</p></li>
+<li><p>Symlink /foo/bar/gitolite to some directory that is on your PATH.  For
+example:</p>
+
+<pre><code>ln -sf /foo/bar/gitolite ~/bin
+</code></pre>
+
+<p>Now you can just say</p>
+
+<pre><code>gitolite setup -pk sitaram.pub
+</code></pre></li>
+</ol>
+
+<h2>packagers</h2>
+
+<ol>
+<li><p>Put src/Gitolite in <code>/usr/share/perl5/vendor_perl</code> or some such place.</p></li>
+<li><p>Put the rest of src anywhere your distro policy allows.  (Fedora keeps
+git's 150 executables in /usr/libexec/git-core, so maybe
+/usr/libexec/gitolite?)</p></li>
+<li><p>Symlink 'gitolite' to /usr/bin or something, similar to step 2 above,</p>
+
+<p>OR</p>
+
+<p>Put it directly in /usr/bin, and hardcode <code>GL_BINDIR</code> into it to tell it
+where the others are.  I'd prefer it if you did not do this but you can.</p></li>
+</ol>
+
+<hr />
+
+<p>Bottom line:</p>
+
+<ul>
+<li><code>GL_BINDIR</code> must point to a place that contains <code>commands</code>, <code>VREF</code>, and
+<code>syntactic-sugar</code> (so they must all be sibling directories).</li>
+<li>The <code>Gitolite</code> directory can also be there, or it can be anywhere in
+perl's <code>@INC</code> path.</li>
+</ul>
+
+<h2>upgrading</h2>
+
+<p>Just put the new version on top of wherever you kept the old one.  That's it.</p>
+
+<p>If you feel it should require a little more effort, pretend I said "you have
+to then run <code>gitolite setup</code>".  Can't hurt...</p>

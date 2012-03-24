@@ -1,0 +1,41 @@
+
+<head><style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>the "rc" file ($HOME/.gitolite.rc)</h1>
+
+<p>The rc file for g3 is quite different from that of g2.  It has been designed
+to be (a) the only thing unique to your site, for most installations and (b)
+easy to extend when new needs show up, without having to touch core gitolite.</p>
+
+<p>g2 had a nasty rc file where every variable had to be declared.  As a result,
+ADCs that needed their own settings could not use it.</p>
+
+<p>Now it's a perl hash, and you can add any keys you want.</p>
+
+<p>Please look at the rc file that gets installed when you setup gitolite.  As
+you can see there are 3 types of variables in it:</p>
+
+<ul>
+<li>simple variables (like UMASK)</li>
+<li>lists (like <code>POST_COMPILE</code>, <code>POST_CREATE</code>)</li>
+<li>hashes (like <code>ROLES</code>, <code>COMMANDS</code>)</li>
+</ul>
+
+<p>Their purposes are to be found in each of their individual documentation files
+around; start with <a href="cust.html">customising gitolite</a>.</p>
