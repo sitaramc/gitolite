@@ -1,10 +1,8 @@
 #!/usr/bin/perl
 
-my $MKD = "$ENV{HOME}/Markdown.pl";
+#   cd <g3 clone>/doc; ./mkdoc     # --> creates ../html/*.html
 
-# run this like so:
-
-#       $0 *.mkd >mt.mkd 2>mf
+my $MKD = "./Markdown.pl";
 
 use 5.10.0;
 use strict;
@@ -37,7 +35,7 @@ while (<>) {
                 : "$3"
             );
             $mt .= "\n";
-            $mf .= "[$2]: $b.html#$2\n" if $2;
+            $mf .= "[$2]: $b.html" . ($2 ne $b ? "#$2" : "") . "\n" if $2;
         }
     }
 }
