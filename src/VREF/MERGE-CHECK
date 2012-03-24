@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# gitolite VREF to check if there are any merge commits in the current push.
+
+# THIS IS DEMO CODE; please read all comments below as well as
+# doc/vref.mkd before trying to use this.
+
+# usage in conf/gitolite.conf goes like this:
+
+#       -   VREF/MERGE_CHECK/master     =   @all
+#       # reject only if the merge commit is being pushed to the master branch
+#       -   VREF/MERGE_CHECK            =   @all
+#       # reject merge commits to any branch
+
+my $ref    = $ARGV[0];
+my $oldsha = $ARGV[1];
+my $newsha = $ARGV[2];
+my $refex  = $ARGV[6];
+
+# The following code duplicates some code from parse_conf_line() and some from
+# check_ref().  This duplication is the only thing that is preventing me from
+# removing the "M" permission code from 'core' gitolite and using this
+# instead.  However, it does demonstrate how you would do this if you had to
+# create any other similar features, for example someone wanted "no non-merge
+# first-parent", which is far too specific for me to add to 'core'.
+
+# -- begin duplication --
+my $branch_refex = $ARGV[7] || '';
+if ($branch_refex) {
+    $branch_refex =~ m(^refs/) or $branch_refex =~ s(^)(refs/heads/);
+} else {
+    $branch_refex = 'refs/.*';
+}
+exit 0 unless $ref =~ /^$branch_refex/;
+# -- end duplication --
+
+# we can't run this check for tag creation or new branch creation, because
+# 'git log' does not deal well with $oldsha = '0' x 40.
+if ( $oldsha eq "0" x 40 or $newsha eq "0" x 40 ) {
+    print STDERR "ref create/delete ignored for purposes of merge-check\n";
+    exit 0;
+}
+
+my $ret = `git rev-list -n 1 --merges $oldsha..$newsha`;
+print "$refex FATAL: merge commits not allowed\n" if $ret =~ /./;
+
+exit 0;
