@@ -10,6 +10,15 @@ Usage:  gitolite setup [<option>]
 
 Setup gitolite, compile conf, and fixup hooks.  The pubkey is required on the
 first run.
+
+Subsequent runs:
+
+  - 'gitolite setup': fix up hooks if you brought in repos from outside, or if
+    someone has been playing around with the hooks and may have deleted some.
+
+  - 'gitolite setup -pk YourName.pub': replace keydir/YourName.pub and
+    recompile/push.  Useful if you lost your key.  In fact you can do this for
+    any key in keydir (but not in subdirectories).
 =cut
 
 # ----------------------------------------------------------------------
