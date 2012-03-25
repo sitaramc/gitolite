@@ -10,9 +10,12 @@ package Gitolite::Easy;
   is_admin
   is_super_admin
   in_group
+
   owns
   can_read
   can_write
+
+  config
 
   %rc
   say
@@ -52,9 +55,9 @@ sub is_super_admin {
 #   if gitolite list-memberships $GL_USER | grep -x $GROUPNAME >/dev/null; then ...
 sub in_group {
     valid_user();
-    my $g = shift;
+    my $g = "@" . +shift;
 
-    return grep { $_ eq $g } @{ list_memberships($user) };
+    return grep { $_ eq $g } @{ Gitolite::Conf::Load::list_memberships($user) };
 }
 
 # shell equivalent
@@ -83,6 +86,18 @@ sub can_write {
     valid_user();
     my $r = shift;
     return not( access( $r, $user, 'W', 'any' ) =~ /DENIED/ );
+}
+
+# shell equivalent
+#   foo=$(gitolite git-config -r $REPONAME foo\\.bar)
+sub config {
+    my $repo = shift;
+    my $key = shift;
+
+    return () if repo_missing($repo);
+
+    my $ret = git_config($repo, $key);
+    return %$ret;
 }
 
 # ----------------------------------------------------------------------
