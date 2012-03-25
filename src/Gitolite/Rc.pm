@@ -59,8 +59,8 @@ my $rc = glrc('filename');
 do $rc if -r $rc;
 if ( defined($GL_ADMINDIR) ) {
     say2 "";
-    say2 "FATAL: $rc seems to be for older gitolite; checking compat";
-    require Gitolite::Compat;
+    say2 "FATAL: $rc seems to be for older gitolite; please see doc/g2migr.mkd\n" .
+    "(online at http://sitaramc.github.com/gitolite/g3/g2migr.html)";
 
     exit 1;
 }
@@ -250,7 +250,9 @@ __DATA__
     # used by the info command
     # SITE_INFO                 =>  'Please see http://blahblah/gitolite for more help',
 
-    # add more roles (like MANAGER, TESTER, ...) here
+    # add more roles (like MANAGER, TESTER, ...) here.
+    #   WARNING: if you make changes to this hash, you MUST run 'gitolite
+    #   compile' afterward, and possibly also 'gitolite trigger POST_COMPILE'
     ROLES                       =>
         {
             READERS             =>  1,

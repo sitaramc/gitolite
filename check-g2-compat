@@ -1,0 +1,87 @@
+#!/usr/bin/perl
+
+use Cwd;
+
+my $h  = $ENV{HOME};
+my $rc = "$h/.gitolite.rc";
+my %count;
+
+intro();
+
+msg( FATAL => "no rc file found; do you even *have* g2 running?" ) if not -f $rc;
+do $rc;
+unless ( $return = do $rc ) {
+    msg( FATAL => "couldn't parse $rc: $@" ) if $@;
+    msg( FATAL   => "couldn't do $rc: $!" ) unless defined $return;
+    msg( WARNING => "couldn't run $rc" )    unless $return;
+}
+
+print "checking rc file...\n";
+rc_basic();
+rest_of_rc();
+print "\n";
+
+print "checking conf file(s)...\n";
+conf();
+print "\n";
+
+print "checking repos...\n";
+repo();
+print "\n";
+
+# ----------------------------------------------------------------------
+
+sub intro {
+    msg( INFO => "This program only checks for uses that make the new g3 completely unusable" );
+    msg( ''   => "or that might end up giving *more* access to someone if migrated as-is." );
+    msg( ''   => "It does NOT attempt to catch all the differences described in the docs." );
+    msg( '', '' );
+    msg( INFO => "'see docs' usually means doc/g2migr.mkd");
+    msg( '',  => "(online at http://sitaramc.github.com/gitolite/g3/g2migr.html)" );
+    msg( '', '' );
+}
+
+sub rc_basic {
+    msg( FATAL => "GL_ADMINDIR in the wrong place -- aborting; see docs" ) if $GL_ADMINDIR ne "$h/.gitolite";
+    msg( NOTE => "GL_ADMINDIR is in the right place; assuming you did not mess with" );
+    msg( '', "GL_CONF, GL_LOGT, GL_KEYDIR, and GL_CONF_COMPILED" );
+    msg( FATAL => "REPO_BASE in the wrong place -- aborting; see docs" ) if $REPO_BASE ne "$h/repositories" and $REPO_BASE ne "repositories";
+# ( abs or rel both ok)
+}
+
+sub rest_of_rc {
+    msg( SEVERE  => "GIT_PATH found; see docs" )                                              if $GIT_PATH;
+    msg( SEVERE  => "GL_ALL_INCLUDES_SPECIAL found; see docs" )                               if $GL_ALL_INCLUDES_SPECIAL;
+    msg( SEVERE  => "GL_GET_MEMBERSHIPS_PGM not yet implemented" )                            if $GL_GET_MEMBERSHIPS_PGM;
+    msg( SEVERE  => "GL_NO_CREATE_REPOS not yet implemented" )                                if $GL_NO_CREATE_REPOS;
+    msg( SEVERE  => 'htpasswd, rsync, and svnserve not yet implemented' )                     if $HTPASSWD_FILE or $RSYNC_BASE or $SVNSERVE;
+    msg( WARNING => "ADMIN_POST_UPDATE_CHAINS_TO found; see docs" )                           if $ADMIN_POST_UPDATE_CHAINS_TO;
+    msg( WARNING => "GL_NO_DAEMON_NO_GITWEB found; see docs" )                                if $GL_NO_DAEMON_NO_GITWEB;
+    msg( WARNING => "GL_NO_SETUP_AUTHKEYS found; see docs" )                                  if $GL_NO_SETUP_AUTHKEYS;
+    msg( WARNING => "UPDATE_CHAINS_TO found; see docs" )                                      if $UPDATE_CHAINS_TO;
+    msg( WARNING => "GL_ADC_PATH found; many ADCs not yet implemented")                       if $GL_ADC_PATH;
+    msg( WARNING => "non-default GL_WILDREPOS_PERM_CATS found" ) if $GL_WILDREPOS_PERM_CATS ne 'READERS WRITERS';
+}
+
+sub conf {
+    chdir($h);
+    chdir($GL_ADMINDIR);
+
+    my $conf = `find . -name "*.conf" | xargs cat`;
+    msg( "SEVERE",  "fallthru in NAME rules; see docs" )        if $conf =~ m(NAME/);
+    msg( "SEVERE", "subconf command in admin repo; see docs" ) if $conf =~ m(NAME/conf/fragments);
+}
+
+sub repo {
+    chdir($h);
+    chdir($REPO_BASE);
+    my @creater = `find . -name gl-creater`;
+    if (@creater) {
+        msg( WARNING => "found " . scalar(@creater) . " gl-creater files; see docs" );
+    }
+
+    my @perms = `find . -name gl-perms | xargs egrep -l -w R\\|RW`;
+    if (@perms) {
+        msg( WARNING => "found " . scalar(@perms) . " gl-perms files with R or RW; see docs" );
+    }
+}

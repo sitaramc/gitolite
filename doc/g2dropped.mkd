@@ -1,2 +1,4 @@
 ## #g2dropped g2 features dropped
 
+(none yet that are not already covered in the rc section in [this][g2migr]
+page).
