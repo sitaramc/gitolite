@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+
+print glrc('default-text');
