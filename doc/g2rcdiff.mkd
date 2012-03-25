@@ -64,12 +64,8 @@ or mechanisms, but you have to do some setup work.
   * `GL_NO_DAEMON_NO_GITWEB` -- uncomment the appropriate lines in the rc
     file, in both the `POST_COMPILE` and `POST_CREATE` trigger sections.
 
-  * `NICE_VALUE` -- use the `PRE_GIT` trigger to attach a program that renices
-    the pid given by $GL_TID (that's the pid of the initial gitolite entry
-    point, usually gitolite-shell, and propagates from there once set).
-
-    You may have to add this list to the rc file; if you don't know perl use
-    one of the others as a model or ask me.
+  * `NICE_VALUE` -- uncomment the 'renice 10' line in the rc file.  You can
+    also change the 10 to something else if you wish.
 
   * `GIT_PATH` -- gone, not needed.  Just add these lines to the end of the rc
     file:

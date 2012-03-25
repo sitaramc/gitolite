@@ -170,14 +170,12 @@ sub trigger {
         } else {
             for my $s ( @{ $rc{$rc_section} } ) {
 
-                # perl-ism; apart from keeping the full path separate from the
-                # simple name, this also protects %rc from change by implicit
-                # aliasing, which would happen if you touched $s itself
-                my $sfp = "$ENV{GL_BINDIR}/commands/$s";
+                my ($pgm, @args) = split ' ', $s;
+                $pgm = "$ENV{GL_BINDIR}/commands/$pgm";
 
-                _warn("skipped command '$s'"), next if not -x $sfp;
+                _warn("skipped command '$s'"), next if not -x $pgm;
                 trace( 2, "command: $s" );
-                _system( $sfp, $rc_section, @_ );    # they better all return with 0 exit codes!
+                _system( $pgm, @args, $rc_section, @_ );    # they better all return with 0 exit codes!
             }
         }
         return;
@@ -262,10 +260,37 @@ __DATA__
     # DEFAULT_ROLE_PERMS          =>  'READERS @all',
 
     # comment out or uncomment as needed
+    # these are available to remote users
+    COMMANDS                    =>
+        {
+            'help'              =>  1,
+            'info'              =>  1,
+            'desc'              =>  1,
+            'perms'             =>  1,
+            'writes'            =>  1,
+        },
+
+    # comment out or uncomment as needed
     # these will run in sequence during the conf file parse
     SYNTACTIC_SUGAR             =>
         [
             # 'continuation-lines',
+        ],
+
+    # comment out or uncomment as needed
+    # these will run in sequence at the start, before a git operation has started
+    PRE_GIT                     =>
+        [
+            # if you use this, make this the first item in the list
+            # 'renice 10',
+        ],
+
+    # comment out or uncomment as needed
+    # these will run in sequence at the end, after a git operation has ended
+    POST_GIT                    =>
+        [
+            # if you use this, make this the last item in the list
+            # 'cpu-time',
         ],
 
     # comment out or uncomment as needed
@@ -285,25 +310,6 @@ __DATA__
             'post-compile/update-git-configs',
             'post-compile/update-gitweb-access-list',
             'post-compile/update-git-daemon-access-list',
-        ],
-
-    # comment out or uncomment as needed
-    # these are available to remote users
-    COMMANDS                    =>
-        {
-            'help'              =>  1,
-            'info'              =>  1,
-            'desc'              =>  1,
-            'perms'             =>  1,
-            'writes'            =>  1,
-        },
-
-    # comment out or uncomment as needed
-    # these will run in sequence at the end, after a git operation has ended
-    POST_GIT                    =>
-        [
-            # if you use this, make this the last item in the list
-            # 'cpu-time',
         ],
 );
 

@@ -42,13 +42,23 @@ However if the triggered code depends on arguments (see next section) this
 won't work.  (The `POST_COMPILE` trigger programs all just happen to not
 require any arguments, so it works).
 
-## triggers and arguments
+## common arguments
 
-All triggers receive the name of the trigger as a string (example,
-`"POST_COMPILE"`) as the first argument, so they can know who invoked them.
-(This allows you to write the same program and fire it from more than one
-trigger, as above).  In addition, they may receive other arguments pertaining
-to the event that happened.
+Triggers receive the following arguments:
+
+1.  any arguments mentioned in the rc file (for an example, see the renice
+    command in the PRE_GIT trigger sequence),
+
+2.  the name of the trigger as a string (example, `"POST_COMPILE"`), so you
+    can call the same program from multiple triggers and know where it was
+    called from,
+
+3.  followed by zero or more arguments specific to the trigger, as given in
+    the next section.
+
+## trigger-specific details
+
+Here's all you need to know about each specific trigger.
 
   * `ACCESS_CHECK`: this fires once after each access check.  The first is
     just before invoking git-receive-pack or git-upload-pack.  The second,
