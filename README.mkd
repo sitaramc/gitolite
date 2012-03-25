@@ -1,5 +1,23 @@
 # Gitolite README
 
+**2012-03-25: there is a completely re-written version of gitolite in the "g3"
+branch.  The old version will now be supported only for existing users, and
+for people who need the features that have not yet made it to the new one.  To
+reflect this, the `pu` branch has been merged into master and deleted.**
+
+The steps to use the new version are:
+
+    git clone git://github.com/sitaramc/gitolite
+    cd gitolite
+    git checkout g3
+
+
+Documentation is currently available at [g3di]
+
+[g3di]: http://sitaramc.github.com/gitolite/g3/
+
+----
+
 **Github users: please read the "wiki" link at the top of the page before
 submitting issues or pull requests**.
 
