@@ -1,16 +1,12 @@
 # testing gitolite
 
-Here's how to *run* the tests:
+Here's how to *run* the tests.  **WARNING: they will clobber lots of things in
+your `$HOME`, so be sure to use a throwaway userid**.
 
     git clone git://github.com/sitaramc/gitolite
     cd gitolite
     git checkout -f g3
-
-    # if you're not ok with your ~/.ssh getting clobbered
     prove
-
-    # if you're ok with your ~/.ssh getting clobbered
-    # prove t/*.t t/ssh*
 
 Gitolite's test suite is mostly written using [tsh][] -- the "testing shell".
 Take a look at some of the scripts and you will see what it looks like.  It
