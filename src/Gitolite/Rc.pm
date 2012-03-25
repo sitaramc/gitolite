@@ -71,6 +71,9 @@ if ( defined($GL_ADMINDIR) ) {
 # add internal triggers
 # ----------------------------------------------------------------------
 
+# is the server/repo in a writable state (i.e., not down for maintenance etc)
+unshift @{ $rc{ACCESS_1} }, 'Writable::writable';
+
 # (testing only) override the rc file silently
 # ----------------------------------------------------------------------
 # use an env var that is highly unlikely to appear in real life :)
@@ -174,13 +177,20 @@ sub trigger {
             _die "$rc_section section in rc file is not a perl list";
         } else {
             for my $s ( @{ $rc{$rc_section} } ) {
-
                 my ($pgm, @args) = split ' ', $s;
-                $pgm = "$ENV{GL_BINDIR}/triggers/$pgm";
 
-                _warn("skipped command '$s'"), next if not -x $pgm;
-                trace( 2, "command: $s" );
-                _system( $pgm, @args, $rc_section, @_ );    # they better all return with 0 exit codes!
+                if ( my($module, $sub) = ($pgm =~ /^(.*)::(\w+)$/ ) ) {
+
+                    require Gitolite::Triggers;
+                    Gitolite::Triggers::run($module, $sub, @args, $rc_section, @_);
+
+                } else {
+                    $pgm = "$ENV{GL_BINDIR}/triggers/$pgm";
+
+                    _warn("skipped command '$s'"), next if not -x $pgm;
+                    trace( 2, "command: $s" );
+                    _system( $pgm, @args, $rc_section, @_ );    # they better all return with 0 exit codes!
+                }
             }
         }
         return;

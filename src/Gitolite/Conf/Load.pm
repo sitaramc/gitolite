@@ -11,7 +11,6 @@ package Gitolite::Conf::Load;
 
   option
   repo_missing
-  check_repo_write_enabled
   creator
 
   vrefs
@@ -160,15 +159,6 @@ sub option {
 sub repo_missing {
     my $repo = shift;
     return not -d "$rc{GL_REPO_BASE}/$repo.git";
-}
-
-sub check_repo_write_enabled {
-    my ($repo) = shift;
-    for my $f ("$ENV{HOME}/.gitolite.down", "$rc{GL_REPO_BASE}/$repo.git/.gitolite.down") {
-        next unless -f $f;
-        _die slurp($f) if -s $f;
-        _die "sorry, writes are currently disabled (no more info available)";
-    }
 }
 
 # ----------------------------------------------------------------------
