@@ -1,4 +1,4 @@
-## #sshts ssh troubleshooting
+## #sts ssh troubleshooting
 
 **This document must be read in full the first time.  If you start from some
 nice looking section in the middle it may not help you unless you're already
