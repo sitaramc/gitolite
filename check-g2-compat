@@ -85,3 +85,12 @@ sub repo {
         msg( WARNING => "found " . scalar(@perms) . " gl-perms files with R or RW; see docs" );
     }
 }
+
+sub msg {
+    my ( $type, $text ) = @_;
+    print "$type" if $type;
+    print "\t$text\n";
+    exit 1 if $type eq 'FATAL';
+
+    $count{$type}++ if $type;
+}
