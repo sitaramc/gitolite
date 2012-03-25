@@ -65,18 +65,18 @@ which they belong, respectively) are kept; the rest are ignored</p></li>
 For each rule:</p>
 
 <ul>
-<li>if the ref does not match the <a href="refex.html#refex">refex</a>, the rule is skipped</li>
+<li>if the ref does not match the <a href="refex.html">refex</a>, the rule is skipped</li>
 <li>if it's a deny rule (the permissions field is a <code>-</code>), access is
 <strong>rejected</strong> and the matching stops</li>
-<li>if the permission field matches the specific <a href="write-types.html#write-types">type of
+<li>if the permission field matches the specific <a href="write-types.html">type of
 write</a> operation, access is <strong>allowed</strong> and the matching
 stops</li>
 </ul></li>
 <li><p>if no rule ends with a decision, ("fallthru"), access is <strong>rejected</strong>.</p></li>
 </ul>
 
-<p>Now you need to understand how <a href="refex.html#refex">refex</a> matching happens and how the
-permissions match the various <a href="write-types.html#write-types">types of write operations</a>.</p>
+<p>Now you need to understand how <a href="refex.html">refex</a> matching happens and how the
+permissions match the various <a href="write-types.html">types of write operations</a>.</p>
 
 <p>Using these, you can see, in our example, that:</p>
 
@@ -84,7 +84,7 @@ permissions match the various <a href="write-types.html#write-types">types of wr
 <li>everyone, even wally, can read the repo.</li>
 <li>dilbert can push, rewind, or delete any ref.</li>
 <li>alice can push, rewind, or delete any ref whose name starts with 'dev';
-see <a href="refex.html#refex">refex</a> for details.</li>
+see <a href="refex.html">refex</a> for details.</li>
 <li>alice can also push (but not rewind or delete) any ref whose name starts
 with 'temp/'.  This applies to bob also.</li>
 <li>if it weren't for line 3, the previous statement would apply to wally
