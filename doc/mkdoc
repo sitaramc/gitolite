@@ -7,61 +7,90 @@ my $MKD = "./Markdown.pl";
 use 5.10.0;
 use strict;
 use warnings;
+use lib '../src/Gitolite/Test';
+use Tsh;
 
-chomp(@ARGV = `cat list`) if not @ARGV;
-@ARGV = grep { $_ ne 'master-toc.mkd' and /./ } @ARGV;
-my @save = @ARGV;
-my $css = join("", <DATA>);
+$ENV{TSH_ERREXIT} = 1;
 
-my $mt = "# gitolite master table of contents/index\n";
-my $mf = '';
-my $fh;
+try "
+    mkdir ../html;                      ok
+    git status -s -uno;                 !/./
+    git log --oneline -1
+" or die 1;
 
-while (<>) {
-    $ARGV =~ /^(?:.*\/)?([^\/]+)\.mkd$/;
-    my $b = $1;
+my $head = (lines())[0];
 
-    if (/^(#+) (?:#(\S+) )?(.*)/) {
-        if ( length($1) == 1 ) {
-            $mt .= "\n";
-            $mt .= "  * [$3][$b]\n";
-            $mf .= "[$b]: $b.html\n";
-        } else {
-            $mt .= " " x ( 4 * ( length($1) - 1 ) );
-            $mt .= "  * ";
-            $mt .= (
-                $2
-                ? "[$3][$2]"
-                : "$3"
-            );
-            $mt .= "\n";
-            $mf .= "[$2]: $b.html" . ($2 ne $b ? "#$2" : "") . "\n" if $2;
+main();
+
+try "
+    git checkout gh-pages;              ok
+    git reset --hard github/gh-pages;   ok
+    cd ..;                              ok
+    git rm g3/*.html;                   ok
+    mkdir g3;                           ok
+    mv html/*.html g3;                  ok
+    git add g3;                         ok
+    git commit -m '$head';              ok
+    git checkout g3;                    ok
+    rmdir html;                         ok
+" or die 2;
+
+sub main {
+    chomp(@ARGV = `cat list`) if not @ARGV;
+    @ARGV = grep { $_ ne 'master-toc.mkd' and /./ } @ARGV;
+    my @save = @ARGV;
+    my $css = join("", <DATA>);
+
+    my $mt = "# gitolite master table of contents/index\n";
+    my $mf = '';
+    my $fh;
+
+    while (<>) {
+        $ARGV =~ /^(?:.*\/)?([^\/]+)\.mkd$/;
+        my $b = $1;
+
+        if (/^(#+) (?:#(\S+) )?(.*)/) {
+            if ( length($1) == 1 ) {
+                $mt .= "\n";
+                $mt .= "  * [$3][$b]\n";
+                $mf .= "[$b]: $b.html\n";
+            } else {
+                $mt .= " " x ( 4 * ( length($1) - 1 ) );
+                $mt .= "  * ";
+                $mt .= (
+                    $2
+                    ? "[$3][$2]"
+                    : "$3"
+                );
+                $mt .= "\n";
+                $mf .= "[$2]: $b.html" . ($2 ne $b ? "#$2" : "") . "\n" if $2;
+            }
         }
     }
-}
 
-open($fh, ">", "master-toc.mkd")
-  and print $fh $mt
-  and close $fh;
-
-# after this, do this for every mkd (including the master-toc.mkd)
-
-#       cat $css_block > $base.html
-#       cat $base.mkd $mf | $MKD >> $base.html
-
-for my $mkd ("master-toc.mkd", @save) {
-    $mkd =~ /^(?:.*\/)?([^\/]+)\.mkd$/;
-    my $b = $1;
-
-    open($fh, ">", "../html/$b.html")
-      and print $fh $css
+    open($fh, ">", "master-toc.mkd")
+      and print $fh $mt
       and close $fh;
 
-    my $mkt = `cat $mkd`;
-    $mkt =~ s/^(#+) #(\S+) /$1 <a name="$2"><\/a> /mg;
-    open($fh, "|-", "$MKD >> ../html/$b.html")
-      and print $fh $mkt, $mf
-      and close $fh;
+    # after this, do this for every mkd (including the master-toc.mkd)
+
+    #       cat $css_block > $base.html
+    #       cat $base.mkd $mf | $MKD >> $base.html
+
+    for my $mkd ("master-toc.mkd", @save) {
+        $mkd =~ /^(?:.*\/)?([^\/]+)\.mkd$/;
+        my $b = $1;
+
+        open($fh, ">", "../html/$b.html")
+          and print $fh $css
+          and close $fh;
+
+        my $mkt = `cat $mkd`;
+        $mkt =~ s/^(#+) #(\S+) /$1 <a name="$2"><\/a> /mg;
+        open($fh, "|-", "$MKD >> ../html/$b.html")
+          and print $fh $mkt, $mf
+          and close $fh;
+    }
 }
 
 __DATA__
