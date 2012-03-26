@@ -286,7 +286,7 @@ sub memberships {
         $base2 = generic_name($base);
 
         # second, you need to check in %repos also
-        for my $i ( keys %repos ) {
+        for my $i ( keys %repos, keys %configs ) {
             if ( $base eq $i or $base =~ /^$i$/ or $base2 and ( $base2 eq $i or $base2 =~ /^$i$/ ) ) {
                 push @ret, $i;
             }

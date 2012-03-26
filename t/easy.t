@@ -18,7 +18,7 @@ sub ok { (+shift) ? print "ok\n" : print "not ok\n"; }
 sub nok { (+shift) ? print "not ok\n" : print "ok\n"; }
 sub msg { return unless $ENV{D}; print STDERR "#" . +shift . "\n"; }
 
-try "plan 88";
+try "plan 90";
 
 try "
     cat $ENV{HOME}/.gitolite.rc
@@ -49,7 +49,6 @@ confreset;confadd '
     @oddguys = u1 u3 u5
     @evensout = u2 u4 u6
 
-    # TODO
     repo cc/sub/..*
         config sub.cc   =   1
 ';
@@ -166,8 +165,7 @@ my @a;
 @a = config("cc/sub/one", "for.cc");   ok($a[0] eq 'for.cc' and $a[1] eq '1');
 @a = config("cc/sub/one", "fo\\..cc"); ok(scalar(@a) == 0);
 
-# TODO
-# @a = config("cc/sub/one", "su..cc");   ok($a[0] eq 'sub.cc' and $a[1] eq '1');
-# @a = config("cc/sub/one", "sub.cc");   ok($a[0] eq 'sub.cc' and $a[1] eq '1');
+@a = config("cc/sub/one", "su..cc");   ok($a[0] eq 'sub.cc' and $a[1] eq '1');
+@a = config("cc/sub/one", "sub.cc");   ok($a[0] eq 'sub.cc' and $a[1] eq '1');
 @a = config("cc/sub/one", "su\\..cc"); ok(scalar(@a) == 0);
 
