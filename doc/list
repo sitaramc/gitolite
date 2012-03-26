@@ -14,11 +14,9 @@ minreq.mkd
 qi.mkd
 install.mkd
 add.mkd
-conf.mkd
 users.mkd
 
-rc.mkd
-cust.mkd
+conf.mkd
 
 group.mkd
 repo.mkd
@@ -26,12 +24,13 @@ rules.mkd
 refex.mkd
 write-types.mkd
 
-dev-notes.mkd
-commands.mkd
-hooks.mkd
+rc.mkd
+
+cust.mkd
 triggers.mkd
-sugar.mkd
 vref.mkd
+
+dev-notes.mkd
 
 misc.mkd
 pw.mkd

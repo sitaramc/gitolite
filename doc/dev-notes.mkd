@@ -9,7 +9,7 @@ Hints for developers wishing to help migrate features over from g2 are
 Here are some random notes on developing hooks, commands, triggers, and sugar
 scripts.
 
-## environment variables
+## environment variables and other inputs
 
 In general, the following environment variables should always be available:
 
@@ -19,6 +19,9 @@ In general, the following environment variables should always be available:
 
 Commands invoked by a remote client will also have `GL_USER` set.  Hooks will
 have `GL_REPO` also set.
+
+Finally, note that triggers get a lot of relevant information as arguments;
+see [here][triggers] for details.
 
 ## APIs
 

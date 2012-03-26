@@ -1,23 +1,71 @@
 # customising gitolite
 
-Here are the ways you can customise gitolite on the server.
+Much of gitolite (g3)'s functionality comes from programs and scripts that are
+not considered "core".  This keeps the core simpler, and allows you to enhance
+gitolite for your own purposes without too much fuss.
 
-First, learn about:
+## types of non-core programs
 
-  * [git hooks][hooks] and [virtual refs][vref]
+There are 5 basic types of non-core programs.
 
-  * [commands][] for your [users][] to run own][dev-notes]
+  * *commands* can be run from the shell command line.  Those listed in the
+    COMMANDS hash of the rc file can also be run remotely.
+  * *hooks* are standard git hooks; see below.
+  * *sugar scripts* change the conf language for your convenience.  The word
+    sugar comes from "syntactics sugar".
+  * *triggers* are to gitolite what hooks are to git.  I just chose a
+    different name to avoid confusion and constant disambiguation in the docs.
+  * **VREFs** are extensions to the access control check part of gitolite.
 
-  * [triggers][] to be run by gitolite as various points in its execution
+## #commands gitolite "commands"
 
-  * [syntactic sugar][sugar] to change the conf language for your convenience
+Gitolite comes with several commands that users can run.  Remote user run the
+commands by saying:
 
-For all of the above:
+    ssh git@host command-name [args...]
 
-  * [edit the rc file][rc] to enable optional features that are shipped in a
-    disabled state
+while on the server you can run
 
-  * [write your own][dev-notes]
+    gitolite command [args...]
 
-(Note: "trigger" is the same concept as "hook", applied to gitolite; I just
-chose a different name to avoid constant ambiguity in documentation).
+Very few commands are designed to be run both ways, but it can be done, by
+checking for the presence of env var `GL_USER`.
+
+You can get a **list of available commands** by using the `help` command.
+Naturally, a remote user will see a much smaller list than the server user.
+
+You add commands to the "allowed from remote" list by adding its name (or
+uncommenting it if it's already added but commented out) to the COMMANDS hash
+in the [rc][] file.
+
+If you write your own commands, put them in src/commands.
+
+## #hooks hooks and gitolite
+
+Gitolite uses the `update` hook for all repos.  In addition, it uses the
+`post-update` hook for the gitolite-admin repo.
+
+If you want to add your own hook, it's easy as long as it's not the 'update'
+hook.  Just add it to `$HOME/.gitolite/hooks/common` and run `gitolite setup`.
+
+The rest is between you and 'man githooks' :-)
+
+## #sugar syntactic sugar
+
+Sugar scripts help you change the perceived syntax of the conf language.  The
+base syntax of the language is as described [here][conf], so sugar scripts
+take something *else* and convert it into that.
+
+That way, the admin sees additional features (like allowing continuation
+lines), while the parser in the core gitolite engine does not change.
+
+If you want to write your own sugar scripts, please read the "your own sugar"
+section in [dev-notes][] first then email me.
+
+## triggers
+
+Triggers have their own [document][triggers].
+
+## VREFs
+
+VREFs also have their own [document][vref].

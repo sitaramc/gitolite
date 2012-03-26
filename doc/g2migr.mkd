@@ -73,7 +73,7 @@ put that contain the words "see docs":
         cd $HOME/repositories
         find . -type d -name "*.git" -prune | while read r
         do
-            mv \$r/gl-creater \$r/gl-creator
+            mv $r/gl-creater $r/gl-creator
         done 2>/dev/null
 
     Once you do this, the g2 will not work completely unless you change them
