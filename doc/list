@@ -30,6 +30,8 @@ cust.mkd
 triggers.mkd
 vref.mkd
 
+non-core.mkd
+
 dev-notes.mkd
 
 misc.mkd

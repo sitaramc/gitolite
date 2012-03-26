@@ -17,6 +17,9 @@ There are 5 basic types of non-core programs.
     different name to avoid confusion and constant disambiguation in the docs.
   * **VREFs** are extensions to the access control check part of gitolite.
 
+[Here][non-core] is a list of non-core programs shipped with gitolite, with
+some description of each.
+
 ## #commands gitolite "commands"
 
 Gitolite comes with several commands that users can run.  Remote user run the

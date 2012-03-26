@@ -1,0 +1,160 @@
+# non-core programs shipped with gitolite
+
+## commands
+
+A list of these commands can be obtained by running `gitolite help` on the
+server.  A different (and probably much smaller) list can be obtained by a
+remote user running `ssh git@host help`.
+
+All the commands will respond to `-h`; please report a bug to me if they
+don't.
+
+## syntactic sugar
+
+The following "sugar" programs are available:
+
+  * continuation-lines -- allow the use of C-style backslash escaped
+    continuation lines in the conf file.  I don't like it but some people do,
+    and now I can support them without bulking up the "core" conf parser!
+
+  * keysubdirs-as-groups -- someone wanted the sub-directory name (of
+    "keydir/") in which the pubkey was placed to be a group to which the user
+    automatically belonged.  A very unusual requirement, and one which would
+    *never* have seen the light of day in g2, but in g3 it's easy, and doesn't
+    affect anyone else!
+
+    (Note: the last component of the directory path is used if there are more
+    than one level between "keydir/" and the actual file).
+
+## triggers
+
+The `PRE_GIT` triggers are:
+
+  * partial-copy -- this has its own section later in this page
+
+  * renice -- this renices the entire job to whatever value you specify
+
+The `POST_GIT` triggers are:
+
+  * cpu-time -- post-git triggers, if you check the [triggers][] doc, receive
+    4 CPU time numbers from the main shell program.  Treat this code as sample
+    and do do with them as you please to do with as you please.
+
+The `POST_COMPILE` triggers are:
+
+  * post-compile/ssh-authkeys -- takes the pubkeys in keydir and populates
+    `~/.ssh/authorized_keys`
+
+  * post-compile/update-git-configs -- updates individual 'repo.git/config'
+    files (using the 'git config ...' command) from settings supplied in the
+    conf file.  All sections except 'gitolite-options' are processed.  (The
+    'gitolite-options' section is considered internal to gitolite).
+
+  * post-compile/update-git-daemon-access-list -- create/delete
+    'git-daemon-export-ok' files in each repo based on whether the conf says
+    'daemon' can read the repo or not
+
+  * post-compile/update-gitweb-access-list -- populates the file named in
+    `GITWEB_PROJECTS_LIST` in the rc file (default: `$HOME/projects.list`)
+    with the list of repos that gitweb is allowed to access.  This could be
+    more than just "R = gitweb"; any repo that has any config setting with the
+    section name 'gitweb' (like 'gitweb.owner', 'gitweb.description', etc) is
+    considered readable by gitweb, so the final list is a union of these two
+    methods
+
+The `POST_CREATE` triggers are:
+
+  * the last 3 in the `POST_COMPILE` list also run from `POST_CREATE`, for
+    obvious reasons.
+
+## VREFs
+
+You should read about [vref][]s in detail first; this won't make sense
+otherwise.  For a brief recap, note that there are 2 kinds of VREFs: those
+that require arguments and those that behave just like any other `update`
+hook.
+
+COUNT is an example of the former (hence the long-ish description).  DUPKEYS
+and EMAIL-CHECK are both examples of the latter.
+
+  * COUNT
+
+    The COUNT VREF is used like this:
+
+        -   VREF/COUNT/9                    =   @junior-developers
+
+    In response, if anyone in the user list pushes a commit series that
+    changes more than 9 files, a vref of "VREF/COUNT/9" is returned.  Gitolite
+    uses that as a "ref" to match against all the rules, hit the same rule
+    that invoked it, and deny the request.
+
+    If the user did not push more than 9 files, the VREF code returns nothing,
+    and nothing happens.
+
+    COUNT can take one more argument:
+
+        -   VREF/COUNT/9/NEWFILES           =   @junior-developers
+
+    This is the same as before, but have to be more than 9 *new* files not
+    just changed files.
+
+  * DUPKEYS -- this checks keydir/ for duplicate keys and aborts the push if
+    it finds any.  You should use this only on the gitolite-admin repo.
+
+        repo gitolite-admin
+            -   VREF/DUPKEYS                =   @all
+
+  * EMAIL-CHECK -- read the comments in the code for this one.  Like DUPKEYS,
+    it does not take any arguments.
+
+  * FILETYPE -- this is sample code for a very site-specific purpose; you'll
+    have to read the code
+
+  * MERGE-CHECK -- this is sample code to illustrate how one of the gitolite
+    built-in functions *could* have been handled, although there are some
+    differences
+
+  * partial-copy -- this has its own section later in this page
+
+## special cases
+
+### partial-copy
+
+Git (and therefore gitolite) cannot do selective read control -- allowing
+someone to read branch A but not branch B.  It's the entire repo or nothing.
+
+<font color="gray"> [Side note: Gerrit Code Review can do that, but that is
+because they have their own git stack (and their own sshd, and so on) all in
+one big Java program.  Gerrit is *really* useful if you want code review to be
+part of the access control decision] </font>
+
+Gitolite can now help you do this, as follows:
+
+1.  enable 'partial-copy' in the `PRE_GIT` section in the rc file.
+
+2.  for each repo "foo" which has secret branches that a certain set of
+    developers (we'll use a group called `@temp-emp` as an example) are not
+    supposed to see, do this:
+
+        repo foo
+            # rules should allow @temp-emp NO ACCESS
+
+        repo foo-partialcopy-1
+            -   secret-branch               =   @temp-emp
+            # other rules should ensure ONLY @temp-emp has ANY ACCESS
+            # NO other user should have access
+
+            -   VREF/partial-copy           =   @all
+            config gitolite.partialCopyOf   =   foo
+
+And that should be it.  **Please test it and let me know if it doesn't work!**
+
+WARNINGS:
+
+  * if you change the config to disallow something that used to be allowed,
+    you should delete the partial repo on the server and then run 'gitolite
+    compile' to let it build again.  See t/partial-copy.t for details.
+
+  * not tested with smart http; probabl won't work
+
+  * also not tested with mirroring, or with wild card repos.
