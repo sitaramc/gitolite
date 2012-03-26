@@ -19,17 +19,13 @@
 </p>
 <h1>testing gitolite</h1>
 
-<p>Here's how to <em>run</em> the tests:</p>
+<p>Here's how to <em>run</em> the tests.  <strong>WARNING: they will clobber lots of things in
+your <code>$HOME</code>, so be sure to use a throwaway userid</strong>.</p>
 
 <pre><code>git clone git://github.com/sitaramc/gitolite
 cd gitolite
 git checkout -f g3
-
-# if you're not ok with your ~/.ssh getting clobbered
 prove
-
-# if you're ok with your ~/.ssh getting clobbered
-# prove t/*.t t/ssh*
 </code></pre>
 
 <p>Gitolite's test suite is mostly written using <a href="http://github.com/sitaramc/tsh">tsh</a> -- the "testing shell".

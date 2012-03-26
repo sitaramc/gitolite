@@ -63,13 +63,23 @@ This is perfectly fine, by the way)</p>
 won't work.  (The <code>POST_COMPILE</code> trigger programs all just happen to not
 require any arguments, so it works).</p>
 
-<h2>triggers and arguments</h2>
+<h2>common arguments</h2>
 
-<p>All triggers receive the name of the trigger as a string (example,
-<code>"POST_COMPILE"</code>) as the first argument, so they can know who invoked them.
-(This allows you to write the same program and fire it from more than one
-trigger, as above).  In addition, they may receive other arguments pertaining
-to the event that happened.</p>
+<p>Triggers receive the following arguments:</p>
+
+<ol>
+<li><p>any arguments mentioned in the rc file (for an example, see the renice
+command in the PRE_GIT trigger sequence),</p></li>
+<li><p>the name of the trigger as a string (example, <code>"POST_COMPILE"</code>), so you
+can call the same program from multiple triggers and know where it was
+called from,</p></li>
+<li><p>followed by zero or more arguments specific to the trigger, as given in
+the next section.</p></li>
+</ol>
+
+<h2>trigger-specific details</h2>
+
+<p>Here's all you need to know about each specific trigger.</p>
 
 <ul>
 <li><p><code>ACCESS_CHECK</code>: this fires once after each access check.  The first is

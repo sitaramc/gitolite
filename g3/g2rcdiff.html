@@ -78,12 +78,8 @@ think people who use spaces and other funky characters in dir/file names
 should be shot but luckily no one listens to me :-)</p></li>
 <li><p><code>GL_NO_DAEMON_NO_GITWEB</code> -- uncomment the appropriate lines in the rc
 file, in both the <code>POST_COMPILE</code> and <code>POST_CREATE</code> trigger sections.</p></li>
-<li><p><code>NICE_VALUE</code> -- use the <code>PRE_GIT</code> trigger to attach a program that renices
-the pid given by $GL_TID (that's the pid of the initial gitolite entry
-point, usually gitolite-shell, and propagates from there once set).</p>
-
-<p>You may have to add this list to the rc file; if you don't know perl use
-one of the others as a model or ask me.</p></li>
+<li><p><code>NICE_VALUE</code> -- uncomment the 'renice 10' line in the rc file.  You can
+also change the 10 to something else if you wish.</p></li>
 <li><p><code>GIT_PATH</code> -- gone, not needed.  Just add these lines to the end of the rc
 file:</p>
 
