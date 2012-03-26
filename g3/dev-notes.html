@@ -28,7 +28,7 @@ over.  Plus you may want to write your own programs to interact with it.</p>
 <p>Here are some random notes on developing hooks, commands, triggers, and sugar
 scripts.</p>
 
-<h2>environment variables</h2>
+<h2>environment variables and other inputs</h2>
 
 <p>In general, the following environment variables should always be available:</p>
 
@@ -39,6 +39,9 @@ GL_ADMIN_BASE
 
 <p>Commands invoked by a remote client will also have <code>GL_USER</code> set.  Hooks will
 have <code>GL_REPO</code> also set.</p>
+
+<p>Finally, note that triggers get a lot of relevant information as arguments;
+see <a href="triggers.html">here</a> for details.</p>
 
 <h2>APIs</h2>
 

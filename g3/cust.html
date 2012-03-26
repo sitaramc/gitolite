@@ -19,24 +19,76 @@
 </p>
 <h1>customising gitolite</h1>
 
-<p>Here are the ways you can customise gitolite on the server.</p>
+<p>Much of gitolite (g3)'s functionality comes from programs and scripts that are
+not considered "core".  This keeps the core simpler, and allows you to enhance
+gitolite for your own purposes without too much fuss.</p>
 
-<p>First, learn about:</p>
+<h2>types of non-core programs</h2>
 
-<ul>
-<li><p><a href="hooks.html">git hooks</a> and <a href="vref.html">virtual refs</a></p></li>
-<li><p><a href="commands.html">commands</a> for your <a href="users.html">users</a> to run own][dev-notes]</p></li>
-<li><p><a href="triggers.html">triggers</a> to be run by gitolite as various points in its execution</p></li>
-<li><p><a href="sugar.html">syntactic sugar</a> to change the conf language for your convenience</p></li>
-</ul>
-
-<p>For all of the above:</p>
+<p>There are 5 basic types of non-core programs.</p>
 
 <ul>
-<li><p><a href="rc.html">edit the rc file</a> to enable optional features that are shipped in a
-disabled state</p></li>
-<li><p><a href="dev-notes.html">write your own</a></p></li>
+<li><em>commands</em> can be run from the shell command line.  Those listed in the
+COMMANDS hash of the rc file can also be run remotely.</li>
+<li><em>hooks</em> are standard git hooks; see below.</li>
+<li><em>sugar scripts</em> change the conf language for your convenience.  The word
+sugar comes from "syntactics sugar".</li>
+<li><em>triggers</em> are to gitolite what hooks are to git.  I just chose a
+different name to avoid confusion and constant disambiguation in the docs.</li>
+<li><strong>VREFs</strong> are extensions to the access control check part of gitolite.</li>
 </ul>
 
-<p>(Note: "trigger" is the same concept as "hook", applied to gitolite; I just
-chose a different name to avoid constant ambiguity in documentation).</p>
+<h2><a name="commands"></a> gitolite "commands"</h2>
+
+<p>Gitolite comes with several commands that users can run.  Remote user run the
+commands by saying:</p>
+
+<pre><code>ssh git@host command-name [args...]
+</code></pre>
+
+<p>while on the server you can run</p>
+
+<pre><code>gitolite command [args...]
+</code></pre>
+
+<p>Very few commands are designed to be run both ways, but it can be done, by
+checking for the presence of env var <code>GL_USER</code>.</p>
+
+<p>You can get a <strong>list of available commands</strong> by using the <code>help</code> command.
+Naturally, a remote user will see a much smaller list than the server user.</p>
+
+<p>You add commands to the "allowed from remote" list by adding its name (or
+uncommenting it if it's already added but commented out) to the COMMANDS hash
+in the <a href="rc.html">rc</a> file.</p>
+
+<p>If you write your own commands, put them in src/commands.</p>
+
+<h2><a name="hooks"></a> hooks and gitolite</h2>
+
+<p>Gitolite uses the <code>update</code> hook for all repos.  In addition, it uses the
+<code>post-update</code> hook for the gitolite-admin repo.</p>
+
+<p>If you want to add your own hook, it's easy as long as it's not the 'update'
+hook.  Just add it to <code>$HOME/.gitolite/hooks/common</code> and run <code>gitolite setup</code>.</p>
+
+<p>The rest is between you and 'man githooks' :-)</p>
+
+<h2><a name="sugar"></a> syntactic sugar</h2>
+
+<p>Sugar scripts help you change the perceived syntax of the conf language.  The
+base syntax of the language is as described <a href="conf.html">here</a>, so sugar scripts
+take something <em>else</em> and convert it into that.</p>
+
+<p>That way, the admin sees additional features (like allowing continuation
+lines), while the parser in the core gitolite engine does not change.</p>
+
+<p>If you want to write your own sugar scripts, please read the "your own sugar"
+section in <a href="dev-notes.html">dev-notes</a> first then email me.</p>
+
+<h2>triggers</h2>
+
+<p>Triggers have their own <a href="triggers.html">document</a>.</p>
+
+<h2>VREFs</h2>
+
+<p>VREFs also have their own <a href="vref.html">document</a>.</p>
