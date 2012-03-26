@@ -26,9 +26,9 @@ cd $GL_REPO_BASE/$main.git
 
 for ref in `git for-each-ref refs/heads '--format=%(refname)'`
 do
-    gitolite access -q $repo $user R $ref &&
     cd $GL_REPO_BASE/$repo.git
 
+    gitolite access -q $repo $user R $ref &&
     git fetch -f $GL_REPO_BASE/$main.git $ref:$ref
 done
 

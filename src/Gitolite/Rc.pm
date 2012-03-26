@@ -283,6 +283,9 @@ __DATA__
         [
             # if you use this, make this the first item in the list
             # 'renice 10',
+
+            # see docs ("list of non-core programs shipped") for details
+            # 'partial-copy',
         ],
 
     # comment out or uncomment as needed
