@@ -60,8 +60,8 @@ try "
 ";
 
 try "
-    gitolite post-compile/update-git-daemon-access-list;    ok
-    gitolite post-compile/update-gitweb-access-list;        ok
+    gitolite ../triggers/post-compile/update-git-daemon-access-list;    ok
+    gitolite ../triggers/post-compile/update-gitweb-access-list;        ok
     cat $ENV{HOME}/projects.list;                           ok
 ";
 cmp 'bar.git

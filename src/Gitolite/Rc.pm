@@ -171,7 +171,7 @@ sub trigger {
             for my $s ( @{ $rc{$rc_section} } ) {
 
                 my ($pgm, @args) = split ' ', $s;
-                $pgm = "$ENV{GL_BINDIR}/commands/$pgm";
+                $pgm = "$ENV{GL_BINDIR}/triggers/$pgm";
 
                 _warn("skipped command '$s'"), next if not -x $pgm;
                 trace( 2, "command: $s" );

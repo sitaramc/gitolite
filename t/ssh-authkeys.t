@@ -17,7 +17,7 @@ my $kd = `gitolite query-rc -n GL_ADMIN_BASE` . "/keydir";
 
 try "plan 49";
 
-my $pgm = "gitolite post-compile/ssh-authkeys";
+my $pgm = "gitolite ../triggers/post-compile/ssh-authkeys";
 
 try "
     # prep

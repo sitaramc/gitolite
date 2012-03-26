@@ -31,7 +31,7 @@ For each case where access is not denied, one line is printed like this:
 This is orders of magnitude faster than running the command multiple times;
 you'll notice if you have more than a hundred or so repos.
 
-Advanced uses: see src/commands/post-compile/update-git-daemon-access-list for
+Advanced uses: see src/triggers/post-compile/update-git-daemon-access-list for
 a good example.
 =cut
 

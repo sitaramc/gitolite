@@ -32,7 +32,7 @@ try "
     cp $bd/../t/keys/*.pub $ab/keydir;      ok or die 6
 ";
 
-system("gitolite post-compile/ssh-authkeys");
+system("gitolite ../triggers/post-compile/ssh-authkeys");
 
 # basic tests
 # ----------------------------------------------------------------------
