@@ -8,7 +8,7 @@ use Gitolite::Test;
 use Cwd;
 my $workdir = getcwd();
 
-# 'gitolite writes' command
+# 'gitolite writable' command
 # ----------------------------------------------------------------------
 
 my $sf = ".gitolite.down";
@@ -48,7 +48,7 @@ try "
     PUSH u2 master;             ok;
 
     # disable site with some message
-    gitolite writes off \@all testing site-wide disable; ok
+    gitolite writable \@all off testing site-wide disable; ok
 
     # try push foo and see fail + message
     cd ../foo;                  ok
@@ -67,7 +67,7 @@ try "
     cd u4;                      ok
 
     # enable site
-    gitolite writes on \@all; ok
+    gitolite writable \@all on; ok
 
     # try same 3 again
 
@@ -88,7 +88,7 @@ try "
     cd u6;                      ok
 
     # disable just foo
-    gitolite writes off foo foo down
+    gitolite writable foo off foo down
 
     # try push foo and see the message
     cd ../foo;                  ok
@@ -101,8 +101,8 @@ try "
     PUSH u2;                    ok;     /master -> master/
 
     # enable foo, disable bar/u2
-    gitolite writes on foo
-    gitolite writes off bar/u2 the bar is closed
+    gitolite writable foo on
+    gitolite writable bar/u2 off the bar is closed
 
     # try both
     cd ../foo;                  ok

@@ -6,7 +6,7 @@ use lib $ENV{GL_BINDIR};
 use Gitolite::Easy;
 
 =for usage
-Usage: gitolite writes on|off <reponame>|@all
+Usage: gitolite writable <reponame>|@all on|off
 
 'on' enables, 'off' disables, writes (pushes) to the named repo or all repos.
 
@@ -16,11 +16,10 @@ from STDIN; this allows longer messages.
 =cut
 
 usage() if not @ARGV or @ARGV < 2 or $ARGV[0] eq '-h';
-
-usage() if $ARGV[0] ne 'on' and $ARGV[0] ne 'off';
-my $on = ( shift eq 'on' );
+usage() if $ARGV[1] ne 'on' and $ARGV[1] ne 'off';
 
 my $repo = shift;
+my $on = ( shift eq 'on' );
 
 if ( $repo eq '@all' ) {
     die "you are not authorized\n" if $ENV{GL_USER} and not is_admin();

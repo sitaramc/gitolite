@@ -94,7 +94,7 @@ $ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}";
 }
 
 # these two are meant to help externally written commands (see
-# src/commands/writes for an example)
+# src/commands/writable for an example)
 $ENV{GL_REPO_BASE}  = $rc{GL_REPO_BASE};
 $ENV{GL_ADMIN_BASE} = $rc{GL_ADMIN_BASE};
 
@@ -282,7 +282,7 @@ __DATA__
             'info'              =>  1,
             'desc'              =>  1,
             'perms'             =>  1,
-            'writes'            =>  1,
+            'writable'          =>  1,
         },
 
     # comment out or uncomment as needed
