@@ -1,0 +1,435 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# you need 3 disposable userids: sam, frodo, gollum.  Then the test user (say
+# "g3") needs to be able to sudo into them.  Put this in /etc/sudoers:
+
+#       g3 ALL = (sam,frodo,gollum) NOPASSWD: ALL
+
+$ENV{TSH_ERREXIT} = 1;
+
+# this is hardcoded; change it if needed
+use lib "src";
+use Gitolite::Test;
+use Cwd;
+my $workdir = getcwd();
+my $h = $ENV{HOME};
+my ($t, $t2);   # temp vars
+
+# basic tests
+# ----------------------------------------------------------------------
+
+try "plan 152";
+##  try "DEF POK = !/DENIED/; !/failed to push/";
+
+##  confreset;confadd '
+
+##  ';
+
+##  try "ADMIN_PUSH set1; !/FATAL/" or die text();
+
+# ----------------------------------------------------------------------
+
+# switch keys
+sub swk {
+    my $h = $ENV{HOME};
+    my $k = shift;
+    system("cp $h/.ssh/$k $h/.ssh/id_rsa");
+    system("cp $h/.ssh/$k.pub $h/.ssh/id_rsa.pub");
+}
+
+sub all {
+    try "F " . join(" ", @_);
+    try "S " . join(" ", @_);
+    try "G " . join(" ", @_);
+}
+
+try "
+    DEF F   =   sudo -u frodo -i
+    DEF S   =   sudo -u sam -i
+    DEF G   =   sudo -u gollum -i
+";
+
+my $bd = `gitolite query-rc -n GL_BINDIR`;
+
+try "
+    $bd/../t/mirror-test-setup.sh;   ok or die mirror setup shell script failed
+        /hello server-frodo, this is frodo/
+        /hello server-sam, this is frodo/
+        /hello server-gollum, this is frodo/
+        /hello server-frodo, this is sam/
+        /hello server-sam, this is sam/
+        /hello server-gollum, this is sam/
+        /hello server-frodo, this is gollum/
+        /hello server-sam, this is gollum/
+        /hello server-gollum, this is gollum/
+        /hello admin, this is frodo/
+        /Initialized empty .*/gitolite-admin.git/
+        /Initialized empty .*/r1.git/
+        /Initialized empty .*/r2.git/
+        /Initialized empty .*/testing.git/
+        /Initialized empty .*/gitolite-admin.git/
+        /Initialized empty .*/r1.git/
+        /Initialized empty .*/r2.git/
+        /Initialized empty .*/testing.git/
+        /Initialized empty .*/gitolite-admin.git/
+        /Initialized empty .*/r1.git/
+        /Initialized empty .*/r2.git/
+        /Initialized empty .*/testing.git/
+";
+
+# ----------------------------------------------------------------------
+# SECTION 1: gitolite-admin shenanigans
+
+# push to frodo and see sam and gollum change
+try "
+    git clone frodo\@localhost:gitolite-admin fga
+        ok; /Cloning into 'fga'.../
+    cd fga;                             ok
+    cp $h/.ssh/u?.pub keydir;           ok
+    git add keydir;                     ok
+    git commit -m 6keys;                ok
+    git push;                           ok
+        /To frodo\@localhost:gitolite-admin/
+        /master -> master/
+    git rev-parse HEAD
+";
+
+chomp($t = text());
+
+try "
+    git ls-remote sam\@localhost:gitolite-admin
+        ok; /$t/
+    git ls-remote gollum\@localhost:gitolite-admin
+        ok; /$t/
+";
+
+try "
+    cd ..
+
+";
+
+# push to sam and see frodo and gollum change
+try "
+    git clone sam\@localhost:gitolite-admin sga
+        ok; /Cloning into 'sga'.../
+    cd sga;                             ok
+    empty;                              ok
+    git push;                           ok
+        /To sam\@localhost:gitolite-admin/
+        /master -> master/
+    git rev-parse HEAD
+";
+
+chomp($t = text());
+
+try "
+    git ls-remote frodo\@localhost:gitolite-admin
+        ok; /$t/
+    git ls-remote gollum\@localhost:gitolite-admin
+        ok; /$t/
+";
+
+try "
+    cd ..
+
+";
+
+# push to gollum and fail at gollum
+try "
+    git clone gollum\@localhost:gitolite-admin gga
+        ok; /Cloning into 'gga'.../
+    cd gga;                             ok
+    empty;                              ok
+    git push;                           !ok
+        !/To gollum\@localhost:gitolite-admin/
+        !/master -> master/
+        /gollum: pushing 'gitolite-admin' to slave 'gollum' not allowed/
+    git rev-parse HEAD
+";
+
+chomp($t2 = text());
+
+try "
+    git ls-remote frodo\@localhost:gitolite-admin
+        ok; /$t/; !/$t2/
+    git ls-remote sam\@localhost:gitolite-admin
+        ok; /$t/; !/$t2/
+    git ls-remote gollum\@localhost:gitolite-admin
+        ok; /$t/; !/$t2/
+";
+
+# fake out the gollum failure to continue the redirected push and fail at frodo
+try "
+    sudo -u gollum -i gitolite git-config -r gitolite-admin .
+        ok
+        /redirectOK.*sam/
+        !/redirectOK.*gollum/
+
+    sudo -u gollum -i bash -c 'echo repo gitolite-admin > junk'
+    sudo -u gollum -i bash -c 'echo option mirror.redirectOK-1 = gollum   >> junk'
+    sudo -u gollum -i bash -c 'cat junk >> .gitolite/conf/gitolite.conf'
+    sudo -u gollum -i gitolite compile
+    sudo -u gollum -i gitolite git-config -r gitolite-admin .
+        ok
+        /redirectOK.*sam/
+        /redirectOK.*gollum/
+
+    git push;                           !ok
+        /frodo: redirection not allowed from 'gollum'/
+        !/To gollum\@localhost:gitolite-admin/
+        !/master -> master/
+";
+
+# reset gollum via frodo
+try "
+    cd ..
+    rm -rf fga
+    git clone frodo\@localhost:gitolite-admin fga
+        ok; /Cloning into 'fga'.../
+    cd fga;                             ok
+    empty;                              ok
+    git push;                           ok
+        /To frodo\@localhost:gitolite-admin/
+        /master -> master/
+
+    sudo -u gollum -i gitolite git-config -r gitolite-admin .
+        ok
+        /redirectOK.*sam/
+        !/redirectOK.*gollum/
+
+    git rev-parse HEAD
+";
+
+chomp($t = text());
+
+try "
+    git ls-remote sam\@localhost:gitolite-admin
+        ok; /$t/
+    git ls-remote gollum\@localhost:gitolite-admin
+        ok; /$t/
+";
+
+# ----------------------------------------------------------------------
+# user repo shenanigans
+
+# for a recap of the perms see t/mirror-test-setup.sh
+
+try "
+    cd ..
+    pwd
+    /tmp/tsh_tempdir/ or die not in the right place
+" or die;
+
+swk('u1');
+
+# u1 sam r1, R ok, W ok
+try "
+    rm -rf fga sga gga
+
+    git clone sam\@localhost:r1 sr1
+        /Cloning into 'sr1'.../
+        /warning: You appear to have cloned an empty repository/
+    cd sr1
+    empty
+    git push origin master
+        /new branch/;   /master -> master/
+    git rev-parse HEAD
+";
+chomp($t = text());
+
+# u1 sam r1, W mirrors to frodo but not gollum
+try "
+    git ls-remote sam\@localhost:r1
+        /$t/
+    git ls-remote frodo\@localhost:r1
+        /$t/
+    git ls-remote gollum\@localhost:r1
+        /gollum: 'r1' is mirrored but not here/
+";
+
+swk("u2");
+try "
+    empty
+    git rev-parse HEAD
+";
+chomp($t2 = text());
+
+# u2 sam r2 W ok, mirrors to all
+try "
+    git push sam\@localhost:r2 master
+        /new branch/;   /master -> master/
+        /master -> master/
+    git ls-remote frodo\@localhost:r2
+        !/$t/
+        /$t2/
+    git ls-remote gollum\@localhost:r2
+        !/$t/
+        /$t2/
+";
+
+swk("u1");
+
+# u1 gollum r1 -- "known unknown" :-)
+# u1 frodo r1 R ok, W not ok
+# u1 sam r1 R ok, W ok
+try "
+    cd ..
+    rm -rf sr1
+
+    git clone gollum\@localhost:r1 fr1
+        /gollum: 'r1' is mirrored but not here/
+
+    git clone frodo\@localhost:r1 fr1;       ok
+    cd fr1
+    empty
+    git push
+        /frodo: pushing 'r1' to slave 'frodo' not allowed/
+    cd ..
+    git clone sam\@localhost:r1 sr1;         ok
+    cd sr1
+    empty
+    git push;                               ok
+        /master -> master/
+    git rev-parse HEAD
+";
+chomp($t = text());
+
+# u1 sam r1 W mirrored to frodo but not gollum
+try "
+    git ls-remote sam\@localhost:r1
+        /$t/
+    git ls-remote frodo\@localhost:r1
+        /$t/
+
+    git ls-remote gollum\@localhost:r1
+        /gollum: 'r1' is mirrored but not here/
+
+    git reset --hard HEAD^;                 ok
+    tc a
+    git push;                               !ok
+        /rejected/
+        /failed to push/
+
+    git push -f
+        /\\+ .......\\.\\.\\........ master -> master .forced update/
+";
+
+swk("u2");
+
+# u2 frodo r1 R ok, W not allowed (no redirectOK)
+# u2 frodo r2 W ok
+try "
+    cd ..
+    rm -rf fr1 sr1
+
+    git clone frodo\@localhost:r1 fr1;       ok
+    cd fr1
+    tc b
+    git push
+        /frodo: pushing 'r1' to slave 'frodo' not allowed/
+    cd ..
+    git clone frodo\@localhost:r2 fr2;       ok
+    cd fr2
+    tc c
+    git push
+        /master -> master/
+    git rev-parse HEAD
+";
+chomp($t = text());
+
+# u2 frodo r2 W mirrors to sam and gollum
+try "
+    git ls-remote sam\@localhost:r2
+        /$t/
+    git ls-remote gollum\@localhost:r2
+        /$t/
+
+    git reset --hard HEAD^;                 ok
+    tc d
+    git push
+        /rejected/
+        /failed to push/
+
+    git push -f
+        /\\+ .......\\.\\.\\........ master -> master .forced update/
+
+    cd ..
+    rm -rf fr1 fr2
+";
+
+swk("u3");
+
+# u3 frodo r2 R ok W ok
+try "
+    git clone frodo\@localhost:r2 fr2;       ok
+    cd fr2
+    tc e
+    git push;                               ok
+
+    git rev-parse HEAD
+";
+chomp($t = text());
+
+# u3 frodo r2 W mirrors to sam and gollum
+try "
+    git ls-remote sam\@localhost:r2
+        /$t/
+    git ls-remote gollum\@localhost:r2
+        /$t/
+
+    git reset --hard HEAD^;                 ok
+    tc f
+    git push
+        /rejected/
+        /failed to push/
+
+    sleep 10
+    git push -f
+        /\\+ refs/heads/master r2 u3 DENIED by fallthru/
+        /hook declined/
+        /rejected/
+";
+
+# ----------------------------------------------------------------------
+# all those vague edge cases where the two servers have totally wrong ideas
+# about each other
+
+swk('u1');
+
+try "sudo -u frodo -i ls .gitolite/logs";
+chomp($t = text());
+my $lfn = ".gitolite/logs/$t";
+
+try "
+    ssh sam\@localhost mirror push frodo lfrodo;  !ok
+    /FATAL: frodo: 'lfrodo' is local/
+
+    ssh sam\@localhost mirror push frodo mboth;  !ok
+    /FATAL: frodo: 'mboth' is native/
+
+    ssh sam\@localhost mirror push frodo mnotsam;  !ok
+    /FATAL: frodo: 'sam' is not the master for 'mnotsam'/
+
+    cd ..
+    git clone sam\@localhost:lfrodo2 lfrodo2;   ok
+    cd lfrodo2
+    empty
+    git push origin master;                     !ok
+    /FATAL: frodo: 'lfrodo2' is local/
+
+    cd ..
+    git clone sam\@localhost:nnfrodo nnfrodo;   ok
+    cd nnfrodo
+    empty
+    git push origin master;                     !ok
+    /FATAL: frodo: 'nnfrodo' is not native/
+
+    cd ..
+    git clone sam\@localhost:nvsfrodo nvsfrodo; ok
+    cd nvsfrodo
+    empty
+    git push origin master;                     !ok
+    /FATAL: frodo: 'sam' is not a valid slave for 'nvsfrodo'/
+";

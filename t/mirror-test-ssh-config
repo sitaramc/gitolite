@@ -1,0 +1,11 @@
+host frodo
+    user frodo
+    hostname localhost
+
+host sam
+    user sam
+    hostname localhost
+
+host gollum
+    user gollum
+    hostname localhost

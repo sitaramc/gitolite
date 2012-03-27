@@ -1,0 +1,69 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+my $tid;
+BEGIN {
+    $tid = $ENV{GL_TID} || 0;
+    delete $ENV{GL_TID};
+}
+
+use lib $ENV{GL_BINDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+=for usage
+Usage 1:    gitolite mirror push <slave> <repo>
+Usage 2:    ssh git@master-server mirror push <slave> <repo>
+
+Forces a push of one repo to one slave.
+
+Usage 1 is directly on the master server.  Nothing is checked; if the slave
+accepts it, the push happens, even if the slave is not in any slaves
+option.  This is how you do delayed or lagged pushes to servers that do not
+need real-time updates or have bandwidth/connectivity issues.
+
+Usage 2 can be initiated by *any* user who has *any* gitolite access to the
+master server, but it checks that the slave is in one of the slaves options
+before doing the push.
+=cut
+
+usage() if not @ARGV or $ARGV[0] eq '-h';
+
+_die "HOSTNAME not set" if not $rc{HOSTNAME};
+
+my ($cmd, $host, $repo) = @ARGV;
+usage() if not $repo;
+
+if ($cmd eq 'push') {
+    valid_slave($host, $repo) if exists $ENV{GL_USER};
+    # will die if host not in slaves for repo
+
+    trace(1, "TID=$tid host=$host repo=$repo", "gitolite mirror push started");
+    _chdir($rc{GL_REPO_BASE});
+    _chdir("$repo.git");
+
+    my $errors = 0;
+    for (`git push --mirror $host:$repo 2>&1`) {
+        print STDERR "$_" if -t STDERR or exists $ENV{GL_USER};
+        chomp;
+        if (/FATAL/) {
+            $errors++;
+            gl_log('mirror', $_);
+        } else {
+            trace(1, "mirror: $_");
+        }
+    }
+    exit $errors;
+}
+
+sub valid_slave {
+    my ($host, $repo) = @_;
+    _die "invalid repo '$repo'" unless $repo =~ $REPONAME_PATT;
+
+    my $ref = git_config($repo, "^gitolite-options\\.mirror\\.slaves.*");
+    my %list = map { $_ => 1 } map { split } values %$ref;
+
+    _die "'$host' not a valid slave for '$repo'" unless $list{$host};
+}
