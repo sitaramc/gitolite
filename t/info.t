@@ -34,7 +34,7 @@ try "
 ";
 
 # GS == greeting string
-try "DEF GS = /hello %1, this is gitolite/";
+try "DEF GS = /hello %1, this is $ENV{USER}\\@.* running gitolite/";
 
 try "
     glt info u1; ok; GS u1
