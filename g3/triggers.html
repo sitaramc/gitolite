@@ -21,7 +21,7 @@
 
 <h2>intro and sample rc excerpt</h2>
 
-<p>Gitolite fires off external commands at six different times.  The <a href="rc.html">rc</a> file
+<p>Gitolite fires off external commands at 7 different times.  The <a href="rc.html">rc</a> file
 specifies what commands to run at each trigger point, but for illustration,
 here's an excerpt:</p>
 
@@ -79,41 +79,63 @@ the next section.</p></li>
 
 <h2>trigger-specific details</h2>
 
-<p>Here's all you need to know about each specific trigger.</p>
+<p>Here's a brief "when" and "with what arguments" for each trigger.</p>
 
 <ul>
-<li><p><code>ACCESS_CHECK</code>: this fires once after each access check.  The first is
-just before invoking git-receive-pack or git-upload-pack.  The second,
-which only applies to "write" operations, is from git's own 'update' hook.</p>
+<li><p><code>ACCESS_1</code> runs after the first access check.  Arguments:</p>
 
-<p>Arguments: repo name, user name, [attempted access][perm], the ref being
-updated, and the result of the access check.</p>
+<ul>
+<li>repo</li>
+<li>user</li>
+<li>'R' or 'W'</li>
+<li>'any'</li>
+<li>result: this is the result of the access() function.  If it contains
+the uppercase word "DENIED", the access was rejected.  Otherwise
+result contains the refex that caused the access to succeed.</li>
+</ul></li>
+<li><p><code>ACCESS_2</code> runs after the second access check, in the update hook.
+Arguments:</p>
 
-<p>The 'ref' is <code>any</code> for the first check, because at that point we don't
-know what the actual ref is.  For the second check it could be, say,
-<code>refs/heads/master</code> or some such.</p>
+<ul>
+<li>repo</li>
+<li>user</li>
+<li>any of W, +, C, D, WM, +M, CM, DM</li>
+<li>the ref being updated (e.g., 'refs/heads/master')</li>
+<li>result (see above)</li>
+</ul></li>
+<li><p><code>PRE_GIT</code> runs just before running the git command.  Arguments:</p>
 
-<p>The result is a text field that the <code>access()</code> function returned.
-Programmatically, the only thing you should rely on is that if it contains
-the upper case word "DENIED" then access was denied, otherwise it was
-allowed.</p></li>
-<li><p><code>PRE_GIT</code>: before running the git command.</p>
+<ul>
+<li>repo</li>
+<li>user</li>
+<li>'R' or 'W'</li>
+<li>'any'</li>
+<li>the git command ('git-receive-pack', 'git-upload-pack', or
+'git-upload-archive') being invoked.</li>
+</ul></li>
+<li><p><code>POST_GIT</code> runs after the git command returns.  Arguments:</p>
 
-<p>Arguments: repo name, user name, [attempted access][perm], the string
-<code>any</code>, and the git command ('git-receive-pack', 'git-upload-pack', or
-'git-upload-archive') being invoked.</p></li>
-<li><p><code>POST_GIT</code>: after the git command returns.</p>
+<ul>
+<li>repo</li>
+<li>user</li>
+<li>'R' or 'W'</li>
+<li>'any'</li>
+<li>the git command ('git-receive-pack', 'git-upload-pack', or</li>
+</ul>
 
-<p>Arguments: same as for <code>PRE_GIT</code>, followed by the output of the perl
-function "times" (i.e., 4 CPU times: user, system, cumulative user,
-cumulative system)</p></li>
-<li><p><code>POST_COMPILE</code>: after an admin push has successfully "compiled" the config
-file.  By default, the next thing is to update the ssh authkeys file, then
-all the 'git-config's, gitweb access, and daemon access.</p>
+<p>These are followed by the output of the perl function "times" (i.e., 4 CPU
+times: user, system, cumulative user, cumulative system) so that's 9
+arguments in total</p></li>
+<li><p><code>PRE_CREATE</code> and <code>POST_CREATE</code> run just before and after a new "[wild][]"
+repo is created by user action.  Arguments:</p>
 
-<p>Programs run by this trigger receive no extra arguments.</p></li>
-<li><p><code>PRE_CREATE</code> and <code>POST_CREATE</code>: before and after a new "[wild][]" repo is
-created by user action.</p>
+<ul>
+<li>repo</li>
+<li>user</li>
+</ul></li>
+<li><p><code>POST_COMPILE</code> runs after an admin push has successfully "compiled" the
+config file.  By default, the next thing is to update the ssh authkeys
+file, then all the 'git-config's, gitweb access, and daemon access.</p>
 
-<p>Arguments: repo name, user name.</p></li>
+<p>No arguments.</p></li>
 </ul>
