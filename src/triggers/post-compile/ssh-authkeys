@@ -48,7 +48,7 @@ for my $f (@pubkeys) {
 
 # dump it out
 if (@gl_keys) {
-    my $out = join( "\n", map { my $_ = $_; chomp($_); $_ } @non_gl, "# gitolite start", @gl_keys, "# gitolite end" ) . "\n";
+    my $out = join( "\n", @non_gl, "# gitolite start", @gl_keys, "# gitolite end" ) . "\n";
 
     my $ak = slurp($akfile);
     _die "$akfile changed between start and end of this program!" if $ak ne $old_ak;
