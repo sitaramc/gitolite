@@ -52,7 +52,6 @@ $UNSAFE_PATT          = qr([`~#\$\&()|;<>]);
 
 # find the rc file and 'do' it
 # ----------------------------------------------------------------------
-
 my $current_data_version = "3.0";
 
 my $rc = glrc('filename');
@@ -64,11 +63,17 @@ if ( defined($GL_ADMINDIR) ) {
 
     exit 1;
 }
+
 # let values specified in rc file override our internal ones
+# ----------------------------------------------------------------------
 @rc{ keys %RC } = values %RC;
 
-# (testing only) testing sometimes requires all of it to be overridden
-# silently; use an env var that is highly unlikely to appear in real life :)
+# add internal triggers
+# ----------------------------------------------------------------------
+
+# (testing only) override the rc file silently
+# ----------------------------------------------------------------------
+# use an env var that is highly unlikely to appear in real life :)
 do $ENV{G3T_RC} if exists $ENV{G3T_RC} and -r $ENV{G3T_RC};
 
 # fix some env vars, setup gitolite internal "env" vars (aka rc vars)
@@ -278,6 +283,12 @@ __DATA__
         ],
 
     # comment out or uncomment as needed
+    # these will run in sequence just after the first access check is done
+    ACCESS_1                    =>
+        [
+        ],
+
+    # comment out or uncomment as needed
     # these will run in sequence at the start, before a git operation has started
     PRE_GIT                     =>
         [
@@ -289,6 +300,12 @@ __DATA__
         ],
 
     # comment out or uncomment as needed
+    # these will run in sequence just after the second access check is done
+    ACCESS_2                    =>
+        [
+        ],
+
+    # comment out or uncomment as needed
     # these will run in sequence at the end, after a git operation has ended
     POST_GIT                    =>
         [
@@ -297,19 +314,19 @@ __DATA__
         ],
 
     # comment out or uncomment as needed
-    # these will run in sequence after post-update
-    POST_COMPILE                =>
+    # these will run in sequence after a new wild repo is created
+    POST_CREATE                 =>
         [
-            'post-compile/ssh-authkeys',
             'post-compile/update-git-configs',
             'post-compile/update-gitweb-access-list',
             'post-compile/update-git-daemon-access-list',
         ],
 
     # comment out or uncomment as needed
-    # these will run in sequence after a new wild repo is created
-    POST_CREATE                 =>
+    # these will run in sequence after post-update
+    POST_COMPILE                =>
         [
+            'post-compile/ssh-authkeys',
             'post-compile/update-git-configs',
             'post-compile/update-gitweb-access-list',
             'post-compile/update-git-daemon-access-list',

@@ -91,7 +91,7 @@ sub main {
     my $ret = access( $repo, $user, $aa, 'any' );
     trace( 1, "access($repo, $user, $aa, 'any')", "-> $ret" );
     gl_log( 'check1', $repo, $user, $aa, 'any', '->', $ret );
-    trigger( 'ACCESS_CHECK', $repo, $user, $aa, 'any', $ret );
+    trigger( 'ACCESS_1', $repo, $user, $aa, 'any', $ret );
     _die $ret . "\n(or you mis-spelled the reponame)" if $ret =~ /DENIED/;
 
     check_repo_write_enabled($repo) if $aa eq 'W';

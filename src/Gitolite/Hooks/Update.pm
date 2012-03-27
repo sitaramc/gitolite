@@ -28,7 +28,7 @@ sub update {
 
     my $ret = access( $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref );
     trace( 1, "access($ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref)", "-> $ret" );
-    trigger( 'ACCESS_CHECK', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref, $ret );
+    trigger( 'ACCESS_2', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref, $ret );
     _die $ret if $ret =~ /DENIED/;
 
     check_vrefs( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa );
