@@ -50,9 +50,8 @@ perl API module) for ideas.
 
 ### the perl API
 
-...is implemented by Gitolite::Easy; see src/Gitolite/Easy.pm.  This is a work
-in progress; for example it does not yet have the equivalent of `gitolite
-git-config`.  I'll add it when I or someone else needs it.
+...is implemented by Gitolite::Easy; the comments in src/Gitolite/Easy.pm
+serve as documentation.
 
 ## your own hooks
 

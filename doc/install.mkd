@@ -4,6 +4,11 @@ Gitolite has only one server side "command" now, much like git itself.  And
 it's been designed so that you don't even really have to *install* it, as you
 will see.
 
+**NOTE**: if you're migrating from g2, there are some settings that MUST be
+dealt with **before** running `gitolite setup`; please read the [g2
+migration][g2migr] page and linked pages, and especially the one on
+'presetting the rc file][rc-preset].
+
 ## simplest
 
 1.  Put all of `src` in one place, doesn't matter where; let's call it

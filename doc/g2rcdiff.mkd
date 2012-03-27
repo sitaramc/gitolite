@@ -11,11 +11,20 @@ when you're ready to migrate.  Instead, you need to run
     # (assuming you saved your g2 rc file somewhere)
     gitolite print-default-rc > $HOME/.gitolite.rc
     $EDITOR $HOME/.gitolite.rc
-    # make appropriate changes, save
+    # make appropriate changes (see below), save
     gitolite setup
 
-One example of this is `GL_NO_SETUP_AUTHKEYS`.  If you don't jump in and fix
-the rc first, the first run will clobber your authkeys file.
+The most serious example of this is `GL_NO_SETUP_AUTHKEYS`.  If you don't
+preset the rc (in this case, by commenting out the 'ssh-authkeys' line)
+**before** running `gitolite setup`, your `~/.ssh/authorized_keys` file will
+get clobbered.
+
+There are several other settings that you may want to look at, with varying
+degrees of severity; **please go through the list below before blindly running
+`gitolite setup`**.  (For example, if you had `GL_NO_DAEMON_NO_GITWEB` in g2
+but forgot to comment out all the gitweb and daemon update lines in the rc
+file, your projects.list and git-daemon-export-ok files might get clobbered.
+Of course this is less severe than ssh authkeys but still...).
 
 ### rc file differences
 
