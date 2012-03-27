@@ -13,6 +13,9 @@ $|++;
 # can be called directly, or as a post-update hook.  Since it ignores
 # arguments anyway, it hardly matters.
 
+tsh_try("sestatus");
+my $selinux = (tsh_text() =~ /enabled/);
+
 my $ab = `gitolite query-rc -n GL_ADMIN_BASE`;
 trace( 2, "'keydir' not found in '$ab'; exiting" ), exit if not -d "$ab/keydir";
 my $akdir   = "$ENV{HOME}/.ssh";
@@ -98,6 +101,7 @@ sub fp {
 }
 
 sub fp_file {
+    return $selinux++ if $selinux;  # return a unique "fingerprint" to prevent noise
     my $f  = shift;
     my $fp = `ssh-keygen -l -f '$f'`;
     chomp($fp);
