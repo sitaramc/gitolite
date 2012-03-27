@@ -5,6 +5,11 @@ package Gitolite::Easy;
 # most/all functions in this module test $ENV{GL_USER}'s rights and
 # permissions so it needs to be set.
 
+# documentation for each function is at the top of the function.
+# Documentation is NOT in pod format; just read the source with a nice syntax
+# coloring text editor and you'll be happy enough.  (I do not like POD; please
+# don't send me patches for this aspect of the module).
+
 #<<<
 @EXPORT = qw(
   is_admin
@@ -37,12 +42,24 @@ my $user;
 
 # ----------------------------------------------------------------------
 
+# is_admin()
+
+# return true if $ENV{GL_USER} is set and has W perms to the admin repo
+
 # shell equivalent
 #   if gitolite access -q gitolite-admin $GL_USER W; then ...
+
 sub is_admin {
     valid_user();
     return not( access( 'gitolite-admin', $user, 'W', 'any' ) =~ /DENIED/ );
 }
+
+# is_super_admin()
+
+# (useful only if you are using delegation)
+
+# return true if $ENV{GL_USER} is set and has W perms to any file in the admin
+# repo
 
 # shell equivalent
 #   if gitolite access -q gitolite-admin $GL_USER W VREF/NAME/; then ...
@@ -51,14 +68,23 @@ sub is_super_admin {
     return not( access( 'gitolite-admin', $user, 'W', 'VREF/NAME/' ) =~ /DENIED/ );
 }
 
+# in_group()
+
+# return true if $ENV{GL_USER} is set and is in the given group
+
 # shell equivalent
 #   if gitolite list-memberships $GL_USER | grep -x $GROUPNAME >/dev/null; then ...
 sub in_group {
     valid_user();
-    my $g = "@" . +shift;
+    my $g = shift;
+    $g =~ s/^\@?/@/;
 
     return grep { $_ eq $g } @{ Gitolite::Conf::Load::list_memberships($user) };
 }
+
+# owns()
+
+# return true if $ENV{GL_USER} is set and is the creator of the given repo
 
 # shell equivalent
 #   if gitolite creator $REPONAME $GL_USER; then ...
@@ -72,6 +98,9 @@ sub owns {
     return ( creator($r) eq $user );
 }
 
+# can_read()
+# return true if $ENV{GL_USER} is set and can read the given repo
+
 # shell equivalent
 #   if gitolite access -q $REPONAME $GL_USER R; then ...
 sub can_read {
@@ -80,6 +109,9 @@ sub can_read {
     return not( access( $r, $user, 'R', 'any' ) =~ /DENIED/ );
 }
 
+# can_write()
+# return true if $ENV{GL_USER} is set and can write to the given repo
+
 # shell equivalent
 #   if gitolite access -q $REPONAME $GL_USER W; then ...
 sub can_write {
@@ -87,6 +119,12 @@ sub can_write {
     my $r = shift;
     return not( access( $r, $user, 'W', 'any' ) =~ /DENIED/ );
 }
+
+# config()
+# given a repo and a key, return a hash containing all the git config
+# variables for that repo where the section+key match the regex.  If none are
+# found, return an empty hash.  If you don't want it as a regex, use \Q
+# appropriately
 
 # shell equivalent
 #   foo=$(gitolite git-config -r $REPONAME foo\\.bar)
