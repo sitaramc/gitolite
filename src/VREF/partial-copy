@@ -21,7 +21,7 @@ main=`git config --file $GL_REPO_BASE/$repo.git/config --get gitolite.partialCop
 [ -z "$main" ] && exit 0
 
 rand=$RANDOM
-export GL_BYPASS_UPDATE_HOOK=1
+export GL_BYPASS_ACCESS_CHECKS=1
 
 git push -f $GL_REPO_BASE/$main.git $new:refs/heads/br-$rand || die "FATAL: failed to send $new"
 

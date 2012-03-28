@@ -88,11 +88,13 @@ sub main {
     # yet know the ref that will be eventually pushed (and even that won't
     # apply if it's a read operation).  See the matching code in access() for
     # more information.
-    my $ret = access( $repo, $user, $aa, 'any' );
-    trace( 1, "access($repo, $user, $aa, 'any')", "-> $ret" );
-    gl_log( 'check1', $repo, $user, $aa, 'any', '->', $ret );
-    trigger( 'ACCESS_1', $repo, $user, $aa, 'any', $ret );
-    _die $ret . "\n(or you mis-spelled the reponame)" if $ret =~ /DENIED/;
+    unless ($ENV{GL_BYPASS_ACCESS_CHECKS}) {
+        my $ret = access( $repo, $user, $aa, 'any' );
+        trace( 1, "access($repo, $user, $aa, 'any')", "-> $ret" );
+        gl_log( 'check1', $repo, $user, $aa, 'any', '->', $ret );
+        trigger( 'ACCESS_1', $repo, $user, $aa, 'any', $ret );
+        _die $ret . "\n(or you mis-spelled the reponame)" if $ret =~ /DENIED/;
+    }
 
     trigger( 'PRE_GIT', $repo, $user, $aa, 'any', $verb );
     my $repodir = "'$rc{GL_REPO_BASE}/$repo.git'";

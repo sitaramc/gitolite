@@ -144,7 +144,7 @@ use strict;
 use warnings;
 
 BEGIN {
-    exit 0 if $ENV{GL_BYPASS_UPDATE_HOOK};
+    exit 0 if $ENV{GL_BYPASS_ACCESS_CHECKS};
     die "GL_BINDIR not set; aborting\n" unless $ENV{GL_BINDIR};
 }
 use lib $ENV{GL_BINDIR};
