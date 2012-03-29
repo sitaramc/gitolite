@@ -9,78 +9,88 @@ use Gitolite::Rc;
 use Gitolite::Common;
 use Gitolite::Conf::Load;
 
-=for usage
-Usage:  gitolite info [-p [-lc] [<repo name pattern>]
+=for args
+Usage:  gitolite info [-lc] [<repo name pattern>]
 
-List all repos/repo groups you can access.  By default, it shows you what the
-conf file specified, which means group names and wild card patterns may show
-up.  Example, if the conf file looked like this:
+List all repos/repo groups you can access.
 
-    @oss = git gitolite linux
-    repo @oss
-        RW+ =   YourName
-
-then running 'ssh git@host info' will only show you '@oss'.
-
-'-p' looks at actual (physical) repos instead; in our example this will show
-you git, gitolite, and linux.
-
-'-lc' lists creators as an additional field at the end; this option is only
-available with '-p'.
+    '-lc'       lists creators as an additional field at the end.
 
 The optional pattern is an unanchored regex that will limit the repos
 searched, in both cases.  It might speed up things a little if you have more
 than a few thousand repos.
 =cut
 
-my ( $help, $phy, $lc, $patt ) = ('') x 4;
-GetOptions(
-    'lc' => \$lc,
-    'p'  => \$phy,
-    'h'  => \$help,
-) or usage();
+# these two are globals
+my ( $lc, $patt ) = args();
 
-usage("'-lc' requires '-p'") if $lc and not $phy;
-usage() if @ARGV > 1 or $help;
-$patt = shift || '.';
+print_version();
 
-my $user = $ENV{GL_USER} or _die "GL_USER not set";
-my $ref = 'any';
+print_patterns();   # repos he can create for himself
+print_phy_repos();  # repos already created
+print "\n$rc{SITE_INFO}\n" if $rc{SITE_INFO};
 
-chomp(my $hn = `hostname -s`);
-my $gv = substr( `git --version`, 12 );
-print "hello $user, this is $ENV{USER}\@$hn running gitolite3 " . version() . " on git $gv\n";
+# ----------------------------------------------------------------------
 
-my $lr = lister_dispatch('list-repos');
+sub args {
+    my ( $lc, $patt ) = ( '', '' );
+    my $help = '';
 
-my $perm;
-my $repos;
-my @aa;
+    GetOptions(
+        'lc' => \$lc,
+        'h'  => \$help,
+    ) or usage();
 
-if ($phy) {
+    usage() if @ARGV > 1 or $help;
+    $patt = shift @ARGV || '.';
+
+    return ( $lc, $patt );
+}
+
+sub print_version {
+    chomp( my $hn = `hostname -s` );
+    my $gv = substr( `git --version`, 12 );
+    $ENV{GL_USER} or _die "GL_USER not set";
+    print "hello $ENV{GL_USER}, this is $ENV{USER}\@$hn running gitolite3 " . version() . " on git $gv\n";
+}
+
+sub print_patterns {
+    my ( $repos, @aa );
+
+    # find repo patterns only, call them with ^C flag included
+    @$repos = grep { !/$REPONAME_PATT/ } @{ lister_dispatch('list-repos')->() };
+    @aa = qw(R W ^C);
+    listem( $repos, '', @aa );
+    # but squelch the 'lc' flag for these
+}
+
+sub print_phy_repos {
+    my ( $repos, @aa );
+
+    # now get the actual repos and get R or W only
     _chdir( $rc{GL_REPO_BASE} );
     $repos = list_phy_repos(1);
-    @aa = qw(R W);
-} else {
-    $repos = $lr->();
-    @aa = qw(R W ^C);
+    @aa    = qw(R W);
+    listem( $repos, $lc, @aa );
 }
 
-my $creator = '';
-for my $repo (@$repos) {
-    next unless $repo =~ /$patt/;
-    my $perm = '';
-    $creator = creator($repo) if $lc;
+sub listem {
+    my ( $repos, $lc, @aa ) = @_;
+    my $creator = '';
+    for my $repo (@$repos) {
+        next unless $repo =~ /$patt/;
+        my $perm = '';
+        $creator = creator($repo) if $lc;
 
-    for my $aa (@aa) {
-        my $ret = access( $repo, $user, $aa, $ref );
-        $perm .= ( $ret =~ /DENIED/ ? "  " : " $aa" );
+        for my $aa (@aa) {
+            my $ret = access( $repo, $ENV{GL_USER}, $aa, 'any' );
+            $perm .= ( $ret =~ /DENIED/ ? "  " : " $aa" );
+        }
+        $perm =~ s/\^//;
+        next unless $perm =~ /\S/;
+        print "$perm\t$repo";
+        print "\t$creator" if $lc;
+        print "\n";
     }
-    $perm =~ s/\^//;
-    next unless $perm =~ /\S/;
-    print "$perm\t$repo";
-    print "\t$creator" if $lc;
-    print "\n";
 }
 
-print "\n$rc{SITE_INFO}\n" if $rc{SITE_INFO};

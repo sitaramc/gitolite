@@ -48,10 +48,10 @@ confreset; confadd '
 try "ADMIN_PUSH set3; !/FATAL/" or die text();
 
 try "
-    ssh u1 info;                ok;     /R W  \tfoo/
-    ssh u2 info;                ok;     /R    \tfoo/
-    ssh u3 info;                ok;     /R W  \tfoo/
-    ssh u4 info;                ok;     /R    \tfoo/
+    ssh u1 info;                ok;     /R W\tfoo/
+    ssh u2 info;                ok;     /R  \tfoo/
+    ssh u3 info;                ok;     /R W\tfoo/
+    ssh u4 info;                ok;     /R  \tfoo/
     ssh u5 info;                ok;     !/foo/
     ssh u6 info;                ok;     !/foo/
 "

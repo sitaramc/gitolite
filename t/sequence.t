@@ -37,7 +37,7 @@ try "
     glt perms u1 -l foo/u1/bar
         /WRITERS u2/
     # expand
-    glt info u2 -p
+    glt info u2
         /R W *\tfoo/u1/bar/
         /R W *\ttesting/
 
@@ -80,7 +80,7 @@ try "
     glt perms u1 -l foo/u1/bar
         /WRITERS u2/
     # expand
-    glt info u2 -p
+    glt info u2
         /R W *\tfoo/u1/bar/
         /R W *\ttesting/
 

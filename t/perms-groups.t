@@ -33,20 +33,20 @@ try "
     glt ls-remote u1 file:///bar/u1/try1
         /Initialized empty Git repository in .*/bar/u1/try1.git//
     # default permissions for u2 and u4
-    glt info u1 -p -lc
+    glt info u1 -lc
         /R W *\tbar/u1/try1\tu1/
-    glt info u2 -p -lc
+    glt info u2 -lc
         !/R W *\tbar/u1/try1\tu1/
-    glt info u4 -p -lc
+    glt info u4 -lc
         !/R W *\tbar/u1/try1\tu1/
 
     # \@leads can RW try1
     echo WRITERS \@leads | glt perms u1 bar/u1/try1; ok
-    glt info u1 -p -lc
+    glt info u1 -lc
         /R W *\tbar/u1/try1\tu1/
-    glt info u2 -p -lc
+    glt info u2 -lc
         /R W *\tbar/u1/try1\tu1/
-    glt info u4 -p -lc
+    glt info u4 -lc
         !/R W *\tbar/u1/try1\tu1/
 
     # \@devs can R try1
@@ -55,14 +55,14 @@ try "
         /READERS \@devs/
         !/WRITERS \@leads/
 
-    glt info u1 -p -lc
+    glt info u1 -lc
         /R W *\tbar/u1/try1\tu1/
 
-    glt info u2 -p -lc
+    glt info u2 -lc
         !/R W *\tbar/u1/try1\tu1/
         /R *\tbar/u1/try1\tu1/
 
-    glt info u4 -p -lc
+    glt info u4 -lc
         !/R W *\tbar/u1/try1\tu1/
         /R *\tbar/u1/try1\tu1/
 
@@ -71,11 +71,11 @@ try "
     glt perms u1 -l bar/u1/try1
         /READERS \@devs/
         /WRITERS \@leads/
-    glt info u1 -p -lc
+    glt info u1 -lc
         /R W *\tbar/u1/try1\tu1/
-    glt info u2 -p -lc
+    glt info u2 -lc
         /R W *\tbar/u1/try1\tu1/
-    glt info u4 -p -lc
+    glt info u4 -lc
         !/R W *\tbar/u1/try1\tu1/
         /R *\tbar/u1/try1\tu1/
 ";
