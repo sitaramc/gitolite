@@ -22,6 +22,7 @@ sub run {
     $module = "Gitolite::Triggers::$module" if $module !~ /^Gitolite::/;
 
     eval "require $module";
+    _die "$@" if $@;
     my $subref;
     eval "\$subref = \\\&$module" . "::" . "$sub";
     _die "module '$module' does not exist or does not have sub '$sub'" unless ref($subref) eq 'CODE';
