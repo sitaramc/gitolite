@@ -46,7 +46,7 @@ use warnings;
 # ----------------------------------------------------------------------
 
 my ( $command, @args ) = @ARGV;
-gl_log( 'command', @ARGV ) if -d $rc{GL_ADMIN_BASE};
+gl_log( 'cli', 'gitolite', @ARGV ) if -d $rc{GL_ADMIN_BASE} and $$ == ( $ENV{GL_TID} || 0 );
 args();
 
 # the first two commands need options via @ARGV, as they have their own
@@ -60,7 +60,7 @@ if ( $command eq 'setup' ) {
 
 } elsif ( $command eq 'query-rc' ) {
     shift @ARGV;
-    query_rc();     # doesn't return
+    query_rc();    # doesn't return
 
 # the rest don't need @ARGV per se
 
@@ -91,7 +91,7 @@ if ( $command eq 'setup' ) {
     _die "unknown gitolite sub-command";
 }
 
-gl_log( '==end==' ) if $$ == $ENV{GL_TID};
+gl_log('END') if $$ == $ENV{GL_TID};
 
 sub args {
     usage() if not $command or $command eq '-h';

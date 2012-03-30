@@ -23,7 +23,7 @@ printing anything, which makes it possible to do this in shell:
 
 usage() if not @ARGV or $ARGV[0] eq '-h';
 my $nl = "\n";
-if ($ARGV[0] eq '-n') {
+if ( $ARGV[0] eq '-n' ) {
     $nl = '';
     shift;
 }
@@ -36,5 +36,5 @@ if ($user) {
     exit 0 if $creator eq $user;
     exit 1;
 }
-return ($creator eq $user) if $user;
+return ( $creator eq $user ) if $user;
 print "$creator$nl";

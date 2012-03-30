@@ -17,7 +17,7 @@ use warnings;
 # the main() sub expects ssh-ish things; set them up...
 my $id = '';
 if ( exists $ENV{G3T_USER} ) {
-    $id = in_local();    # file:// masquerading as ssh:// for easy testing
+    $id = in_file();    # file:// masquerading as ssh:// for easy testing
 } elsif ( exists $ENV{SSH_CONNECTION} ) {
     $id = in_ssh();
 } elsif ( exists $ENV{REQUEST_URI} ) {
@@ -28,18 +28,20 @@ if ( exists $ENV{G3T_USER} ) {
 
 main($id);
 
-gl_log( '==end==' ) if $$ == $ENV{GL_TID};
+gl_log('END') if $$ == $ENV{GL_TID};
 
 exit 0;
 
 # ----------------------------------------------------------------------
 
-sub in_local {
+sub in_file {
+    gl_log( 'file', "ARGV=" . join( ",", @ARGV ), "SOC=$ENV{SSH_ORIGINAL_COMMAND}" );
+
     if ( $ENV{SSH_ORIGINAL_COMMAND} =~ /git-\w+-pack/ ) {
         print STDERR "TRACE: gsh(", join( ")(", @ARGV ), ")\n";
         print STDERR "TRACE: gsh(SOC=$ENV{SSH_ORIGINAL_COMMAND})\n";
     }
-    return 'local';
+    return 'file';
 }
 
 sub in_http {
@@ -47,13 +49,16 @@ sub in_http {
 }
 
 sub in_ssh {
+    my $ip;
+    ( $ip = $ENV{SSH_CONNECTION} || '(no-IP)' ) =~ s/ .*//;
+
+    gl_log( 'ssh', "ARGV=" . join( ",", @ARGV ), "SOC=$ENV{SSH_ORIGINAL_COMMAND}", "FROM=$ip" );
+
     $ENV{SSH_ORIGINAL_COMMAND} ||= '';
     my $soc = $ENV{SSH_ORIGINAL_COMMAND};
     $soc =~ s/[\n\r]+/<<newline>>/g;
     _die "I don't like newlines in the command: $soc\n" if $ENV{SSH_ORIGINAL_COMMAND} ne $soc;
 
-    my $ip;
-    ($ip = $ENV{SSH_CONNECTION} || '(no-IP)') =~ s/ .*//;
     return $ip;
 }
 
@@ -64,7 +69,6 @@ sub in_ssh {
 sub main {
     my $id = shift;
 
-    gl_log( 'remote', $id, @ARGV, $ENV{SSH_ORIGINAL_COMMAND} );
     umask $rc{UMASK};
 
     # set up the user
@@ -88,12 +92,13 @@ sub main {
     # yet know the ref that will be eventually pushed (and even that won't
     # apply if it's a read operation).  See the matching code in access() for
     # more information.
-    unless ($ENV{GL_BYPASS_ACCESS_CHECKS}) {
+    unless ( $ENV{GL_BYPASS_ACCESS_CHECKS} ) {
         my $ret = access( $repo, $user, $aa, 'any' );
         trace( 1, "access($repo, $user, $aa, 'any')", "-> $ret" );
-        gl_log( 'check1', $repo, $user, $aa, 'any', '->', $ret );
         trigger( 'ACCESS_1', $repo, $user, $aa, 'any', $ret );
         _die $ret . "\n(or you mis-spelled the reponame)" if $ret =~ /DENIED/;
+
+        gl_log( "pre_git", $repo, $user, $aa, 'any', "-> $ret" );
     }
 
     trigger( 'PRE_GIT', $repo, $user, $aa, 'any', $verb );

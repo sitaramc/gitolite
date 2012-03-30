@@ -130,11 +130,11 @@ sub can_write {
 #   foo=$(gitolite git-config -r $REPONAME foo\\.bar)
 sub config {
     my $repo = shift;
-    my $key = shift;
+    my $key  = shift;
 
     return () if repo_missing($repo);
 
-    my $ret = git_config($repo, $key);
+    my $ret = git_config( $repo, $key );
     return %$ret;
 }
 

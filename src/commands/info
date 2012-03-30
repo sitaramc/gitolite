@@ -26,8 +26,8 @@ my ( $lc, $patt ) = args();
 
 print_version();
 
-print_patterns();   # repos he can create for himself
-print_phy_repos();  # repos already created
+print_patterns();     # repos he can create for himself
+print_phy_repos();    # repos already created
 print "\n$rc{SITE_INFO}\n" if $rc{SITE_INFO};
 
 # ----------------------------------------------------------------------

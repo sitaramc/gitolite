@@ -67,7 +67,7 @@ my $last_repo = '';
 
 sub access {
     my ( $repo, $user, $aa, $ref ) = @_;
-    my $deny_rules = option($repo, 'deny-rules');
+    my $deny_rules = option( $repo, 'deny-rules' );
     load($repo);
 
     # sanity check the only piece the user can control
@@ -192,7 +192,7 @@ sub load_1 {
     trace( 3, $repo );
 
     if ( repo_missing($repo) ) {
-        trace( 2, "repo '$repo' missing" );
+        trace( 1, "repo '$repo' missing" );
         return;
     }
     _chdir("$rc{GL_REPO_BASE}/$repo.git");
@@ -289,7 +289,7 @@ sub memberships {
         }
     }
 
-    if ( $type eq 'user' and $repo and not repo_missing($repo)  ) {
+    if ( $type eq 'user' and $repo and not repo_missing($repo) ) {
         # find the roles this user has when accessing this repo and add those
         # in as groupnames he is a member of.  You need the already existing
         # memberships for this; see below this function for an example

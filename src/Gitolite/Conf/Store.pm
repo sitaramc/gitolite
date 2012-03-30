@@ -277,7 +277,7 @@ sub store_common {
     my $compiled_fh = _open( ">", "$cc.new" );
 
     my $data_version = glrc('current-data-version');
-    trace( 1, "data_version = $data_version" );
+    trace( 3, "data_version = $data_version" );
     print $compiled_fh Data::Dumper->Dump( [$data_version], [qw(*data_version)] );
 
     my $dumped_data = Data::Dumper->Dump( [ \%repos ], [qw(*repos)] );

@@ -18,7 +18,7 @@ use warnings;
 # ----------------------------------------------------------------------
 
 sub run {
-    my ($module, $sub, @args) = @_;
+    my ( $module, $sub, @args ) = @_;
     $module = "Gitolite::Triggers::$module" if $module !~ /^Gitolite::/;
 
     eval "require $module";

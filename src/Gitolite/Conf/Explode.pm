@@ -86,7 +86,7 @@ sub prefix_groupnames {
     if ($lhs) {
         $line =~ s/^@\S+ = /"\@$subconf.$lhs = "/e;
         $prefixed_groupname{$subconf}{"\@$lhs"} = "\@$subconf.$lhs";
-        trace( 2, "prefixed_groupname.$subconf.\@$lhs = \@$subconf.$lhs" );
+        trace( 3, "prefixed_groupname.$subconf.\@$lhs = \@$subconf.$lhs" );
     }
 
     return $line;
@@ -105,7 +105,7 @@ sub already_included {
 
 sub device_inode {
     my $file = shift;
-    trace( 2, $file, ( stat $file )[ 0, 1 ] );
+    trace( 3, $file, ( stat $file )[ 0, 1 ] );
     return join( "/", ( stat $file )[ 0, 1 ] );
 }
 

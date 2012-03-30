@@ -64,11 +64,11 @@ sub args {
         'help|h'      => \$help,
     ) or usage();
 
-    usage() if $help or ($pubkey and $admin);
+    usage() if $help or ( $pubkey and $admin );
 
     if ($pubkey) {
         $pubkey =~ /\.pub$/ or _die "$pubkey name does not end in .pub";
-        $pubkey =~ /\@/    and _die "$pubkey name contains '\@'";
+        $pubkey =~ /\@/ and _die "$pubkey name contains '\@'";
         tsh_try("cat $pubkey")              or _die "$pubkey not a readable file";
         tsh_lines() == 1                    or _die "$pubkey must have exactly one line";
         tsh_try("ssh-keygen -l -f $pubkey") or _die "$pubkey does not seem to be a valid ssh pubkey file";

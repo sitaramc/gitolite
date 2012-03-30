@@ -53,7 +53,7 @@ try "
 
     # log file
     cat \$(gitolite query-rc GL_LOGFILE);
-                                    ok;     /check2/
+                                    ok;     /\tupdate\t/
                                             /aa\tu1\t\\+\trefs/heads/master/
                                             /2d066fb4860c29cf321170c17695c6883f3d50e8/
                                             /284951dfa11d58f99ab76b9f4e4c1ad2f2461236/

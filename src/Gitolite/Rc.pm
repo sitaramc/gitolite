@@ -58,8 +58,7 @@ my $rc = glrc('filename');
 do $rc if -r $rc;
 if ( defined($GL_ADMINDIR) ) {
     say2 "";
-    say2 "FATAL: $rc seems to be for older gitolite; please see doc/g2migr.mkd\n" .
-    "(online at http://sitaramc.github.com/gitolite/g3/g2migr.html)";
+    say2 "FATAL: $rc seems to be for older gitolite; please see doc/g2migr.mkd\n" . "(online at http://sitaramc.github.com/gitolite/g3/g2migr.html)";
 
     exit 1;
 }
@@ -177,12 +176,13 @@ sub trigger {
             _die "$rc_section section in rc file is not a perl list";
         } else {
             for my $s ( @{ $rc{$rc_section} } ) {
-                my ($pgm, @args) = split ' ', $s;
+                my ( $pgm, @args ) = split ' ', $s;
 
-                if ( my($module, $sub) = ($pgm =~ /^(.*)::(\w+)$/ ) ) {
+                if ( my ( $module, $sub ) = ( $pgm =~ /^(.*)::(\w+)$/ ) ) {
 
                     require Gitolite::Triggers;
-                    Gitolite::Triggers::run($module, $sub, @args, $rc_section, @_);
+                    trace(1, 'trigger', $module, $sub, @args, $rc_section, @_ );
+                    Gitolite::Triggers::run( $module, $sub, @args, $rc_section, @_ );
 
                 } else {
                     $pgm = "$ENV{GL_BINDIR}/triggers/$pgm";
@@ -250,6 +250,9 @@ __DATA__
 %RC = (
     UMASK                       =>  0077,
     GIT_CONFIG_KEYS             =>  '',
+
+    # comment out if you don't need all the extra detail in the logfile
+    LOG_EXTRA                   =>  1,
 
     # settings used by external programs; uncomment and change as needed.  You
     # can add your own variables for use in your own external programs; take a

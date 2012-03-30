@@ -39,6 +39,8 @@ sub say2 {
 }
 
 sub trace {
+    gl_log( "\t" . join( ",", @_[ 1 .. $#_ ] ) ) if $_[0] <= 1 and defined $Gitolite::Rc::rc{LOG_EXTRA};
+
     return unless defined( $ENV{D} );
 
     my $level = shift; return if $ENV{D} < $level;
@@ -111,8 +113,7 @@ sub _chdir {
 sub _system {
     # run system(), catch errors.  Be verbose only if $ENV{D} exists.  If not,
     # exit with <rc of system()> if it applies, else just "exit 1".
-    trace( 2, @_ );
-    gl_log( 'system', @_ );
+    trace( 1, 'system', @_ );
     if ( system(@_) != 0 ) {
         trace( 1, "system() failed", @_, "-> $?" );
         if ( $? == -1 ) {
@@ -238,10 +239,12 @@ sub gl_log {
     # the log filename and the timestamp come from the environment.  If we get
     # called even before they are set, we have no choice but to dump to STDERR
     # (and probably call "logger").
+
+    # tab sep if there's more than one field
     my $msg = join( "\t", @_ );
     $msg =~ s/[\n\r]+/<<newline>>/g;
 
-    my $ts  = gen_ts();
+    my $ts = gen_ts();
     my $tid = $ENV{GL_TID} ||= $$;
 
     my $fh;

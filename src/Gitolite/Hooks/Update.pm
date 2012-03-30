@@ -20,27 +20,27 @@ use warnings;
 # ----------------------------------------------------------------------
 
 sub update {
-    trace( 2, @ARGV );
-    gl_log( 'update', @ARGV );
     # this is the *real* update hook for gitolite
 
     my ( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa ) = args(@ARGV);
 
+    trace( 1, 'update', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV );
+
     my $ret = access( $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref );
-    trace( 1, "access($ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref)", "-> $ret" );
     trigger( 'ACCESS_2', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref, $ret );
     _die $ret if $ret =~ /DENIED/;
 
     check_vrefs( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa );
 
-    gl_log( 'check2', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV, '->', $ret );
+    trace( 1, "-> $ret" );
+    gl_log( 'update', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV );
     exit 0;
 }
 
 sub check_vrefs {
     my ( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa ) = @_;
     my $name_seen = 0;
-    my $n_vrefs = 0;
+    my $n_vrefs   = 0;
     for my $vref ( vrefs( $ENV{GL_REPO}, $ENV{GL_USER} ) ) {
         $n_vrefs++;
         if ( $vref =~ m(^VREF/NAME/) ) {
@@ -72,10 +72,10 @@ sub check_vref {
     my ( $aa, $ref, $deny_message ) = @_;
 
     my $ret = access( $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref );
-    trace( 1, "access($ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref)", "-> $ret" );
+    trace( 2, "access($ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref)", "-> $ret" );
     _die "$ret" . ( $deny_message ? "\n$deny_message" : '' )
       if $ret =~ /DENIED/ and $ret !~ /by fallthru/;
-    trace( 1, "remember, fallthru is success here!" ) if $ret =~ /by fallthru/;
+    trace( 2, "remember, fallthru is success here!" ) if $ret =~ /by fallthru/;
 }
 
 {

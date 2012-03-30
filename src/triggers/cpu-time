@@ -5,7 +5,7 @@ use warnings;
 use lib $ENV{GL_BINDIR};
 use Gitolite::Easy;
 
-my ($trigger, $repo, $user, $aa, $ref, $verb, $utime, $stime, $cutime, $cstime) = @ARGV;
+my ( $trigger, $repo, $user, $aa, $ref, $verb, $utime, $stime, $cutime, $cstime ) = @ARGV;
 
 # now do whatever you want with this data; the following is just an example.
 
@@ -14,13 +14,13 @@ my ($trigger, $repo, $user, $aa, $ref, $verb, $utime, $stime, $cutime, $cstime) 
 # to the rc file, and (c) change your rc file to call your program at the end
 # of the POST_GIT list.
 
-if (my $limit = $rc{CPU_TIME_WARN_LIMIT}) {
+if ( my $limit = $rc{CPU_TIME_WARN_LIMIT} ) {
     my $total = $utime + $cutime + $stime + $cstime;
     # some code to send an email or whatever...
     say2 "limit = $limit, actual = $total" if $total > $limit;
 }
 
-if ($rc{DISPLAY_CPU_TIME}) {
+if ( $rc{DISPLAY_CPU_TIME} ) {
     say2 "perf stats for $verb on repo '$repo':";
     say2 "  user CPU time: " . ( $utime + $cutime );
     say2 "  sys  CPU time: " . ( $stime + $cstime );
