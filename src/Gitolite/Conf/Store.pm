@@ -197,6 +197,7 @@ sub hook_repos {
     for my $repo (`find . -name "*.git" -prune`) {
         chomp($repo);
         $repo =~ s/\.git$//;
+        $repo =~ s(^\./)();
         hook_1($repo);
     }
 }
