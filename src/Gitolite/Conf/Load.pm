@@ -232,7 +232,6 @@ sub load_1 {
 
         my @repos = memberships( 'repo', $repo );
         my @users = memberships( 'user', $user, $repo );
-        dbg(\@users);
         trace( 3, "memberships: " . scalar(@repos) . " repos and " . scalar(@users) . " users found" );
 
         for my $r (@repos) {

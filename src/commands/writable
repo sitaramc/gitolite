@@ -8,6 +8,9 @@ use Gitolite::Easy;
 =for usage
 Usage: gitolite writable <reponame>|@all on|off
 
+Disable/re-enable pushes to all repos or named repo.  Useful to run
+non-git-aware backups and so on.
+
 'on' enables, 'off' disables, writes (pushes) to the named repo or all repos.
 
 With 'off', any subsequent text is taken to be the message to be shown to

@@ -14,11 +14,11 @@ use Cwd;
 my $workdir = getcwd();
 
 confreset;confadd '
-    repo foo/..*
-        C   =   u1 u2 u3
-        RW+ =   CREATOR
-        RW  =   WRITERS
-        R   =   READERS
+repo foo/..*
+    C   =   u1 u2 u3
+    RW+ =   CREATOR
+    RW  =   WRITERS
+    R   =   READERS
 ';
 
 try "ADMIN_PUSH set1; !/FATAL/" or die text();

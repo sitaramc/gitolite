@@ -70,7 +70,7 @@ sub conf {
     chdir($GL_ADMINDIR);
 
     my $conf = `find . -name "*.conf" | xargs cat`;
-    msg( "SEVERE", "fallthru in NAME rules; see docs" )        if $conf =~ m(NAME/);
+    msg( "SEVERE", "NAME rules; see docs" )                    if $conf =~ m(NAME/);
     msg( "SEVERE", "subconf command in admin repo; see docs" ) if $conf =~ m(NAME/conf/fragments);
     msg( "SEVERE", "mirroring used; see docs" )                if $conf =~ m(config +gitolite\.mirror\.);
 }
