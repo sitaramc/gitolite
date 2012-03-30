@@ -29,6 +29,8 @@ print "checking repos...\n";
 repo();
 print "\n";
 
+print "...all done...\n";
+
 # ----------------------------------------------------------------------
 
 sub intro {
