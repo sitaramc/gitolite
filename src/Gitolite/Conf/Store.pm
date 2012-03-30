@@ -218,7 +218,7 @@ sub store {
 
 sub parse_done {
     for my $ig ( sort keys %ignored ) {
-        _warn "$ig.conf attempting to set access for " . join( ", ", sort keys %{ $ignored{$ig} } );
+        _warn "subconf '$ig' attempting to set access for " . join( ", ", sort keys %{ $ignored{$ig} } );
     }
 }
 

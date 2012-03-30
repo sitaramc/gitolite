@@ -9,6 +9,7 @@ package Gitolite::Conf::Explode;
 
 use Exporter 'import';
 
+use Gitolite::Rc;
 use Gitolite::Common;
 
 use strict;
@@ -33,10 +34,13 @@ sub explode {
         my $line = cleanup_conf_line($_);
         next unless $line =~ /\S/;
 
+        # subst %HOSTNAME word if rc defines a hostname, else leave as is
+        $line =~ s/%HOSTNAME\b/$rc{HOSTNAME}/g if $rc{HOSTNAME};
+
         $line = prefix_groupnames( $line, $subconf ) if $subconf ne 'master';
 
-        if ( $line =~ /^(include|subconf) (\S.+)$/ ) {
-            incsub( $1, $2, $subconf, $out );
+        if ( $line =~ /^(include|subconf) (?:(\S+) )?(\S.+)$/ ) {
+            incsub( $1, $2, $3, $subconf, $out );
         } else {
             # normal line, send it to the callback function
             push @{$out}, $line;
@@ -46,9 +50,9 @@ sub explode {
 
 sub incsub {
     my $is_subconf = ( +shift eq 'subconf' );
-    my ( $include_glob, $subconf, $out ) = @_;
+    my ( $new_subconf, $include_glob, $current_subconf, $out ) = @_;
 
-    _die "subconf $subconf attempting to run 'subconf'\n" if $is_subconf and $subconf ne 'master';
+    _die "subconf $current_subconf attempting to run 'subconf'\n" if $is_subconf and $current_subconf ne 'master';
 
     _die "invalid include/subconf file/glob '$include_glob'"
       unless $include_glob =~ /^"(.+)"$/
@@ -65,11 +69,11 @@ sub incsub {
         next if already_included($file);
 
         if ($is_subconf) {
-            push @{$out}, "subconf $basename";
-            explode( $file, $basename, $out );
-            push @{$out}, "subconf $subconf";
+            push @{$out}, "subconf " . ( $new_subconf || $basename );
+            explode( $file, ( $new_subconf || $basename ), $out );
+            push @{$out}, "subconf $current_subconf";
         } else {
-            explode( $file, $subconf, $out );
+            explode( $file, $current_subconf, $out );
         }
     }
 }

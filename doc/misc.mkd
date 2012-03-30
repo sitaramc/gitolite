@@ -78,3 +78,55 @@ is effectively the same as this, for repo foo:
         R   =   gitweb
 
 This extends to patterns also, but I'll leave an example for later.
+
+## #subconf the subconf command
+
+This is just like the include command:
+
+    subconf "foo/bar.conf"      # example 1
+    subconf "foo/*.conf"        # example 2
+
+with the difference that, for the duration of the file(s) being included, a
+subconf restriction is in effect.  This restrictions limits the repos that can
+be access controlled by the lines within the included file(s).
+
+Here's how it works.  First, a subconf *name* is derived from the filename
+being included, which is basically the basename of the file.  For example 1
+that is "bar".  For example 2, assuming foo contains "a.conf" and "b.conf",
+the subconf name is "a" while processing "a.conf", and "b" while processing
+"b.conf".
+
+A variation of the subconf command allows you to specify the subconf *name*
+explicitly, while including files as before:
+
+    subconf frob "foo/bar.conf  # example 3
+    subconf frob "foo/*.conf    # example 4
+
+In this case the subconf name is "frob" in both cases.
+
+A subconf restricts the repos that can be named in 'repo' lines while the
+subconf is in effect.  If the subconf name is "foo", the conf lines parsed
+while under the subconf restriction can only refer to
+
+  * a repo called 'foo'
+  * a repo group called '@foo'
+  * the members of the same repo group '@foo'
+  * match a regex that is a member of the repo group '@foo'
+
+In the last 3 cases, the repo group '@foo' must be defined in the main conf
+file (i.e., outside the subconf restriction).
+
+For example, if you have this in the main conf file:
+
+    @foo    =   bar baz frob/..*
+
+    subconf "foo.conf"
+
+then foo.conf can only refer to 'foo', '@foo', 'bar', 'baz', or any repo name
+matching the pattern `frob/..*`.
+
+## #HOSTNAME HOSTNAME substitution
+
+Wherever gitolite sees the word `%HOSTNAME`, it will replace it with the
+HOSTNAME supplied in the rc file, if one was supplied.  This is mainly useful
+in [mirroring][].

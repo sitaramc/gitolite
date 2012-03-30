@@ -81,7 +81,7 @@ put   "conf/fragments/u3r.conf", '
         RW+     =   u6
 ';
 try "SUBCONF_PUSH u3 u3;
-        /WARNING: u3r.conf attempting to set access for r2a/
+        /WARNING: subconf 'u3r' attempting to set access for r2a/
 ";
 
 try "git reset --hard origin/master; ok";
@@ -95,5 +95,5 @@ put   "conf/fragments/u3r.conf", '
 ';
 
 try "SUBCONF_PUSH u3 u3
-        /WARNING: u3r.conf attempting to set access for locally modified \@u3r/
+        /WARNING: subconf 'u3r' attempting to set access for locally modified \@u3r/
 ";

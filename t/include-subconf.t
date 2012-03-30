@@ -9,7 +9,7 @@ use Gitolite::Test;
 # include and subconf
 # ----------------------------------------------------------------------
 
-try 'plan 37';
+try 'plan 55';
 
 confreset; confadd '
     include "i1.conf"
@@ -39,7 +39,7 @@ try "ADMIN_PUSH set2; !/FATAL/" or die text();
 
 try "
                                         /i1.conf already included/
-	                                /i2.conf attempting to set access for \@i1, b2, bar, i1, locally modified \@g2/
+	                                /subconf 'i2' attempting to set access for \@i1, b2, bar, i1, locally modified \@g2/
                                         !/attempting to set access.*i2/
                                         /Initialized.*empty.*baz.git/
                                         /Initialized.*empty.*foo.git/
@@ -62,7 +62,7 @@ confadd 'g2.conf', '
 
 try "ADMIN_PUSH set3; !/FATAL/" or die text();
 try "
-                                        /g2.conf attempting to set access for locally modified \@g2/
+                                        /subconf 'g2' attempting to set access for locally modified \@g2/
                                         !/Initialized.*empty/
 ";
 
@@ -79,4 +79,38 @@ confadd 'g2.conf', '
 
 try "
     ADMIN_PUSH set3;           ok;     /FATAL: subconf g2 attempting to run 'subconf'/
+";
+
+# ----------------------------------------------------------------------
+
+confreset; confadd '
+    include "i1.conf"
+    @i2 = b1
+    subconf i2 "eye2.conf"
+';
+confadd 'eye2.conf', '
+    repo @eye2
+        RW = u2
+';
+
+try "ADMIN_PUSH set2; !/FATAL/" or die text();
+
+try "
+    /subconf 'i2' attempting to set access for \@eye2/
+";
+
+confreset; confadd '
+    include "i1.conf"
+    @i2 = b1
+    subconf i2 "eye2.conf"
+';
+confadd 'eye2.conf', '
+    repo @i2
+        RW = u2
+';
+
+try "ADMIN_PUSH set2; !/FATAL/" or die text();
+
+try "
+    !/subconf 'i2' attempting to set access for \@eye2/
 ";
