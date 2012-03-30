@@ -26,6 +26,8 @@ if ( exists $ENV{G3T_USER} ) {
     _die "who the *heck* are you?";
 }
 
+trigger('INPUT');
+
 main($id);
 
 gl_log('END') if $$ == $ENV{GL_TID};
