@@ -102,9 +102,6 @@ sub setup_gladmin {
     _mkdir( $rc{GL_ADMIN_BASE} );
     _chdir( $rc{GL_ADMIN_BASE} );
 
-    tsh_try("cd \$GL_BINDIR; git describe --tags --long --dirty=-dt 2>/dev/null")
-      and _print( "VERSION", tsh_text() );
-
     _mkdir("conf");
     _mkdir("logs");
     my $conf;

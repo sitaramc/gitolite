@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# Clearly you don't need a program to make one measly symlink, but the git
+# describe command involved in generating the VERSION string is a bit fiddly.
+
+use Getopt::Long;
+use FindBin;
+
+# meant to be run from the root of the gitolite tree, one level above 'src'
+BEGIN { $ENV{GL_BINDIR} = $FindBin::RealBin . "/src"; }
+use lib $ENV{GL_BINDIR};
+use Gitolite::Common;
+
+=for usage
+Usage (from gitolite clone directory):
+
+    ./install
+        to run gitolite using an absolute or relative path, for example
+        'src/gitolite' or '/full/path/to/this/dir/src/gitolite'
+    ./install -ln [<dir>]
+        to symlink just the gitolite executable to some <dir> that is in
+        $PATH.  <dir> defauls to $HOME/bin if <dir> not specified.
+    ./install -to <dir>
+        to copy the entire 'src' directory to <dir>.  If <dir> is not in
+        $PATH, use the full path to run gitolite commands.
+
+Simplest use, if you have $HOME/bin in $PATH, is:
+
+    git clone -b g3 git://github.com/sitaramc/gitolite
+    gitolite/install -ln
+
+    # now run setup
+    gitolite setup -pk /path/to/YourName.pub
+=cut
+
+my ( $to, $ln, $help, $quiet );
+
+GetOptions(
+    'to=s' => \$to,
+    'ln:s' => \$ln,
+    'help|h'    => \$help,
+    'quiet|q'    => \$quiet,
+);
+usage() if $to and $ln or $help;
+$ln = "$ENV{HOME}/bin" if defined($ln) and not $ln;
+
+chdir($ENV{GL_BINDIR});
+my $version = `git describe --tags --long --dirty=-dt`;
+
+if ($to) {
+    _mkdir($to);
+    system("cp -a * $to");
+    _print( "$to/VERSION", $version );
+} elsif ($ln) {
+    ln_sf( $ENV{GL_BINDIR}, "gitolite", $ln );
+    _print( "VERSION", $version );
+} else {
+    say "use the following full path for gitolite:";
+    say "\t$ENV{GL_BINDIR}/gitolite";
+    _print( "VERSION", $version );
+}

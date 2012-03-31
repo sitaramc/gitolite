@@ -161,7 +161,7 @@ sub query_rc {
 sub version {
     my $version = '';
     $version = '(unknown)';
-    for ("$rc{GL_ADMIN_BASE}/VERSION") {
+    for ("$ENV{GL_BINDIR}/VERSION") {
         $version = slurp($_) if -r $_;
     }
     chomp($version);
