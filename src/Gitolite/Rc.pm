@@ -248,6 +248,9 @@ __DATA__
 # (Tip: perl allows a comma after the last item in a list also!)
 
 %RC = (
+    # if you're using mirroring, you need a hostname.  This is *one* simple
+    # word, not a full domain name.  See documentation if in doubt
+    # HOSTNAME                  =>  'darkstar',
     UMASK                       =>  0077,
     GIT_CONFIG_KEYS             =>  '',
 
@@ -285,6 +288,7 @@ __DATA__
             'info'              =>  1,
             'desc'              =>  1,
             'perms'             =>  1,
+            # 'mirror'          =>  1,
             'writable'          =>  1,
         },
 
@@ -293,6 +297,13 @@ __DATA__
     SYNTACTIC_SUGAR             =>
         [
             # 'continuation-lines',
+        ],
+
+    # comment out or uncomment as needed
+    # these will run in sequence to modify the input (arguments and environment)
+    INPUT                       =>
+        [
+            # 'Mirroring::input',
         ],
 
     # comment out or uncomment as needed
@@ -307,6 +318,8 @@ __DATA__
         [
             # if you use this, make this the first item in the list
             # 'renice 10',
+
+            # 'Mirroring::pre_git',
 
             # see docs ("list of non-core programs shipped") for details
             # 'partial-copy',
@@ -324,6 +337,7 @@ __DATA__
         [
             # if you use this, make this the last item in the list
             # 'cpu-time',
+            # 'Mirroring::post_git',
         ],
 
     # comment out or uncomment as needed
