@@ -65,6 +65,11 @@ put that contain the words "see docs":
     processing files you intended to.  Again, see the same link as in the
     previous bullet.
 
+  * `mirroring used`
+
+    There have been quite a few changes to mirroring.  Please see the new
+    [mirroring][mirroring] doc for details.
+
   * `found N gl-creater files`
 
     These need to be renamed to `gl-creator` (the correct spelling at last,

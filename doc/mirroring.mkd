@@ -1,0 +1,188 @@
+# mirroring using gitolite
+
+**WARNING** existing gitolite mirroring users please note: significant changes
+in syntax and usage compared to g2.  The most important change is that `config
+gitolite.mirror.master` changes to `option mirror.master`, and similarly for
+'slaves' and redirectOK.  In addition, the special value for 'redirectOK'
+changes from '1' to 'all'.  The second big change is the disappearance of the
+ambiguously named 'keys' (for example `gitolite.mirror.hourly` etc., in the
+old mirroring doc) -- all that complexity is yours to handle now :-)
+
+----
+
+Mirroring is simple: you have one "master" and one or more "slaves".  The
+slaves get updates only from the master; to the rest of the world they are at
+best read-only.
+
+Gitolite extends this simple notion in the following ways:
+
+  * different masters and sets of slaves for different repos
+
+    This lets you do things like
+
+      * use the server closest to *most* of its developers as the master for
+        that repo
+      * not mirror a repo at all to some servers
+      * have repos that are purely local to a server (not mirrored at all)
+      * negotiate mirroring with servers that are not even under your control
+      * push to a slave on demand or via cron (helps deal with bandwidth or
+        connectivity constraints).
+
+  * pushes to a slave can be transparently forwarded to the real master
+
+    Your developers need not worry about where a repo's master is -- they just
+    write to their local mirror for *all* repos, even if their local mirror is
+    only a slave for some.
+
+## caveats
+
+  * mirroring will never *create* a repo on a slave; it has to exist and be
+    prepared to receive updates from the master.  (For example, [wild][] repos
+    must be created on the slave as well, otherwise they will not propagate).
+
+  * mirroring is only for git repos.  Ancillary files like gl-creator and
+    gl-perms in the repo directory are not mirrored; you must do that
+    separately.  Files in the admin directory (like log files) are also not
+    mirrored.
+
+## setting up mirroring
+
+This is in two parts: the initial setup and the rc file, followed by the conf
+file settings and syntax.
+
+### the initial setup and the rc file
+
+On each server:
+
+  * install gitolite normally.  Make clones of each server's 'gitolite-admin'
+    repo on your workstation so you can admin them all from one place.
+
+  * give each server a short, simple, "hostname" and set the HOSTNAME in the
+    rc file to this name, for example 'mars'.
+
+  * run ssh-keygen if needed and get an ssh key pair for the server.  Copy the
+    public key to a common area and name it after the host, but with 'server-'
+    prefixed.  So the pubkey for server 'mars' would be stored as
+    'server-mars.pub'.
+
+  * copy all keys to **each of** the admin repo clones on your workstation and
+    and add them as usual.
+
+    You may have guessed that the prefix 'server-' is special, and
+    distinguishes a human user from a mirroring peer.
+
+  * create "host" aliases on each machine to refer to all other machines.  See
+    [here][ssh-ha] for what/why/how.
+
+    The host alias for a host (in all other machines' `~/.ssh/config` files)
+    MUST be the same as the `HOSTNAME` in the referred host's
+    `~/.gitolite.rc`.  Gitolite mirroring **requires** this consistency in
+    naming; things will NOT work otherwise.
+
+    Normally you should be able to build one common file and append it to all
+    the servers' `~/.ssh/config` files.
+
+  * the following **MUST** work for **each pair** of servers that must talk to
+    each other:
+
+        # on server mars
+        ssh phobos info
+        # the response MUST start with "hello, server-mars..."
+
+    Note the exact syntax used; variations like "ssh git@phobos.example.com
+    info" are NOT sufficient.  That is why you need the ssh host aliases.
+
+    Check this command from *everywhere to everywhere else*, and make sure you
+    get expected results.  **Do NOT proceed otherwise.**
+
+  * setup the gitolite.conf file on all the servers.  If the slaves are to be
+    exact copies of the master, you need to do the complete configuration only
+    on the master; the slaves can have just this:
+
+        repo gitolite-admin
+            RW+     =   <some local admin>
+
+            option mirror.master    =   mars
+            option mirror.slaves    =   phobos
+
+    because on the first push to the master it will update all the slaves
+    anyway.
+
+  * when that is all done and tested, **enable mirroring** on each server by
+    going through the rc file and uncommenting all the lines mentioning
+    `Mirroring`.
+
+### conf file settings and syntax
+
+Mirroring is defined by the following [option][]s.  You can have different
+settings for different repos, and of course some repos may not have any mirror
+options at all -- they are then purely local.
+
+    repo foo
+        ...access rules...
+
+        option mirror.master        =   mars
+        option mirror.slaves        =   phobos deimos
+        option mirror.redirectOK    =   all
+
+The first line is easy, since a repo can have only one master.
+
+The second is a space separated list of hosts that are all slaves.  You can
+have several slave lists, as long as the config key starts with
+'mirror.slaves' and is unique.  For example.
+
+        option mirror.slaves-1   =   phobos deimos
+        option mirror.slaves-2   =   io europa
+        option mirror.slaves-3   =   ganymede callisto
+
+Do not repeat a key; then only the last line for that key will be effective.
+
+## redirected pushes
+
+**Please read carefully; there are security implications if you enable this
+for mirrors NOT under your control**.
+
+Normally, a master, (and *only* a master), pushes to a slave, and the slaves
+are "read-only" to the users.  Gitolite allows a *slave* to receive pushes
+from a user and transparently redirect them to the *master*.
+
+This simplifies things for users in complex setups, letting them use their
+local mirror for both fetch and push access to all repos.
+
+Just remember that if you do this, **authentication** happens on the slave,
+but **authorisation** is on the master.  The master is trusting the slave to
+authenticate the user correctly, *and* use the same authentication data (i.e.,
+user alice on the slave should be guaranteed to be the same as user alice on
+the master).
+
+The syntax for enabling this is one of these:
+
+    option mirror.redirectOK    =   all
+    option mirror.redirectOK    =   phobos deimos
+
+The first syntax trusts all valid slaves to redirect user pushes, while the
+second one trusts only some slaves.
+
+Note that you cannot redirect gitolite commands (like perms, etc).
+
+## manually synchronising a slave repo
+
+You can use the `gitolite mirror push` command on a master to manually
+synchronise any of its slaves.  Try it with `-h` to get usage info.
+
+Tip: if you want to do this to all the slaves, try this:
+
+    for s in `gitolite git-config -r reponame mirror.slave | cut -f3`
+    do
+        gitolite mirror push $s reponame
+    done
+
+This command can also be run remotely; run `ssh git@host mirror -h` for
+details.
+
+## appendix A: efficiency versus paranoia
+
+If you're paranoid enough to use mirrors, you should be paranoid enough to
+set this on each server, despite the possible CPU overhead:
+
+    git config --global receive.fsckObjects true
