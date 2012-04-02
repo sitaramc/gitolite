@@ -232,6 +232,7 @@ sub load_1 {
 
         my @repos = memberships( 'repo', $repo );
         my @users = memberships( 'user', $user, $repo );
+        dbg(\@users);
         trace( 3, "memberships: " . scalar(@repos) . " repos and " . scalar(@users) . " users found" );
 
         for my $r (@repos) {
@@ -295,6 +296,8 @@ sub memberships {
         # memberships for this; see below this function for an example
         push @ret, user_roles( $base, $repo, @ret );
     }
+
+    push @ret, @{ ext_grouplist($base) } if $type eq 'user' and $rc{GROUPLIST_PGM};
 
     @ret = @{ sort_u( \@ret ) };
     trace( 3, sort @ret );
@@ -383,6 +386,20 @@ sub creator {
     my $creator = '';
     chomp( $creator = slurp($f) ) if -f $f;
     return $creator;
+}
+
+{
+    my %cache = ();
+
+    sub ext_grouplist {
+        my $user = shift;
+        my $pgm = $rc{GROUPLIST_PGM};
+        return [] if not $pgm;
+
+        return $cache{$user} if $cache{$user};
+        my @extgroups = map { s/^@?/@/; $_; } split ' ', `$rc{GROUPLIST_PGM} $user`;
+        return ($cache{$user} = \@extgroups);
+    }
 }
 
 # ----------------------------------------------------------------------
