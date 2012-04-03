@@ -313,7 +313,7 @@ __DATA__
         ],
 
     # comment out or uncomment as needed
-    # these will run in sequence at the start, before a git operation has started
+    # these will run in sequence just before the actual git command is invoked
     PRE_GIT                     =>
         [
             # if you use this, make this the first item in the list
@@ -332,12 +332,18 @@ __DATA__
         ],
 
     # comment out or uncomment as needed
-    # these will run in sequence at the end, after a git operation has ended
+    # these will run in sequence after the git command returns
     POST_GIT                    =>
         [
             # if you use this, make this the last item in the list
             # 'cpu-time',
             # 'Mirroring::post_git',
+        ],
+
+    # comment out or uncomment as needed
+    # these will run in sequence before a new wild repo is created
+    PRE_CREATE                  =>
+        [
         ],
 
     # comment out or uncomment as needed
