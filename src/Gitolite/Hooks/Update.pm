@@ -22,6 +22,8 @@ use warnings;
 sub update {
     # this is the *real* update hook for gitolite
 
+    bypass() if $ENV{GL_BYPASS_ACCESS_CHECKS};
+
     my ( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa ) = args(@ARGV);
 
     trace( 1, 'update', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV );
@@ -34,6 +36,13 @@ sub update {
 
     trace( 1, "-> $ret" );
     gl_log( 'update', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV );
+    exit 0;
+}
+
+sub bypass {
+    require Cwd;
+    Cwd->import;
+    gl_log( 'update', getcwd(), '(' . ($ENV{USER} || '?') . ')', 'bypass', @ARGV );
     exit 0;
 }
 
@@ -143,10 +152,6 @@ __DATA__
 use strict;
 use warnings;
 
-BEGIN {
-    exit 0 if $ENV{GL_BYPASS_ACCESS_CHECKS};
-    die "GL_BINDIR not set; aborting\n" unless $ENV{GL_BINDIR};
-}
 use lib $ENV{GL_BINDIR};
 use Gitolite::Hooks::Update;
 

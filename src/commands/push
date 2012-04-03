@@ -1,0 +1,5 @@
+#!/bin/sh
+
+export GL_BYPASS_ACCESS_CHECKS=1
+
+git push "$@"
