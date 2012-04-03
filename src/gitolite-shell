@@ -54,7 +54,7 @@ sub in_ssh {
     my $ip;
     ( $ip = $ENV{SSH_CONNECTION} || '(no-IP)' ) =~ s/ .*//;
 
-    gl_log( 'ssh', "ARGV=" . join( ",", @ARGV ), "SOC=$ENV{SSH_ORIGINAL_COMMAND}", "FROM=$ip" );
+    gl_log( 'ssh', "ARGV=" . join( ",", @ARGV ), "SOC=" . ( $ENV{SSH_ORIGINAL_COMMAND} || ''), "FROM=$ip" );
 
     $ENV{SSH_ORIGINAL_COMMAND} ||= '';
     my $soc = $ENV{SSH_ORIGINAL_COMMAND};
