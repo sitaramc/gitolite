@@ -1,0 +1,189 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# complete rewrite of the sshkeys-lint program.  Usage has changed, see
+# usage() function or run without arguments.
+
+use Getopt::Long;
+my $admin = 0;
+my $quiet = 0;
+my $help  = 0;
+GetOptions( 'admin|a=s' => \$admin, 'quiet|q' => \$quiet, 'help|h' => \$help );
+
+use Data::Dumper;
+$Data::Dumper::Deepcopy = 1;
+$|++;
+
+my $in_gl_section = 0;
+my $warnings      = 0;
+
+sub dbg {
+    use Data::Dumper;
+    for my $i (@_) {
+        print STDERR "DBG: " . Dumper($i);
+    }
+}
+
+sub msg {
+    my $warning = shift;
+    return if $quiet and not $warning;
+    $warnings++ if $warning;
+    print "sshkeys-lint: " . ( $warning ? "WARNING: " : "" ) . $_ for @_;
+}
+
+usage() if $help;
+
+our @pubkeyfiles = @ARGV; @ARGV = ();
+my $kd = "$ENV{HOME}/.gitolite/keydir";
+if ( not @pubkeyfiles ) {
+    chomp( @pubkeyfiles = `find $kd -type f -name "*.pub" | sort` );
+}
+
+if ( -t STDIN ) {
+    @ARGV = ("$ENV{HOME}/.ssh/authorized_keys");
+}
+
+# ------------------------------------------------------------------------
+
+my @authkeys;
+my %seen_fprints;
+my %pkf_by_fp;
+msg 0, "==== checking authkeys file:\n";
+fill_authkeys();    # uses up STDIN
+
+if ($admin) {
+    my $fp = fprint("$admin.pub");
+    my $fpu = ( $fp && $seen_fprints{$fp}{user} || 'no access' );
+    # dbg("fpu = $fpu, admin=$admin");
+    #<<<
+    die "\t\t*** FATAL ***\n" .
+        "$admin.pub maps to $fpu, not $admin.\n" .
+        "You will not be able to access gitolite with this key.\n" .
+        "Look for the 'ssh troubleshooting' link in http://sitaramc.github.com/gitolite/.\n"
+    if $fpu ne "user $admin";
+    #>>>
+}
+
+msg 0, "==== checking pubkeys:\n" if @pubkeyfiles;
+for my $pkf (@pubkeyfiles) {
+    # get the short name for the pubkey file
+    ( my $pkfsn = $pkf ) =~ s(^$kd/)();
+
+    my $fp = fprint($pkf);
+    next unless $fp;
+    msg 1, "$pkfsn appears to be a COPY of $pkf_by_fp{$fp}\n" if $pkf_by_fp{$fp};
+    $pkf_by_fp{$fp} ||= $pkf;
+    my $fpu = ( $seen_fprints{$fp}{user} || 'no access' );
+    msg 0, "$pkfsn maps to $fpu\n";
+}
+
+if ($warnings) {
+    print "\n$warnings warnings found\n";
+}
+
+exit $warnings;
+
+# ------------------------------------------------------------------------
+sub fill_authkeys {
+    while (<>) {
+        my $seq = $.;
+        next if ak_comment($_);    # also sets/clears $in_gl_section global
+        my $fp   = fprint($_);
+        my $user = user($_);
+
+        check( $seq, $fp, $user );
+
+        $authkeys[$seq]{fprint}  = $fp;
+        $authkeys[$seq]{ustatus} = $user;
+    }
+}
+
+sub check {
+    my ( $seq, $fp, $user ) = @_;
+
+    msg 1, "line $seq, $user key found *outside* gitolite section!\n"
+      if $user =~ /^user / and not $in_gl_section;
+
+    msg 1, "line $seq, $user key found *inside* gitolite section!\n"
+      if $user !~ /^user / and $in_gl_section;
+
+    if ( $seen_fprints{$fp} ) {
+        #<<<
+        msg 1, "authkeys line $seq ($user) will be ignored by sshd; " .
+              "same key found on line " .
+              $seen_fprints{$fp}{seq} . " (" .
+              $seen_fprints{$fp}{user} . ")\n";
+        return;
+        #>>>
+    }
+
+    $seen_fprints{$fp}{seq}  = $seq;
+    $seen_fprints{$fp}{user} = $user;
+}
+
+sub user {
+    my $user = '';
+    $user ||= "user $1"         if /^command=.*gitolite-shell (.*?)"/;
+    $user ||= "unknown command" if /^command/;
+    $user ||= "shell access"    if /^ssh-(rsa|dss)/;
+
+    return $user;
+}
+
+sub ak_comment {
+    local $_ = shift;
+    $in_gl_section = 1 if /^# gitolite start/;
+    $in_gl_section = 0 if /^# gitolite end/;
+    die "gitosis?  what's that?\n" if /^#.*gitosis/;
+    return /^\s*(#|$)/;
+}
+
+sub fprint {
+    local $_ = shift;
+    my ( $fh, $tempfn, $in );
+    if (/ssh-(dss|rsa) /) {
+        # an actual key was passed.  Since ssh-keygen requires an actual file,
+        # make a temp file to take the data and pass on to ssh-keygen
+        s/^.* (ssh-dss|ssh-rsa)/$1/;
+        use File::Temp qw(tempfile);
+        ( $fh, $tempfn ) = tempfile();
+        $in = $tempfn;
+        print $fh $_;
+        close $fh;
+    } else {
+        # a filename was passed
+        $in = $_;
+    }
+    # dbg("in = $in");
+    -f $in or die "file not found: $in\n";
+    open( $fh, "ssh-keygen -l -f $in |" ) or die "could not fork: $!\n";
+    my $fp = <$fh>;
+    # dbg("fp = $fp");
+    close $fh;
+    unlink $tempfn if $tempfn;
+    warn "$fp\n" unless $fp =~ /([0-9a-f][0-9a-f](:[0-9a-f][0-9a-f])+)/;
+    return $1;
+}
+
+# ------------------------------------------------------------------------
+sub usage {
+    print <<EOF;
+
+sshkeys-lint expects
+  - the contents of an authorized_keys file via STDIN
+  - one or more pubkey filenames as arguments
+
+sample use to check all keys on gitolite server:
+    cd ~/.gitolite/keydir
+    cat ~/.ssh/authorized_keys | sshkeys-lint `find . -name "*.pub"`
+    # or supply only one pubkey file to check only that:
+    cat ~/.ssh/authorized_keys | sshkeys-lint YourName.pub
+
+Note that it runs ssh-keygen -l for each line in the authkeys file and each
+pubkey in the argument list, so be wary of running it on something huge.  This
+is meant for troubleshooting.
+
+EOF
+    exit 1;
+}
