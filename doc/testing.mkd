@@ -1,7 +1,9 @@
 # testing gitolite
 
-Here's how to *run* the tests.  **WARNING: they will clobber lots of things in
-your `$HOME`, so be sure to use a throwaway userid**.
+Here's how to *run* the tests.
+
+<font color="red">**WARNING: they will clobber lots of things in your `$HOME`,
+so be sure to use a throwaway userid**.</font>
 
     git clone git://github.com/sitaramc/gitolite
     cd gitolite
@@ -21,7 +23,3 @@ would otherwise take.
 
 If you think that defeats the purpose of the testing, you haven't read
 [this][auth] yet.
-
-There are 2 specific tests that deal with ssh though, which are run only on
-request, as you can see above, because they clobber your `~/.ssh`.  You have
-been warned.

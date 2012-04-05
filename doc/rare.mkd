@@ -1,0 +1,41 @@
+# rare or one-time activities
+
+## #existing moving existing repos into gitolite
+
+  * move the repos to `$HOME/repositories`.  Make sure they are all *bare*
+    repos, and the directory names end in ".git".
+
+  * [add them][repos] to conf/gitolite.conf in your clone of the admin repo,
+    then commit and push the change.
+
+    If the repos are already covered by some [wild][] pattern, this is
+    optional.
+
+  * run `gitolite setup` to fix up the hooks on all repos, just in case.
+
+## #moving moving servers
+
+This is adapted from the "migrating" section of the [install][] page; if
+you're actually *migrating* from g2 please go there!
+
+Nothing in any of the gitolite install/setup/etc will ever touch the *data* in
+any repository except the gitolite-admin repo.  The only thing it will
+normally touch is the `update` hook.  So one fool-proof way of "moving"
+servers is this (untested but should work; feedback appreciated):
+
+1.  Install gitolite on the new server, using the same key for the admin as
+    for the old server.
+
+2.  Copy the [rc][] file from the old server, overwriting this one.
+
+3.  [Disable][writable] the old server so people won't push to it.
+
+4.  Copy all the repos over from the old server, including gitolite-admin.
+    Make sure the files end up with right ownership and permissions; if not,
+    chown/chmod them.
+
+5.  On a clone of the old gitolite-admin, add a new remote (or change an
+    existing one) to point to the new server.  Then `git push -f` to this
+    remote.
+
+6.  On the server, run `gitolite setup`.

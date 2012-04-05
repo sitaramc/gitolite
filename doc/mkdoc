@@ -13,6 +13,8 @@ use Tsh;
 $ENV{TSH_ERREXIT} = 1;
 
 try "
+    ./fm2mt.pl < g3-master-toc.mm > master-toc.mkd
+
     mkdir ../html;                      ok
     git status -s -uno;                 !/./
     git log --oneline -1
@@ -36,8 +38,8 @@ try "
 " or die 2;
 
 sub main {
-    chomp(@ARGV = `cat list`) if not @ARGV;
-    @ARGV = grep { $_ ne 'master-toc.mkd' and /./ } @ARGV;
+    chomp(@ARGV = `find . -name "*.mkd" | cut -c3-`) if not @ARGV;
+    @ARGV = grep { /./ } @ARGV;
     my @save = @ARGV;
     my $css = join("", <DATA>);
 
@@ -68,16 +70,16 @@ sub main {
         }
     }
 
-    open($fh, ">", "master-toc.mkd")
-      and print $fh $mt
-      and close $fh;
+    # open($fh, ">", "master-toc.mk2")
+    #   and print $fh $mt
+    #   and close $fh;
 
     # after this, do this for every mkd (including the master-toc.mkd)
 
     #       cat $css_block > $base.html
     #       cat $base.mkd $mf | $MKD >> $base.html
 
-    for my $mkd ("master-toc.mkd", @save) {
+    for my $mkd (@save) {
         $mkd =~ /^(?:.*\/)?([^\/]+)\.mkd$/;
         my $b = $1;
 
@@ -88,7 +90,7 @@ sub main {
         my $mkt = `cat $mkd`;
         $mkt =~ s/^(#+) #(\S+) /$1 <a name="$2"><\/a> /mg;
         open($fh, "|-", "$MKD >> ../html/$b.html")
-          and print $fh $mkt, $mf
+          and print $fh $mkt, "\n\n", $mf
           and close $fh;
     }
 }

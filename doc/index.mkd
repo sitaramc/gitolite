@@ -5,49 +5,47 @@ fine-grained access control and many more powerful features.
 
 Here's more on [what][] it is and [why][] you might need it.
 
+<font color="gray">
+
+## #g2 (for current gitolite (v2) users)
+
 For current gitolite (call it "g2" for convenience) users,
 
   * [Why][g3why] I rewrote gitolite.
-  * Development [status][dev-status] (**should change often for a while**)
+  * Development [status][dev-status].
   * Specific migration [issues and steps][g2migr].
 
-Quick links:
+</font>
 
-  * [Minimum requirements][minreq].
-  * Here's how to [get started][qi] installing and setting it up
+## #ql quick links
+
+  * Minimum [requirements][req].
+  * Here's how to do a [quick install, setup, and clone][qi].
   * Don't know ssh well enough?  [Learn][ssh].  It's **IMPORTANT**.
-  * [Add users and repos][add].
-  * Learn about fine-grained access control with the [conf][] file
-  * Explain gitolite to your [users][].
+  * Add [users][] and [repos][].
+  * Learn about fine-grained access control with the [conf][] file.
+  * Explain gitolite to your [users][user].
 
-Not so "quick" links:
-
-  * The "master table of contents" link at the top of each page is the
-    **first** place you should check when looking for anything.
-
-  * Want to do more than just add users and repos and control their access?
-    Here's how to [customise][cust] your server installation.
-
-Additional reading for Unix newbies:
-
-  * [Regular Expressions][regex]
+The rest of the documentation is in the "master index" link at the top of each
+page on this website.  This is the first place you should search when looking
+for specific information.
 
 ## #what What is gitolite?
 
 Gitolite is an access control layer on top of git.  Here are the features that
 most people see:
 
-  * use a single unix user ("real" user) on the server
-  * provide access to many gitolite users
+  * Use a single unix user ("real" user) on the server.
+  * Provide access to many gitolite users:
       * they are not "real" users
       * they do not get shell access
-  * control access to many git repositories
+  * Control access to many git repositories:
       * read access controlled at the repo level
       * write access controlled at the branch/tag/file/directory level,
         including who can rewind, create, and delete branches/tags
-  * can be installed without root access, assuming git and perl are already
-    installed
-  * authentication is most commonly done using sshd, but you can also use
+  * Can be installed without root access, assuming git and perl are already
+    installed.
+  * Authentication is most commonly done using sshd, but you can also use
     httpd if you prefer (this may require root access).
 
 ## #contact contact

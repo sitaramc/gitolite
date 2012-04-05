@@ -1,0 +1,53 @@
+# adding and removing repos
+
+>   ----
+
+>   *WARNING: Do NOT add repos directly on the server.  Clone the
+>   'gitolite-admin' repo to your workstation, make changes to it, then add,
+>   commit, and push.  When the push hits the server, the server "acts" upon
+>   your changes.*
+
+>   ----
+
+Just as for [users][], all operations are in a clone of the gitolite-admin
+repo.
+
+To **add** a new repo, edit `conf/gitolite.conf` and add it, along with at
+least one user with some permissions.  Or add it to an existing repo line:
+
+    repo gitolite tsh gitpod
+        RW+     =   sitaram
+        RW  dev =   alice bob
+        R       =   @all
+
+The "repo" line can have any number of repo names or repo group names in it.
+However, it can only be one line; this will not work
+
+    repo foo
+    repo bar    # WRONG; 'foo' is now forgotten
+        RW      =   alice
+
+If you have too many, use a group name:
+
+    @myrepos    =   foo
+    @myrepos    =   bar
+
+    repo @myrepos
+        RW      =   alice
+
+Finally, you add, commit, and push this change.  Gitolite will create a bare,
+empty, repo on the server that is ready to be cloned.
+
+**Removing** a repo is not so straightforward.  You certainly must remove the
+appropriate lines from the `conf/gitolite.conf` file, but gitolite will not
+automatically delete the repo from the server.  You have to log on to the
+server and do the dirty deed yourself :-)
+
+It is best to make the change in the conf file, push it, and *then* go to the
+server and do what you need to.
+
+**Renaming** a repo is also not automatic.  Here's what you do (and the order
+is important):
+
+  * go to the server and rename the repo at the Unix command line
+  * change the name in the conf/gitolite.conf file and add/commit/push.

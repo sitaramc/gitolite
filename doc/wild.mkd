@@ -1,0 +1,148 @@
+# "wild" repos (user created repos)
+
+## quick introduction
+
+The wildrepos feature allows you to specify access control rules using regular
+expression patterns, so you can have many actual repos being served by a
+single set of rules in the config file.  The regex pattern can also include
+the word `CREATOR` in it, allowing you to parametrise the name of the user
+creating the repo.
+
+See the section on "repo patterns" later for additional information on what
+counts as a "wild" repo pattern and how it is matched.
+
+## (admin) declaring wild repos in the conf file
+
+Here's an example:
+
+    @prof       =   u1
+    @TAs        =   u2 u3
+    @students   =   u4 u5 u6
+
+    repo    assignments/CREATOR/a[0-9][0-9]
+        C   =   @students
+        RW+ =   CREATOR
+        RW  =   WRITERS @TAs
+        R   =   READERS @prof
+
+Note the "C" permission.  This is a standalone "C", which gives the named
+users the right to *create a repo*.  <font color="gray">This is not to be
+confused with the "RWC" or its variants described elsewhere, which are about
+*branches*, not *repos*.</font>
+
+## #create (user) creating a specific repo
+
+For now, ignore the special usernames READERS and WRITERS, and just create a
+new repo, as user "u4" (a student):
+
+    $ git clone git@server:assignments/u4/a12
+    Initialized empty Git repository in /home/sitaram/a12/.git/
+    Initialized empty Git repository in /home/git/repositories/assignments/u4/a12.git/
+    warning: You appear to have cloned an empty repository.
+
+Notice the *two* empty repo inits, and the order in which they occur ;-)
+
+## a slightly different example
+
+Here's how the same example would look if you did not want the CREATOR's name
+to be part of the actual repo name.
+
+    repo    assignments/a[0-9][0-9]
+        C   =   @students
+        RW+ =   CREATOR
+        RW  =   WRITERS @TAs
+        R   =   READERS @prof
+
+We haven't changed anything except the repo name pattern.  This means that the
+first student that creates, say, `assignments/a12` becomes the owner.
+Mistakes (such as claiming a12 instead of a13) need to be rectified by an
+admin logging on to the back end, though it's not too difficult.
+
+You could also repace the C line like this:
+
+        C   =   @TAs
+
+and have a TA create the repos in advance.
+
+## repo patterns
+
+### pattern versus normal repo
+
+Due to projects like `gtk+`, the `+` character is now considered a valid
+character for an *ordinary* repo.  Therefore, a pattern like `foo/.+` does not
+look like a regex to gitolite.  Use `foo/..*` if you want that.
+
+Also, `..*` by itself is not considered a valid repo pattern.  Try
+`[a-zA-Z0-9].*`.
+
+### line-anchored regexes
+
+A regex like
+
+    repo assignments/S[0-9]+/A[0-9]+
+
+would match `assignments/S02/A37`.  It will not match `assignments/S02/ABC`,
+or `assignments/S02/a37`, obviously.
+
+But you may be surprised to find that it does not match even
+`assignments/S02/A37/B99`.  This is because internally, gitolite
+*line-anchors* the given regex; so that regex actually becomes
+`^assignments/S[0-9]+/A[0-9]+$` -- notice the line beginning and ending
+metacharacters.
+
+Side-note: contrast with refexes
+
+>   Just for interest, note that this is in contrast to the refexes for the >
+>   normal "branch" permissions, as described in `doc/gitolite.conf.mkd` and
+>   elsewhere.  These "refexes" are only anchored at the start; a pattern like
+>   `refs/heads/master` actually can match `refs/heads/master01/bar` as well,
+>   even if no one will actually push such a branch!  You can anchor both
+>   sides if you really care, by using `master$` instead of `master`, but that
+>   is *not* the default for refexes.
+
+## roles
+
+The tokens READERS and WRITERS are called "role" names.  The access rules that
+the admin specifies say what permissions these roles have, but they don't say
+what users are in these roles.
+
+That needs to be done by the creator of the repo, using the `perms` command.
+You can run `ssh git@host perms -h` for detailed help, but in brief, that
+command lets you give and take away roles to users.
+
+## adding other roles
+
+If you want to have more than just the 2 default roles, say something like:
+
+    repo foo/..*
+      C                 =   u1
+      RW    refs/tags/  =   TESTERS
+      -     refs/tags/  =   @all
+      RW+               =   WRITERS
+      RW                =   INTERNS
+      R                 =   READERS
+      RW+D              =   MANAGERS
+
+You can add the new names to the ROLES hash in the [rc][] file.  Be sure to
+run the 2 commands mentioned there after you have added the roles.
+file.  The rc file documentation (`doc/gitolite.rc.mkd`) explains how.
+
+#### #rolenamewarn **IMPORTANT WARNING ABOUT THIS FEATURE**
+
+Please make sure that none of the role names conflict with any of the user
+names or group names in the system.  For example, if you have a user called
+"foo" or a group called "@foo", make sure you do not include "foo" as a valid
+role in the ROLES hash.
+
+You can keep things sane by using UPPERCASE names for roles, while keeping all
+your user and group names lowercase; then you don't have to worry about this
+problem.
+
+## listing wild repos
+
+In order to see what repositories were created from a wildcard, use the 'info'
+command.  Try `ssh git@host info -h` to get help on the info command.
+
+## deleting a wild repo
+
+TBD

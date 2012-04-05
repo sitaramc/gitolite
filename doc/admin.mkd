@@ -1,0 +1,42 @@
+# gitolite administration
+
+## #server server-side administration
+
+The following activities require command line access to the server
+
+  * changing anything in the [rc][] file
+  * installing custom [hooks][], whether to all repos or just some repos
+  * moving [existing][] (bare) repos into gitolite control
+
+Please read the [WARNINGS][] page first.
+
+## #conf access control (the gitolite.conf file)
+
+Most of gitolite's power is in the conf/gitolite.conf file, which specifies
+detailed access control for repos.
+
+### #confex example of a conf file
+
+Here is an example of a simple conf/gitolite.conf file.
+
+        @staff              =   dilbert alice           # line 1
+        @projects           =   foo bar                 # line 2
+
+        repo @projects baz                              # line 3
+            RW+             =   @staff                  # line 4
+            -       master  =   ashok                   # line 5
+            RW              =   ashok                   # line 6
+            R               =   wally                   # line 7
+
+            config hooks.emailprefix = '[%GL_REPO] '    # line 8
+
+Use the following links to learn more:
+
+  * the basic [syntax][] -- comments, whitespace, include files, etc.
+  * defining [groups][], as in lines 1 and 2
+  * adding and removing [users][]
+  * adding and removing [repos][], as in line 3
+  * defining access [rules][], as in lines 4, 5, 6, and 7
+  * gitolite [options][]
+  * [git config][git-config] keys and values, as in line 8
+  * ["wild"][wild] repos -- ad hoc, user-created, repos

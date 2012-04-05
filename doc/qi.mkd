@@ -1,26 +1,45 @@
-# getting started
+# quick install, setup, and clone
 
-The quickest install, assuming your `$PATH` contains `$HOME/bin`, is:
+(Please do not ignore the "assumptions" list below).
 
-  * get the software
+On the server:
 
-        git clone git://github.com/sitaramc/gitolite
+    # get the software
+    git clone -b g3 git://github.com/sitaramc/gitolite
 
-        # (until this becomes "master")
-        cd gitolite
-        git checkout -f g3
+    # install it
+    gitolite/install -ln
 
-  * install it
-
-        ln -sf $PWD/src/gitolite $HOME/bin
-
-If you don't like that, there are [other install methods][install].
-
-Once the install is done, setup:
-
+    # setup the initial repos with your key
     gitolite setup -pk your-name.pub
 
-And that's it.
+On your workstation:
 
-Next steps are usually [adding][add] users and repos and learning about
+    # clone the admin repo so you can start adding stuff
+    git clone git@host:gitolite-admin.git
+
+## ASSUMPTIONS
+
+  * on the server, your `$PATH` contains `$HOME/bin`.  If you don't like that,
+    there are [other install methods][install].
+
+  * "your-name.pub" is your public key from your workstation.
+      * also, this key does not already have shell access to this gitolite
+        hosting user
+
+  * the setup command does not generate any warnings.
+      * if it does, please see [common errors][ce] and fix things before
+        continuing, or read the more complete [setup][] page.
+
+## Notes
+
+Note that the clone path is NOT "repositories/gitolite-admin.git".  If you
+clone with a path that includes "repositories/", the clone should fail.  If
+the clone *does* succeed, a subsequent push should fail :-)  See
+[this][ybpfail] for some details.  If that doesn't make enough sense read all
+of [ssh][].
+
+## next steps
+
+Next steps are usually adding [users][] and [repos][] and learning about
 [access control][conf].

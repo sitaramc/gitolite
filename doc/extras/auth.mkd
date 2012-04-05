@@ -3,7 +3,7 @@
 This document will explain why an "ssh issue" is almost never a "gitolite
 issue", and, indirectly, why I dont get too excited about the former.
 
-Note: for actual ssh troubleshooting see [this][ssh-troubleshooting].
+Note: for actual ssh troubleshooting see [this][sts].
 
 Here is a fundamental point: <font color="red">**Gitolite does not do
 authentication.  It only does authorisation**.</font>
@@ -18,41 +18,42 @@ So first, let's loosely define these words:
 >   **Authorisation** is the process of asking what you want to do and
 >   deciding if you're allowed to do it or not.
 
-Now, if you managed to read about [gitolite and ssh][gitolite-and-ssh], you
+Now, if you managed to read about [gitolite and ssh][glssh], you
 know that gitolite is meant to be invoked as:
 
-    /full/path/to/gl-auth-command some-authenticated-gitolite-username
+    /full/path/to/gitolite-shell some-authenticated-gitolite-username
 
 (where the "gitolite username" is a "virtual" username; it does not have to
 be, and usually *isn't*, an actual *unix* username).
 
 As you can see, authentication happens before gitolite is called.
 
-## but... but... you have all that ssh stuff in there!
+## but... but... you have all that ssh stuff in gitolite!
 
-The default mode of using gitolite does use ssh keys, but all it's doing is
-helping you **setup** ssh-based authentication **as a convenience to you**.
+No I don't.  Not in "core" gitolite from g3 onwards :-)
 
-You don't have to use it, though.  And many people don't.  The examples I know
-are [smart http][http], and ldap-backed sshd.  In both cases, gitolite has no
-role to play in creating users, setting up their passwords/keys, etc.  There's
-even a `GL_NO_SETUP_AUTHKEYS` option to make sure gitolite doesn't meddle with
-the authkeys file in such installations.
+The default setup does use ssh keys, but it's only helping you **setup**
+ssh-based authentication **as a convenience to you**.  But in fact it is a
+*completely* separate program that you can disable (in the rc file) or replace
+with something else of your choice.
+
+For example, in both [smart http][http] and ldap-backed sshd, gitolite has no
+role to play in creating users, setting up their passwords/keys, etc.
 
 ## so you're basically saying you won't support "X"
 
 (where "X" is some ssh related behaviour change or feature)
 
-Well, if it's not a security issue I *probably* won't.  I'm willing to change
-my mind if enough people convince me they need it.  (There's a mailing list if
-you want to find others who also need the same thing.)
+Well, if it's not a security issue I won't.  But since it's no longer part of
+"core" gitolite, I can be much more relaxed about taking patches, or even
+alternative implementations.
 
 While we're on the subject, locking someone out is *not* a security issue.
-Even if you locked yourself (the admin) out, the docs tell you how to recover
+Even if you [lost the admin key][lost-key], the docs tell you how to recover
 from such errors.  You do need some password based method to get a shell
 command line on the server, of course.
 
-## appendix: how to use other authentication systems with gitolite
+## #otherauth how to use other authentication systems with gitolite
 
 The bottom line in terms of how to invoke gitolite has been described above,
 and as long as you manage to do that gitolite won't even know how the
@@ -84,6 +85,22 @@ to generate keypairs and send them to the admin, but they can be more
 centrally stored and perhaps used by other programs or tools simultaneously,
 which can be useful.
 
-Finally, gitolite allows you to store *group* information externally too.  See
-[here][ldap] for more on this.
+## #ldap getting user group info from LDAP
 
+Gitolite's [groups][] are pretty convenient, but some organisations already
+have similar (or sufficient) information in their LDAP store.
+
+Gitolite can tap into that information, with a little help.  Write a program
+which, given a username, queries your LDAP store and returns a space-separated
+list of groups that the user is a member of.  Then put the full path to this
+program in an [rc][] variable called `GROUPLIST_PGM`, like so:
+
+    GROUPLIST_PGM           =>  '/home/git/bin/ldap-query-groups',
+
+Now you can use those groupnames in access rules in gitolite, just as if you
+had declared their memberships in the conf file.
+
+Caution: your program must do its own logging if you want the audit trail of
+"why/how did this user get access to this repo at this time?" to resolve
+properly.  Gitolite does not do any logging of the results of the queries
+because for people who don't need it that would be a huge waste.

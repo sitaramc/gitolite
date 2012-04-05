@@ -50,15 +50,16 @@ Triggers receive the following arguments:
     command in the PRE_GIT trigger sequence),
 
 2.  the name of the trigger as a string (example, `"POST_COMPILE"`), so you
-    can call the same program from multiple triggers and know where it was
-    called from,
+    can call the same program from multiple triggers and it can know where it
+    was called from,
 
 3.  followed by zero or more arguments specific to the trigger, as given in
     the next section.
 
-## trigger-specific details
+## trigger-specific arguments and other details
 
-Here's a brief "when" and "with what arguments" for each trigger.
+Here are the **rest of** the arguments for each trigger, plus a brief
+description of when the trigger runs:
 
   * `ACCESS_1` runs after the first access check.  Arguments:
       * repo

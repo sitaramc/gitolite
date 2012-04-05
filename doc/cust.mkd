@@ -2,17 +2,20 @@
 
 Much of gitolite (g3)'s functionality comes from programs and scripts that are
 not considered "core".  This keeps the core simpler, and allows you to enhance
-gitolite for your own purposes without too much fuss.
+gitolite for your own purposes without too much fuss.  (As an extreme example,
+even mirroring is not in core now!)
+
+(Also, please see the [developer notes][dev-notes] page).
 
 ## types of non-core programs
 
 There are 5 basic types of non-core programs.
 
-  * *commands* can be run from the shell command line.  Those listed in the
-    COMMANDS hash of the rc file can also be run remotely.
+  * *commands* can be run from the shell command line.  Among those, the ones
+    listed in the COMMANDS hash of the rc file can also be run remotely.
   * *hooks* are standard git hooks; see below.
   * *sugar scripts* change the conf language for your convenience.  The word
-    sugar comes from "syntactics sugar".
+    sugar comes from "syntactic sugar".
   * *triggers* are to gitolite what hooks are to git.  I just chose a
     different name to avoid confusion and constant disambiguation in the docs.
   * **VREFs** are extensions to the access control check part of gitolite.
@@ -22,7 +25,7 @@ some description of each.
 
 ## #commands gitolite "commands"
 
-Gitolite comes with several commands that users can run.  Remote user run the
+Gitolite comes with several commands that users can run.  Remote users run the
 commands by saying:
 
     ssh git@host command-name [args...]
@@ -56,8 +59,8 @@ The rest is between you and 'man githooks' :-)
 ## #sugar syntactic sugar
 
 Sugar scripts help you change the perceived syntax of the conf language.  The
-base syntax of the language is as described [here][conf], so sugar scripts
-take something *else* and convert it into that.
+base syntax of the language is very simple, so sugar scripts take something
+*else* and convert it into that.
 
 That way, the admin sees additional features (like allowing continuation
 lines), while the parser in the core gitolite engine does not change.

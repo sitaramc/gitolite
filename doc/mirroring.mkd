@@ -1,18 +1,19 @@
 # mirroring using gitolite
 
-**WARNING** existing gitolite mirroring users please note: significant changes
-in syntax and usage compared to g2.  The most important change is that `config
-gitolite.mirror.master` changes to `option mirror.master`, and similarly for
-'slaves' and redirectOK.  In addition, the special value for 'redirectOK'
-changes from '1' to 'all'.  The second big change is the disappearance of the
-ambiguously named 'keys' (for example `gitolite.mirror.hourly` etc., in the
-old mirroring doc) -- all that complexity is yours to handle now :-)
+**WARNING** existing gitolite mirroring users please note: **there are
+significant changes** in syntax and usage compared to g2.  The most important
+change is that `config gitolite.mirror.master` changes to `option
+mirror.master`, and similarly for 'slaves' and redirectOK.  In addition, the
+special value for 'redirectOK' changes from '1' to 'all'.  The second big
+change is the disappearance of the ambiguously named 'keys' (for example
+`gitolite.mirror.hourly` etc., in the old mirroring doc) -- all that
+complexity is yours to handle now :-)
 
 ----
 
-Mirroring is simple: you have one "master" and one or more "slaves".  The
-slaves get updates only from the master; to the rest of the world they are at
-best read-only.
+Mirroring is simple: you have one "master" server and one or more "slave"
+servers.  The slaves get updates only from the master; to the rest of the
+world they are at best read-only.
 
 Gitolite extends this simple notion in the following ways:
 
@@ -52,12 +53,12 @@ file settings and syntax.
 
 ### the initial setup and the rc file
 
-On each server:
+On **each** server:
 
-  * install gitolite normally.  Make clones of each server's 'gitolite-admin'
+  * install gitolite normally.  Make clones of the server's 'gitolite-admin'
     repo on your workstation so you can admin them all from one place.
 
-  * give each server a short, simple, "hostname" and set the HOSTNAME in the
+  * give the server a short, simple, "hostname" and set the HOSTNAME in the
     rc file to this name, for example 'mars'.
 
   * run ssh-keygen if needed and get an ssh key pair for the server.  Copy the
@@ -65,14 +66,14 @@ On each server:
     prefixed.  So the pubkey for server 'mars' would be stored as
     'server-mars.pub'.
 
-  * copy all keys to **each of** the admin repo clones on your workstation and
-    and add them as usual.
+  * copy all keys to all the admin repo clones on your workstation and and add
+    them as usual.  This is an `O(N^2)` operation ;-)
 
     You may have guessed that the prefix 'server-' is special, and
     distinguishes a human user from a mirroring peer.
 
-  * create "host" aliases on each machine to refer to all other machines.  See
-    [here][ssh-ha] for what/why/how.
+  * create "host" aliases to refer to all other machines.  See [here][ssh-ha]
+    for what/how.
 
     The host alias for a host (in all other machines' `~/.ssh/config` files)
     MUST be the same as the `HOSTNAME` in the referred host's
@@ -108,13 +109,12 @@ On each server:
     because on the first push to the master it will update all the slaves
     anyway.
 
-  * when that is all done and tested, **enable mirroring** on each server by
-    going through the rc file and uncommenting all the lines mentioning
-    `Mirroring`.
+  * when that is all done and tested, **enable mirroring** by going through
+    the rc file and uncommenting all the lines mentioning `Mirroring`.
 
 ### conf file settings and syntax
 
-Mirroring is defined by the following [option][]s.  You can have different
+Mirroring is defined by the following [options][].  You can have different
 settings for different repos, and of course some repos may not have any mirror
 options at all -- they are then purely local.
 

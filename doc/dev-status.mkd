@@ -2,20 +2,19 @@
 
 Not yet done (will be tackled in this order unless someone asks):
 
-  * detailed documentation for new features
-  * querying the outside world for group info (see gl-get-membership-program
-    in g2)
-  * mirroring
+  * svnserve (someone is testing it)
   * pulling in documentation for things that are the same in g2
-  * "unrestricted arguments" for some ADCs (like git-annexe)
   * smart http
-  * special features (no-create-repos, shell-access, gl-all-read-all, etc)
+  * special features (no-create-repos, gl-all-read-all, etc)
+  * mechanism for ADCs using unchecked arguments -- this is not just a matter
+    of writing it; I have to think about *how* it will be done.  (AFAIK the
+    only tool affected is git-annexe)
 
 Help needed:
 
   * I'd like distro packagers to play with it and help with migration advice
     for distro-upgrades
-  * [rsync][pw2], htpasswd
+  * rsync, htpasswd
   * git-annexe support (but this has a pre-requisite in the previous list)
 
 Won't be done unless someone asks (saw no evidence that anyone used them in g2
@@ -30,6 +29,7 @@ Done:
 
   * core code
   * test suite
-  * some documentation
+  * mirroring
+  * most documentation
   * distro packaging instructions
   * migration advice for common cases

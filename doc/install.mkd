@@ -1,37 +1,122 @@
-# different ways to install gitolite
-
-Gitolite has only one server side "command" now, much like git itself.  And
-it's been designed so that you don't even really have to *install* it, as you
-will see.
+# installing gitolite
 
 **NOTE**: if you're migrating from g2, there are some settings that MUST be
 dealt with **before** running `gitolite setup`; please read the [g2
 migration][g2migr] page and linked pages, and especially the one on
-'presetting the rc file][rc-preset].
+[presetting the rc file][rc-preset].
 
-## simplest
+## notes and naming conventions
 
-1.  Put all of `src` in one place, doesn't matter where; let's call it
-    /foo/bar.
+Gitolite uses a single "real" (i.e., unix) user to provide secure access to
+git repos to any number of "virtual" users, without giving them a shell.
 
-2.  Use the full path to run any gitolite commands, for example:
+The real user used is called the **hosting user**.  Typically this user is
+*git*, and that is what we will use throughout the documentation.  However
+RPMs and DEBs create a user called *gitolite* for this, so adjust instructions
+and examples accordingly.
 
-        /foo/bar/gitolite setup -pk sitaram.pub
+Notes:
 
-## almost as simple
+  * Any unix user can be a hosting user.
+  * Which also means you can have several hosting users on the same machine.
+  * The URLs used will be of the form `git@host:reponame` (or its longer
+    equivalent starting with `ssh://`).  The `.git` at the end is optional.  I
+    recommend you leave it out, so your reponames are consistent with what the
+    conf file uses.
 
-1.  (same as above)
+## #req requirements
 
-2.  Symlink /foo/bar/gitolite to some directory that is on your PATH.  For
-    example:
+### your skills
 
-        ln -sf /foo/bar/gitolite ~/bin
+  * If you're installing gitolite, you're a "system admin", like it or not.
+    Ssh is therefore a necessary skill.  Please take the time to learn at
+    least enough to get passwordless access working.
 
-    Now you can just say
+  * You also need to be somewhat familiar with git itself.  You cannot
+    administer a whole bunch of git repositories if you don't know the basics
+    of git.
 
-        gitolite setup -pk sitaram.pub
+  * Some familiarity with Unix and shells is probably required.
 
-## packagers
+  * Regular expressions are a big part of gitolite in many places but
+    familiarity is not necessary to do *basic* access control.
+
+### server
+
+  * any Unix system with a posix compatible "sh".
+  * git version 1.6.6 or later
+  * perl 5.8.8 or later
+  * openssh (almost any version).  Optional if you're using the http backend
+    (which is still a TODO item!)
+  * a dedicated Unix userid to be the hosting user, usually "git" but it can
+    be any user, even your own normal one.  (If you're using an RPM/DEB the
+    install probably created one called "gitolite").
+
+Also see the [WARNINGS][] page for more on what gitolite expects on the server
+side.
+
+### client
+
+  * openssh client
+  * git 1.6.6 or later.  Almost any git client will work, as long as it knows
+    how to use ssh keys and send the right one along.
+
+## getting the software
+
+    git clone -b g3 git://github.com/sitaramc/gitolite
+
+The -b g3' is needed until g3 becomes "master".  Current estimates put this
+around June 2012, when the old gitolite (upto v2.x) will be retired and
+supported only for security issues.
+
+## the actual install
+
+Gitolite has only one server side "command" now, much like git itself.  This
+command is `gitolite`.  You don't need to place it anywhere special; worst
+case you run it with the full path.
+
+"Installation" consists of the following options:
+
+1.  Keep the sources anywhere and use the full path to run the `gitolite`
+    command.
+2.  Keep the sources anywhere and symlink *just* the `gitolite` program to
+    some directory on your `$PATH`.
+3.  Copy the sources somewhere and use that path to run the `gitolite`
+    command.
+
+Option 2 is the best for general use.
+
+There is a program called 'install' that helps you do these easily.  Assuming
+your cloned the repo like this:
+
+    git clone -b g3 git://github.com/sitaramc/gitolite
+
+you can run the 'install' command in 3 different ways:
+
+    # option 1
+    gitolite/install
+
+    # option 2
+    gitolite/install -ln
+    # defaults to $HOME/bin, or use a specific directory:
+    gitolite/install -ln /usr/local/bin
+
+    # option 3
+    gitolite/install -to /usr/local/gitolite/bin
+
+Creating a symlink doesn't need a separate program but 'install' also runs
+`git describe` to create a VERSION file, which, trust me, is important!
+
+**Next step**: run [**setup**][setup].
+
+## upgrading
+
+Just put the new version on top of wherever you kept the old one.  That's it.
+
+If you feel it should require a little more effort, pretend I said "you have
+to then run `gitolite setup`".  Won't hurt...
+
+## packaging gitolite
 
 1.  Put src/Gitolite in `/usr/share/perl5/vendor_perl` or some such place.
 
@@ -39,25 +124,44 @@ migration][g2migr] page and linked pages, and especially the one on
     git's 150 executables in /usr/libexec/git-core, so maybe
     /usr/libexec/gitolite?)
 
-3.  Symlink 'gitolite' to /usr/bin or something, similar to step 2 above,
+3.  Symlink 'gitolite' to /usr/bin or something, similar to option 2.
 
-    OR
-
-    Put it directly in /usr/bin, and hardcode `GL_BINDIR` into it to tell it
-    where the others are.  I'd prefer it if you did not do this but you can.
-
-----
-
-Bottom line:
+**Bottom line**:
 
   * `GL_BINDIR` must point to a place that contains `commands`, `VREF`, and
     `syntactic-sugar` (so they must all be sibling directories).
   * The `Gitolite` directory can also be there, or it can be anywhere in
     perl's `@INC` path.
 
-## upgrading
+## migrating
 
-Just put the new version on top of wherever you kept the old one.  That's it.
+There are a lot of migration hints and notes; see links at the top of this
+document.
 
-If you feel it should require a little more effort, pretend I said "you have
-to then run `gitolite setup`".  Can't hurt...
+But here's the **bottom line** on migrating:
+
+Nothing in any of the gitolite install/setup/etc will ever touch the *data* in
+any repository except the gitolite-admin repo.  The only thing it will
+normally touch is the `update` hook.  So one fool-proof way of "migrating"
+from any older gitolite is this:
+
+1.  Wipe out the old gitolite, but **carefully**
+
+      * clone `~/repositories/gitolite-admin.git` to someplace, then delete it
+        (and only it, none of the other repos!) from `~/repositories`
+      * rename `~/.gitolite.rc` to something else
+      * move the ~/.gitolite/logs` directory somewhere else, then delete `~/.gitolite`
+
+2.  Install gitolite g3; see [quick install and setup][qi] or [install][]
+    followed by [setup][].
+
+3.  Make sure your gitolite-admin clone has the correct pubkey for the
+    administrator in its `keydir` directory, then `git push -f` to the server
+    to overwrite the "default" admin repo created by the install.
+
+4.  Handle any errors, look for migration issues, etc., as described in the
+    links at the top of this page.
+
+    This also includes building up your new `~/.gitolite.rc` file.
+
+You're done.

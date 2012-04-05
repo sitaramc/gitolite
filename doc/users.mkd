@@ -1,96 +1,67 @@
-# what users (not admins) need to know about gitolite
+# adding and removing users
 
-...written for the one guy in the world no one will think of as "just a normal
-user" ;-)
+Strictly speaking, gitolite doesn't know where users come from.  If that
+surprises you, read [this][auth].  However, gitolite does help with ssh-based
+authentication, so here's some info on adding and removing users.
 
-This document has some text, and a lot of links.  Most of this info *is*
-available in the rest of the documentation, but it's scattered and sparse.
-Collecting all of it, or at least links to it, in one place sounds useful.
+>   ----
 
-## accessing gitolite
+>   *WARNING: Do NOT add users directly on the server.  Clone the
+>   'gitolite-admin' repo to your workstation, make changes to it, then add,
+>   commit, and push.  When the push hits the server, the server "acts" upon
+>   your changes.*
 
-The most common setup is based on ssh, where your admin asks you to send him
-your public key, and uses that to setup your access.
+>   ----
 
-Your actual access is either a git command (like `git clone
-git@server:reponame`, and we won't be discussing these any more in this
-document), or an ssh command (like `ssh git@server info`).
+All operations are in a clone of the gitolite-admin repo.
 
-Note that you do *not* get a shell on the server -- the whole point of
-gitolite is to prevent that!
+To **add** a user, say Alice, obtain her public key (typically
+`$HOME/.ssh/id_rsa.pub` on her workstation), copy it to `keydir` with the user
+name as the basename (e.g., 'alice.pub' for user alice), then `git add
+keydir/alice.pub`.  (All keys files must have names ending in ".pub", and must
+be in openssh's default format).
 
-## #info the info command
+To **remove** a user, `git rm keydir/alice.pub`.
 
-The only command that is *always* available to every user is the `info`
-command (run `ssh git@host info -h` for help), which tells you what version of
-gitolite and git are on the server, and what repositories you have access to.
-The list of repos is very useful if you have doubts about the spelling of some
-new repo that you know was setup.
+In both cases, you must commit and push.  On receiving the push, gitolite will
+carry out the changes specified.
 
-## digression: two kinds of repos
+The user name is simply the base name of the public key file name.  So
+'alice.pub', 'foo/alice.pub' and 'bar/alice.pub', all resolve to user "alice".
 
-Gitolite has two kinds of repos.  Normal repos are specified by their full
-names in the config file.  "Wildcard" repos are specified by a regex in the
-config file.  Try the [`info` command][info] and see if it shows any lines
-that look like regex patterns, (with a "C" permission in addition to the "R"
-and the "W").
+## #multi-key multiple keys per user
 
-If you see any, it means you are allowed to create brand new repos whose names
-fit that pattern.  When you create such a repo, your "ownership" of it (as far
-as gitolite is concerned) is *automatically* recorded by gitolite.
+The simplest and most understandable is to put their keys in different
+subdirectories, (alice,pub, home/alice.pub, laptop/alice.pub, etc).
 
-## other commands
+### old style multi-keys
 
-### #perms set/get additional permissions for repos you created
+There is another way that involves creating key files like `alice@home.pub`
+and `alice@laptop.pub`, but there is a complication because gitolite also
+allows *full email addresses* as user names.  (I.e., `sitaramc@gmail.com.pub`
+denotes the user called `sitaramc@gmail.com`).
 
-The gitolite config may have several permissions lines for your repo, like so:
+This older method of enabling multi-keys was developed to deal with that.  It
+will continue to work and be supported in *code*, simply because I prefer it.
+But I will not accept questions or doc patches for it, because it seems it is
+too difficult to understand for a lot of people.  This table of sample pubkey
+filenames and the corresponding derived usernames is all you get:
 
-    repo pub/CREATOR/..*
-        RW+     =   CREATOR
-        RW      =   user1 user2
-        R       =   user3
+  * plain username, no multikey
 
-If that's all it had, you really can't do much.  Any changes to access must be
-done by the administrator.  (Note that "CREATOR" is a reserved word that gets
-expanded to your userid in some way, so the admin can literally add just the
-first two lines, and *every* authenticated user now has his own personal repo
-namespace, starting with `pub/<username>/`).
+        sitaramc.pub                            sitaramc
 
-To give some flexibility to users, the admin could add rules like this:
+  * plain username, with multikeys
 
-        RW      =   WRITERS
-        R       =   READERS
+        sitaramc@laptop.pub                     sitaramc
+        sitaramc@desktop.pub                    sitaramc
 
-(he could also add other roles but then he needs to read the documentation).
+  * email address as username, no multikey
 
-Once he does this, you can then use the `perms` command (run `ssh git@host
-perms -h` for help) to set permissions for other users by specifying which
-users are in the list of "READERS", and which in "WRITERS".
+        sitaramc@gmail.com.pub                  sitaramc@gmail.com
 
-If you think of READERS and WRITERS as "roles", it will help.  You can't
-change what access a role has, but you *can* say which users have that role.
+  * email address as username, with multikeys
 
-**Note**: there isn't a way for you to see the actual rule set unless you're
-given read access to the special 'gitolite-admin' repo.  Sorry.  The idea is
-that your admin will tell you what "roles" he added into rules for your repos,
-and what permissions those roles have.
+        sitaramc@gmail.com@laptop.pub           sitaramc@gmail.com
+        sitaramc@gmail.com@desktop.pub          sitaramc@gmail.com
 
-### #desc adding a description to repos you created
-
-The `desc` command is extremely simple.  Run `ssh git@host desc -h` for help.
-
-## "site-local" commands
-
-The main purpose of gitolite is to prevent you from getting a shell.  But
-there are commands that you often need to run on the server (i.e., cannot be
-done by pushing something to a repo).
-
-To enable this, gitolite allows the admin to setup scripts in a special
-directory that users can then run.  Gitolite comes with a set of working
-scripts that your admin may install, or may use as a starting point for his
-own, if he chooses.
-
-Think of these commands as equivalent to those in `COMMAND_DIR` in `man
-git-shell`.
-
-You can get a list of available commands by running `ssh git@host help`.

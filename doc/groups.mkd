@@ -1,6 +1,4 @@
-# parts of the conf file
-
-## #group group definitions
+# group definitions
 
 You can group repos or users for convenience.  The syntax is the same for both
 and does not distinguish; until you *use* the group name it could really be
@@ -26,7 +24,7 @@ right there (meaning later additions will not appear in the second group).
 
     # wally is NOT part of @staff
 
-### special group `@all`
+## special group `@all`
 
 `@all` is a special group name that is often convenient to use if you really
 mean "all repos" or "all users".

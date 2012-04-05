@@ -1,0 +1,66 @@
+# "git-config" keys and values
+
+Here's all you want to know about setting repo-specific git-config values.
+
+(Original version thanks to teemu dot matilainen at iki dot fi)
+
+>   ----
+
+>   **Note**: this won't work unless the rc file has the right settings;
+>   please see `$GIT_CONFIG_KEYS` in the [rc file doc][rc].
+
+>   ----
+
+The syntax is simple:
+
+    config sectionname.keyname = [optional value_string]
+
+For example:
+
+    repo gitolite
+        config hooks.mailinglist = gitolite-commits@example.tld
+        config hooks.emailprefix = "[gitolite] "
+        config foo.bar = ""
+        config foo.baz =
+
+This does either a plain "git config section.key value" (for the first 3
+examples above) or "git config --unset-all section.key" (for the last
+example).  Other forms of the `git config` command (`--add`, the
+`value_regex`, etc) are not supported.
+
+>   ----
+
+>   **WARNING**: simply deleting the config line from the `conf/gitolite.conf`
+>   file will *not* delete the variable from `repo.git/config`.  The syntax in
+>   the last example is the *only* way to make gitolite execute a
+>   `--unset-all` operation on the given key.
+
+>   ----
+
+You can also use the special value `%GL_REPO` in the string to save typing:
+
+    repo foo bar baz
+        config hooks.mailinglist = %GL_REPO-commits@example.tld
+        config hooks.emailprefix = "[%GL_REPO] "
+
+You can repeat the 'config' line as many times as you like, and the last
+occurrence will be the one in effect.  This allows you to override settings
+just for one project, as in this example:
+
+    repo @all
+        config hooks.mailinglist = %GL_REPO-commits@example.tld
+        config hooks.emailprefix = "[%GL_REPO] "
+
+    repo customer-project
+        # different mailing list
+        config hooks.mailinglist = announce@customer.tld
+
+The "delete config variable" syntax can also be used, if you wish:
+
+    repo secret     # no emails for this one please
+        config hooks.mailinglist =
+        config hooks.emailprefix =
+
+As you can see, the general idea is to place the most generic ones (`repo
+@all`, or repo patterns like `repo foo.*`) first, and place more specific ones
+later to override the generic settings.

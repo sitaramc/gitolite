@@ -1,0 +1,87 @@
+# files involved in gitolite
+
+## install
+
+Let's say you start from a totally clean slate:
+
+    $ pwd
+    /home/gl-test
+
+    $ ls -a
+    .  ..  .bash_logout  .bash_profile  .bashrc
+
+You run `git clone -b g3 git://github.com/sitaramc/gitolite` (the '-b' option
+does the equivalent of 'git checkout g3' after the clone is done).
+
+Now you have
+
+    $ ls -aF
+    ./  ../  .bash_logout  .bash_profile  .bashrc  gitolite/
+
+    $ ls -aF gitolite
+    ./  ../  check-g2-compat*  doc/  dot.pl  .git/  install*  src/  t/
+
+If we were an existing user, we'd run the migration checker 'check-g2-compat'
+(see [here][g2migr]).  For now we're only interested in "gitolite/src", so:
+
+    $ ls -aF gitolite/src
+    ./  ../  commands/  gitolite*  Gitolite/  gitolite-shell*  syntactic-sugar/  triggers/  VREF/
+
+We check our PATH to make sure `$HOME/bin` is in it:
+
+    $ echo $PATH
+    /usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/home/gl-test/.local/bin:/home/gl-test/bin
+
+Since it is, we run `mkdir bin; gitolite/install -ln`, and get:
+
+    $ mkdir bin
+    $ gitolite/install -ln
+
+    $ ls -aF
+    ./  ../  .bash_logout  .bash_profile  .bashrc  bin/  gitolite/
+
+    $ ls -aF bin
+    ./  ../  gitolite@
+
+    $ file bin/gitolite
+    bin/gitolite: symbolic link to `/home/gl-test/gitolite/src/gitolite'
+
+That's the install done.  At the end of it, we have just *one* symlink in
+`$HOME/bin`; everything else is in a different directory.
+
+## setup
+
+Now you copy your pubkey (typically `id_rsa.pub`) from your workstation to the
+server, then run `gitolite setup -pk "yourname.pub"`.  Which gives you this:
+
+    $ ls -aF
+    ./   .bash_logout   .bashrc  gitolite/   .gitolite.rc   repositories/  .ssh/
+    ../  .bash_profile  bin/     .gitolite/  projects.list  sitaram.pub
+
+    $ ls -aF bin
+    ./  ../  gitolite@
+
+    $ ls -aF .gitolite
+    ./  ../  conf/  hooks/  keydir/  logs/
+
+    $ ls -aF repositories
+    ./  ../  gitolite-admin.git/  testing.git/
+
+    $ ls -aF .ssh
+    ./  ../  authorized_keys*
+
+And that's the setup done.  At the end of this step, you have
+
+  * `~/bin/gitolite` -- a symlink to `~/gitolite/src/gitolite`.  The target of
+    this symlink tells gitolite where the rest of the code is.
+  * `~/gitolite/src` -- the rest of the code.
+  * `~/.gitolite` -- the gitolite "admin" directory.  The only thing you
+    should directly touch here are the [log][] files and [hooks][].  (I.e., do
+    NOT change the conf or keydir contents here; see adding [users][] and
+    [repos][] for how to do that.
+  * `~/.gitolite.rc` -- the [rc][] file.
+  * `~/repositories` -- which contains all the repositories that gitolite will
+    be managing.
+  * `~/.ssh` -- which contains (at least) the `authorized_keys` file that
+    provides access to users.  You can look inside that file and correlate it
+    with what the [ssh][] docs tell you, if you wish.

@@ -1,0 +1,41 @@
+# setting up gitolite
+
+Installing the software gets you ready to use it, but the first "use" of it is
+always the "setup" command.
+
+The first time you run it, you need to have a public key file ready.  If the
+main gitolite admin's username is "alice", this file should be named
+"alice.pub".  Then run
+
+    gitolite setup -pk alice.pub
+
+If that command completes without any warnings, you should be done.  If it had
+a warning, you probably supplied a key which already has shell access to the
+server.  That won't work.
+
+>   ----
+
+>   Normally, gitolite is hosted on a user that no one accesses directly --
+>   you log on to the server using some other userid, and then `su - git`.  In
+>   this scenario, there *is* no key being used for shell access, so there is
+>   no conflict.
+
+>   An alternative method is to use two different keys, and a [host
+>   alias][ssh-ha] to distinguish the two.
+
+>   [common errors][ce] has some links to background information on this
+>   issue.
+
+>   ----
+
+The 'setup' command has other uses, so you will be running it at other times
+after the install as well:
+
+  * to setup the update hook when you move [existing][] repos to gitolite.
+    This also applies if someone has been fiddling with the hooks on some
+    repos and you want to put them all right quickly.
+
+  * to replace a [lost admin key][lost-key].
+
+When in doubt, run 'gitolite setup' anyway; it doesn't do any harm, though it
+may take a minute or so if you have more than a few thousand repos!

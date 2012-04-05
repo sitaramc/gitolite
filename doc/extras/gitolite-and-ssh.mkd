@@ -99,13 +99,13 @@ The answer to the first question is the `command=` we talked about before.  If
 you look in the `authorized_keys` file, you'll see entries like this (I chopped
 off the ends of course; they're pretty long lines):
 
-    command="[path]/gl-auth-command sitaram",[more options] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA18S2t...
-    command="[path]/gl-auth-command usertwo",[more options] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEArXtCT...
+    command="[path]/gitolite-shell sitaram",[more options] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA18S2t...
+    command="[path]/gitolite-shell usertwo",[more options] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEArXtCT...
 
 First, it finds out which of the public keys in this file match the incoming
 login.  That's crypto stuff, and I won't go into it.  Once the match has been
 found, it will run the command given on that line; e.g., if I logged in, it
-would run `[path]/gl-auth-command sitaram`.  So the first thing to note is
+would run `[path]/gitolite-shell sitaram`.  So the first thing to note is
 that such users do not get "shell access", which is good!
 
 Before running the command, however, sshd sets up an environment variable
@@ -113,7 +113,7 @@ called `SSH_ORIGINAL_COMMAND` which contains the actual git command that your
 workstation sent out.  This is the command that *would have run* if you did
 not have the `command=` part in the authorised keys file.
 
-When `gl-auth-command` gets control, it looks at the first argument
+When `gitolite-shell` gets control, it looks at the first argument
 ("sitaram", "usertwo", etc) to determine who you are.  It then looks at the
 `SSH_ORIGINAL_COMMAND` variable to find out which repository you want to
 access, and whether you're reading or writing.

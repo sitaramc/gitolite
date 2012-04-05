@@ -53,7 +53,7 @@ put that contain the words "see docs":
 
     same as above
 
-  * `fallthru in NAME rules`
+  * `NAME rules`
 
     **This is a significant difference and affects access badly (gives access
     that would otherwise not be given)**.  Please see the [list of non-RC

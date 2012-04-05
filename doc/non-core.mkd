@@ -6,8 +6,8 @@ A list of these commands can be obtained by running `gitolite help` on the
 server.  A different (and probably much smaller) list can be obtained by a
 remote user running `ssh git@host help`.
 
-All the commands will respond to `-h`; please report a bug to me if they
-don't.
+All the commands that ship with gitolite will respond to `-h`; please report a
+bug to me if they don't.
 
 ## syntactic sugar
 
@@ -43,7 +43,7 @@ The `POST_GIT` triggers are:
 The `POST_COMPILE` triggers are:
 
   * post-compile/ssh-authkeys -- takes the pubkeys in keydir and populates
-    `~/.ssh/authorized_keys`
+    `~/.ssh/authorized_keys`.
 
   * post-compile/update-git-configs -- updates individual 'repo.git/config'
     files (using the 'git config ...' command) from settings supplied in the
@@ -52,7 +52,7 @@ The `POST_COMPILE` triggers are:
 
   * post-compile/update-git-daemon-access-list -- create/delete
     'git-daemon-export-ok' files in each repo based on whether the conf says
-    'daemon' can read the repo or not
+    'daemon' can read the repo or not.
 
   * post-compile/update-gitweb-access-list -- populates the file named in
     `GITWEB_PROJECTS_LIST` in the rc file (default: `$HOME/projects.list`)
@@ -60,7 +60,7 @@ The `POST_COMPILE` triggers are:
     more than just "R = gitweb"; any repo that has any config setting with the
     section name 'gitweb' (like 'gitweb.owner', 'gitweb.description', etc) is
     considered readable by gitweb, so the final list is a union of these two
-    methods
+    methods.
 
 The `POST_CREATE` triggers are:
 
@@ -69,56 +69,11 @@ The `POST_CREATE` triggers are:
 
 ## VREFs
 
-You should read about [vref][]s in detail first; this won't make sense
-otherwise.  For a brief recap, note that there are 2 kinds of VREFs: those
-that require arguments and those that behave just like any other `update`
-hook.
-
-COUNT is an example of the former (hence the long-ish description).  DUPKEYS
-and EMAIL-CHECK are both examples of the latter.
-
-  * COUNT
-
-    The COUNT VREF is used like this:
-
-        -   VREF/COUNT/9                    =   @junior-developers
-
-    In response, if anyone in the user list pushes a commit series that
-    changes more than 9 files, a vref of "VREF/COUNT/9" is returned.  Gitolite
-    uses that as a "ref" to match against all the rules, hit the same rule
-    that invoked it, and deny the request.
-
-    If the user did not push more than 9 files, the VREF code returns nothing,
-    and nothing happens.
-
-    COUNT can take one more argument:
-
-        -   VREF/COUNT/9/NEWFILES           =   @junior-developers
-
-    This is the same as before, but have to be more than 9 *new* files not
-    just changed files.
-
-  * DUPKEYS -- this checks keydir/ for duplicate keys and aborts the push if
-    it finds any.  You should use this only on the gitolite-admin repo.
-
-        repo gitolite-admin
-            -   VREF/DUPKEYS                =   @all
-
-  * EMAIL-CHECK -- read the comments in the code for this one.  Like DUPKEYS,
-    it does not take any arguments.
-
-  * FILETYPE -- this is sample code for a very site-specific purpose; you'll
-    have to read the code
-
-  * MERGE-CHECK -- this is sample code to illustrate how one of the gitolite
-    built-in functions *could* have been handled, although there are some
-    differences
-
-  * partial-copy -- this has its own section later in this page
+VREFs have their [own page][vref].
 
 ## special cases
 
-### partial-copy
+### #partial-copy partial-copy
 
 Git (and therefore gitolite) cannot do selective read control -- allowing
 someone to read branch A but not branch B.  It's the entire repo or nothing.
@@ -155,6 +110,6 @@ WARNINGS:
     you should delete the partial repo on the server and then run 'gitolite
     compile' to let it build again.  See t/partial-copy.t for details.
 
-  * not tested with smart http; probabl won't work
+  * not tested with smart http; probably won't work
 
   * also not tested with mirroring, or with wild card repos.

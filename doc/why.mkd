@@ -1,4 +1,4 @@
-# Why is gitolite needed?
+# why might you need gitolite
 
 Gitolite is separate from git, and needs to be installed and configured.  So...
 why do we bother?
@@ -14,33 +14,34 @@ allow/disallow users access to repos.
 
 But there are several disadvantages here:
 
-  * every user needs a userid and password on the server.  This is usually a
-    killer, especially in tightly controlled environments
-  * adding/removing access rights involves complex `usermod -G ...` mumblings
-    which most admins would rather not deal with
-  * *viewing* (aka auditing) the current set of permissions requires running
+  * Every user needs a userid and password on the server.  This is usually a
+    killer, especially in tightly controlled environments.
+  * Adding/removing access rights involves complex `usermod -G ...` mumblings
+    which most admins would rather not deal with.
+  * *Viewing* (aka auditing) the current set of permissions requires running
     multiple commands to list directories and their permissions/ownerships,
-    users and their group memberships, and then correlating all these manually
-  * auditing historical permissions or permission changes is pretty much
-    impossible without extraneous tools
-  * errors or omissions in setting the permissions exactly can cause problems
-    of either kind: false accepts or false rejects
-  * without going into ACLs it is not possible to give some people read-only
+    users and their group memberships, and then correlating all these
+    manually.
+  * Auditing historical permissions or permission changes is pretty much
+    impossible without extraneous tools.
+  * Errors or omissions in setting the permissions exactly can cause problems
+    of either kind: false accepts or false rejects.
+  * Without going into ACLs it is not possible to give some people read-only
     access while some others have read-write access to a repo (unless you make
-    it world-readable).  Group access just doesn't have enough granularity
-  * it is absolutely impossible to restrict pushing by branch name or tag
+    it world-readable).  Group access just doesn't have enough granularity.
+  * It is absolutely impossible to restrict pushing by branch name or tag
     name.
 
 Gitolite does away with all this:
 
-  * it uses ssh magic to remove the need to give actual unix userids to
-    developers
-  * it uses a simple but powerful config file format to specify access rights
-  * access control changes are affected by modifying this file, adding or
-    removing user's public keys, and "compiling" the configuration
-  * this also makes auditing trivial -- all the data is in one place, and
+  * It uses ssh magic to remove the need to give actual unix userids to
+    developers.
+  * It uses a simple but powerful config file format to specify access rights.
+  * Access control changes are affected by modifying this file, adding or
+    removing user's public keys, and "compiling" the configuration.
+  * This also makes auditing trivial -- all the data is in one place, and
     changes to the configuration are also logged, so you can audit them.
-  * finally, the config file allows distinguishing between read-only and
+  * Finally, the config file allows distinguishing between read-only and
     read-write access, not only at the repository level, but at the branch
     level within repositories.
 

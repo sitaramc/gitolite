@@ -1,0 +1,42 @@
+# special features and setups
+
+## #writable disabling pushes to take backups
+
+The `writable` command allows you to disable pushes to all repos or just the
+named repo, in order to do file-system level things to the repo directory that
+require it not to change, like using normal backup software.
+
+Run `gitolite writable -h` for more info.
+
+## #pers "personal" branches
+
+"personal" branches are great for environments where developers need to share
+work but can't directly pull from each other (usually due to either a
+networking or authentication related reason, both common in corporate setups).
+
+Personal branches exist **in a namespace** of their own.  The syntax is
+
+        RW+ personal/USER/  =   @userlist
+
+where the "personal" can be anything you like (but cannot be empty), and the
+"/USER/" part is **necessary (including both slashes)**.
+
+A user "alice" (if she's in the userlist) can then push any branches inside
+`personal/alice/`.  Which means she can push `personal/alice/foo` and
+`personal/alice/bar`, but NOT `personal/alice`.
+
+(Background: at runtime the "USER" component will be replaced by the name of
+the invoking user.  Access is determined by the right hand side, as usual).
+
+Compared to using arbitrary branch names on the same server, this
+
+  * reduces namespace pollution by corralling all these ad hoc branches into
+    the "personal/" namespace.
+  * reduces branch name collision by giving each developer her own
+    sub-hierarchy within that.
+  * removes the need to think about access control, because a user can push
+    only to his own sub-hierarchy.
+
+## delegating access control responsibilities
+
+See [this][deleg].
