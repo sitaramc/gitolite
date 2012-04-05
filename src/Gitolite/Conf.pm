@@ -58,6 +58,7 @@ sub parse {
             }
         } elsif ( $line =~ /^config (.+) = ?(.*)/ ) {
             my ( $key, $value ) = ( $1, $2 );
+            $value =~ s/^['"](.*)["']$/$1/;
             my @validkeys = split( ' ', ( $rc{GIT_CONFIG_KEYS} || '' ) );
             push @validkeys, "gitolite-options\\..*";
             my @matched = grep { $key =~ /^$_$/ } @validkeys;

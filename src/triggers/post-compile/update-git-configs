@@ -24,7 +24,6 @@ for my $pr (@$lpr) {
     while ( my ( $key, $value ) = each( %{$gc} ) ) {
         next if $key =~ /^gitolite-options\./;
         if ( $value ne "" ) {
-            $value =~ s/^['"](.*)["']$/$1/;
             $value =~ s/%GL_REPO/$pr/g;
             system( "git", "config", "--file", "$RB/$pr.git/config", $key, $value );
         } else {
