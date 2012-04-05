@@ -1,0 +1,64 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>setting up gitolite</h1>
+
+<p>Installing the software gets you ready to use it, but the first "use" of it is
+always the "setup" command.</p>
+
+<p>The first time you run it, you need to have a public key file ready.  If the
+main gitolite admin's username is "alice", this file should be named
+"alice.pub".  Then run</p>
+
+<pre><code>gitolite setup -pk alice.pub
+</code></pre>
+
+<p>If that command completes without any warnings, you should be done.  If it had
+a warning, you probably supplied a key which already has shell access to the
+server.  That won't work.</p>
+
+<blockquote>
+  <hr />
+
+<p>Normally, gitolite is hosted on a user that no one accesses directly --
+  you log on to the server using some other userid, and then <code>su - git</code>.  In
+  this scenario, there <em>is</em> no key being used for shell access, so there is
+  no conflict.</p>
+
+<p>An alternative method is to use two different keys, and a <a href="ssh-troubleshooting.html#ssh-ha">host
+  alias</a> to distinguish the two.</p>
+
+<p><a href="emergencies.html#ce">common errors</a> has some links to background information on this
+  issue.</p>
+
+<hr />
+</blockquote>
+
+<p>The 'setup' command has other uses, so you will be running it at other times
+after the install as well:</p>
+
+<ul>
+<li><p>to setup the update hook when you move <a href="rare.html#existing">existing</a> repos to gitolite.
+This also applies if someone has been fiddling with the hooks on some
+repos and you want to put them all right quickly.</p></li>
+<li><p>to replace a <a href="emergencies.html#lost-key">lost admin key</a>.</p></li>
+</ul>
+
+<p>When in doubt, run 'gitolite setup' anyway; it doesn't do any harm, though it
+may take a minute or so if you have more than a few thousand repos!</p>

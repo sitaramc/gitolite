@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -17,19 +17,27 @@
 |
     <a href="index.html#license">license</a>
 </p>
-<h1>the "rc" file ($HOME/.gitolite.rc)</h1>
+<h1>the "rc" file (<code>$HOME/.gitolite.rc</code>)</h1>
 
-<p>The rc file for g3 is quite different from that of g2.  It has been designed
-to be (a) the only thing unique to your site, for most installations and (b)
-easy to extend when new needs show up, without having to touch core gitolite.</p>
+<p><strong>NOTE</strong>: if you're migrating from g2, there are some settings that MUST be
+dealt with <strong>before</strong> running <code>gitolite setup</code>; please read the <a href="g2migr.html">g2
+migration</a> page and linked pages, and especially the one on
+<a href="g2rcdiff.html#rc-preset">presetting the rc file</a>.</p>
 
-<p>g2 had a nasty rc file where every variable had to be declared.  As a result,
-ADCs that needed their own settings could not use it.</p>
+<hr />
 
-<p>Now it's a perl hash, and you can add any keys you want.</p>
+<p>The rc file for g3 is <em>quite</em> different from that of g2.</p>
 
-<p>Please look at the rc file that gets installed when you setup gitolite.  As
-you can see there are 3 types of variables in it:</p>
+<p>As before, it is designed to be the only thing unique to your site for most
+setups.  What is new is that it is easy to extend it when new needs come up,
+without having to touch core gitolite.</p>
+
+<p>The rc file is perl code, but you do NOT need to know perl to edit it.  Just
+mind the commas, use single quotes unless you know what you're doing, and make
+sure the brackets and braces stay matched up!</p>
+
+<p>Please look at the <code>~/.gitolite.rc</code> file that gets installed when you setup
+gitolite.  As you can see there are 3 types of variables in it:</p>
 
 <ul>
 <li>simple variables (like UMASK)</li>
@@ -37,5 +45,60 @@ you can see there are 3 types of variables in it:</p>
 <li>hashes (like <code>ROLES</code>, <code>COMMANDS</code>)</li>
 </ul>
 
-<p>Their purposes are to be found in each of their individual documentation files
-around; start with <a href="cust.html">customising gitolite</a>.</p>
+<p>While some of the variables are documented in this file, many of them are not.
+Their purposes are to be found in each of their individual documentation files
+around; start with <a href="cust.html">customising gitolite</a>.  If a setting is used by an
+external command then running that command with '-h' may give you additional
+information.</p>
+
+<h2>specific variables</h2>
+
+<ul>
+<li><p><code>$UMASK</code>, octal, default <code>0077</code></p>
+
+<p>The default UMASK that gitolite uses makes all the repos and their
+contents have <code>rwx------</code> permissions.  People who want to run gitweb
+realise that this will not do.</p>
+
+<p>The correct way to deal with this is to give this variable a value like
+<code>0027</code> (note the syntax: the leading 0 is required), and then make the
+user running the webserver (apache, www-data, whatever) a member of the
+'git' group.</p>
+
+<p>If you've already installed gitolite then existing files will have to be
+fixed up manually (for a umask or 0027, that would be <code>chmod -R g+rX</code>).
+This is because umask only affects permissions on newly created files, not
+existing ones.</p></li>
+<li><p><code>$GIT_CONFIG_KEYS</code>, string, default empty</p>
+
+<p>This setting allows the repo admin to define acceptable gitconfig keys.</p>
+
+<p>Gitolite allows you to set git config values using the "config" keyword;
+see <a href="git-config.html">here</a> for details and syntax.</p>
+
+<p>However, if you are in an installation where the repo admin does not (and
+should not) have shell access to the server, then allowing him to set
+arbitrary repo config options <em>may</em> be a security risk -- some config
+settings allow executing arbitrary commands!</p>
+
+<p>You have 3 choices.  By default <code>$GIT_CONFIG_KEYS</code> is left empty, which
+completely disables this feature (meaning you cannot set git configs via
+the repo config).</p>
+
+<p>The second choice is to give it a space separated list of settings you
+consider safe.  (These are actually treated as a set of <a href="regex.html">regular
+expression</a> patterns, and any one of them must match).</p>
+
+<p>For example:</p>
+
+<pre><code>$GIT_CONFIG_KEYS = 'core\.logAllRefUpdates core\..*compression';
+</code></pre>
+
+<p>Each pattern should match the <em>whole</em> key (in other words, there
+is an implicit <code>^</code> at the start of each pattern, and a <code>$</code> at the
+end).</p>
+
+<p>The third choice (which you may have guessed already if you're familiar
+with regular expressions) is to allow anything and everything:
+<code>$GIT_CONFIG_KEYS = '.*';</code></p></li>
+</ul>

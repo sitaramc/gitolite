@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -17,33 +17,56 @@
 |
     <a href="index.html#license">license</a>
 </p>
-<h1>getting started</h1>
+<h1>quick install, setup, and clone</h1>
 
-<p>The quickest install, assuming your <code>$PATH</code> contains <code>$HOME/bin</code>, is:</p>
+<p>(Please do not ignore the "assumptions" list below).</p>
 
-<ul>
-<li><p>get the software</p>
+<p>On the server:</p>
 
-<pre><code>git clone git://github.com/sitaramc/gitolite
+<pre><code># get the software
+git clone -b g3 git://github.com/sitaramc/gitolite
 
-# (until this becomes "master")
-cd gitolite
-git checkout -f g3
-</code></pre></li>
-<li><p>install it</p>
+# install it
+gitolite/install -ln
 
-<pre><code>ln -sf $PWD/src/gitolite $HOME/bin
-</code></pre></li>
-</ul>
-
-<p>If you don't like that, there are <a href="install.html">other install methods</a>.</p>
-
-<p>Once the install is done, setup:</p>
-
-<pre><code>gitolite setup -pk your-name.pub
+# setup the initial repos with your key
+gitolite setup -pk your-name.pub
 </code></pre>
 
-<p>And that's it.</p>
+<p>On your workstation:</p>
 
-<p>Next steps are usually <a href="add.html">adding</a> users and repos and learning about
-<a href="conf.html">access control</a>.</p>
+<pre><code># clone the admin repo so you can start adding stuff
+git clone git@host:gitolite-admin.git
+</code></pre>
+
+<h2>ASSUMPTIONS</h2>
+
+<ul>
+<li><p>on the server, your <code>$PATH</code> contains <code>$HOME/bin</code>.  If you don't like that,
+there are <a href="install.html">other install methods</a>.</p></li>
+<li><p>"your-name.pub" is your public key from your workstation.</p>
+
+<ul>
+<li>also, this key does not already have shell access to this gitolite
+hosting user</li>
+</ul></li>
+<li><p>the setup command does not generate any warnings.</p>
+
+<ul>
+<li>if it does, please see <a href="emergencies.html#ce">common errors</a> and fix things before
+continuing, or read the more complete <a href="setup.html">setup</a> page.</li>
+</ul></li>
+</ul>
+
+<h2>Notes</h2>
+
+<p>Note that the clone path is NOT "repositories/gitolite-admin.git".  If you
+clone with a path that includes "repositories/", the clone should fail.  If
+the clone <em>does</em> succeed, a subsequent push should fail :-)  See
+<a href="ssh-troubleshooting.html#ybpfail">this</a> for some details.  If that doesn't make enough sense read all
+of <a href="ssh.html">ssh</a>.</p>
+
+<h2>next steps</h2>
+
+<p>Next steps are usually adding <a href="users.html">users</a> and <a href="repos.html">repos</a> and learning about
+<a href="admin.html#conf">access control</a>.</p>

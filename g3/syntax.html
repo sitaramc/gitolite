@@ -1,0 +1,66 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1><a name="syntax"></a> basic syntax</h1>
+
+<p>In general, everything is <strong>space separated</strong>; there are no commas,
+semicolons, etc., in the syntax.</p>
+
+<p><strong>Comments</strong> are in the usual shell-ish style.</p>
+
+<p><strong>User names</strong> and <strong>repo names</strong> are as simple as possible; they must start
+with an alphanumeric, but after that they can also contain <code>.</code>, <code>_</code>, or <code>-</code>.</p>
+
+<p>Usernames can optionally be followed by an <code>@</code> and a domainname containing at
+least one <code>.</code> (this allows you to use an email address as someone's username).
+Reponames can contain <code>/</code> characters (this allows you to put your repos in a
+tree-structure for convenience)</p>
+
+<p>There are no continuation lines by default.  You do not need them; the section
+on "groups" will tell you how you can break up large lists of names in a group
+definition into multiple lines.</p>
+
+<p><font color="gray">If you <em>must</em> have them, you can optionally enable them;
+see the syntactic <a href="cust.html#sugar">sugar</a> section.</font></p>
+
+<h2><a name="include"></a> include files</h2>
+
+<p>Gitolite allows you to break up the configuration into multiple files and
+include them in the main file for convenience.</p>
+
+<pre><code>include     "foo.conf"
+</code></pre>
+
+<p>will include the contents of the file "foo.conf".</p>
+
+<p>Details:</p>
+
+<ul>
+<li><p>You can also use a glob (<code>include "*.conf"</code>), or put your include files
+into subdirectories of "conf" (<code>include "foo/bar.conf"</code>), or both
+(<code>include "repos/*.conf"</code>).</p></li>
+<li><p>Included files are always searched from the gitolite-admin repo's "conf/"
+directory, unless you supplied an absolute path.  (Note: in the interests
+of cloning the admin-repo sanely you should avoid absolute paths!)</p></li>
+<li><p>If you ended up recursing, files that have been already processed once are
+skipped, with a warning.</p></li>
+</ul>
+
+<p><font color="gray">Advanced users: <code>subconf</code>, a command that is very closely
+related to <code>include</code>, is documented <a href="deleg.html#subconf">here</a>.</font></p>

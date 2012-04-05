@@ -1,0 +1,97 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>interfacing with external tools</h1>
+
+<blockquote>
+  <hr />
+
+<p><strong>Note</strong>: The old gitolite (v1.x, v2.x) used to tie itself into knots
+  dealing with gitweb and daemon.  One of the goals of g3 was to get out of
+  that game, which your author does not play anyway.  This means statements
+  like "...special user called 'gitweb'..." really apply to the <a href="non-core.html">non-core</a>
+  programs that gitolite ships with, not to "core" gitolite, and any or all
+  of this functionality can be disabled by commenting out certain lines in
+  the <a href="rc.html">rc</a> file.</p>
+
+<hr />
+
+<p>Also, <strong>note</strong> that gitolite does <strong>not</strong> install or configure
+  gitweb/git-daemon -- that is a one-time setup you must do separately.</p>
+
+<hr />
+</blockquote>
+
+<h2>gitweb</h2>
+
+<p>The following repos are deemed to be readable by gitweb:</p>
+
+<ul>
+<li>any repos readable by the special user <code>gitweb</code></li>
+<li><p>any repos containing one or more of the following types of lines:</p>
+
+<pre><code>config gitweb.owner         =   owner name
+config gitweb.description   =   some description
+config gitweb.category      =   some category
+</code></pre>
+
+<p>Side note: the following shorter forms are available as <a href="cust.html#sugar">syntactic
+sugar</a> for the above longer forms:</p>
+
+<pre><code>owner       =   owner name
+desc        =   some description
+category    =   some category
+</code></pre></li>
+</ul>
+
+<p>The list of gitweb-readable repos is written to a file whose name is given by
+the <a href="rc.html">rc</a> file variable <code>GITWEB_PROJECTS_LIST</code>.  The default value of this
+variable, if it is not specified or empty, is <code>$HOME/projects.list</code>.</p>
+
+<p>In addition, each of the config variables described above is written to the
+repo to which it pertains, so that gitweb can use them.</p>
+
+<h3><a name="umask"></a> changing the UMASK</h3>
+
+<p>Gitweb typically runs under a different userid, and the default permissions
+that gitolite sets make them unreadable.</p>
+
+<p>See the section on the <code>UMASK</code> variable in the documentation for the <a href="rc.html">rc
+file</a>.</p>
+
+<h2>git-daemon</h2>
+
+<p>Any repo readable by the special user <code>daemon</code> is deemed to be readable by
+git-daemon.  For each of these repos, an empty file called
+<code>git-daemon-export-ok</code> is created in the repository (i.e., the <code>repo.git</code>
+directory inside <code>$HOME/repositories</code>).</p>
+
+<h2>tips</h2>
+
+<p>Setting descriptions en-masse usually does not make sense, but you can
+certainly do things like</p>
+
+<pre><code>repo @all
+    R       =   gitweb daemon
+</code></pre>
+
+<p>assuming you have other means of setting 'gitweb.description' and
+'gitweb.owner'.</p>
+
+<p>Also see <a href="rules.html#deny-rules">this</a> for a twist on that.</p>

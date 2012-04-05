@@ -1,0 +1,66 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>gitolite administration</h1>
+
+<h2><a name="server"></a> server-side administration</h2>
+
+<p>The following activities require command line access to the server</p>
+
+<ul>
+<li>changing anything in the <a href="rc.html">rc</a> file</li>
+<li>installing custom <a href="cust.html#hooks">hooks</a>, whether to all repos or just some repos</li>
+<li>moving <a href="rare.html#existing">existing</a> (bare) repos into gitolite control</li>
+</ul>
+
+<p>Please read the <a href="WARNINGS.html">WARNINGS</a> page first.</p>
+
+<h2><a name="conf"></a> access control (the gitolite.conf file)</h2>
+
+<p>Most of gitolite's power is in the conf/gitolite.conf file, which specifies
+detailed access control for repos.</p>
+
+<h3><a name="confex"></a> example of a conf file</h3>
+
+<p>Here is an example of a simple conf/gitolite.conf file.</p>
+
+<pre><code>    @staff              =   dilbert alice           # line 1
+    @projects           =   foo bar                 # line 2
+
+    repo @projects baz                              # line 3
+        RW+             =   @staff                  # line 4
+        -       master  =   ashok                   # line 5
+        RW              =   ashok                   # line 6
+        R               =   wally                   # line 7
+
+        config hooks.emailprefix = '[%GL_REPO] '    # line 8
+</code></pre>
+
+<p>Use the following links to learn more:</p>
+
+<ul>
+<li>the basic <a href="syntax.html">syntax</a> -- comments, whitespace, include files, etc.</li>
+<li>defining <a href="groups.html">groups</a>, as in lines 1 and 2</li>
+<li>adding and removing <a href="users.html">users</a></li>
+<li>adding and removing <a href="repos.html">repos</a>, as in line 3</li>
+<li>defining access <a href="rules.html">rules</a>, as in lines 4, 5, 6, and 7</li>
+<li>gitolite <a href="options.html">options</a></li>
+<li><a href="git-config.html">git config</a> keys and values, as in line 8</li>
+<li><a href="wild.html">"wild"</a> repos -- ad hoc, user-created, repos</li>
+</ul>

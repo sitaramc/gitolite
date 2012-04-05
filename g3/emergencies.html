@@ -1,0 +1,214 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>help for emergencies</h1>
+
+<hr />
+
+<p>"Don't Panic!"</p>
+
+<hr />
+
+<h2><a name="lost-key"></a> lost admin key/access</h2>
+
+<p>If you lost your gitolite <strong>admin</strong> key or access, here's what you do.  We'll
+assume your username is 'alice'.</p>
+
+<ul>
+<li><p>Make yourself a new keypair and copy the public key to the server as
+'alice.pub'.</p></li>
+<li><p>Log on to the server, and run <code>gitolite setup -pk alice.pub</code>.</p></li>
+</ul>
+
+<p>That's it; the new alice.pub file replaces whatever existed in the repo
+before.</p>
+
+<h2><a name="bypass"></a> bypassing gitolite</h2>
+
+<p>You may have lost access because of a conf file error, in which case the above
+trick won't help.  What you want is to make changes to the repo (or perhaps
+just rewind) and push that.  Here's how to do that:</p>
+
+<ul>
+<li><p>Log on to the server.</p></li>
+<li><p>Clone the admin repo using the full path: <code>git clone
+$HOME/repositories/gitolite-admin.git temp</code>.</p></li>
+<li><p>Make whatever changes you want -- add/replace a key, 'git revert' or 'git
+reset --hard' to an older commit, etc.  Anything you need to fix the
+problem, really.</p></li>
+<li><p>Run <code>gitolite push</code> (or possibly <code>gitolite push -f</code>).  Note that's
+'gitolite push', not 'git push'.</p></li>
+</ul>
+
+<p><font color="red">
+<strong>NOTE</strong>: gitolite does <strong>no access checking</strong> when you do this!
+</font></p>
+
+<h2><a name="clean"></a> cleaning out a botched install</h2>
+
+<p>If you've read the <a href="files.html">files involved in gitolite</a> page, you probably know
+the answer, but here's a list of files you should blow away.</p>
+
+<ul>
+<li><p><strong>gitolite sources</strong> -- can be found by running <code>which gitolite</code>.  If it's
+a symlink, go to its target directory.</p></li>
+<li><p><strong>gitolite admin directory</strong> -- <code>$HOME/.gitolite</code>.  Save the 'logs'
+directory if you want to preserve them for any reason.</p></li>
+<li><p><strong>the rc file</strong> -- <code>$HOME/.gitolite.rc</code>.  If you made any changes to it
+you can save it as some other name instead of deleting it.</p></li>
+<li><p><strong>the gitolite-admin repo</strong> -- <code>$HOME/repositories/gitolite-admin.git</code>.
+You can clone it somewhere to save it before blowing it away if you wish.</p></li>
+<li><p><strong>git repositories</strong> -- <code>$HOME/repositories</code>.  The install process will
+not touch any existing repos except 'gitolite-admin.git', so you do not
+have to blow away (or move) your work repos to fix a botched install.</p>
+
+<p>Only when you update the conf to include those repos and push the changes
+will those repos be touched.  And even then all that happens is that the
+update hook, if any, is replaced with gitolite's own hook.</p></li>
+<li><p><strong>ssh stuff</strong> -- exercise caution when doing this, but in general it
+should be safe to delete all lines between the "gitolite start" and
+"gitolite end" markers in <code>$HOME/.ssh/authorized_keys</code>.</p>
+
+<p>Gitolite does not touch any other files in the ssh directory.</p></li>
+</ul>
+
+<h2><a name="ce"></a> common errors</h2>
+
+<ul>
+<li><p><code>WARNING: keydir/&lt;yourname&gt;.pub duplicates a non-gitolite key, sshd will ignore it</code></p>
+
+<p>You used a key that is already set to give you shell access.  You cannot
+use the same key to get shell access as well as access gitolite repos.</p>
+
+<p>Solution: use a different keypair for gitolite.  There's a slightly longer
+discussion in the <a href="setup.html">setup</a> page.  Also see <a href="ssh-troubleshooting.html#ybpfail">why bypassing causes a
+problem</a> and both the documents in <a href="ssh.html">ssh</a> for background.</p></li>
+<li><p><code>Empty compile time value given to use lib at hooks/update line 6</code></p>
+
+<p>(followed by <code>Can't locate Gitolite/Hooks/Update.pm in @INC</code> a couple of
+lines later).</p>
+
+<p>You're bypassing gitolite.  You cloned the repo using the full path (i.e.,
+including the <code>repositories/</code> prefix), either directly on the server, or
+via ssh but with a key that gives you <strong>shell</strong> access.</p>
+
+<p>Solution: same as for the previous bullet.</p>
+
+<p>NOTE: If you really <em>must</em> do it, and this is a one-time thing, you can
+try <code>gitolite push</code> instead of <code>git push</code>.  <strong>BUT</strong>... this defeats all
+gitolite access control, so if you're going to do this often, maybe you
+don't need gitolite!</p></li>
+</ul>
+
+<h2><a name="ue"></a> uncommon errors</h2>
+
+<ul>
+<li><p><code>WARNING: split conf not set, gl-conf present for &lt;repo&gt;</code></p>
+
+<p>(case 1) This can happen if you have a <em>bare</em> repo (i.e., some <code>repo.git</code>
+directory) copied from g2 with <code>GL_BIG_CONFIG</code> on, and you pushed a change
+to the conf or ran certain commands <em>before</em> adding the newly added repo
+to the conf file.</p>
+
+<p>(case 2) This can also happen if you changed something like this</p>
+
+<pre><code>repo foo
+    ...&lt;some rules&gt;...
+</code></pre>
+
+<p>to this</p>
+
+<pre><code>@grp = foo
+repo @grp
+    ...&lt;some rules&gt;...
+</code></pre>
+
+<p>Also, even running <code>gitolite setup</code> will not fix this.</p>
+
+<p>The root cause is an internal consistency check that I do not wish to
+disable or subvert.  It is there for a reason, and I would prefer a
+warning that a human can investigate.</p>
+
+<p>If you're sure the reasons are one of the two above, you can either add
+the repo to the conf file in case 1, or manually remove the gl-conf file
+from the repo.git directory in case 2.</p>
+
+<p>Either way, run <code>gitolite setup</code> afterwards to make sure things are in
+good shape.</p>
+
+<p>If you think neither of those is the cause, email me.</p></li>
+</ul>
+
+<h2><a name="ngp"></a> things that are not gitolite problems</h2>
+
+<p>There are several things that appear to be gitolite problems but are not.  I
+cannot help with most of these (although the good folks on irc or the mailing
+list -- see <a href="index.html#contact">contact</a> -- might be able to; they certainly appear to have a
+lot more patience than I do, bless 'em!)</p>
+
+<ul>
+<li><p><strong>client side software</strong></p>
+
+<ul>
+<li>putty/plink</li>
+<li>jgit/Eclipse</li>
+<li>Mac OS client <strong>or</strong> server</li>
+<li>putty/plink</li>
+<li>windows as a server</li>
+<li>...probably some more I forgot; will update this list as I remember...</li>
+<li>did I mention putty/plink?</li>
+</ul></li>
+<li><p><strong>ssh</strong></p>
+
+<p>The <em>superstar</em> of the "not a gitolite problem" category is actually ssh.</p>
+
+<p>Surprised?  It is so common that it has <a href="auth.html">its own document</a> to tell
+you why it is <em>not</em> a gitolite problem, while <a href="ssh.html">another one</a> tries to
+help you anyway!</p>
+
+<p>Everything I know is in that latter link.  Please email me about ssh ONLY
+if you find something wrong or missing in those documents.</p></li>
+<li><p><strong>git</strong></p>
+
+<p>I wish I had a dollar for each time someone did a <em>first push</em> on a new
+repo, got an error because there were "no refs in common (etc.)", and
+asked me why gitolite was not allowing the push.</p>
+
+<p>Gitolite is designed to look like just another bare repo server to a
+client (except requiring public keys -- no passwords allowed).  It is
+<em>completely transparent</em> when there is no authorisation failure (i.e.,
+when the access is allowed, the remote client has no way of knowing
+gitolite was even installed!)</p>
+
+<p>Even "on disk", apart from reserving the <code>update</code> hook for itself,
+gitolite does nothing to your bare repos unless you tell it to (for
+example, adding 'gitweb.owner' and such to the config file).</p>
+
+<p>BEFORE you think gitolite is the problem, try the same thing with a normal
+bare repo.  In most cases you can play with it just by doing something
+like this:</p>
+
+<pre><code>mkdir /tmp/throwaway
+cd    /tmp/throwaway
+git clone --mirror &lt;some repo you have a URL for&gt; bare.git
+git clone bare.git worktree
+cd worktree
+&lt;...try stuff&gt;
+</code></pre></li>
+</ul>

@@ -1,0 +1,142 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>delegating access control responsibilities</h1>
+
+<p>Delegation allows you to divide up a large conf file into smaller groups of
+repos (called <strong>subconf</strong>s) and hand over responsibility to manage them to
+<strong>sub-admin</strong>s.  Gitolite can prevent one sub-admin from being able to set
+access rules for any other sub-admin's repos.</p>
+
+<p>Delegation is achieved by combining two gitolite features: <a href="deleg.html#subconf">subconf</a> and the
+<a href="vref.html#NAME">NAME VREF</a>.</p>
+
+<p>To understand delegation, read both those links then come back to this
+example.</p>
+
+<h2>example</h2>
+
+<pre><code>@webbrowsers        = firefox lynx browsers/..*
+@webservers         = apache nginx servers/..*
+@malwares           = conficker storm ms/..*
+    # side note: if anyone objects, we claim ms stands for "metasploit" ;-)
+
+# the admin repo access was probably like this to start with:
+repo gitolite-admin
+    RW+                                     = sitaram
+# now add these lines to the config for the admin repo
+    RW                                      = alice bob mallory
+    RW  VREF/NAME/conf/subs/webbrowsers     = alice
+    RW  VREF/NAME/conf/subs/webservers      = bob
+    RW  VREF/NAME/conf/subs/malwares        = mallory
+    -   VREF/NAME/                          = alice bob mallory
+</code></pre>
+
+<p>Finally, you tell gitolite to pull in these files using the "subconf" command</p>
+
+<pre><code>subconf "subs/*.conf"
+</code></pre>
+
+<p>And that's it.</p>
+
+<h2><a name="subconf"></a> the subconf command</h2>
+
+<p>Subconf is exactly like the include command in syntax:</p>
+
+<pre><code>subconf "foo/bar.conf"
+</code></pre>
+
+<p>but while reading the included file, it sets a "subconf name" of "foo".</p>
+
+<p>When a subconf name is in effect, there are some restrictions on what repos
+can be managed.</p>
+
+<p>For example, in the include file in the above example, you can only have
+"repo" lines for:</p>
+
+<ul>
+<li>a repo called "foo"</li>
+<li>a group called "@foo" defined outside the include file</li>
+<li>a member of a group called "@foo" (again, defined outside)</li>
+<li>a repo that matches a member of a group called "@foo" if that member is a
+regular expression pattern</li>
+</ul>
+
+<p>Here's an example.  If the main conf file contains</p>
+
+<pre><code>@foo    =   aa bb cc/..*
+</code></pre>
+
+<p>then the subconf can only accept repo statements that refer to 'foo', '@foo',
+'aa', 'bb', or any repo whose name starts with 'cc/'.</p>
+
+<h3>how the "subconf name" is derived</h3>
+
+<p>For subconf lines that look just like include statements, i.e.,</p>
+
+<pre><code>subconf "foo/bar.conf"
+subconf "frob/*.conf"
+    # assume frob has files aa.conf, bb.conf
+</code></pre>
+
+<p>the subconf name as each file is being processed is the base name of the file.
+This means it would be "bar" for the first line, "aa" when processing
+"frob/aa.conf", and "bb" when processing "frob/bb.conf".</p>
+
+<p>A variation of subconf exists that can explicitly state the subconf name:</p>
+
+<pre><code>subconf foo "frob/*.conf"
+</code></pre>
+
+<p>In this variation, regardless of what file in "frob/" is being read, the
+subconf name in effect is "foo".</p>
+
+<h2>security notes</h2>
+
+<h3>group names</h3>
+
+<p>You can use "@group"s defined in the main config file but do not attempt to
+redefine or extend them in your own subconf file.  If you must extend a group
+(say <code>@foo</code>) defined in the main config file, do this:</p>
+
+<pre><code>@myfoo  =   @foo
+# now do whatever you want with @myfoo
+</code></pre>
+
+<p>Group names you define in your subconf will not clash even if the exact same
+name is used in another subconf file, so you need not worry about that.</p>
+
+<h3>delegating pubkeys</h3>
+
+<p>Short answer: not gonna happen.</p>
+
+<p>The delegation feature is meant only for access control rules, not pubkeys.
+Adding/removing pubkeys is a much more significant event than changing branch
+level permissions for people already on staff, and only the main admin should
+be allowed to do it.</p>
+
+<p>Gitolite's "userids" all live in the same namespace.  This is unlikely to
+change, so please don't ask -- it gets real complicated to do otherwise.
+Allowing sub-admins to add users means username collisions, which also means
+security problems (admin-A creates a pubkey for Admin-B, thus gaining access
+to all of Admin-B's stuff).</p>
+
+<p>If you feel the need to delegate even that, please just go the whole hog and
+give them separate gitolite instances (i.e., running under different gitolite
+hosting users)!</p>

@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -34,7 +34,7 @@ and accessing gitolite.</p>
 <li><p>Before reading this document, it is <strong>mandatory</strong> to read and <strong>completely
 understand</strong> <a href="ssh.html">this</a>, which is a very detailed look at how gitolite
 uses ssh's features on the server side.  Don't assume you know all that;
-if you knew it, you wouldn't be needing <em>this</em> document either!</p></li>
+if you did, you wouldn't be needing <em>this</em> document either!</p></li>
 <li><p>This document, and others linked from this, together comprise all the help
 I can give you in terms of the ssh aspect of using gitolite.  If you're
 installing gitolite, you're a "system admin", like it or not.  Ssh is
@@ -101,11 +101,6 @@ end</code>).</p></li>
 </ul></li>
 </ul>
 
-<h3>(Other resources)</h3>
-
-<p>People who think installing gitolite is too hard should take a look at this
-<a href="http://sites.google.com/site/senawario/home/gitolite-tutorial">tutorial</a> to <strong>see how simple it <em>actually</em> is</strong>.</p>
-
 <h3>common ssh problems</h3>
 
 <p>Since I'm pretty sure at least some of you didn't bother to read the
@@ -115,7 +110,7 @@ you there again.  Especially the first bullet.</p>
 <p>Done?  OK, read on...</p>
 
 <p>The following problem(s) indicate that pubkey access is not working at all, so
-you should start with <a href="ssh-troubleshooting.html#stsapp1_">appendix 1</a>.  If that doesn't fix the problem, continue
+you should start with <a href="ssh-troubleshooting.html#stsapp1">appendix 1</a>.  If that doesn't fix the problem, continue
 with the other appendices in sequence.</p>
 
 <ul>
@@ -124,8 +119,9 @@ you for a password.</li>
 </ul>
 
 <p>The following problem(s) indicate that your pubkey is bypassing gitolite and
-going straight to a shell.  You should start with <a href="ssh-troubleshooting.html#stsapp2_">appendix 2</a> and continue with
-the rest in sequence.  <a href="ssh-troubleshooting.html#stsapp5_">Appendix 5</a> has some background info.</p>
+going straight to a shell.  You should start with <a href="ssh-troubleshooting.html#sshkeys-lint">appendix 2</a>
+and continue with the rest in sequence.  <a href="ssh-troubleshooting.html#ybpfail">Appendix 5</a> has some
+background info.</p>
 
 <ul>
 <li><p>running <code>ssh git@server info</code> gets you the output of the GNU 'info'
@@ -136,8 +132,8 @@ command instead of gitolite's version and access info.</p></li>
 <p>[A proper gitolite key will only let you <code>git clone git@server:reponame</code>
 (note absence of <code>repositories/</code>)]</p></li>
 <li><p>you are able to clone repositories but are unable to push changes back
-(the error complains about the <code>GL_RC</code> environment variable not being set,
-and the <code>hooks/update</code> failing in some way).</p>
+(the error complains about the <code>GL_BINDIR</code> environment variable not being
+set, and the <code>hooks/update</code> failing in some way).</p>
 
 <p>[If you run <code>git remote -v</code> you will find that your clone URL included the
 <code>repositories/</code> described above!]</p></li>
@@ -159,42 +155,40 @@ you there again.  Especially the first bullet.</p>
 <li><p>make sure the server's overall setup even <em>allows</em> pubkey based login.
 I.e., check that git fetch/clone/ls-remote commands or a plain <code>ssh
 git@server info</code> do NOT ask for a password.  If you do get asked for a
-password, see <a href="ssh-troubleshooting.html#stsapp1_">appendix 1</a>.</p></li>
+password, see <a href="ssh-troubleshooting.html#stsapp1">appendix 1</a>.</p></li>
 <li><p>match client-side pubkeys (<code>~/.ssh/*.pub</code>) with the server's authkeys
 file.  To do this, run <code>sshkeys-lint</code>, which tells you in detail what key
-has what access.  See <a href="ssh-troubleshooting.html#stsapp2_">appendix 2</a>.</p></li>
+has what access.  See <a href="ssh-troubleshooting.html#sshkeys-lint">appendix 2</a>.</p></li>
 <li><p>at this point, we know that we have the right key, and that if sshd
 receives that key, things will work.  But we're not done yet.  We still
 need to make sure that this specific key is being offered/sent by the
-client, instead of the default key.  See <a href="ssh-troubleshooting.html#stsapp3_">appendix 3</a> and [appendix 4][sshhostaliases].</p></li>
+client, instead of the default key.  See <a href="ssh-troubleshooting.html#stsapp3">appendix 3</a> and
+<a href="ssh-troubleshooting.html#ssh-ha">appendix 4</a>.</p></li>
 </ul>
 
 <h3>random tips, tricks, and notes</h3>
 
 <h4>giving shell access to gitolite users</h4>
 
-<p>We've managed (thanks to an idea from Jesse Keating) to make it possible for a
-single key to allow both gitolite access <em>and</em> shell access.</p>
+<p>Thanks to an idea from Jesse Keating, a single key can allow both gitolite
+access <em>and</em> shell access.</p>
 
-<p>This is done by copying the pubkey (to which you want to give shell access) to
-the server and running</p>
+<p>This is done by manually prefixing the username with "-s" as an extra argument
+in the "command=" part of <code>~/.ssh/authorized_keys</code>.  For example</p>
 
-<pre><code>gl-tool add-shell-user ~/foo.pub
+<pre><code>command="/home/g3/gitolite/src/gitolite-shell u1",no-port-[...etc...]
 </code></pre>
 
-<p><strong>IMPORTANT UPGRADE NOTE</strong>: previous implementations of this feature were
-crap.  There was no easy/elegant way to ensure that someone who had repo admin
-access would not manage to get himself shell access.</p>
+<p>should be edited to be</p>
 
-<p>Giving someone shell access requires that you should have shell access in the
-first place, so the simplest way is to enable it from the server side only.</p>
+<pre><code>command="/home/g3/gitolite/src/gitolite-shell -s u1",no-port-[...etc...]
+</code></pre>
 
-<h4>losing your admin key</h4>
+<p>and moved out of the gitolite area of the authkeys file.</p>
 
-<p>If you lost the admin key, and need to re-establish ownership of the
-gitolite-admin repository with a fresh key, get a shell on the server and use
-the program called <code>gl-admin-push</code> that comes with gitolite.  See instructions
-[here][adminpush].</p>
+<p>It should be easy to make src/triggers/post-compile/ssh-authkeys read a list
+of shell capable users from some file on the server and put in the "-s" for
+those users.  Patches welcome.</p>
 
 <h4>simulating ssh-copy-id</h4>
 
@@ -223,12 +217,12 @@ bigger problems than gitolite install not working!)]</p>
 <h4>problems with using non-openssh public keys</h4>
 
 <p>Gitolite accepts public keys only in openssh format.  Trying to use an "ssh2"
-key (used by proprietary SSH software) results in:</p>
+key (used by proprietary SSH software) will not be a happy experience.
+src/triggers/post-compile/ssh-authkeys can be made to detect non-openssh
+formats and automatically convert them; patches welcome!</p>
 
-<pre><code>WARNING: a pubkey file can only have one line (key); ignoring YourName.pub
-</code></pre>
-
-<p>To convert ssh2-compatible keys to openssh run:</p>
+<p>The actual conversion command, if you want to just do it manually for now and
+be done with it, is:</p>
 
 <pre><code>ssh-keygen -i -f /tmp/ssh2/YourName.pub &gt; /tmp/openssh/YourName.pub
 </code></pre>
@@ -244,9 +238,9 @@ used them for any kind of git access).  If you have unusual ssh problems that
 just don't seem to have any explanation, try removing all traces of
 putty/plink, including environment variables, etc., and then try again.</p>
 
-<p>Thankfully, someone contributed [contrib/putty.mkd][contrib_putty].</p>
+<p>Thankfully, someone contributed <a href="putty.html">this</a>.</p>
 
-<h3><a name="stsapp1_"></a> appendix 1: ssh daemon asks for a password</h3>
+<h3><a name="stsapp1"></a> appendix 1: ssh daemon asks for a password</h3>
 
 <blockquote>
   <p><strong>NOTE</strong>: This section should be useful to anyone trying to get
@@ -259,7 +253,7 @@ putty/plink, including environment variables, etc., and then try again.</p>
 public part of it (<code>~/.ssh/id_rsa.pub</code>, by default) to the server.</p>
 
 <p>On the server you have appended this file to <code>~/.ssh/authorized_keys</code>.  Or you
-ran something, like the <code>gl-setup</code> step during a gitolite install, which
+ran something, like the <code>gitolite setup</code> step during a gitolite install, which
 should have done that for you.</p>
 
 <p>You now expect to log in without having to type in a password, but when you
@@ -305,6 +299,9 @@ will tell you what they are.</p></li>
 is allowed to login at all.  For example, if that file contains an
 <code>AllowUsers</code> config entry, then only users mentioned in that line are
 allowed to log in!</p></li>
+<li><p>while you're in there, check that file does NOT have a setting for
+<code>AuthorizedKeysFile</code>.  See <code>man sshd_config</code> for details.  This setting is
+a show stopper for gitolite to use ssh.</p></li>
 <li><p>some OSs/distributions require that the "git" user should have a password
 and/or not be a locked account.  You may want to check that as well.</p></li>
 <li><p>if all that fails, log onto the server as root, <code>cd /var/log</code>, and look
@@ -313,29 +310,27 @@ this file for messages matching the approximate time of your last attempt
 to login, to see if they tell you what is the problem.</p></li>
 </ul>
 
-<h3><a name="stsapp2_"></a> appendix 2: which key is which -- running sshkeys-lint</h3>
+<h3><a name="sshkeys-lint"></a> appendix 2: which key is which -- running sshkeys-lint</h3>
 
-<p>Follow these steps on the client:</p>
+<p>The sshkeys-lint program can be run on the server or the client.  Run it with
+'-h' to get a help message.</p>
+
+<p>On the server you can run <code>gitolite sshkeys-lint</code> and it will tell you, for
+each key in the admin directory's keydir, what access is available.  This is
+especially good at finding duplicate keys and such.</p>
+
+<p>To run it on the client you have to copy the file src/commands/sshkeys-lint
+from some gitolite clone, then follow these steps:</p>
 
 <ul>
 <li><p>get a copy of <code>~/.ssh/authorized_keys</code> from the server and put it in
 <code>/tmp/foo</code> or something</p></li>
 <li><p>cd to <code>~/.ssh</code></p></li>
-<li><p>run <code>sshkeys-lint *.pub &lt; /tmp/foo</code></p></li>
+<li><p>run <code>/path/to/sshkeys-lint *.pub &lt; /tmp/foo</code></p></li>
 </ul>
 
-<p>This tells you, for each pubkey, what type of access (if any) it has to the
-server.</p>
-
-<p>Note that it is not trying to log in or anything -- it's just comparing bits
-of text (the contents of STDIN taken as an authkeys file, and the contents of
-each of the <code>*.pub</code> files one by one).</p>
-
-<blockquote>
-  <p>Note: It's also a stand-alone program, so even if your gitolite version is
-  old, you can safely bring over just this program from a more recent
-  gitolite and use it, without having to upgrade gitolite itself.</p>
-</blockquote>
+<p>Note that it is not trying to log in or anything -- it's just comparing
+fingerprints as computed by <code>ssh-keygen -l</code>.</p>
 
 <p>If the pubkey file you're interested in appears to have the correct access to
 the server, you're done with this step.</p>
@@ -355,7 +350,7 @@ and re-add identities for it to pick up the renamed ones correctly</p></li>
 
 <p>The admin often has passwordless shell access to <code>git@server</code> already, and
 then used that same key to get access to gitolite (i.e., copied that same
-pubkey as YourName.pub and ran <code>gl-setup</code> on it).</p>
+pubkey as YourName.pub and ran <code>gitolite setup</code> on it).</p>
 
 <p>As a result, the same key appears twice in the authkeys file now, and since
 the ssh server will always use the first match, the second occurrence (which
@@ -363,11 +358,11 @@ invokes gitolite) is ignored.</p>
 
 <p>To fix this, you have to use a different keypair for gitolite access.  The
 best way to do this is to create a new keypair, copy the pubkey to the server
-as YourName.pub, then run <code>gl-setup YourName.pub</code> on the server.  Remember to
-adjust your agent identities using ssh-add -D and ssh-add if you're using
-ssh-agent, otherwise these new keys may not work.</p>
+as YourName.pub, then run <code>gitolite setup -pk YourName.pub</code> on the server.
+Remember to adjust your agent identities using ssh-add -D and ssh-add if
+you're using ssh-agent, otherwise these new keys may not work.</p>
 
-<h3><a name="stsapp3_"></a> appendix 3: ssh client may not be offering the right key</h3>
+<h3><a name="stsapp3"></a> appendix 3: ssh client may not be offering the right key</h3>
 
 <ul>
 <li><p>make sure the right private key is being offered.  Run ssh in very
@@ -378,7 +373,7 @@ verbose mode and look for the word "Offering", like so:</p>
 
 <p>If some keys <em>are</em> being offered, but not the key that was supposed to be
 used, you may be using ssh-agent (next bullet).  You may also need to
-create some host aliases in <code>~/.ssh/config</code> ([appendix 4][sshhostaliases]).</p></li>
+create some host aliases in <code>~/.ssh/config</code> (<a href="ssh-troubleshooting.html#ssh-ha">appendix 4</a>).</p></li>
 <li><p>(ssh-agent issues) If <code>ssh-add -l</code> responds with either "The agent has no
 identities." or "Could not open a connection to your authentication
 agent.", then you can skip this bullet.</p>
@@ -391,7 +386,7 @@ those keys, <em>even if you explicitly ask</em> for some other key to be used.</
 the access again.</p></li>
 </ul>
 
-<h3>F=sshhostaliases appendix 4: host aliases</h3>
+<h3><a name="ssh-ha"></a> appendix 4: ssh host aliases</h3>
 
 <p>(or "making git use the right options for ssh")</p>
 
@@ -426,10 +421,10 @@ non-default values, although I put them in anyway just to be complete).</p>
 <strong>must</strong> use this method to make git pick up the right key.  There is no other
 way to do this, as far as I know.</p>
 
-<h3><a name="stsapp5_"></a> appendix 5: why bypassing gitolite causes a problem</h3>
+<h3><a name="ybpfail"></a> appendix 5: why bypassing gitolite causes a problem</h3>
 
 <p>When you bypass gitolite, you end up running your normal shell instead of the
-special gitolite entry point script <code>gl-auth-command</code>.</p>
+special gitolite entry point script <code>gitolite-shell</code>.</p>
 
 <p>This means commands (like 'info') are interpreted by the shell instead of
 gitolite.</p>

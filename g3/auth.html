@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -22,7 +22,7 @@
 <p>This document will explain why an "ssh issue" is almost never a "gitolite
 issue", and, indirectly, why I dont get too excited about the former.</p>
 
-<p>Note: for actual ssh troubleshooting see [this][ssh-troubleshooting].</p>
+<p>Note: for actual ssh troubleshooting see <a href="ssh-troubleshooting.html#sts">this</a>.</p>
 
 <p>Here is a fundamental point: <font color="red"><strong>Gitolite does not do
 authentication.  It only does authorisation</strong>.</font></p>
@@ -39,10 +39,10 @@ authentication.  It only does authorisation</strong>.</font></p>
   deciding if you're allowed to do it or not.</p>
 </blockquote>
 
-<p>Now, if you managed to read about [gitolite and ssh][gitolite-and-ssh], you
+<p>Now, if you managed to read about <a href="gitolite-and-ssh.html#glssh">gitolite and ssh</a>, you
 know that gitolite is meant to be invoked as:</p>
 
-<pre><code>/full/path/to/gl-auth-command some-authenticated-gitolite-username
+<pre><code>/full/path/to/gitolite-shell some-authenticated-gitolite-username
 </code></pre>
 
 <p>(where the "gitolite username" is a "virtual" username; it does not have to
@@ -50,31 +50,32 @@ be, and usually <em>isn't</em>, an actual <em>unix</em> username).</p>
 
 <p>As you can see, authentication happens before gitolite is called.</p>
 
-<h2>but... but... you have all that ssh stuff in there!</h2>
+<h2>but... but... you have all that ssh stuff in gitolite!</h2>
 
-<p>The default mode of using gitolite does use ssh keys, but all it's doing is
-helping you <strong>setup</strong> ssh-based authentication <strong>as a convenience to you</strong>.</p>
+<p>No I don't.  Not in "core" gitolite from g3 onwards :-)</p>
 
-<p>You don't have to use it, though.  And many people don't.  The examples I know
-are [smart http][http], and ldap-backed sshd.  In both cases, gitolite has no
-role to play in creating users, setting up their passwords/keys, etc.  There's
-even a <code>GL_NO_SETUP_AUTHKEYS</code> option to make sure gitolite doesn't meddle with
-the authkeys file in such installations.</p>
+<p>The default setup does use ssh keys, but it's only helping you <strong>setup</strong>
+ssh-based authentication <strong>as a convenience to you</strong>.  But in fact it is a
+<em>completely</em> separate program that you can disable (in the rc file) or replace
+with something else of your choice.</p>
+
+<p>For example, in both [smart http][http] and ldap-backed sshd, gitolite has no
+role to play in creating users, setting up their passwords/keys, etc.</p>
 
 <h2>so you're basically saying you won't support "X"</h2>
 
 <p>(where "X" is some ssh related behaviour change or feature)</p>
 
-<p>Well, if it's not a security issue I <em>probably</em> won't.  I'm willing to change
-my mind if enough people convince me they need it.  (There's a mailing list if
-you want to find others who also need the same thing.)</p>
+<p>Well, if it's not a security issue I won't.  But since it's no longer part of
+"core" gitolite, I can be much more relaxed about taking patches, or even
+alternative implementations.</p>
 
 <p>While we're on the subject, locking someone out is <em>not</em> a security issue.
-Even if you locked yourself (the admin) out, the docs tell you how to recover
+Even if you <a href="emergencies.html#lost-key">lost the admin key</a>, the docs tell you how to recover
 from such errors.  You do need some password based method to get a shell
 command line on the server, of course.</p>
 
-<h2>appendix: how to use other authentication systems with gitolite</h2>
+<h2><a name="otherauth"></a> how to use other authentication systems with gitolite</h2>
 
 <p>The bottom line in terms of how to invoke gitolite has been described above,
 and as long as you manage to do that gitolite won't even know how the
@@ -106,5 +107,23 @@ to generate keypairs and send them to the admin, but they can be more
 centrally stored and perhaps used by other programs or tools simultaneously,
 which can be useful.</p>
 
-<p>Finally, gitolite allows you to store <em>group</em> information externally too.  See
-[here][ldap] for more on this.</p>
+<h2><a name="ldap"></a> getting user group info from LDAP</h2>
+
+<p>Gitolite's <a href="groups.html">groups</a> are pretty convenient, but some organisations already
+have similar (or sufficient) information in their LDAP store.</p>
+
+<p>Gitolite can tap into that information, with a little help.  Write a program
+which, given a username, queries your LDAP store and returns a space-separated
+list of groups that the user is a member of.  Then put the full path to this
+program in an <a href="rc.html">rc</a> variable called <code>GROUPLIST_PGM</code>, like so:</p>
+
+<pre><code>GROUPLIST_PGM           =&gt;  '/home/git/bin/ldap-query-groups',
+</code></pre>
+
+<p>Now you can use those groupnames in access rules in gitolite, just as if you
+had declared their memberships in the conf file.</p>
+
+<p>Caution: your program must do its own logging if you want the audit trail of
+"why/how did this user get access to this repo at this time?" to resolve
+properly.  Gitolite does not do any logging of the results of the queries
+because for people who don't need it that would be a huge waste.</p>

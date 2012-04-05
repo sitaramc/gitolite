@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -18,6 +18,12 @@
     <a href="index.html#license">license</a>
 </p>
 <h1>virtual refs</h1>
+
+<p><strong>IMPORTANT</strong>: fallthru is success in VREFs, unlike the normal refs.  That
+won't make sense until you read further, but I had to put it up here for folks
+who stop reading halfway!</p>
+
+<hr />
 
 <p>Here's an example to start you off.</p>
 
@@ -60,7 +66,7 @@ is therefore a <em>virtual</em> ref.  This could be a property that git knows ab
 like in the example above, or comes from outside git like, say, the current
 time; see examples section later for some ideas.</p>
 
-<h2>fallthru is success here</h2>
+<h2><a name="vref-fallthru"></a> fallthru is success here</h2>
 
 <p>Notice that you didn't need to add an <code>RW+ VREF/...</code> rule for user <code>lead_dev</code>
 in our example.  This section explains why.</p>
@@ -74,7 +80,7 @@ ref involves calling an external program, many of these calls may be wasted.</p>
 
 <p>There's another advantage to doing it this way: a VREF can choose to simply
 die if things look bad, and it will have the same effect, assuming you used
-the VREF only in [deny][] rules.</p>
+the VREF only in "deny" rules.</p>
 
 <p>This in turn means any existing update hook can be used as a VREF <em>as-is</em>, as
 long as it (a) prints nothing on success and (b) dies on failure.  See the
@@ -192,29 +198,70 @@ first rule, it might pass back (to gitolite) a virtual ref saying
 
 <h2>VREFs shipped with gitolite</h2>
 
+<h3><a name="NAME"></a> restricting pushes by dir/file name</h3>
+
+<p>The "NAME" VREF allows you to restrict pushes by the names of dirs and files
+changed.</p>
+
+<p>Here's an example.  Say you don't want junior developers pushing changes to
+the Makefile, because it's quite complex:</p>
+
+<pre><code>repo foo
+        RW+                             =   @senior_devs
+        RW                              =   @junior_devs
+
+        -   VREF/NAME/Makefile          =   @junior_devs
+</code></pre>
+
+<p>When a senior dev pushes, the VREF is not invoked at all.  But when a junior
+dev pushes, the VREF is invoked, and it returns a list of files changed <strong>as
+refs</strong>, looking like this:</p>
+
+<pre><code>VREF/NAME/file-1
+VREF/NAME/dir-2/file-3
+...etc...
+</code></pre>
+
+<p>Each of these refs is matched against the access rules.  If one of them
+happens to be the Makefile, then the ref returned (VREF/NAME/Makefile) will
+match the deny rule and kill the push.</p>
+
+<p>Another way to use this is when you know what is allowed instead of what is
+not allowed.  Let's say the QA person is only allowed to touch a file called
+CHANGELOG and any files in a directory called ReleaseNotes:</p>
+
+<pre><code>repo foo
+        RW+                             =   @senior_devs
+        RW                              =   @junior_devs
+        RW+                             =   QA-guy
+
+        RW+ VREF/NAME/CHANGELOG         =   QA-guy
+        RW+ VREF/NAME/ReleaseNotes/     =   QA-guy
+        -   VREF/NAME/                  =   QA-guy
+</code></pre>
+
 <h3>number of new files</h3>
 
-<p>If a dev pushes more than 2 <em>new</em> files, the top commit needs to have a
-signed-off by line in its commit message.  For example if he has 4 new files
-this text should be:</p>
+<p>The COUNT VREF is used like this:</p>
 
-<pre><code>4 new files signed-off by: &lt;top commit author's email&gt;
+<pre><code>-   VREF/COUNT/9                    =   @junior-developers
 </code></pre>
 
-<p>The config entry for this is below (<code>NO_SIGNOFF</code> applies only to, and thus
-implies, <code>NEWFILES</code>):</p>
+<p>In response, if anyone in the user list pushes a commit series that
+changes more than 9 files, a vref of "VREF/COUNT/9" is returned.  Gitolite
+uses that as a "ref" to match against all the rules, hits the same rule
+that invoked it, and denies the request.</p>
 
-<pre><code> RW+ VREF/COUNT/2/NO_SIGNOFF         =   sitaram
- -   VREF/COUNT/2/NO_SIGNOFF         =   @all
+<p>If the user did not push more than 9 files, the VREF code returns nothing,
+and nothing happens.</p>
+
+<p>COUNT can take one more argument:</p>
+
+<pre><code>-   VREF/COUNT/9/NEWFILES           =   @junior-developers
 </code></pre>
 
-<p>Notice how the refex in both cases is <em>exactly</em> the same.  If you make it
-different (even change the number on my access line), things won't work.</p>
-
-<p>Junior devs can't push more than 10 new files, even with a signed-off by line:</p>
-
-<pre><code> -   VREF/COUNT/10/NEWFILES          =   @junior_devs
-</code></pre>
+<p>This is the same as before, but have to be more than 9 <em>new</em> files not
+just changed files.</p>
 
 <h3>advanced filetype detection</h3>
 
@@ -247,6 +294,9 @@ have to change one subroutine in that script if you want to use it)</p>
 
 <h3>catching duplicate pubkeys</h3>
 
+<p>This checks keydir/ for duplicate keys and aborts the push if it finds any.
+You should use this only on the gitolite-admin repo.</p>
+
 <p>We covered this as a teaser example at the start.</p>
 
 <h2>other ideas -- code welcome!</h2>
@@ -259,9 +309,10 @@ something like this (untested)</p>
 <pre><code>[ -z "$(git rev-list --first-parent --no-merges $2..$3)" ]
 </code></pre>
 
-<p>This can be implemented using <code>src/VREF/MERGE-CHECK</code> as a model.
-That script does what the 'in core' feature called [merge check][mergecheck]
-does, although the syntax to be used in conf/gitolite will be quite different.</p>
+<p>This can be implemented using <code>src/VREF/MERGE-CHECK</code> as a model.  That script
+does what the 'M' qualifier does in access rules (see last part of
+<a href="write-types.html">this</a>), although the syntax to be used in conf/gitolite will be
+quite different.</p>
 
 <h3>other ideas for VREFs</h3>
 

@@ -1,0 +1,79 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>adding and removing repos</h1>
+
+<blockquote>
+  <hr />
+
+<p><em>WARNING: Do NOT add repos directly on the server.  Clone the
+  'gitolite-admin' repo to your workstation, make changes to it, then add,
+  commit, and push.  When the push hits the server, the server "acts" upon
+  your changes.</em></p>
+
+<hr />
+</blockquote>
+
+<p>Just as for <a href="users.html">users</a>, all operations are in a clone of the gitolite-admin
+repo.</p>
+
+<p>To <strong>add</strong> a new repo, edit <code>conf/gitolite.conf</code> and add it, along with at
+least one user with some permissions.  Or add it to an existing repo line:</p>
+
+<pre><code>repo gitolite tsh gitpod
+    RW+     =   sitaram
+    RW  dev =   alice bob
+    R       =   @all
+</code></pre>
+
+<p>The "repo" line can have any number of repo names or repo group names in it.
+However, it can only be one line; this will not work</p>
+
+<pre><code>repo foo
+repo bar    # WRONG; 'foo' is now forgotten
+    RW      =   alice
+</code></pre>
+
+<p>If you have too many, use a group name:</p>
+
+<pre><code>@myrepos    =   foo
+@myrepos    =   bar
+
+repo @myrepos
+    RW      =   alice
+</code></pre>
+
+<p>Finally, you add, commit, and push this change.  Gitolite will create a bare,
+empty, repo on the server that is ready to be cloned.</p>
+
+<p><strong>Removing</strong> a repo is not so straightforward.  You certainly must remove the
+appropriate lines from the <code>conf/gitolite.conf</code> file, but gitolite will not
+automatically delete the repo from the server.  You have to log on to the
+server and do the dirty deed yourself :-)</p>
+
+<p>It is best to make the change in the conf file, push it, and <em>then</em> go to the
+server and do what you need to.</p>
+
+<p><strong>Renaming</strong> a repo is also not automatic.  Here's what you do (and the order
+is important):</p>
+
+<ul>
+<li>go to the server and rename the repo at the Unix command line</li>
+<li>change the name in the conf/gitolite.conf file and add/commit/push.</li>
+</ul>

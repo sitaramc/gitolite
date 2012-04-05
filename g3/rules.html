@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -35,7 +35,31 @@ repo foo
     R           =   ashok       # line 5
 </code></pre>
 
-<h3>when does gitolite check access</h3>
+<h3>what does a rule look like?</h3>
+
+<p>A rule line has the structure</p>
+
+<pre><code>&lt;permission&gt; &lt;zero or more refexes&gt; = &lt;one or more users/user groups&gt;
+</code></pre>
+
+<p>The most common permissions used are:</p>
+
+<ul>
+<li>R, for read only</li>
+<li>RW, for push existing ref or create new ref</li>
+<li>RW+, for  "push -f" or ref deletion allowed (i.e., destroy
+information)</li>
+<li><code>-</code> (the minus sign), to <strong>deny</strong> access.</li>
+</ul>
+
+<p>There are also other, less commonly used, <a href="write-types.html">types of permissions</a>.</p>
+
+<p>A refex is an expression that matches the ref (i.e., branch or tag) being
+pushed.  See <a href="refex.html">this</a> for more info.</p>
+
+<h3>when are the rules checked?</h3>
+
+<p>There are 2 places where access rules are checked.</p>
 
 <p>The "pre-git" check is before git is invoked.  Gitolite knows the repo name,
 user name, and attempted access (R or W), but no ref name.</p>
@@ -43,7 +67,7 @@ user name, and attempted access (R or W), but no ref name.</p>
 <p>The "update" check is only for write operations, and it is just before git
 updates a ref.  This time gitolite knows the refname also.</p>
 
-<h3>how is a particular rule line matched</h3>
+<h3>how are the rules matched?</h3>
 
 <p>For the <strong>pre-git check</strong>, any permission that contains "R" matches a read
 operation, and any permission that contains "W" matches a write operation.
@@ -51,16 +75,16 @@ This is because we simply don't know enough to make finer distinctions at this
 point.</p>
 
 <p>In addition, <em>gitolite ignores deny rules during the pre-git check</em>.  <font
-color="gray">(You can <a href="misc.html#deny-rules">change this</a> if you wish, though it's
+color="gray">(You can <a href="rules.html#deny-rules">change this</a> if you wish, though it's
 rarely needed)</font>.  This means line 3 is ignored, and so Wally in our
 example will pass the pre-git check.</p>
 
 <p>For the <strong>update check</strong>, git gives us all the information we need.  Then:</p>
 
 <ul>
-<li><p>all the rules for a repo are <a href="misc.html#rule-accum">accumulated</a></p></li>
-<li><p>then the rules pertaining to this repo <em>and</em> this user (or to a group to
-which they belong, respectively) are kept; the rest are ignored</p></li>
+<li><p>all the rules for a repo are <a href="rules.html#rule-accum">accumulated</a></p></li>
+<li><p>the rules pertaining to this repo <em>and</em> this user (or to a group to which
+they belong, respectively) are kept; the rest are ignored</p></li>
 <li><p>these rules are examined <em>in the sequence they appeared in the conf file</em>.
 For each rule:</p>
 
@@ -94,11 +118,64 @@ also.</li>
 <p>Interestingly, wally can get past the pre-git check because gitolite ignores
 deny rules for pre-git, but having got past it, he can't actually do anything.
 That's by design, and as I said if you don't like it you can ask gitolite to
-<a href="misc.html#deny-rules">deny at pre-git</a>.</p>
+<a href="rules.html#deny-rules">deny at pre-git</a>.</p>
 
-<h3>summary of permissions</h3>
+<h3><a name="perms"></a> summary of permissions</h3>
 
 <p>The full set of permissions, in regex syntax: <code>-|R|RW+?C?D?M?</code>.  This expands
 to one of <code>-</code>, <code>R</code>, <code>RW</code>, <code>RW+</code>, <code>RWC</code>, <code>RW+C</code>, <code>RWD</code>, <code>RW+D</code>, <code>RWCD</code>, or
-<code>RW+CD</code>, all but the first one optionally followed by an <code>M</code>.  And by now you
+<code>RW+CD</code>, all but the first two optionally followed by an <code>M</code>.  And by now you
 know what they all mean.</p>
+
+<h2>additional topics</h2>
+
+<h3><a name="rule-accum"></a> rule accumulation</h3>
+
+<p>Gitolite was meant to collect rules from multiple places and apply them all.
+For example, this:</p>
+
+<pre><code>repo foo
+    RW  =   u1
+
+@gr1 = foo bar
+
+repo @gr1
+    RW  =   u2
+    R   =   u3
+
+repo @all
+    R   =   gitweb
+</code></pre>
+
+<p>is effectively the same as this, for repo foo:</p>
+
+<pre><code>repo foo
+    RW  =   u1
+    RW  =   u2
+    R   =   u3
+    R   =   gitweb
+</code></pre>
+
+<p>This extends to patterns also, but I'll leave an example for later.</p>
+
+<h3><a name="deny-rules"></a> applying deny rules during the pre-git check</h3>
+
+<p>The access rules section above describes the problem in one scenario.  Here's
+another.  Let's say you have this at the end of your gitolite.conf file:</p>
+
+<pre><code>repo @all
+    R   =   gitweb daemon
+</code></pre>
+
+<p>but you don't want the gitolite-admin repo showing up on gitweb.  How do you
+do that?  Here's how:</p>
+
+<pre><code>repo gitolite-admin
+    -   =   gitweb daemon
+    option deny-rules = 1
+
+repo @all
+    R   =   gitweb daemon
+</code></pre>
+
+<p>Note that the order matters; the <code>-</code> rule must come <em>before</em> the <code>R</code> rule.</p>

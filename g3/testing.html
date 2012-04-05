@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -19,8 +19,10 @@
 </p>
 <h1>testing gitolite</h1>
 
-<p>Here's how to <em>run</em> the tests.  <strong>WARNING: they will clobber lots of things in
-your <code>$HOME</code>, so be sure to use a throwaway userid</strong>.</p>
+<p>Here's how to <em>run</em> the tests.</p>
+
+<p><font color="red"><strong>WARNING: they will clobber lots of things in your <code>$HOME</code>,
+so be sure to use a throwaway userid</strong>.</font></p>
 
 <pre><code>git clone git://github.com/sitaramc/gitolite
 cd gitolite
@@ -39,7 +41,3 @@ would otherwise take.</p>
 
 <p>If you think that defeats the purpose of the testing, you haven't read
 <a href="auth.html">this</a> yet.</p>
-
-<p>There are 2 specific tests that deal with ssh though, which are run only on
-request, as you can see above, because they clobber your <code>~/.ssh</code>.  You have
-been warned.</p>

@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -21,18 +21,21 @@
 
 <p>Much of gitolite (g3)'s functionality comes from programs and scripts that are
 not considered "core".  This keeps the core simpler, and allows you to enhance
-gitolite for your own purposes without too much fuss.</p>
+gitolite for your own purposes without too much fuss.  (As an extreme example,
+even mirroring is not in core now!)</p>
+
+<p>(Also, please see the <a href="dev-notes.html">developer notes</a> page).</p>
 
 <h2>types of non-core programs</h2>
 
 <p>There are 5 basic types of non-core programs.</p>
 
 <ul>
-<li><em>commands</em> can be run from the shell command line.  Those listed in the
-COMMANDS hash of the rc file can also be run remotely.</li>
+<li><em>commands</em> can be run from the shell command line.  Among those, the ones
+listed in the COMMANDS hash of the rc file can also be run remotely.</li>
 <li><em>hooks</em> are standard git hooks; see below.</li>
 <li><em>sugar scripts</em> change the conf language for your convenience.  The word
-sugar comes from "syntactics sugar".</li>
+sugar comes from "syntactic sugar".</li>
 <li><em>triggers</em> are to gitolite what hooks are to git.  I just chose a
 different name to avoid confusion and constant disambiguation in the docs.</li>
 <li><strong>VREFs</strong> are extensions to the access control check part of gitolite.</li>
@@ -43,7 +46,7 @@ some description of each.</p>
 
 <h2><a name="commands"></a> gitolite "commands"</h2>
 
-<p>Gitolite comes with several commands that users can run.  Remote user run the
+<p>Gitolite comes with several commands that users can run.  Remote users run the
 commands by saying:</p>
 
 <pre><code>ssh git@host command-name [args...]
@@ -79,8 +82,8 @@ hook.  Just add it to <code>$HOME/.gitolite/hooks/common</code> and run <code>gi
 <h2><a name="sugar"></a> syntactic sugar</h2>
 
 <p>Sugar scripts help you change the perceived syntax of the conf language.  The
-base syntax of the language is as described <a href="conf.html">here</a>, so sugar scripts
-take something <em>else</em> and convert it into that.</p>
+base syntax of the language is very simple, so sugar scripts take something
+<em>else</em> and convert it into that.</p>
 
 <p>That way, the admin sees additional features (like allowing continuation
 lines), while the parser in the core gitolite engine does not change.</p>

@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -26,25 +26,29 @@ severity.  <strong>The ones in the first section are IMPORTANT because they allo
 access that was previously not allowed -- please fix your config before using
 the new gitolite!</strong></p>
 
-<h3>fallthru in NAME rules</h3>
+<h3>NAME rules</h3>
 
-<p>Fallthru on all VREFs is "success" now, so any NAME/ rules you have <strong>MUST</strong>
-change the ruleset in some way to maintain the same restrictions.  The
-simplest is to add the following line to the end of each repo's rule list:</p>
+<ol>
+<li><p>NAME/ rules must be changed to VREF/NAME/</p></li>
+<li><p>Fallthru on all VREFs is "success" now, so any NAME/ rules you have
+<strong>MUST</strong> change the ruleset in some way to maintain the same restrictions.
+The simplest is to add the following line to the end of each repo's rule
+list:</p>
 
-<pre><code>    -   NAME/       =   @all
-</code></pre>
+<pre><code>-   VREF/NAME/       =   @all
+</code></pre></li>
+</ol>
 
 <h3>subconf command in admin repo</h3>
 
-<p>(This is also affected by the previous issue, 'fallthru in NAME rules'; please
-read that as well).</p>
+<p>(This is also affected by the previous issue, 'NAME rules'; please read that
+as well).</p>
 
 <p>If you're using delegation in your admin conf setup, please add the following
 lines to the end of the gitolite-admin rules in your conf/gitolite.conf file:</p>
 
 <pre><code>repo gitolite-admin
-    -   NAME/       =   @all
+    -   VREF/NAME/       =   @all
 
 subconf "fragments/*.conf"
 </code></pre>

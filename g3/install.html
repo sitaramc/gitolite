@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -17,62 +17,145 @@
 |
     <a href="index.html#license">license</a>
 </p>
-<h1>different ways to install gitolite</h1>
-
-<p>Gitolite has only one server side "command" now, much like git itself.  And
-it's been designed so that you don't even really have to <em>install</em> it, as you
-will see.</p>
+<h1>installing gitolite</h1>
 
 <p><strong>NOTE</strong>: if you're migrating from g2, there are some settings that MUST be
 dealt with <strong>before</strong> running <code>gitolite setup</code>; please read the <a href="g2migr.html">g2
 migration</a> page and linked pages, and especially the one on
-'presetting the rc file][rc-preset].</p>
+<a href="g2rcdiff.html#rc-preset">presetting the rc file</a>.</p>
 
-<h2>simplest</h2>
+<h2>notes and naming conventions</h2>
 
-<ol>
-<li><p>Put all of <code>src</code> in one place, doesn't matter where; let's call it
-/foo/bar.</p></li>
-<li><p>Use the full path to run any gitolite commands, for example:</p>
+<p>Gitolite uses a single "real" (i.e., unix) user to provide secure access to
+git repos to any number of "virtual" users, without giving them a shell.</p>
 
-<pre><code>/foo/bar/gitolite setup -pk sitaram.pub
-</code></pre></li>
-</ol>
+<p>The real user used is called the <strong>hosting user</strong>.  Typically this user is
+<em>git</em>, and that is what we will use throughout the documentation.  However
+RPMs and DEBs create a user called <em>gitolite</em> for this, so adjust instructions
+and examples accordingly.</p>
 
-<h2>almost as simple</h2>
+<p>Notes:</p>
 
-<ol>
-<li><p>(same as above)</p></li>
-<li><p>Symlink /foo/bar/gitolite to some directory that is on your PATH.  For
-example:</p>
+<ul>
+<li>Any unix user can be a hosting user.</li>
+<li>Which also means you can have several hosting users on the same machine.</li>
+<li>The URLs used will be of the form <code>git@host:reponame</code> (or its longer
+equivalent starting with <code>ssh://</code>).  The <code>.git</code> at the end is optional.  I
+recommend you leave it out, so your reponames are consistent with what the
+conf file uses.</li>
+</ul>
 
-<pre><code>ln -sf /foo/bar/gitolite ~/bin
+<h2><a name="req"></a> requirements</h2>
+
+<h3>your skills</h3>
+
+<ul>
+<li><p>If you're installing gitolite, you're a "system admin", like it or not.
+Ssh is therefore a necessary skill.  Please take the time to learn at
+least enough to get passwordless access working.</p></li>
+<li><p>You also need to be somewhat familiar with git itself.  You cannot
+administer a whole bunch of git repositories if you don't know the basics
+of git.</p></li>
+<li><p>Some familiarity with Unix and shells is probably required.</p></li>
+<li><p>Regular expressions are a big part of gitolite in many places but
+familiarity is not necessary to do <em>basic</em> access control.</p></li>
+</ul>
+
+<h3>server</h3>
+
+<ul>
+<li>any Unix system with a posix compatible "sh".</li>
+<li>git version 1.6.6 or later</li>
+<li>perl 5.8.8 or later</li>
+<li>openssh (almost any version).  Optional if you're using the http backend
+(which is still a TODO item!)</li>
+<li>a dedicated Unix userid to be the hosting user, usually "git" but it can
+be any user, even your own normal one.  (If you're using an RPM/DEB the
+install probably created one called "gitolite").</li>
+</ul>
+
+<p>Also see the <a href="WARNINGS.html">WARNINGS</a> page for more on what gitolite expects on the server
+side.</p>
+
+<h3>client</h3>
+
+<ul>
+<li>openssh client</li>
+<li>git 1.6.6 or later.  Almost any git client will work, as long as it knows
+how to use ssh keys and send the right one along.</li>
+</ul>
+
+<h2>getting the software</h2>
+
+<pre><code>git clone -b g3 git://github.com/sitaramc/gitolite
 </code></pre>
 
-<p>Now you can just say</p>
+<p>The -b g3' is needed until g3 becomes "master".  Current estimates put this
+around June 2012, when the old gitolite (upto v2.x) will be retired and
+supported only for security issues.</p>
 
-<pre><code>gitolite setup -pk sitaram.pub
-</code></pre></li>
+<h2>the actual install</h2>
+
+<p>Gitolite has only one server side "command" now, much like git itself.  This
+command is <code>gitolite</code>.  You don't need to place it anywhere special; worst
+case you run it with the full path.</p>
+
+<p>"Installation" consists of the following options:</p>
+
+<ol>
+<li>Keep the sources anywhere and use the full path to run the <code>gitolite</code>
+command.</li>
+<li>Keep the sources anywhere and symlink <em>just</em> the <code>gitolite</code> program to
+some directory on your <code>$PATH</code>.</li>
+<li>Copy the sources somewhere and use that path to run the <code>gitolite</code>
+command.</li>
 </ol>
 
-<h2>packagers</h2>
+<p>Option 2 is the best for general use.</p>
+
+<p>There is a program called 'install' that helps you do these easily.  Assuming
+your cloned the repo like this:</p>
+
+<pre><code>git clone -b g3 git://github.com/sitaramc/gitolite
+</code></pre>
+
+<p>you can run the 'install' command in 3 different ways:</p>
+
+<pre><code># option 1
+gitolite/install
+
+# option 2
+gitolite/install -ln
+# defaults to $HOME/bin, or use a specific directory:
+gitolite/install -ln /usr/local/bin
+
+# option 3
+gitolite/install -to /usr/local/gitolite/bin
+</code></pre>
+
+<p>Creating a symlink doesn't need a separate program but 'install' also runs
+<code>git describe</code> to create a VERSION file, which, trust me, is important!</p>
+
+<p><strong>Next step</strong>: run <a href="setup.html"><strong>setup</strong></a>.</p>
+
+<h2>upgrading</h2>
+
+<p>Just put the new version on top of wherever you kept the old one.  That's it.</p>
+
+<p>If you feel it should require a little more effort, pretend I said "you have
+to then run <code>gitolite setup</code>".  Won't hurt...</p>
+
+<h2>packaging gitolite</h2>
 
 <ol>
 <li><p>Put src/Gitolite in <code>/usr/share/perl5/vendor_perl</code> or some such place.</p></li>
 <li><p>Put the rest of src anywhere your distro policy allows.  (Fedora keeps
 git's 150 executables in /usr/libexec/git-core, so maybe
 /usr/libexec/gitolite?)</p></li>
-<li><p>Symlink 'gitolite' to /usr/bin or something, similar to step 2 above,</p>
-
-<p>OR</p>
-
-<p>Put it directly in /usr/bin, and hardcode <code>GL_BINDIR</code> into it to tell it
-where the others are.  I'd prefer it if you did not do this but you can.</p></li>
+<li><p>Symlink 'gitolite' to /usr/bin or something, similar to option 2.</p></li>
 </ol>
 
-<hr />
-
-<p>Bottom line:</p>
+<p><strong>Bottom line</strong>:</p>
 
 <ul>
 <li><code>GL_BINDIR</code> must point to a place that contains <code>commands</code>, <code>VREF</code>, and
@@ -81,9 +164,36 @@ where the others are.  I'd prefer it if you did not do this but you can.</p></li
 perl's <code>@INC</code> path.</li>
 </ul>
 
-<h2>upgrading</h2>
+<h2>migrating</h2>
 
-<p>Just put the new version on top of wherever you kept the old one.  That's it.</p>
+<p>There are a lot of migration hints and notes; see links at the top of this
+document.</p>
 
-<p>If you feel it should require a little more effort, pretend I said "you have
-to then run <code>gitolite setup</code>".  Can't hurt...</p>
+<p>But here's the <strong>bottom line</strong> on migrating:</p>
+
+<p>Nothing in any of the gitolite install/setup/etc will ever touch the <em>data</em> in
+any repository except the gitolite-admin repo.  The only thing it will
+normally touch is the <code>update</code> hook.  So one fool-proof way of "migrating"
+from any older gitolite is this:</p>
+
+<ol>
+<li><p>Wipe out the old gitolite, but <strong>carefully</strong></p>
+
+<ul>
+<li>clone <code>~/repositories/gitolite-admin.git</code> to someplace, then delete it
+(and only it, none of the other repos!) from <code>~/repositories</code></li>
+<li>rename <code>~/.gitolite.rc</code> to something else</li>
+<li>move the ~/.gitolite/logs<code>directory somewhere else, then delete</code>~/.gitolite`</li>
+</ul></li>
+<li><p>Install gitolite g3; see <a href="qi.html">quick install and setup</a> or <a href="install.html">install</a>
+followed by <a href="setup.html">setup</a>.</p></li>
+<li><p>Make sure your gitolite-admin clone has the correct pubkey for the
+administrator in its <code>keydir</code> directory, then <code>git push -f</code> to the server
+to overwrite the "default" admin repo created by the install.</p></li>
+<li><p>Handle any errors, look for migration issues, etc., as described in the
+links at the top of this page.</p>
+
+<p>This also includes building up your new <code>~/.gitolite.rc</code> file.</p></li>
+</ol>
+
+<p>You're done.</p>

@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -73,7 +73,7 @@ change the RC accordingly, and re-try.</p></li>
 <li><p><code>REPO_BASE in the wrong place -- aborting</code></p>
 
 <p>same as above</p></li>
-<li><p><code>fallthru in NAME rules</code></p>
+<li><p><code>NAME rules</code></p>
 
 <p><strong>This is a significant difference and affects access badly (gives access
 that would otherwise not be given)</strong>.  Please see the <a href="g2incompat.html">list of non-RC
@@ -83,6 +83,10 @@ incompatibilities</a>.</p></li>
 <p>This is not so bad security wise but it might <em>reduce</em> access by not
 processing files you intended to.  Again, see the same link as in the
 previous bullet.</p></li>
+<li><p><code>mirroring used</code></p>
+
+<p>There have been quite a few changes to mirroring.  Please see the new
+<a href="mirroring.html">mirroring</a> doc for details.</p></li>
 <li><p><code>found N gl-creater files</code></p>
 
 <p>These need to be renamed to <code>gl-creator</code> (the correct spelling at last,

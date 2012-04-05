@@ -1,0 +1,94 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>"git-config" keys and values</h1>
+
+<p>Here's all you want to know about setting repo-specific git-config values.</p>
+
+<p>(Original version thanks to teemu dot matilainen at iki dot fi)</p>
+
+<blockquote>
+  <hr />
+
+<p><strong>Note</strong>: this won't work unless the rc file has the right settings;
+  please see <code>$GIT_CONFIG_KEYS</code> in the <a href="rc.html">rc file doc</a>.</p>
+
+<hr />
+</blockquote>
+
+<p>The syntax is simple:</p>
+
+<pre><code>config sectionname.keyname = [optional value_string]
+</code></pre>
+
+<p>For example:</p>
+
+<pre><code>repo gitolite
+    config hooks.mailinglist = gitolite-commits@example.tld
+    config hooks.emailprefix = "[gitolite] "
+    config foo.bar = ""
+    config foo.baz =
+</code></pre>
+
+<p>This does either a plain "git config section.key value" (for the first 3
+examples above) or "git config --unset-all section.key" (for the last
+example).  Other forms of the <code>git config</code> command (<code>--add</code>, the
+<code>value_regex</code>, etc) are not supported.</p>
+
+<blockquote>
+  <hr />
+
+<p><strong>WARNING</strong>: simply deleting the config line from the <code>conf/gitolite.conf</code>
+  file will <em>not</em> delete the variable from <code>repo.git/config</code>.  The syntax in
+  the last example is the <em>only</em> way to make gitolite execute a
+  <code>--unset-all</code> operation on the given key.</p>
+
+<hr />
+</blockquote>
+
+<p>You can also use the special value <code>%GL_REPO</code> in the string to save typing:</p>
+
+<pre><code>repo foo bar baz
+    config hooks.mailinglist = %GL_REPO-commits@example.tld
+    config hooks.emailprefix = "[%GL_REPO] "
+</code></pre>
+
+<p>You can repeat the 'config' line as many times as you like, and the last
+occurrence will be the one in effect.  This allows you to override settings
+just for one project, as in this example:</p>
+
+<pre><code>repo @all
+    config hooks.mailinglist = %GL_REPO-commits@example.tld
+    config hooks.emailprefix = "[%GL_REPO] "
+
+repo customer-project
+    # different mailing list
+    config hooks.mailinglist = announce@customer.tld
+</code></pre>
+
+<p>The "delete config variable" syntax can also be used, if you wish:</p>
+
+<pre><code>repo secret     # no emails for this one please
+    config hooks.mailinglist =
+    config hooks.emailprefix =
+</code></pre>
+
+<p>As you can see, the general idea is to place the most generic ones (<code>repo
+@all</code>, or repo patterns like <code>repo foo.*</code>) first, and place more specific ones
+later to override the generic settings.</p>

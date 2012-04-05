@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -24,39 +24,34 @@ fine-grained access control and many more powerful features.</p>
 
 <p>Here's more on <a href="index.html#what">what</a> it is and <a href="why.html">why</a> you might need it.</p>
 
+<p><font color="gray"></p>
+
+<h2><a name="g2"></a> (for current gitolite (v2) users)</h2>
+
 <p>For current gitolite (call it "g2" for convenience) users,</p>
 
 <ul>
 <li><a href="g3why.html">Why</a> I rewrote gitolite.</li>
-<li>Development <a href="dev-status.html">status</a> (<strong>should change often for a while</strong>)</li>
+<li>Development <a href="dev-status.html">status</a>.</li>
 <li>Specific migration <a href="g2migr.html">issues and steps</a>.</li>
 </ul>
 
-<p>Quick links:</p>
+<p></font></p>
+
+<h2><a name="ql"></a> quick links</h2>
 
 <ul>
-<li><a href="minreq.html">Minimum requirements</a>.</li>
-<li>Here's how to <a href="qi.html">get started</a> installing and setting it up</li>
+<li>Minimum <a href="install.html#req">requirements</a>.</li>
+<li>Here's how to do a <a href="qi.html">quick install, setup, and clone</a>.</li>
 <li>Don't know ssh well enough?  <a href="ssh.html">Learn</a>.  It's <strong>IMPORTANT</strong>.</li>
-<li><a href="add.html">Add users and repos</a>.</li>
-<li>Learn about fine-grained access control with the <a href="conf.html">conf</a> file</li>
-<li>Explain gitolite to your <a href="users.html">users</a>.</li>
+<li>Add <a href="users.html">users</a> and <a href="repos.html">repos</a>.</li>
+<li>Learn about fine-grained access control with the <a href="admin.html#conf">conf</a> file.</li>
+<li>Explain gitolite to your <a href="user.html">users</a>.</li>
 </ul>
 
-<p>Not so "quick" links:</p>
-
-<ul>
-<li><p>The "master table of contents" link at the top of each page is the
-<strong>first</strong> place you should check when looking for anything.</p></li>
-<li><p>Want to do more than just add users and repos and control their access?
-Here's how to <a href="cust.html">customise</a> your server installation.</p></li>
-</ul>
-
-<p>Additional reading for Unix newbies:</p>
-
-<ul>
-<li><a href="regex.html">Regular Expressions</a></li>
-</ul>
+<p>The rest of the documentation is in the "master index" link at the top of each
+page on this website.  This is the first place you should search when looking
+for specific information.</p>
 
 <h2><a name="what"></a> What is gitolite?</h2>
 
@@ -64,21 +59,21 @@ Here's how to <a href="cust.html">customise</a> your server installation.</p></l
 most people see:</p>
 
 <ul>
-<li>use a single unix user ("real" user) on the server</li>
-<li>provide access to many gitolite users
+<li>Use a single unix user ("real" user) on the server.</li>
+<li>Provide access to many gitolite users:
 <ul>
 <li>they are not "real" users</li>
 <li>they do not get shell access</li>
 </ul></li>
-<li>control access to many git repositories
+<li>Control access to many git repositories:
 <ul>
 <li>read access controlled at the repo level</li>
 <li>write access controlled at the branch/tag/file/directory level,
 including who can rewind, create, and delete branches/tags</li>
 </ul></li>
-<li>can be installed without root access, assuming git and perl are already
-installed</li>
-<li>authentication is most commonly done using sshd, but you can also use
+<li>Can be installed without root access, assuming git and perl are already
+installed.</li>
+<li>Authentication is most commonly done using sshd, but you can also use
 httpd if you prefer (this may require root access).</li>
 </ul>
 

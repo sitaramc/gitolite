@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -25,8 +25,8 @@
 server.  A different (and probably much smaller) list can be obtained by a
 remote user running <code>ssh git@host help</code>.</p>
 
-<p>All the commands will respond to <code>-h</code>; please report a bug to me if they
-don't.</p>
+<p>All the commands that ship with gitolite will respond to <code>-h</code>; please report a
+bug to me if they don't.</p>
 
 <h2>syntactic sugar</h2>
 
@@ -67,21 +67,21 @@ and do do with them as you please to do with as you please.</li>
 
 <ul>
 <li><p>post-compile/ssh-authkeys -- takes the pubkeys in keydir and populates
-<code>~/.ssh/authorized_keys</code></p></li>
+<code>~/.ssh/authorized_keys</code>.</p></li>
 <li><p>post-compile/update-git-configs -- updates individual 'repo.git/config'
 files (using the 'git config ...' command) from settings supplied in the
 conf file.  All sections except 'gitolite-options' are processed.  (The
 'gitolite-options' section is considered internal to gitolite).</p></li>
 <li><p>post-compile/update-git-daemon-access-list -- create/delete
 'git-daemon-export-ok' files in each repo based on whether the conf says
-'daemon' can read the repo or not</p></li>
+'daemon' can read the repo or not.</p></li>
 <li><p>post-compile/update-gitweb-access-list -- populates the file named in
 <code>GITWEB_PROJECTS_LIST</code> in the rc file (default: <code>$HOME/projects.list</code>)
 with the list of repos that gitweb is allowed to access.  This could be
 more than just "R = gitweb"; any repo that has any config setting with the
 section name 'gitweb' (like 'gitweb.owner', 'gitweb.description', etc) is
 considered readable by gitweb, so the final list is a union of these two
-methods</p></li>
+methods.</p></li>
 </ul>
 
 <p>The <code>POST_CREATE</code> triggers are:</p>
@@ -93,56 +93,11 @@ obvious reasons.</li>
 
 <h2>VREFs</h2>
 
-<p>You should read about <a href="vref.html">vref</a>s in detail first; this won't make sense
-otherwise.  For a brief recap, note that there are 2 kinds of VREFs: those
-that require arguments and those that behave just like any other <code>update</code>
-hook.</p>
-
-<p>COUNT is an example of the former (hence the long-ish description).  DUPKEYS
-and EMAIL-CHECK are both examples of the latter.</p>
-
-<ul>
-<li><p>COUNT</p>
-
-<p>The COUNT VREF is used like this:</p>
-
-<pre><code>-   VREF/COUNT/9                    =   @junior-developers
-</code></pre>
-
-<p>In response, if anyone in the user list pushes a commit series that
-changes more than 9 files, a vref of "VREF/COUNT/9" is returned.  Gitolite
-uses that as a "ref" to match against all the rules, hit the same rule
-that invoked it, and deny the request.</p>
-
-<p>If the user did not push more than 9 files, the VREF code returns nothing,
-and nothing happens.</p>
-
-<p>COUNT can take one more argument:</p>
-
-<pre><code>-   VREF/COUNT/9/NEWFILES           =   @junior-developers
-</code></pre>
-
-<p>This is the same as before, but have to be more than 9 <em>new</em> files not
-just changed files.</p></li>
-<li><p>DUPKEYS -- this checks keydir/ for duplicate keys and aborts the push if
-it finds any.  You should use this only on the gitolite-admin repo.</p>
-
-<pre><code>repo gitolite-admin
-    -   VREF/DUPKEYS                =   @all
-</code></pre></li>
-<li><p>EMAIL-CHECK -- read the comments in the code for this one.  Like DUPKEYS,
-it does not take any arguments.</p></li>
-<li><p>FILETYPE -- this is sample code for a very site-specific purpose; you'll
-have to read the code</p></li>
-<li><p>MERGE-CHECK -- this is sample code to illustrate how one of the gitolite
-built-in functions <em>could</em> have been handled, although there are some
-differences</p></li>
-<li><p>partial-copy -- this has its own section later in this page</p></li>
-</ul>
+<p>VREFs have their <a href="vref.html">own page</a>.</p>
 
 <h2>special cases</h2>
 
-<h3>partial-copy</h3>
+<h3><a name="partial-copy"></a> partial-copy</h3>
 
 <p>Git (and therefore gitolite) cannot do selective read control -- allowing
 someone to read branch A but not branch B.  It's the entire repo or nothing.</p>
@@ -183,6 +138,6 @@ config gitolite.partialCopyOf   =   foo
 <li><p>if you change the config to disallow something that used to be allowed,
 you should delete the partial repo on the server and then run 'gitolite
 compile' to let it build again.  See t/partial-copy.t for details.</p></li>
-<li><p>not tested with smart http; probabl won't work</p></li>
+<li><p>not tested with smart http; probably won't work</p></li>
 <li><p>also not tested with mirroring, or with wild card repos.</p></li>
 </ul>

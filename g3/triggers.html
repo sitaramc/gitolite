@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -71,15 +71,16 @@ require any arguments, so it works).</p>
 <li><p>any arguments mentioned in the rc file (for an example, see the renice
 command in the PRE_GIT trigger sequence),</p></li>
 <li><p>the name of the trigger as a string (example, <code>"POST_COMPILE"</code>), so you
-can call the same program from multiple triggers and know where it was
-called from,</p></li>
+can call the same program from multiple triggers and it can know where it
+was called from,</p></li>
 <li><p>followed by zero or more arguments specific to the trigger, as given in
 the next section.</p></li>
 </ol>
 
-<h2>trigger-specific details</h2>
+<h2>trigger-specific arguments and other details</h2>
 
-<p>Here's a brief "when" and "with what arguments" for each trigger.</p>
+<p>Here are the <strong>rest of</strong> the arguments for each trigger, plus a brief
+description of when the trigger runs:</p>
 
 <ul>
 <li><p><code>ACCESS_1</code> runs after the first access check.  Arguments:</p>
@@ -126,7 +127,7 @@ Arguments:</p>
 <p>These are followed by the output of the perl function "times" (i.e., 4 CPU
 times: user, system, cumulative user, cumulative system) so that's 9
 arguments in total</p></li>
-<li><p><code>PRE_CREATE</code> and <code>POST_CREATE</code> run just before and after a new "[wild][]"
+<li><p><code>PRE_CREATE</code> and <code>POST_CREATE</code> run just before and after a new "<a href="wild.html">wild</a>"
 repo is created by user action.  Arguments:</p>
 
 <ul>

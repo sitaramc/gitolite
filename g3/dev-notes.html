@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -21,9 +21,6 @@
 
 <p>Gitolite has a huge bunch of existing features that gradually need to moved
 over.  Plus you may want to write your own programs to interact with it.</p>
-
-<p>Hints for developers wishing to help migrate features over from g2 are
-[here][dev-hints].</p>
 
 <p>Here are some random notes on developing hooks, commands, triggers, and sugar
 scripts.</p>
@@ -40,15 +37,15 @@ GL_ADMIN_BASE
 <p>Commands invoked by a remote client will also have <code>GL_USER</code> set.  Hooks will
 have <code>GL_REPO</code> also set.</p>
 
-<p>Finally, note that triggers get a lot of relevant information as arguments;
-see <a href="triggers.html">here</a> for details.</p>
+<p>Finally, note that triggers get a lot of relevant information from gitolite as
+arguments; see <a href="triggers.html">here</a> for details.</p>
 
 <h2>APIs</h2>
 
 <h3>the shell API</h3>
 
 <p>The following commands exist to help you write shell scripts that interact
-easily with gitolite.  Each of them responds to <code>h</code> so please run that for
+easily with gitolite.  Each of them responds to <code>-h</code> so please run that for
 more info.</p>
 
 <ul>
@@ -57,7 +54,7 @@ more info.</p>
 <li><p><code>gitolite creator</code> to get/check the creator of a repo.  Example use:
 src/commands/desc</p></li>
 <li><p><code>gitolite git-config</code> to check gitolite options or git config variables
-directly from gitolite's "compiled output, (i.e., without looking at the
+directly from gitolite's "compiled" output, (i.e., without looking at the
 actual <code>repo.git/config</code> file or using the <code>git config</code> command).  Example
 use: none yet</p></li>
 <li><p><code>gitolite query-rc</code> to check the value of an RC variable.  Example use:
@@ -72,16 +69,18 @@ perl API module) for ideas.</p>
 <p>...is implemented by Gitolite::Easy; the comments in src/Gitolite/Easy.pm
 serve as documentation.</p>
 
-<h2>your own hooks</h2>
+<h2>writing your own...</h2>
 
-<h3>anything but the update hook</h3>
+<h3>...hooks</h3>
+
+<h4>anything but the update hook</h4>
 
 <p>If you want to add your own hook, it's easy as long as it's not the 'update'
 hook.  Just add it to <code>$HOME/.gitolite/hooks/common</code> and run <code>gitolite setup</code>.</p>
 
 <p>The rest is between you and 'man githooks' :-)</p>
 
-<h3>update hook</h3>
+<h4>update hook</h4>
 
 <p>If you want to add additional <code>update</code> hook functionality, do this:</p>
 
@@ -103,7 +102,7 @@ selective, applying them only to some repos / users / combinations.</p>
 VREF will get those three, followed by at least 4 more.  Your VREF should just
 ignore the extra args.</p>
 
-<h2>your own commands</h2>
+<h3>...commands</h3>
 
 <p>You can add your own commands.  You can run them on the server (example,
 <code>gitolite access</code>).  Then you can enable certain commands to be allowed to run
@@ -114,24 +113,20 @@ receive the arguments you append.  In addition, the env var <code>GL_USER</code>
 available if it is being run remotely.  src/commands/desc is the best example
 at present.</p>
 
-<h2>your own trigger programs</h2>
+<h3>...trigger programs</h3>
 
-<p>Trigger programs are just commands whose names have been added to the
-appropriate list in the <a href="rc.html">rc</a> file.  Triggers get specific arguments
-depending on when they are called; see <a href="triggers.html">here</a> for details.</p>
+<p>Trigger programs run at specific points in gitolite's execution, with specific
+arguments being passed to them.  See the <a href="triggers.html">triggers</a> page for details.</p>
 
 <p>You can write programs that are both manually runnable as well as callable by
 trigger events, especially if they don't <em>need</em> any arguments.</p>
 
-<p>Look in the distributed <a href="rc.html">rc</a> file for example programs; at this point there
-aren't many.</p>
-
-<h2>your own "sugar"</h2>
+<h3>..."sugar"</h3>
 
 <p>Syntactic sugar helpers are NOT complete, standalone, programs.  They must
 include a perl sub called <code>sugar_script</code> that takes in a listref, and returns
 a listref.  The listrefs point to a list that contains the entire conf file
-(with all <a href="misc.html#include">include</a> processing already done).  You create a new list with
+(with all <a href="syntax.html#include">include</a> processing already done).  You create a new list with
 contents modified as you like and return a ref to it.</p>
 
 <p>There are a couple of examples in src/syntactic-sugar.</p>

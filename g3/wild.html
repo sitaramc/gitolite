@@ -1,0 +1,175 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>"wild" repos (user created repos)</h1>
+
+<h2>quick introduction</h2>
+
+<p>The wildrepos feature allows you to specify access control rules using regular
+expression patterns, so you can have many actual repos being served by a
+single set of rules in the config file.  The regex pattern can also include
+the word <code>CREATOR</code> in it, allowing you to parametrise the name of the user
+creating the repo.</p>
+
+<p>See the section on "repo patterns" later for additional information on what
+counts as a "wild" repo pattern and how it is matched.</p>
+
+<h2>(admin) declaring wild repos in the conf file</h2>
+
+<p>Here's an example:</p>
+
+<pre><code>@prof       =   u1
+@TAs        =   u2 u3
+@students   =   u4 u5 u6
+
+repo    assignments/CREATOR/a[0-9][0-9]
+    C   =   @students
+    RW+ =   CREATOR
+    RW  =   WRITERS @TAs
+    R   =   READERS @prof
+</code></pre>
+
+<p>Note the "C" permission.  This is a standalone "C", which gives the named
+users the right to <em>create a repo</em>.  <font color="gray">This is not to be
+confused with the "RWC" or its variants described elsewhere, which are about
+<em>branches</em>, not <em>repos</em>.</font></p>
+
+<h2><a name="create"></a> (user) creating a specific repo</h2>
+
+<p>For now, ignore the special usernames READERS and WRITERS, and just create a
+new repo, as user "u4" (a student):</p>
+
+<pre><code>$ git clone git@server:assignments/u4/a12
+Initialized empty Git repository in /home/sitaram/a12/.git/
+Initialized empty Git repository in /home/git/repositories/assignments/u4/a12.git/
+warning: You appear to have cloned an empty repository.
+</code></pre>
+
+<p>Notice the <em>two</em> empty repo inits, and the order in which they occur ;-)</p>
+
+<h2>a slightly different example</h2>
+
+<p>Here's how the same example would look if you did not want the CREATOR's name
+to be part of the actual repo name.</p>
+
+<pre><code>repo    assignments/a[0-9][0-9]
+    C   =   @students
+    RW+ =   CREATOR
+    RW  =   WRITERS @TAs
+    R   =   READERS @prof
+</code></pre>
+
+<p>We haven't changed anything except the repo name pattern.  This means that the
+first student that creates, say, <code>assignments/a12</code> becomes the owner.
+Mistakes (such as claiming a12 instead of a13) need to be rectified by an
+admin logging on to the back end, though it's not too difficult.</p>
+
+<p>You could also repace the C line like this:</p>
+
+<pre><code>    C   =   @TAs
+</code></pre>
+
+<p>and have a TA create the repos in advance.</p>
+
+<h2>repo patterns</h2>
+
+<h3>pattern versus normal repo</h3>
+
+<p>Due to projects like <code>gtk+</code>, the <code>+</code> character is now considered a valid
+character for an <em>ordinary</em> repo.  Therefore, a pattern like <code>foo/.+</code> does not
+look like a regex to gitolite.  Use <code>foo/..*</code> if you want that.</p>
+
+<p>Also, <code>..*</code> by itself is not considered a valid repo pattern.  Try
+<code>[a-zA-Z0-9].*</code>.</p>
+
+<h3>line-anchored regexes</h3>
+
+<p>A regex like</p>
+
+<pre><code>repo assignments/S[0-9]+/A[0-9]+
+</code></pre>
+
+<p>would match <code>assignments/S02/A37</code>.  It will not match <code>assignments/S02/ABC</code>,
+or <code>assignments/S02/a37</code>, obviously.</p>
+
+<p>But you may be surprised to find that it does not match even
+<code>assignments/S02/A37/B99</code>.  This is because internally, gitolite
+<em>line-anchors</em> the given regex; so that regex actually becomes
+<code>^assignments/S[0-9]+/A[0-9]+$</code> -- notice the line beginning and ending
+metacharacters.</p>
+
+<p>Side-note: contrast with refexes</p>
+
+<blockquote>
+  <p>Just for interest, note that this is in contrast to the refexes for the >
+  normal "branch" permissions, as described in <code>doc/gitolite.conf.mkd</code> and
+  elsewhere.  These "refexes" are only anchored at the start; a pattern like
+  <code>refs/heads/master</code> actually can match <code>refs/heads/master01/bar</code> as well,
+  even if no one will actually push such a branch!  You can anchor both
+  sides if you really care, by using <code>master$</code> instead of <code>master</code>, but that
+  is <em>not</em> the default for refexes.</p>
+</blockquote>
+
+<h2>roles</h2>
+
+<p>The tokens READERS and WRITERS are called "role" names.  The access rules that
+the admin specifies say what permissions these roles have, but they don't say
+what users are in these roles.</p>
+
+<p>That needs to be done by the creator of the repo, using the <code>perms</code> command.
+You can run <code>ssh git@host perms -h</code> for detailed help, but in brief, that
+command lets you give and take away roles to users.</p>
+
+<h2>adding other roles</h2>
+
+<p>If you want to have more than just the 2 default roles, say something like:</p>
+
+<pre><code>repo foo/..*
+  C                 =   u1
+  RW    refs/tags/  =   TESTERS
+  -     refs/tags/  =   @all
+  RW+               =   WRITERS
+  RW                =   INTERNS
+  R                 =   READERS
+  RW+D              =   MANAGERS
+</code></pre>
+
+<p>You can add the new names to the ROLES hash in the <a href="rc.html">rc</a> file.  Be sure to
+run the 2 commands mentioned there after you have added the roles.
+file.  The rc file documentation (<code>doc/gitolite.rc.mkd</code>) explains how.</p>
+
+<h4><a name="rolenamewarn"></a> <strong>IMPORTANT WARNING ABOUT THIS FEATURE</strong></h4>
+
+<p>Please make sure that none of the role names conflict with any of the user
+names or group names in the system.  For example, if you have a user called
+"foo" or a group called "@foo", make sure you do not include "foo" as a valid
+role in the ROLES hash.</p>
+
+<p>You can keep things sane by using UPPERCASE names for roles, while keeping all
+your user and group names lowercase; then you don't have to worry about this
+problem.</p>
+
+<h2>listing wild repos</h2>
+
+<p>In order to see what repositories were created from a wildcard, use the 'info'
+command.  Try <code>ssh git@host info -h</code> to get help on the info command.</p>
+
+<h2>deleting a wild repo</h2>
+
+<p>TBD</p>

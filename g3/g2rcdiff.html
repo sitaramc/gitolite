@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -106,7 +106,7 @@ trigger chain.  You won't be getting any arguments but for the admin repo
 the only argument that ever comes in is "refs/heads/master" anyway.</p></li>
 <li><p><code>GL_ADC_PATH</code> -- obsolete; use <a href="cust.html#commands">commands</a> or add <a href="dev-notes.html">your own</a>.</p></li>
 <li><p><code>GL_ALL_INCLUDES_SPECIAL</code> -- obsolete; @all always includes gitweb and
-daemon now.  Use <a href="misc.html#deny-rules">deny-rules</a> if you want to say <code>R = @all</code> but not have
+daemon now.  Use <a href="rules.html#deny-rules">deny-rules</a> if you want to say <code>R = @all</code> but not have
 it be visible to gitweb or daemon.</p></li>
 <li><p><code>GL_PERFLOGT</code> -- see the entry for "gl-time" in the <a href="g2alt.html">alternative
 implementations</a> page.</p></li>

@@ -1,0 +1,64 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>special features and setups</h1>
+
+<h2><a name="writable"></a> disabling pushes to take backups</h2>
+
+<p>The <code>writable</code> command allows you to disable pushes to all repos or just the
+named repo, in order to do file-system level things to the repo directory that
+require it not to change, like using normal backup software.</p>
+
+<p>Run <code>gitolite writable -h</code> for more info.</p>
+
+<h2><a name="pers"></a> "personal" branches</h2>
+
+<p>"personal" branches are great for environments where developers need to share
+work but can't directly pull from each other (usually due to either a
+networking or authentication related reason, both common in corporate setups).</p>
+
+<p>Personal branches exist <strong>in a namespace</strong> of their own.  The syntax is</p>
+
+<pre><code>    RW+ personal/USER/  =   @userlist
+</code></pre>
+
+<p>where the "personal" can be anything you like (but cannot be empty), and the
+"/USER/" part is <strong>necessary (including both slashes)</strong>.</p>
+
+<p>A user "alice" (if she's in the userlist) can then push any branches inside
+<code>personal/alice/</code>.  Which means she can push <code>personal/alice/foo</code> and
+<code>personal/alice/bar</code>, but NOT <code>personal/alice</code>.</p>
+
+<p>(Background: at runtime the "USER" component will be replaced by the name of
+the invoking user.  Access is determined by the right hand side, as usual).</p>
+
+<p>Compared to using arbitrary branch names on the same server, this</p>
+
+<ul>
+<li>reduces namespace pollution by corralling all these ad hoc branches into
+the "personal/" namespace.</li>
+<li>reduces branch name collision by giving each developer her own
+sub-hierarchy within that.</li>
+<li>removes the need to think about access control, because a user can push
+only to his own sub-hierarchy.</li>
+</ul>
+
+<h2>delegating access control responsibilities</h2>
+
+<p>See <a href="deleg.html">this</a>.</p>

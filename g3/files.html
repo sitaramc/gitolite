@@ -1,0 +1,114 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>files involved in gitolite</h1>
+
+<h2>install</h2>
+
+<p>Let's say you start from a totally clean slate:</p>
+
+<pre><code>$ pwd
+/home/gl-test
+
+$ ls -a
+.  ..  .bash_logout  .bash_profile  .bashrc
+</code></pre>
+
+<p>You run <code>git clone -b g3 git://github.com/sitaramc/gitolite</code> (the '-b' option
+does the equivalent of 'git checkout g3' after the clone is done).</p>
+
+<p>Now you have</p>
+
+<pre><code>$ ls -aF
+./  ../  .bash_logout  .bash_profile  .bashrc  gitolite/
+
+$ ls -aF gitolite
+./  ../  check-g2-compat*  doc/  dot.pl  .git/  install*  src/  t/
+</code></pre>
+
+<p>If we were an existing user, we'd run the migration checker 'check-g2-compat'
+(see <a href="g2migr.html">here</a>).  For now we're only interested in "gitolite/src", so:</p>
+
+<pre><code>$ ls -aF gitolite/src
+./  ../  commands/  gitolite*  Gitolite/  gitolite-shell*  syntactic-sugar/  triggers/  VREF/
+</code></pre>
+
+<p>We check our PATH to make sure <code>$HOME/bin</code> is in it:</p>
+
+<pre><code>$ echo $PATH
+/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/home/gl-test/.local/bin:/home/gl-test/bin
+</code></pre>
+
+<p>Since it is, we run <code>mkdir bin; gitolite/install -ln</code>, and get:</p>
+
+<pre><code>$ mkdir bin
+$ gitolite/install -ln
+
+$ ls -aF
+./  ../  .bash_logout  .bash_profile  .bashrc  bin/  gitolite/
+
+$ ls -aF bin
+./  ../  gitolite@
+
+$ file bin/gitolite
+bin/gitolite: symbolic link to `/home/gl-test/gitolite/src/gitolite'
+</code></pre>
+
+<p>That's the install done.  At the end of it, we have just <em>one</em> symlink in
+<code>$HOME/bin</code>; everything else is in a different directory.</p>
+
+<h2>setup</h2>
+
+<p>Now you copy your pubkey (typically <code>id_rsa.pub</code>) from your workstation to the
+server, then run <code>gitolite setup -pk "yourname.pub"</code>.  Which gives you this:</p>
+
+<pre><code>$ ls -aF
+./   .bash_logout   .bashrc  gitolite/   .gitolite.rc   repositories/  .ssh/
+../  .bash_profile  bin/     .gitolite/  projects.list  sitaram.pub
+
+$ ls -aF bin
+./  ../  gitolite@
+
+$ ls -aF .gitolite
+./  ../  conf/  hooks/  keydir/  logs/
+
+$ ls -aF repositories
+./  ../  gitolite-admin.git/  testing.git/
+
+$ ls -aF .ssh
+./  ../  authorized_keys*
+</code></pre>
+
+<p>And that's the setup done.  At the end of this step, you have</p>
+
+<ul>
+<li><code>~/bin/gitolite</code> -- a symlink to <code>~/gitolite/src/gitolite</code>.  The target of
+this symlink tells gitolite where the rest of the code is.</li>
+<li><code>~/gitolite/src</code> -- the rest of the code.</li>
+<li><code>~/.gitolite</code> -- the gitolite "admin" directory.  The only thing you
+should directly touch here are the [log][] files and <a href="cust.html#hooks">hooks</a>.  (I.e., do
+NOT change the conf or keydir contents here; see adding <a href="users.html">users</a> and
+<a href="repos.html">repos</a> for how to do that.</li>
+<li><code>~/.gitolite.rc</code> -- the <a href="rc.html">rc</a> file.</li>
+<li><code>~/repositories</code> -- which contains all the repositories that gitolite will
+be managing.</li>
+<li><code>~/.ssh</code> -- which contains (at least) the <code>authorized_keys</code> file that
+provides access to users.  You can look inside that file and correlate it
+with what the <a href="ssh.html">ssh</a> docs tell you, if you wish.</li>
+</ul>

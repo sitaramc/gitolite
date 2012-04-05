@@ -17,15 +17,25 @@
 |
     <a href="index.html#license">license</a>
 </p>
-<h1>ssh</h1>
+<h1>gitolite options</h1>
 
-<p>There are two documents you need to read, in order:</p>
+<p>Some gitolite features are enabled, or gitolite's behaviour changed, by
+setting "options".</p>
+
+<p>Options are set by repo.  The syntax is very simple:</p>
+
+<pre><code>option  foo.bar     =   baz
+</code></pre>
+
+<p>Of course this is useless if some other part of gitolite, or some external
+command, is not querying for the option key 'foo.bar'!</p>
+
+<p>Options are therefore documented in the section/page they belong in, not here.
+Here are the currently recognised options:</p>
 
 <ul>
-<li><p><a href="gitolite-and-ssh.html#glssh">Gitolite and ssh</a> explains how gitolite uses openssh features to
-create any number of virtual users over just one actual (unix) user, and
-distinguish between them by their public keys.</p></li>
-<li><p><a href="ssh-troubleshooting.html#sts">Ssh troubleshooting</a> is a rather long document that, as far as I
-know, covers almost every known ssh related issue.  If you find something
-missing, send me an email with details so I can update it.</p></li>
+<li><p><a href="rules.html#deny-rules">deny-rules</a> -- ask gitolite to honor deny rules during the pre-git
+check also.</p></li>
+<li><p><a href="mirroring.html">mirroring</a> related options -- tell gitolite who is the master server,
+and who are the slaves, for each repo.</p></li>
 </ul>

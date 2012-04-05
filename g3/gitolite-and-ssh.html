@@ -1,13 +1,13 @@
 
 <head><style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
 </style></head>
 
 <p style="text-align:center">
@@ -123,14 +123,14 @@ logging in as the same remote user "git"</li>
 you look in the <code>authorized_keys</code> file, you'll see entries like this (I chopped
 off the ends of course; they're pretty long lines):</p>
 
-<pre><code>command="[path]/gl-auth-command sitaram",[more options] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA18S2t...
-command="[path]/gl-auth-command usertwo",[more options] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEArXtCT...
+<pre><code>command="[path]/gitolite-shell sitaram",[more options] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA18S2t...
+command="[path]/gitolite-shell usertwo",[more options] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEArXtCT...
 </code></pre>
 
 <p>First, it finds out which of the public keys in this file match the incoming
 login.  That's crypto stuff, and I won't go into it.  Once the match has been
 found, it will run the command given on that line; e.g., if I logged in, it
-would run <code>[path]/gl-auth-command sitaram</code>.  So the first thing to note is
+would run <code>[path]/gitolite-shell sitaram</code>.  So the first thing to note is
 that such users do not get "shell access", which is good!</p>
 
 <p>Before running the command, however, sshd sets up an environment variable
@@ -138,7 +138,7 @@ called <code>SSH_ORIGINAL_COMMAND</code> which contains the actual git command t
 workstation sent out.  This is the command that <em>would have run</em> if you did
 not have the <code>command=</code> part in the authorised keys file.</p>
 
-<p>When <code>gl-auth-command</code> gets control, it looks at the first argument
+<p>When <code>gitolite-shell</code> gets control, it looks at the first argument
 ("sitaram", "usertwo", etc) to determine who you are.  It then looks at the
 <code>SSH_ORIGINAL_COMMAND</code> variable to find out which repository you want to
 access, and whether you're reading or writing.</p>
