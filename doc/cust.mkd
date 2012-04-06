@@ -7,6 +7,12 @@ even mirroring is not in core now!)
 
 (Also, please see the [developer notes][dev-notes] page).
 
+----
+
+[[TOC]]
+
+----
+
 ## types of non-core programs
 
 There are 5 basic types of non-core programs.

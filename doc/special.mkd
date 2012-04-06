@@ -1,5 +1,11 @@
 # special features and setups
 
+----
+
+[[TOC]]
+
+----
+
 ## #writable disabling pushes to take backups
 
 The `writable` command allows you to disable pushes to all repos or just the

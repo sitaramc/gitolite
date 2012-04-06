@@ -20,6 +20,9 @@ On your workstation:
 
 ## ASSUMPTIONS
 
+  * this is a fresh install, not a migration from the old gitolite (v1.x,
+    v2.x).
+
   * on the server, your `$PATH` contains `$HOME/bin`.  If you don't like that,
     there are [other install methods][install].
 

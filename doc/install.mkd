@@ -1,9 +1,8 @@
 # installing gitolite
 
-**NOTE**: if you're migrating from g2, there are some settings that MUST be
-dealt with **before** running `gitolite setup`; please read the [g2
-migration][g2migr] page and linked pages, and especially the one on
-[presetting the rc file][rc-preset].
+<font color="red">**NOTE**: if you're migrating from g2, there are some
+settings that MUST be dealt with **before** running `gitolite setup`; please
+read the [g2 migration][g2migr] page and linked pages.</font>
 
 ## notes and naming conventions
 
@@ -138,12 +137,12 @@ Creating a symlink doesn't need a separate program but 'install' also runs
 There are a lot of migration hints and notes; see links at the top of this
 document.
 
-But here's the **bottom line** on migrating:
+But here's the **bottom line** on migrating: nothing in any of the gitolite
+install/setup/etc will ever touch the *data* in any repository except the
+gitolite-admin repo.  The only thing it will normally touch is the `update`
+hook.
 
-Nothing in any of the gitolite install/setup/etc will ever touch the *data* in
-any repository except the gitolite-admin repo.  The only thing it will
-normally touch is the `update` hook.  So one fool-proof way of "migrating"
-from any older gitolite is this:
+So one fool-proof way of "migrating" from any older gitolite is this:
 
 1.  Wipe out the old gitolite, but **carefully**
 
@@ -152,14 +151,18 @@ from any older gitolite is this:
       * rename `~/.gitolite.rc` to something else
       * move the ~/.gitolite/logs` directory somewhere else, then delete `~/.gitolite`
 
-2.  Install gitolite g3; see [quick install and setup][qi] or [install][]
+2.  Read about [presetting][rc-preset] the rc file; if you're using any
+    variables listed as requiring preset, follow those instructions to create
+    your new rc file.
+
+3.  Install gitolite g3; see [quick install and setup][qi] or [install][]
     followed by [setup][].
 
-3.  Make sure your gitolite-admin clone has the correct pubkey for the
+4.  Make sure your gitolite-admin clone has the correct pubkey for the
     administrator in its `keydir` directory, then `git push -f` to the server
     to overwrite the "default" admin repo created by the install.
 
-4.  Handle any errors, look for migration issues, etc., as described in the
+5.  Handle any errors, look for migration issues, etc., as described in the
     links at the top of this page.
 
     This also includes building up your new `~/.gitolite.rc` file.

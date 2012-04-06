@@ -7,6 +7,12 @@ This document has some text, and a lot of links.  Most of this info *is*
 available in the rest of the documentation, but it's scattered and sparse.
 Collecting all of it, or at least links to it, in one place sounds useful.
 
+----
+
+[[TOC]]
+
+----
+
 ## accessing gitolite
 
 The most common setup is based on ssh, where your admin asks you to send him

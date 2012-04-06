@@ -2,13 +2,11 @@
 
 Not yet done (will be tackled in this order unless someone asks):
 
-  * svnserve (someone is testing it)
-  * pulling in documentation for things that are the same in g2
   * smart http
-  * special features (no-create-repos, gl-all-read-all, etc)
+  * svnserve (someone is testing it)
   * mechanism for ADCs using unchecked arguments -- this is not just a matter
     of writing it; I have to think about *how* it will be done.  (AFAIK the
-    only tool affected is git-annexe)
+    only tool affected is git-annexe; if there are more let me know)
 
 Help needed:
 
@@ -22,6 +20,7 @@ anyway!):
 
   * mob branches
   * password access
+  * some of the more arcane rc variables!
   * specific ADCs -- there are too many for me to bother without applying
     Pareto somewhere, so I choose to not do any and wait for people to ask :-)
 
@@ -30,6 +29,7 @@ Done:
   * core code
   * test suite
   * mirroring
-  * most documentation
+  * documentation
+  * migration documentation
   * distro packaging instructions
   * migration advice for common cases

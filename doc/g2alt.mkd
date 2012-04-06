@@ -1,9 +1,0 @@
-## #g2alt alternate implementations for some g2 features
-
-The following g2 features have been dropped but suitable (or better)
-alternatives exist.
-
-### gl-time for performance measurement
-
-Take a look at the 'CpuTime' trigger module shipped.  Comments within, and
-comments in the default rc file that contain the word "cpu", should be useful.

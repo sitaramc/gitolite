@@ -1,13 +1,13 @@
 # mirroring using gitolite
 
-**WARNING** existing gitolite mirroring users please note: **there are
-significant changes** in syntax and usage compared to g2.  The most important
-change is that `config gitolite.mirror.master` changes to `option
-mirror.master`, and similarly for 'slaves' and redirectOK.  In addition, the
-special value for 'redirectOK' changes from '1' to 'all'.  The second big
-change is the disappearance of the ambiguously named 'keys' (for example
-`gitolite.mirror.hourly` etc., in the old mirroring doc) -- all that
-complexity is yours to handle now :-)
+<font color="red">**WARNING** existing gitolite mirroring users please note:
+**there are [significant changes][g2i-mirroring]** in syntax and usage
+compared to g2.  If you're not the kind who reads documentation before doing
+serious system admin things, well... good luck!</font>
+
+----
+
+[[TOC]]
 
 ----
 
@@ -45,6 +45,11 @@ Gitolite extends this simple notion in the following ways:
     gl-perms in the repo directory are not mirrored; you must do that
     separately.  Files in the admin directory (like log files) are also not
     mirrored.
+
+  * if you ever do a [bypass push][bypass], mirroring will not work.
+    Mirroring checks also will not work -- for example, you can push to a
+    slave, which is not usually a good idea.  So don't bypass gitolite if the
+    repo is mirrored!
 
 ## setting up mirroring
 
@@ -180,7 +185,23 @@ Tip: if you want to do this to all the slaves, try this:
 This command can also be run remotely; run `ssh git@host mirror -h` for
 details.
 
-## appendix A: efficiency versus paranoia
+## #HOSTNAME appendix A: HOSTNAME substitution
+
+Wherever gitolite sees the word `%HOSTNAME`, it will replace it with the
+HOSTNAME supplied in the rc file, if one was supplied.  This lets you maintain
+configurations for all servers in one repo, yet havethem act differently on
+different servers, by saying something like:
+
+    subconf "%HOSTNAME/*.conf"
+
+You can use it in other places also, for example:
+
+    RW+     VREF/NAME/subs/%HOSTNAME/       =   @%HOSTNAME-admins
+
+(you still have to define @mars-admins, @phobos-admins, etc., but the actual
+VREF is now one line instead of one for each server!)
+
+## appendix B: efficiency versus paranoia
 
 If you're paranoid enough to use mirrors, you should be paranoid enough to
 set this on each server, despite the possible CPU overhead:

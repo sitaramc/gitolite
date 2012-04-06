@@ -1,38 +1,181 @@
-## #g2migr migrating from g2
+# #g2migr migrating from g2
 
-<font color="red">
+<font color="red"> **This document is a *MUST* read if you are currently using
+g2 and want to move to g3.** </font>
 
-**This document is a *MUST* read if you are currently using g2 and want to
-move to g3.**
+----
 
-</font>
+[[TOC]]
 
-First things first: g2 will be supported for a good long time.  My current
-*expert* users do not cause me any load anyway.
+----
 
-Migration should be straightforward, but it is not automatic.  You should run
-the "check-g2-compat" program first, to see any *major* differences that
-affect you.  The bulk of the changes are in the RC file, which must be
-manually handled (links below).  The conf files have very few changes -- they
-apply only if you use "NAME/" or delegation.
+First things first: g2 will be supported for a good long time for critical
+bugs, although enhancements and new features won't happen.
 
-You must first read about [incompatible][g2incompat] features and
-[dropped][g2dropped] features.  Some features have been replaced with
-[alternatives][g2alt].
+Migration should be straightforward, but it is not automatic.  The biggest
+differences are in the rc file, mirroring, "NAME/" rules, and delegation.
 
-Since the majority of changes are in the rc file, they're all listed
-[here][g2rcdiff].
+>   ----
 
-The rest of this page describes the completely standalone "check-g2-compat"
-script that you can find in the repo root (i.e., not in "src/").
+>   **presetting the rc file**
 
-### the "check-g2-compat" program
+>   Some rc settings in the older gitolite are such that you cannot directly
+>   run `gitolite setup` when you're ready to migrate.  Doing that will
+>   **clobber** something important.  See [presetting the rc file][rc-preset]
+>   for details.
+
+>   ----
+
+The `check-g2-compat` program attempts to identify any *big* issues you will
+be facing; run that first.  See [later][cg2c] in this page for what its
+messages mean.  If it does not report any issues, your migrate will probably
+go quickly.  I still suggest you go through the links below in case that
+program missed something.
+
+## incompatible features
+
+Here's a list of incompatible features and what you need to do to migrate.
+Some of them have links where there is more detail than I want to put here.
+
+### high impact
+
+(serious loss of functionality and/or access control compromised)
+
+  * [`NAME/`][g2i-name] rules: thes need to change to `VREF/NAME/`, and you
+    need to add a deny rule at the end because fallthru is "success" for all
+    [VREFs][vref] now, including the "NAME" VREF.
+
+  * [subconf][g2i-subconf]: if you're using [delegation][deleg], there is no
+    implicit "subconf" at the end; you'll have to add it in.
+
+  * there are several important differences in mirroring.  You can start from
+    scratch by reading the new [mirroring][mirroring] doc or
+    [migrate][g2i-mirroring] (carefully!).
+
+  * `ADMIN_POST_UPDATE_CHAINS_TO` -- **dropped**.  Add your script to the
+    `POST_COMPILE` trigger chain.  Your script won't be getting the arguments
+    that *git* sends to the post-update hook, but for the admin repo the only
+    argument that even comes in (or is significant) is "refs/heads/master"
+    anyway.
+
+  * `GL_ALL_INCLUDES_SPECIAL` -- **dropped**, **requires presetting**.
+
+    @all always includes gitweb and daemon now.  Use [deny-rules][] if you
+    want to say `R = @all` but not have the repo(s) be visible to gitweb or
+    daemon.
+
+  * `GL_NO_CREATE_REPOS` -- **dropped**.  If you think you need this, email
+    me.  I know one group who does need this so I will be putting it in
+    eventually but not right away.  It's almost certain to be renamed anyway.
+
+  * `GL_NO_DAEMON_NO_GITWEB` **dropped**, **requires presetting**.  Default
+    will clobber your projects.list file and git-daemon-export-ok files.
+
+    Comment out the appropriate lines in the rc file, in the `POST_COMPILE`
+    *and* the `POST_CREATE` trigger sections.  As a bonus, gitweb and daemon
+    can now be separately disabled, instead of both being tied to the same
+    setting.
+
+  * `GL_NO_SETUP_AUTHKEYS` **dropped**, **requires presetting**.  Default will
+    clobber your authkeys file.
+
+    Comment out all the line(s) that call ssh-authkeys in the rc file.
+
+  * `UPDATE_CHAINS_TO` **dropped**, **requires presetting**.  Default will
+    fail to run this extra check when users push.
+
+    Use a [vref][] instead.  You can directly use any existing chained-to
+    script as a VREF; they'll work.  Don't forget to add a rule that
+    references the new VREF!
+
+  * `GIT_PATH` **dropped**, **requires presetting**.
+
+    If you need its functionality, add these lines to the end of the rc file:
+
+        $ENV{PATH}="...whatever you want...";
+        1;
+
+### medium impact
+
+(important functionality lost, but access control not compromised)
+
+  * `GL_ADMINDIR` -- **dropped**, is now at a fixed location: `~/.gitolite`.
+    If you want it somewhere else go ahead and move it, then place a symlink
+    from the assumed location to the real one.
+
+  * `GL_GET_MEMBERSHIPS_PGM` -- is now `GROUPLIST_PGM`, see
+    [here][ldap].
+
+  * `GL_WILDREPOS_DEFPERMS` -- is now `DEFAULT_ROLE_PERMS`.
+
+  * `REPO_BASE` -- **dropped**, is now at a fixed location: `~/repositories`.
+    If you want it somewhere else go ahead and move it, then place a symlink
+    from the assumed location to the real one.
+
+### low impact
+
+(ancillary, non-core, or minor functionality lost)
+
+  * [gl-time][g2i-gl-time]: the CpuTime module replaces gl-time.
+
+  * `BIG_INFO_CAP` -- **dropped**.  If you think you must have this, try it
+    without and see if there's a difference.  If you *know* you need this,
+    convince me.
+
+  * `GL_ADC_PATH` -- **dropped**.  It is obsolete; use [commands][] or add
+    [your own][dev-notes].
+
+  * `GL_ALL_READ_ALL` -- **dropped**.  If you think you must have this, try it
+    without and see if there's a difference.  If you *know* you need this,
+    convince me.
+
+  * `GL_BIG_CONFIG` -- **dropped**.  This feature is default now.
+
+  * `GL_CONF`, `GL_CONF_COMPILED`, and `GL_KEYDIR` -- **dropped**.  You had no
+    business touching these anyway; if you did, move them into the expected
+    default locations before attempting to run `gitolite setup`
+
+  * `GL_GITCONFIG_KEYS` -- is now `GITCONFIG_KEYS`.
+
+  * `GL_LOGT` -- now has a fixed value; email me if this is a problem.
+
+  * `GL_PACKAGE_CONF` and `GL_PACKAGE_HOOKS` -- **dropped**.  They are not
+    needed anymore, but check if you had any custom hooks set in the latter
+    location and copy them across.
+
+  * `GL_PERFLOGT` -- **dropped**.  See [gl-time][g2i-gl-time].
+
+  * `GL_SITE_INFO` -- is now `SITE_INFO`.
+
+  * `GL_WILDREPOS` -- **dropped**.  This feature is default now.
+
+  * `GL_WILDREPOS_PERM_CATS` -- is now the ROLES hash in the rc file.
+
+  * `HTPASSWD_FILE`, `RSYNC_BASE`, `SVNSERVE` -- need work.  Email me if you
+    are using any of these.
+
+  * `NICE_VALUE` -- **dropped**.  Uncomment the 'renice 10' line in the rc
+    file.  You can also change the 10 to something else if you wish.
+
+  * `PROJECTS_LIST` -- is now `GITWEB_PROJECTS_LIST`.  More importantly, it is
+    only used by update-gitweb-access-list in src/commands/post-compile.  This
+    variable now has nothing to do with gitolite core, and the rc is just
+    helping to store settings for external programs like that one.
+
+  * `REPO_UMASK` -- is now `UMASK`.
+
+  * `WEB_INTERFACE` and `GITWEB_URI_ESCAPE` -- **dropped**.  Patches to the
+    update program to directly do those things are welcome.  Personally, I
+    think people who use spaces and other funky characters in dir/file names
+    should be shot but no one listens to me anyway.
+
+## #cg2c using the "check-g2-compat" program
 
 This program checks a few things only, not everything.  In particular, it
 looks for settings and status that might:
 
   * make g3 unusable for lots of users
-  * make g3 give *more* access than g2 under some conditions.
+  * make g3 give *more* access than g2 under some conditions
 
 It does NOT look for or warn about anything else; you're expected to read (and
 act upon, if needed) the rest of the migration guide links given a few paras
@@ -67,8 +210,9 @@ put that contain the words "see docs":
 
   * `mirroring used`
 
-    There have been quite a few changes to mirroring.  Please see the new
-    [mirroring][mirroring] doc for details.
+    There have been quite a few changes to mirroring.  You can start from
+    scratch by reading the new [mirroring][mirroring] doc or
+    [migrate][g2i-mirroring] (carefully!).
 
   * `found N gl-creater files`
 
@@ -89,24 +233,35 @@ put that contain the words "see docs":
     Setting perms of R and RW will no longer work; you have to say READERS and
     WRITERS now.  Suggested command:
 
-The following variables need to be [preset][rc-preset] in the rc file
-**before** running `gitolite setup`.  Otherwise the default actions will
-clobber something and require some recovery.
+## #rc-preset presetting the rc file
 
-  * `GL_NO_SETUP_AUTHKEYS` (default will clobber your authkeys file)
+Some rc settings in the older gitolite are such that you cannot directly run
+`gitolite setup` when you're ready to migrate.  Doing that will **clobber**
+something important.  You have to create a default rc file, edit it
+appropriately, and *then* run `gitolite setup`.
 
-  * `GL_NO_DAEMON_NO_GITWEB` (default will clobber your projects.list file and
-    git-daemon-export-ok files)
+The most serious example of this is `GL_NO_SETUP_AUTHKEYS`, which tells the
+(old) gitolite that you want to manage `~/.ssh/authorized_keys` yourself and
+it should not fiddle with it.
 
-  * `UPDATE_CHAINS_TO` (default will fail to run this extra check when users
-    push)
+If you don't preset the rc (in this case, by commenting out the 'ssh-authkeys'
+line) **before** running `gitolite setup`, **your `~/.ssh/authorized_keys`
+file will get clobbered**.
 
-  * `ADMIN_POST_UPDATE_CHAINS_TO` (severity depends on what your code is
-    doing; see [g2rcdiff][] for how to fix this)
+The actual rc settings that require presetting are listed in the "high
+impact" section above.  This section tells you how to do the presetting.
 
-  * `GL_ALL_INCLUDES_SPECIAL` (default will allow gitweb and daemon to be able
-    to read any repos that have `R = @all`)
+  * save your old (g2) rc file somewhere, just in case
 
-  * `GIT_PATH` (presumably your git is in some non-std path so unless you
-    preset `$ENV{PATH}` per instructions in the [rc file
-    differences][g2rcdiff] doc, nothing will work).
+  * run
+
+        gitolite print-default-rc > $HOME/.gitolite.rc
+
+  * edit the file
+
+        ${EDITOR:-vim} $HOME/.gitolite.rc
+
+    make appropriate changes as described elsewhere in this migration guide,
+    and save it.
+
+  * *then* you can run [gitolite setup][setup].
