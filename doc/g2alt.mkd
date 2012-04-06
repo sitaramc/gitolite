@@ -5,6 +5,5 @@ alternatives exist.
 
 ### gl-time for performance measurement
 
-Take a look at the 'cpu-time' program that you can set to run from the
-`POST_GIT` trigger.  Just set it to run as the last program in that sequence
-so it covers all previous programs.
+Take a look at the 'CpuTime' trigger module shipped.  Comments within, and
+comments in the default rc file that contain the word "cpu", should be useful.

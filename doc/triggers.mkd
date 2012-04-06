@@ -78,24 +78,14 @@ description of when the trigger runs:
       * the ref being updated (e.g., 'refs/heads/master')
       * result (see above)
 
-  * `PRE_GIT` runs just before running the git command.  Arguments:
+  * `PRE_GIT` and `POST_GIT` run just before and after the git command.
+    Arguments:
       * repo
       * user
       * 'R' or 'W'
       * 'any'
       * the git command ('git-receive-pack', 'git-upload-pack', or
         'git-upload-archive') being invoked.
-
-  * `POST_GIT` runs after the git command returns.  Arguments:
-      * repo
-      * user
-      * 'R' or 'W'
-      * 'any'
-      * the git command ('git-receive-pack', 'git-upload-pack', or
-
-    These are followed by the output of the perl function "times" (i.e., 4 CPU
-    times: user, system, cumulative user, cumulative system) so that's 9
-    arguments in total
 
   * `PRE_CREATE` and `POST_CREATE` run just before and after a new "[wild][]"
     repo is created by user action.  Arguments:

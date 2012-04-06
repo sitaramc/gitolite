@@ -36,9 +36,8 @@ The `PRE_GIT` triggers are:
 
 The `POST_GIT` triggers are:
 
-  * cpu-time -- post-git triggers, if you check the [triggers][] doc, receive
-    4 CPU time numbers from the main shell program.  Treat this code as sample
-    and do do with them as you please to do with as you please.
+  * CpuTime, which is only a sample because it only prints the CPU times data.
+    In reality you will want to do something else with it.
 
 The `POST_COMPILE` triggers are:
 

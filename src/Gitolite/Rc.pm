@@ -259,9 +259,9 @@ __DATA__
 
     # settings used by external programs; uncomment and change as needed.  You
     # can add your own variables for use in your own external programs; take a
-    # look at the cpu-time and desc commands for perl and shell samples.
+    # look at the info and desc commands for perl and shell samples.
 
-    # used by the cpu-time command
+    # used by the CpuTime trigger
     # DISPLAY_CPU_TIME          =>  1,
     # CPU_TIME_WARN_LIMIT       =>  0.1,
     # used by the desc command
@@ -335,9 +335,10 @@ __DATA__
     # these will run in sequence after the git command returns
     POST_GIT                    =>
         [
-            # if you use this, make this the last item in the list
-            # 'cpu-time',
             # 'Mirroring::post_git',
+
+            # if you use this, make this the last item in the list
+            # 'CpuTime::post_git',
         ],
 
     # comment out or uncomment as needed
