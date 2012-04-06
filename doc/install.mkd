@@ -111,10 +111,10 @@ Creating a symlink doesn't need a separate program but 'install' also runs
 
 ## upgrading
 
-Just put the new version on top of wherever you kept the old one.  That's it.
-
-If you feel it should require a little more effort, pretend I said "you have
-to then run `gitolite setup`".  Won't hurt...
+  * Update your clone of the gitolite source.
+  * Repeat the install command you used earlier (make sure you use the same
+    arguments as before).
+  * Run `gitolite setup` just in case the hooks changed.
 
 ## packaging gitolite
 
