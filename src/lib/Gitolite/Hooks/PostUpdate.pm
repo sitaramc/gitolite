@@ -55,10 +55,7 @@ __DATA__
 use strict;
 use warnings;
 
-BEGIN {
-    die "GL_BINDIR not set; aborting\n" unless $ENV{GL_BINDIR};
-}
-use lib $ENV{GL_BINDIR};
+use lib $ENV{GL_LIBDIR};
 use Gitolite::Hooks::PostUpdate;
 
 # gitolite post-update hook (only for the admin repo)

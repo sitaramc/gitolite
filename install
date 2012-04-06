@@ -10,7 +10,8 @@ use FindBin;
 
 # meant to be run from the root of the gitolite tree, one level above 'src'
 BEGIN { $ENV{GL_BINDIR} = $FindBin::RealBin . "/src"; }
-use lib $ENV{GL_BINDIR};
+BEGIN { $ENV{GL_LIBDIR} = "$ENV{GL_BINDIR}/lib"; }
+use lib $ENV{GL_LIBDIR};
 use Gitolite::Common;
 
 =for usage

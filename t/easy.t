@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 # this is hardcoded; change it if needed
-use lib "src";
+use lib "src/lib";
 use Gitolite::Easy;
 use Gitolite::Test;
 # put this after ::Easy because it chdirs away from where you were and the

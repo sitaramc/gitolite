@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 # this is hardcoded; change it if needed
-use lib "src";
+use lib "src/lib";
 use Gitolite::Test;
 
 # basic tests

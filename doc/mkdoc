@@ -7,7 +7,7 @@ my $MKD = "./Markdown.pl";
 use 5.10.0;
 use strict;
 use warnings;
-use lib '../src/Gitolite/Test';
+use lib '../src/lib/Gitolite/Test';
 use Tsh;
 
 $ENV{TSH_ERREXIT} = 1;

@@ -152,7 +152,7 @@ __DATA__
 use strict;
 use warnings;
 
-use lib $ENV{GL_BINDIR};
+use lib $ENV{GL_LIBDIR};
 use Gitolite::Hooks::Update;
 
 # gitolite update hook

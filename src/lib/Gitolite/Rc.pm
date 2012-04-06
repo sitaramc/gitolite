@@ -29,12 +29,14 @@ our %rc;
 
 # ----------------------------------------------------------------------
 
-# variables that could be overridden by the rc file
+# pre-populate some important rc keys
 # ----------------------------------------------------------------------
 
 $rc{GL_BINDIR}    = $ENV{GL_BINDIR};
-$rc{GL_REPO_BASE} = "$ENV{HOME}/repositories";
+$rc{GL_LIBDIR}    = $ENV{GL_LIBDIR};
 
+# these keys could be overridden by the rc file later
+$rc{GL_REPO_BASE} = "$ENV{HOME}/repositories";
 $rc{GL_ADMIN_BASE} = "$ENV{HOME}/.gitolite";
 $rc{LOG_TEMPLATE}  = "$ENV{HOME}/.gitolite/logs/gitolite-%y-%m.log";
 

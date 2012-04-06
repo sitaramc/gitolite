@@ -7,7 +7,7 @@ BEGIN {
 }
 
 # this is hardcoded; change it if needed
-use lib "src";
+use lib "src/lib";
 use Gitolite::Test;
 
 use Cwd;

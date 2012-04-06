@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Getopt::Long;
-use lib $ENV{GL_BINDIR};
+use lib $ENV{GL_LIBDIR};
 use Gitolite::Rc;
 use Gitolite::Common;
 use Gitolite::Conf::Load;

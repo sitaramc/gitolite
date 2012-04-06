@@ -6,7 +6,8 @@
 use FindBin;
 
 BEGIN { $ENV{GL_BINDIR} = $FindBin::RealBin; }
-use lib $ENV{GL_BINDIR};
+BEGIN { $ENV{GL_LIBDIR} = "$ENV{GL_BINDIR}/lib"; }
+use lib $ENV{GL_LIBDIR};
 use Gitolite::Rc;
 use Gitolite::Common;
 use Gitolite::Conf::Load;
