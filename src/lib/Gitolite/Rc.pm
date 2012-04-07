@@ -305,6 +305,9 @@ __DATA__
     # these will run in sequence to modify the input (arguments and environment)
     INPUT                       =>
         [
+            # if you use this, make this the first item in the list
+            # 'CpuTime::input',
+
             # 'Mirroring::input',
         ],
 
