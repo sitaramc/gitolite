@@ -43,7 +43,7 @@ sub main {
     my @save = @ARGV;
     my $css = join("", <DATA>);
 
-    my $mt = "# gitolite master table of contents/index\n";
+    my %ct; # chapter tocs
     my $mf = '';
     my $fh;
 
@@ -53,18 +53,18 @@ sub main {
 
         if (/^(#+) (?:#(\S+) )?(.*)/) {
             if ( length($1) == 1 ) {
-                $mt .= "\n";
-                $mt .= "  * [$3][$b]\n";
+                $ct{$b} .= "\n";
+                $ct{$b} .= "  * [$3][$b]\n";
                 $mf .= "[$b]: $b.html\n";
             } else {
-                $mt .= " " x ( 4 * ( length($1) - 1 ) );
-                $mt .= "  * ";
-                $mt .= (
+                $ct{$b} .= " " x ( 4 * ( length($1) - 1 ) );
+                $ct{$b} .= "  * ";
+                $ct{$b} .= (
                     $2
                     ? "[$3][$2]"
                     : "$3"
                 );
-                $mt .= "\n";
+                $ct{$b} .= "\n";
                 $mf .= "[$2]: $b.html" . ($2 ne $b ? "#$2" : "") . "\n" if $2;
             }
         }
@@ -89,6 +89,7 @@ sub main {
 
         my $mkt = `cat $mkd`;
         $mkt =~ s/^(#+) #(\S+) /$1 <a name="$2"><\/a> /mg;
+        $mkt =~ s/^\[\[TOC\]\]/$ct{$b}/mg;
         open($fh, "|-", "$MKD >> ../html/$b.html")
           and print $fh $mkt, "\n\n", $mf
           and close $fh;
