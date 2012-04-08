@@ -23,8 +23,7 @@ Examples:
     gitolite git-config -q repo gitweb.owner
     gitolite git-config -r repo gitweb
 
-When the key is treated as a pattern, prints one key+value per line, tab
-separated:
+When the key is treated as a pattern, prints:
 
     reponame<tab>key<tab>value<newline>
 
@@ -57,10 +56,17 @@ if ( $repo ne '%' and $key ne '%' ) {
 
     $ret = git_config( $repo, $key );
 
+    # if the key is not a regex, it should match at most one item
+    _die "found more than one entry for '$key'" if not $regex and scalar( keys %$ret ) > 1;
+
     # unlike access, there's nothing to print if we don't find any matching keys
     exit 1 unless %$ret;
 
-    map { print "$repo\t$_\t" . $ret->{$_} . "\n" } sort keys %$ret unless $quiet;
+    if ($regex) {
+        map { print "$repo\t$_\t" . $ret->{$_} . "\n" } sort keys %$ret unless $quiet;
+    } else {
+        map { print $ret->{$_} . ( $nonl ? "" : "\n" ) } sort keys %$ret unless $quiet;
+    }
     exit 0;
 }
 
