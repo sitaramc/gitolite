@@ -104,7 +104,8 @@ Arguments:</p>
 <li>the ref being updated (e.g., 'refs/heads/master')</li>
 <li>result (see above)</li>
 </ul></li>
-<li><p><code>PRE_GIT</code> runs just before running the git command.  Arguments:</p>
+<li><p><code>PRE_GIT</code> and <code>POST_GIT</code> run just before and after the git command.
+Arguments:</p>
 
 <ul>
 <li>repo</li>
@@ -114,19 +115,6 @@ Arguments:</p>
 <li>the git command ('git-receive-pack', 'git-upload-pack', or
 'git-upload-archive') being invoked.</li>
 </ul></li>
-<li><p><code>POST_GIT</code> runs after the git command returns.  Arguments:</p>
-
-<ul>
-<li>repo</li>
-<li>user</li>
-<li>'R' or 'W'</li>
-<li>'any'</li>
-<li>the git command ('git-receive-pack', 'git-upload-pack', or</li>
-</ul>
-
-<p>These are followed by the output of the perl function "times" (i.e., 4 CPU
-times: user, system, cumulative user, cumulative system) so that's 9
-arguments in total</p></li>
 <li><p><code>PRE_CREATE</code> and <code>POST_CREATE</code> run just before and after a new "<a href="wild.html">wild</a>"
 repo is created by user action.  Arguments:</p>
 

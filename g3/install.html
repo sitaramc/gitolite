@@ -19,10 +19,9 @@
 </p>
 <h1>installing gitolite</h1>
 
-<p><strong>NOTE</strong>: if you're migrating from g2, there are some settings that MUST be
-dealt with <strong>before</strong> running <code>gitolite setup</code>; please read the <a href="g2migr.html">g2
-migration</a> page and linked pages, and especially the one on
-<a href="g2rcdiff.html#rc-preset">presetting the rc file</a>.</p>
+<p><font color="red"><strong>NOTE</strong>: if you're migrating from g2, there are some
+settings that MUST be dealt with <strong>before</strong> running <code>gitolite setup</code>; please
+read the <a href="g2migr.html">g2 migration</a> page and linked pages.</font></p>
 
 <h2>notes and naming conventions</h2>
 
@@ -140,10 +139,12 @@ gitolite/install -to /usr/local/gitolite/bin
 
 <h2>upgrading</h2>
 
-<p>Just put the new version on top of wherever you kept the old one.  That's it.</p>
-
-<p>If you feel it should require a little more effort, pretend I said "you have
-to then run <code>gitolite setup</code>".  Won't hurt...</p>
+<ul>
+<li>Update your clone of the gitolite source.</li>
+<li>Repeat the install command you used earlier (make sure you use the same
+arguments as before).</li>
+<li>Run <code>gitolite setup</code> just in case the hooks changed.</li>
+</ul>
 
 <h2>packaging gitolite</h2>
 
@@ -169,12 +170,12 @@ perl's <code>@INC</code> path.</li>
 <p>There are a lot of migration hints and notes; see links at the top of this
 document.</p>
 
-<p>But here's the <strong>bottom line</strong> on migrating:</p>
+<p>But here's the <strong>bottom line</strong> on migrating: nothing in any of the gitolite
+install/setup/etc will ever touch the <em>data</em> in any repository except the
+gitolite-admin repo.  The only thing it will normally touch is the <code>update</code>
+hook.</p>
 
-<p>Nothing in any of the gitolite install/setup/etc will ever touch the <em>data</em> in
-any repository except the gitolite-admin repo.  The only thing it will
-normally touch is the <code>update</code> hook.  So one fool-proof way of "migrating"
-from any older gitolite is this:</p>
+<p>So one fool-proof way of "migrating" from any older gitolite is this:</p>
 
 <ol>
 <li><p>Wipe out the old gitolite, but <strong>carefully</strong></p>
@@ -185,6 +186,9 @@ from any older gitolite is this:</p>
 <li>rename <code>~/.gitolite.rc</code> to something else</li>
 <li>move the ~/.gitolite/logs<code>directory somewhere else, then delete</code>~/.gitolite`</li>
 </ul></li>
+<li><p>Read about <a href="g2migr.html#rc-preset">presetting</a> the rc file; if you're using any
+variables listed as requiring preset, follow those instructions to create
+your new rc file.</p></li>
 <li><p>Install gitolite g3; see <a href="qi.html">quick install and setup</a> or <a href="install.html">install</a>
 followed by <a href="setup.html">setup</a>.</p></li>
 <li><p>Make sure your gitolite-admin clone has the correct pubkey for the

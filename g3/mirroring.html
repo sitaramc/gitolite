@@ -19,14 +19,28 @@
 </p>
 <h1>mirroring using gitolite</h1>
 
-<p><strong>WARNING</strong> existing gitolite mirroring users please note: <strong>there are
-significant changes</strong> in syntax and usage compared to g2.  The most important
-change is that <code>config gitolite.mirror.master</code> changes to <code>option
-mirror.master</code>, and similarly for 'slaves' and redirectOK.  In addition, the
-special value for 'redirectOK' changes from '1' to 'all'.  The second big
-change is the disappearance of the ambiguously named 'keys' (for example
-<code>gitolite.mirror.hourly</code> etc., in the old mirroring doc) -- all that
-complexity is yours to handle now :-)</p>
+<p><font color="red"><strong>WARNING</strong> existing gitolite mirroring users please note:
+<strong>there are <a href="g2incompat.html#g2i-mirroring">significant changes</a></strong> in syntax and usage
+compared to g2.  If you're not the kind who reads documentation before doing
+serious system admin things, well... good luck!</font></p>
+
+<hr />
+
+<ul>
+<li><a href="mirroring.html">mirroring using gitolite</a>
+<ul>
+<li>caveats</li>
+<li>setting up mirroring
+<ul>
+<li>the initial setup and the rc file</li>
+<li>conf file settings and syntax</li>
+</ul></li>
+<li>redirected pushes</li>
+<li>manually synchronising a slave repo</li>
+<li><a href="mirroring.html#HOSTNAME">appendix A: HOSTNAME substitution</a></li>
+<li>appendix B: efficiency versus paranoia</li>
+</ul></li>
+</ul>
 
 <hr />
 
@@ -67,6 +81,10 @@ must be created on the slave as well, otherwise they will not propagate).</p></l
 gl-perms in the repo directory are not mirrored; you must do that
 separately.  Files in the admin directory (like log files) are also not
 mirrored.</p></li>
+<li><p>if you ever do a <a href="emergencies.html#bypass">bypass push</a>, mirroring will not work.
+Mirroring checks also will not work -- for example, you can push to a
+slave, which is not usually a good idea.  So don't bypass gitolite if the
+repo is mirrored!</p></li>
 </ul>
 
 <h2>setting up mirroring</h2>
@@ -206,7 +224,25 @@ done
 <p>This command can also be run remotely; run <code>ssh git@host mirror -h</code> for
 details.</p>
 
-<h2>appendix A: efficiency versus paranoia</h2>
+<h2><a name="HOSTNAME"></a> appendix A: HOSTNAME substitution</h2>
+
+<p>Wherever gitolite sees the word <code>%HOSTNAME</code>, it will replace it with the
+HOSTNAME supplied in the rc file, if one was supplied.  This lets you maintain
+configurations for all servers in one repo, yet havethem act differently on
+different servers, by saying something like:</p>
+
+<pre><code>subconf "%HOSTNAME/*.conf"
+</code></pre>
+
+<p>You can use it in other places also, for example:</p>
+
+<pre><code>RW+     VREF/NAME/subs/%HOSTNAME/       =   @%HOSTNAME-admins
+</code></pre>
+
+<p>(you still have to define @mars-admins, @phobos-admins, etc., but the actual
+VREF is now one line instead of one for each server!)</p>
+
+<h2>appendix B: efficiency versus paranoia</h2>
 
 <p>If you're paranoid enough to use mirrors, you should be paranoid enough to
 set this on each server, despite the possible CPU overhead:</p>
