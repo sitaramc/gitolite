@@ -119,14 +119,14 @@ sub owner_desc {
 
     # owner = "owner name"
     #   ->  config gitweb.owner = owner name
-    # description = "some long description"
+    # desc = "some long description"
     #   ->  config gitweb.description = some long description
     # category = "whatever..."
     #   ->  config gitweb.category = whatever...
 
     # older formats:
     # repo = "some long description"
-    # repo = "owner name" = "some long description"
+    # repo "owner name" = "some long description"
     #   ->  config gitweb.owner = owner name
     #   ->  config gitweb.description = some long description
 

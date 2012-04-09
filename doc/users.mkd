@@ -32,7 +32,7 @@ The user name is simply the base name of the public key file name.  So
 ## #multi-key multiple keys per user
 
 The simplest and most understandable is to put their keys in different
-subdirectories, (alice,pub, home/alice.pub, laptop/alice.pub, etc).
+subdirectories, (alice.pub, home/alice.pub, laptop/alice.pub, etc).
 
 ### old style multi-keys
 

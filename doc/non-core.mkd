@@ -9,6 +9,15 @@ remote user running `ssh git@host help`.
 All the commands that ship with gitolite will respond to `-h`; please report a
 bug to me if they don't.
 
+Here's a list of remote commands that are shipped:
+
+  * 'desc' -- get/set the 'description' file for a repo
+  * 'info' -- already documented [here][info]
+  * 'mirror' -- documented [here][sync]
+  * 'perms' -- get/set the gl-perms file; see [perms][] for more
+  * 'sskm' -- self-service key management
+  * 'writable' -- disabling pushes to take backups etc
+
 ## syntactic sugar
 
 The following "sugar" programs are available:

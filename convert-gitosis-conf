@@ -1,0 +1,124 @@
+#!/usr/bin/perl -w
+#
+# migrate gitosis.conf to gitolite.conf format
+#
+# Based on gl-conf-convert by: Sitaram Chamarty
+# Rewritten by: Behan Webster <behanw@websterwood.com>
+#
+
+use strict;
+use warnings;
+
+if (not @ARGV and -t or @ARGV and $ARGV[0] eq '-h') {
+    print "Usage:\n    gl-conf-convert < gitosis.conf > gitolite.conf\n(please see the documentation for details)\n";
+    exit 1;
+}
+
+my @comments = ();
+my $groupname;
+my %groups;
+my $reponame;
+my %repos;
+
+while (<>)
+{
+    # not supported
+    if (/^repositories *=/ or /^map /) {
+        print STDERR "not supported: $_";
+        s/^/NOT SUPPORTED: /;
+        print;
+        next;
+    }
+
+    # normalise whitespace to help later regexes
+    chomp;
+    s/\s+/ /g;
+    s/ ?= ?/ = /;
+    s/^ //;
+    s/ $//;
+
+    if (/^\s*$/ and @comments > 1) {
+        @{$repos{$reponame}{comments}} = @comments if $reponame;
+        @{$groups{$groupname}{comments}} = @comments if $groupname;
+        @comments = ();
+    } elsif (/^\s*#/) {
+        push @comments, $_;
+    } elsif (/^\[repo\s+(.*?)\]$/) {
+        $groupname = '';
+        $reponame = $1;
+        $reponame =~ s/\.git$//;
+    } elsif (/^gitweb\s*=\s*yes/i) {
+        push @{$repos{$reponame}{R}}, 'gitweb';
+    } elsif (/^daemon\s*=\s*yes/i) {
+        push @{$repos{$reponame}{R}}, 'daemon';
+    } elsif (/^description\s*=\s*(.+?)$/) {
+        $repos{$reponame}{desc} = $1;
+    } elsif (/^owner\s*=\s*(.+?)$/) {
+        $repos{$reponame}{owner} = $1;
+    } elsif (/^\[group\s+(.*)\]$/) {
+        $reponame = '';
+        $groupname = $1;
+    } elsif (/^members\s*=\s*(.*)/) {
+        push @{$groups{$groupname}{users}}, map {s/\@([^.]+)$/_$1/g; $_} split(' ', $1);
+    } elsif (/^write?able\s*=\s*(.*)/) {
+        foreach my $repo (split(' ', $1)) {
+            $repo =~ s/\.git$//;
+            push @{$repos{$repo}{RW}}, "\@$groupname";
+        }
+    } elsif (/^readonly\s*=\s*(.*)/) {
+        foreach my $repo (split(' ', $1)) {
+            $repo =~ s/\.git$//;
+            push @{$repos{$repo}{R}}, "\@$groupname";
+        }
+    }
+}
+
+#use Data::Dumper;
+#print Dumper(\%repos);
+#print Dumper(\%groups);
+
+# Groups
+print "#\n# Groups\n#\n\n";
+foreach my $grp (sort keys %groups) {
+    next unless @{$groups{$grp}{users}};
+    printf join("\n", @{$groups{$grp}{comments}})."\n" if $groups{$grp}{comments};
+    printf "\@%-19s = %s\n", $grp, join(' ', @{$groups{$grp}{users}});
+}
+
+# Gitweb
+print "\n#\n# Gitweb\n#\n\n";
+foreach my $repo (sort keys %repos) {
+    if ($repos{$repo}{desc}) {
+        @{$repos{$repo}{R}} = grep(!/^gitweb$/, @{$repos{$repo}{R}});
+        print $repo;
+        print " \"$repos{$repo}{owner}\"" if $repos{$repo}{owner};
+        print " = \"$repos{$repo}{desc}\"\n";
+    }
+}
+
+# Repos
+print "\n#\n# Repos\n#\n";
+foreach my $repo (sort keys %repos) {
+    print "\n";
+    printf join("\n", @{$repos{$repo}{comments}})."\n" if $repos{$repo}{comments};
+    #if ($repos{$repo}{desc}) {
+    #    @{$repos{$repo}{R}} = grep(!/^gitweb$/, @{$repos{$repo}{R}});
+    #}
+    print "repo\t$repo\n";
+    foreach my $access (qw(RW+ RW R)) {
+        next unless $repos{$repo}{$access};
+        my @keys;
+        foreach my $key (@{$repos{$repo}{$access}}) {
+            if ($key =~ /^\@(.*)/) {
+                next unless defined $groups{$1} and @{$groups{$1}{users}};
+            }
+            push @keys, $key;
+        }
+        printf "\t$access\t= %s\n", join(' ', @keys) if @keys;
+    }
+    #if ($repos{$repo}{desc}) {
+    #    print $repo;
+    #    print " \"$repos{$repo}{owner}\"" if $repos{$repo}{owner};
+    #    print " = \"$repos{$repo}{desc}\"\n";
+    #}
+}

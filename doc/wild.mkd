@@ -108,7 +108,8 @@ what users are in these roles.
 
 That needs to be done by the creator of the repo, using the `perms` command.
 You can run `ssh git@host perms -h` for detailed help, but in brief, that
-command lets you give and take away roles to users.
+command lets you give and take away roles to users.  [This][perms] has some
+more detail.
 
 ## adding other roles
 

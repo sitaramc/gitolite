@@ -170,7 +170,7 @@ second one trusts only some slaves.
 
 Note that you cannot redirect gitolite commands (like perms, etc).
 
-## manually synchronising a slave repo
+## #sync manually synchronising a slave repo
 
 You can use the `gitolite mirror push` command on a master to manually
 synchronise any of its slaves.  Try it with `-h` to get usage info.
