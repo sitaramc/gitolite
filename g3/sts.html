@@ -17,7 +17,7 @@
 |
     <a href="index.html#license">license</a>
 </p>
-<h2><a name="sts"></a> ssh troubleshooting</h2>
+<h2>ssh troubleshooting</h2>
 
 <p><strong>This document must be read in full the first time.  If you start from some
 nice looking section in the middle it may not help you unless you're already
@@ -110,7 +110,7 @@ you there again.  Especially the first bullet.</p>
 <p>Done?  OK, read on...</p>
 
 <p>The following problem(s) indicate that pubkey access is not working at all, so
-you should start with <a href="ssh-troubleshooting.html#stsapp1">appendix 1</a>.  If that doesn't fix the problem, continue
+you should start with <a href="sts.html#stsapp1">appendix 1</a>.  If that doesn't fix the problem, continue
 with the other appendices in sequence.</p>
 
 <ul>
@@ -119,8 +119,8 @@ you for a password.</li>
 </ul>
 
 <p>The following problem(s) indicate that your pubkey is bypassing gitolite and
-going straight to a shell.  You should start with <a href="ssh-troubleshooting.html#sshkeys-lint">appendix 2</a>
-and continue with the rest in sequence.  <a href="ssh-troubleshooting.html#ybpfail">Appendix 5</a> has some
+going straight to a shell.  You should start with <a href="sts.html#sshkeys-lint">appendix 2</a>
+and continue with the rest in sequence.  <a href="sts.html#ybpfail">Appendix 5</a> has some
 background info.</p>
 
 <ul>
@@ -155,15 +155,15 @@ you there again.  Especially the first bullet.</p>
 <li><p>make sure the server's overall setup even <em>allows</em> pubkey based login.
 I.e., check that git fetch/clone/ls-remote commands or a plain <code>ssh
 git@server info</code> do NOT ask for a password.  If you do get asked for a
-password, see <a href="ssh-troubleshooting.html#stsapp1">appendix 1</a>.</p></li>
+password, see <a href="sts.html#stsapp1">appendix 1</a>.</p></li>
 <li><p>match client-side pubkeys (<code>~/.ssh/*.pub</code>) with the server's authkeys
 file.  To do this, run <code>sshkeys-lint</code>, which tells you in detail what key
-has what access.  See <a href="ssh-troubleshooting.html#sshkeys-lint">appendix 2</a>.</p></li>
+has what access.  See <a href="sts.html#sshkeys-lint">appendix 2</a>.</p></li>
 <li><p>at this point, we know that we have the right key, and that if sshd
 receives that key, things will work.  But we're not done yet.  We still
 need to make sure that this specific key is being offered/sent by the
-client, instead of the default key.  See <a href="ssh-troubleshooting.html#stsapp3">appendix 3</a> and
-<a href="ssh-troubleshooting.html#ssh-ha">appendix 4</a>.</p></li>
+client, instead of the default key.  See <a href="sts.html#stsapp3">appendix 3</a> and
+<a href="sts.html#ssh-ha">appendix 4</a>.</p></li>
 </ul>
 
 <h3>random tips, tricks, and notes</h3>
@@ -373,7 +373,7 @@ verbose mode and look for the word "Offering", like so:</p>
 
 <p>If some keys <em>are</em> being offered, but not the key that was supposed to be
 used, you may be using ssh-agent (next bullet).  You may also need to
-create some host aliases in <code>~/.ssh/config</code> (<a href="ssh-troubleshooting.html#ssh-ha">appendix 4</a>).</p></li>
+create some host aliases in <code>~/.ssh/config</code> (<a href="sts.html#ssh-ha">appendix 4</a>).</p></li>
 <li><p>(ssh-agent issues) If <code>ssh-add -l</code> responds with either "The agent has no
 identities." or "Could not open a connection to your authentication
 agent.", then you can skip this bullet.</p>

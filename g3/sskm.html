@@ -1,0 +1,305 @@
+
+<head><style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style></head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="index.html">main page</a>
+|
+    <a href="index.html#license">license</a>
+</p>
+<h1>changing keys -- self service key management</h1>
+
+<p>[Note on g3 version: this has been manually spot-tested; there is no test suite.  Changes from g2 version are minimal so it should all work fine but please report errors!]</p>
+
+<p>Follow this guide to add keys to or remove keys from your account. Note that you cannot use this method to add your <em>first</em> key to the account; you must still email your initial key to your admin.</p>
+
+<p>The key management is done using a command called <code>sskm</code>.  This command must be enabled for remote use by the admin (see <a href="cust.html#commands">here</a> for more on this).</p>
+
+<hr />
+
+<ul>
+<li><a href="sskm.html">changing keys -- self service key management</a>
+<ul>
+<li>Important!
+<ul>
+<li>Key fingerprints</li>
+<li>Active keys</li>
+<li>Selecting which key to use</li>
+<li>Public vs. private keys</li>
+</ul></li>
+<li>Listing your existing keys</li>
+<li>Adding or Replacing a key
+<ul>
+<li>Step 1: Adding the Key</li>
+<li>Step 2: Confirming the addition</li>
+<li>Optional: Undoing a mistaken add (before confirmation)</li>
+</ul></li>
+<li>Removing a key
+<ul>
+<li>Step 1: Mark the key for deletion</li>
+<li>Step 2: Confirming the deletion</li>
+<li>Optional: Undoing a mistaken delete (before confirmation)</li>
+</ul></li>
+<li>important notes for the admin</li>
+</ul></li>
+</ul>
+
+<hr />
+
+<h2>Important!</h2>
+
+<p>There are a few things that you should know before using the key management system. Please do not ignore this section!</p>
+
+<h3>Key fingerprints</h3>
+
+<p>Keys are identified in some of these subcommands by their fingerprints. To see the fingerprint for a public key on your computer, use the following syntax:</p>
+
+<pre><code>ssh-keygen -l -f &lt;path_to_public_key.pub&gt;
+</code></pre>
+
+<p>You'll get output like:</p>
+
+<pre><code>jeff@baklava ~  $  ssh-keygen -l -f .ssh/jeffskey.pub 
+2048 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44 .ssh/jeffskey.pub (RSA)
+</code></pre>
+
+<h3>Active keys</h3>
+
+<p>Any keys that you can use to interact with the system are active keys. (Inactive keys are keys that are, for instance, scheduled to be added or removed.) Keys are identified with their <code>keyid</code>; see the section below on listing keys.</p>
+
+<p>If you have no current active keys, you will be locked out of the system (in which case email your admin for help). Therefore, be sure that you are never removing your only active key!</p>
+
+<h3>Selecting which key to use</h3>
+
+<p>Although you can identify yourself to the Gitolite system with any of your active keys on the server, at times it is necessary to specifically pick which key you are identifying with. To pick the key to use, pass the <code>-i</code> flag into <code>ssh</code>:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/jeffskey git@git info
+hello jeff, the gitolite version here is v2.0.1-11-g1cd3414
+the gitolite config gives you the following access:
+ @C  R   W      [a-zA-Z0-9][a-zA-Z0-9_\-\.]+[a-zA-Z0-9]
+....
+</code></pre>
+
+<p><em>N.B.</em>: If you have any keys loaded into <code>ssh-agent</code> (i.e., <code>ssh-add -l</code> shows
+at least one key), then this may not work properly.  <code>ssh</code> has a bug which
+makes it ignore <code>-i</code> values when that key has not been loaded into the agent.
+One solution is to add the key you want to use (e.g., <code>ssh-add
+.ssh/jeffskey</code>).  The other is to remove <em>all</em> the keys from the agent or
+disable the agent, using one of these commands:</p>
+
+<ul>
+<li>Terminate <code>ssh-agent</code> or use <code>ssh-add -D</code> flag to remove identities from it</li>
+<li>If using <code>keychain</code>, run <code>keychain --clear</code> to remove identities</li>
+<li>Unset the <code>SSH_AUTH_SOCK</code> and <code>SSH_AGENT_PID</code> variables in the current shell</li>
+</ul>
+
+<h3>Public vs. private keys</h3>
+
+<p>In this guide, all keys are using their full suffix. In other words, if you see a <code>.pub</code> at the end of a key, it's the public key; if you don't, it's the private key. For instance, when using the <code>-i</code> flag with <code>ssh</code>, you are specifying private keys to use. When you are submitting a key for addition to the system, you are using the public key.</p>
+
+<h2>Listing your existing keys</h2>
+
+<p>To see a list of your existing keys, use the <code>list</code> argument to <code>sskm</code>:</p>
+
+<pre><code>jeff@baklava ~  $  ssh git@git sskm list
+hello jeff, you are currently using a normal ("active") key
+you have the following keys:
+== active keys ==
+1: 72:ef:a3:e0:f5:06:f8:aa:6f:a2:88:9d:50:86:25:4e  : jeff@key1.pub
+2: 61:38:a7:9f:ba:cb:99:81:4f:49:2c:8b:c8:63:8e:33  : jeff@key2.pub
+3: 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44  : jeff@key3.pub
+</code></pre>
+
+<p>Notice the <code>@</code> sign in each key's name? That sign and the text after that up until the <code>.pub</code> is the <code>keyid</code>. This is what you will use when identifying keys to the system. Above, for instance, one of my keys has the <code>keyid</code> of <code>@key3</code>.</p>
+
+<p>A keyid may be <em>empty</em>; in fact to start with you may only have a single
+<code>jeff.pub</code> key, depending on how your admin added your initial key.  You can
+use any keyid you wish when adding keys (like <code>@home</code>, <code>@laptop</code>, ...); the
+only rules are that it must start with the <code>@</code> character and after that
+contain only digits, letters, or underscores.</p>
+
+<h2>Adding or Replacing a key</h2>
+
+<h3>Step 1: Adding the Key</h3>
+
+<p>Adding and replacing a key is the same process. What matters is the <code>keyid</code>. When adding a new key, use a new <code>keyid</code>; when replacing a key, pass in the <code>keyid</code> of the key you want to replace, as found by using the <code>list</code> subcommand. Pretty simple!</p>
+
+<p>To add a key, pipe in the text of your new key using <code>cat</code> to the <code>add</code> subcommand. In the example below, I explicitly select which existing, active pubkey to identify with for the command (using the <code>-i</code> parameter to ssh) for clarity:</p>
+
+<pre><code>jeff@baklava ~  $  cat .ssh/newkey.pub | ssh -i .ssh/jeffskey git@git sskm add @key4
+hello jeff, you are currently using a normal ("active") key
+please supply the new key on STDIN.  (I recommend you
+        don't try to do this interactively, but use a pipe)
+</code></pre>
+
+<p>If you now run the <code>list</code> command you'll see that it's scheduled for addition:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/jeffskey git@git sskm list
+hello jeff, you are currently using a normal ("active") key
+you have the following keys:
+== active keys ==
+1: 72:ef:a3:e0:f5:06:f8:aa:6f:a2:88:9d:50:86:25:4e  : jeff@key1.pub
+2: 61:38:a7:9f:ba:cb:99:81:4f:49:2c:8b:c8:63:8e:33  : jeff@key2.pub
+3: 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44  : jeff@key3.pub
+== keys marked for addition/replacement ==
+1: ff:92:a2:20:6d:42:6b:cf:20:e8:a2:4a:3b:b0:32:3a  : jeff@key4.pub
+</code></pre>
+
+<h3>Step 2: Confirming the addition</h3>
+
+<p>Gitolite uses Git internally to store the keys. Just like with Git, where you commit locally before <code>push</code>-ing up to the server, you need to confirm the key addition (see the next section if you made a mistake). We use the <code>confirm-add</code> subcommand to do this, <em>but</em>: to verify that you truly have ownership of the corresponding private key, you <em>must</em> use the key you are adding itself to do the confirmation! (Inconvenient like most security, but very necessary from a security perspective.) This is where using the <code>-i</code> flag of <code>ssh</code> comes in handy:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/newkey git@git sskm confirm-add @key4
+hello jeff, you are currently using a key in the 'marked for add' state
+</code></pre>
+
+<p>Listing keys again shows that all four keys are now active:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/newkey git@git sskm list
+hello jeff, you are currently using a normal ("active") key
+you have the following keys:
+== active keys ==
+1: 72:ef:a3:e0:f5:06:f8:aa:6f:a2:88:9d:50:86:25:4e  : jeff@key1.pub
+2: 61:38:a7:9f:ba:cb:99:81:4f:49:2c:8b:c8:63:8e:33  : jeff@key2.pub
+3: 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44  : jeff@key3.pub
+4: ff:92:a2:20:6d:42:6b:cf:20:e8:a2:4a:3b:b0:32:3a  : jeff@key4.pub
+</code></pre>
+
+<h3>Optional: Undoing a mistaken add (before confirmation)</h3>
+
+<p>Another advantage of Gitolite using Git internally is that that if we mistakenly add the wrong key, we can undo it before it's confirmed by passing in the <code>keyid</code> we want to remove into the <code>undo-add</code> subcommand:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/jeffskey git@git sskm undo-add @key4
+hello jeff, you are currently using a normal ("active") key
+</code></pre>
+
+<p>Listing the keys shows that that new key has been removed:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/jeffskey git@git sskm list
+hello jeff, you are currently using a normal ("active") key
+you have the following keys:
+== active keys ==
+1: 72:ef:a3:e0:f5:06:f8:aa:6f:a2:88:9d:50:86:25:4e  : jeff@key1.pub
+2: 61:38:a7:9f:ba:cb:99:81:4f:49:2c:8b:c8:63:8e:33  : jeff@key2.pub
+3: 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44  : jeff@key3.pub
+</code></pre>
+
+<h2>Removing a key</h2>
+
+<h3>Step 1: Mark the key for deletion</h3>
+
+<p>Deleting a key works very similarly to adding a key, with <code>del</code> substituted for <code>add</code>.</p>
+
+<p>Let's say that I have my four keys from the example above:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/newkey git@git sskm list
+hello jeff, you are currently using a normal ("active") key
+you have the following keys:
+== active keys ==
+1: 72:ef:a3:e0:f5:06:f8:aa:6f:a2:88:9d:50:86:25:4e  : jeff@key1.pub
+2: 61:38:a7:9f:ba:cb:99:81:4f:49:2c:8b:c8:63:8e:33  : jeff@key2.pub
+3: 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44  : jeff@key3.pub
+4: ff:92:a2:20:6d:42:6b:cf:20:e8:a2:4a:3b:b0:32:3a  : jeff@key4.pub
+</code></pre>
+
+<p>I would like to remove the key that on my box is called <code>newkey</code> and in the Gitolite system is known as <code>@key4</code>.</p>
+
+<p>I simply pass in the identifier to the <code>del</code> subcommand of <code>sskm</code>:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/newkey git@git sskm del @key4
+hello jeff, you are currently using a normal ("active") key
+</code></pre>
+
+<p>Listing the keys now shows that it is marked for deletion:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/newkey git@git sskm list
+hello jeff, you are currently using a key in the 'marked for del' state
+you have the following keys:
+== active keys ==
+1: 72:ef:a3:e0:f5:06:f8:aa:6f:a2:88:9d:50:86:25:4e  : jeff@key1.pub
+2: 61:38:a7:9f:ba:cb:99:81:4f:49:2c:8b:c8:63:8e:33  : jeff@key2.pub
+3: 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44  : jeff@key3.pub
+== keys marked for deletion ==
+1: ff:92:a2:20:6d:42:6b:cf:20:e8:a2:4a:3b:b0:32:3a  : jeff@key4.pub
+</code></pre>
+
+<h3>Step 2: Confirming the deletion</h3>
+
+<p>Just like with Git, where you commit locally before <code>push</code>-ing up to the server, you need to confirm the key addition (see the next section if you made a mistake). We use the <code>confirm-del</code> subcommand to do this, <em>but</em>: unlike the <code>confirm-add</code> subcommand, you <em>must</em> use a <em>different</em> key than the key you are deleting to do the confirmation! This prevents you from accidentally locking yourself out of the system by removing all active keys:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/jeffskey git@git sskm confirm-del @key4
+hello jeff, you are currently using a normal ("active") key
+</code></pre>
+
+<p>Listing keys again shows that the fourth key has been removed:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/jeffskey git@git sskm list
+hello jeff, you are currently using a normal ("active") key
+you have the following keys:
+== active keys ==
+1: 72:ef:a3:e0:f5:06:f8:aa:6f:a2:88:9d:50:86:25:4e  : jeff@key1.pub
+2: 61:38:a7:9f:ba:cb:99:81:4f:49:2c:8b:c8:63:8e:33  : jeff@key2.pub
+3: 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44  : jeff@key3.pub
+</code></pre>
+
+<h3>Optional: Undoing a mistaken delete (before confirmation)</h3>
+
+<p>Another advantage of Gitolite using Git internally is that that if we mistakenly delete the wrong key, we can undo it before it's confirmed by passing in the <code>keyid</code> we want to keep into the <code>undo-del</code> subcommand. Note that this operation <em>must</em> be performed using the private key that corresponds to the key you are trying to keep! (Security reasons, similar to the reason that you must confirm an addition this way; it prevents anyone from undoing a deletion, and therefore keeping in the system, a key that they cannot prove (by having the corresponding private key) should stay in the system):</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/newkey git@git sskm undo-del @key4
+hello jeff, you are currently using a key in the 'marked for del' state
+
+You're undeleting a key that is currently marked for deletion.
+    Hit ENTER to undelete this key
+    Hit Ctrl-C to cancel the undelete
+Please see documentation for caveats on the undelete process as well as how to
+actually delete it.
+</code></pre>
+
+<p>(Go ahead and hit ENTER there; the caveats are really only on the administrative side of things.)</p>
+
+<p>Listing the keys shows that that new key is now marked active again:</p>
+
+<pre><code>jeff@baklava ~  $  ssh -i .ssh/newkey git@git sskm list
+hello jeff, you are currently using a normal ("active") key
+you have the following keys:
+== active keys ==
+1: 72:ef:a3:e0:f5:06:f8:aa:6f:a2:88:9d:50:86:25:4e  : jeff@key1.pub
+2: 61:38:a7:9f:ba:cb:99:81:4f:49:2c:8b:c8:63:8e:33  : jeff@key2.pub
+3: 2d:78:d4:2c:b1:6d:9a:dc:d9:0d:94:3c:d8:c2:65:44  : jeff@key3.pub
+4: ff:92:a2:20:6d:42:6b:cf:20:e8:a2:4a:3b:b0:32:3a  : jeff@key4.pub
+</code></pre>
+
+<hr />
+
+<h2>important notes for the admin</h2>
+
+<p>These are the things that can break if you allows your users to use this command:</p>
+
+<ul>
+<li><p>if you, as the gitolite admin, are in the habit of force-pushing changes
+to the admin repo instead of doing a <code>git pull</code> (or, even better, a <code>git
+pull --rebase</code>) then you had better not enable this command.  Your users
+will eventually come after you with pitchforks ;-)</p></li>
+<li><p>there is no way to distinguish <code>foo/alice.pub</code> from <code>bar/alice.pub</code> using
+this command.  You can distinguish <code>foo/alice.pub</code> from
+<code>bar/alice@home.pub</code>, but that's not because of the foo and bar, it's
+because the two files have different keyids.</p>
+
+<p>In other words, sskm only works with the older style, not with the
+"subdirectory" style of <a href="users.html#multi-key">multi-key</a> management.</p></li>
+<li><p>keys placed in specific folders (for whatever reasons), will probably not
+stay in those folders if this command is used.  Even a key delete, followed
+by undoing the delete, will cause the key to effectively move to the root
+of the key store (i.e., the <code>keydir</code> directory in the gitolite-admin repo).</p></li>
+</ul>
