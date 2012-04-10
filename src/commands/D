@@ -1,0 +1,122 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+# ADMINISTRATOR NOTES:
+# ----------------------------------------------------------------------
+
+# - set TRASH_CAN in the rc if you don't like the default.  It should be
+#   relative to GL_REPO_BASE or an absolute value.  It should also be on the
+#   same filesystem as GL_REPO_BASE, otherwise the 'mv' will take too long.
+
+# - you could set TRASH_SUFFIX also but I recomend you leave it as it is
+
+# - run a cron job to delete old repos based on age (the TRASH_SUFFIX has a
+#   timestamp); your choice how/how often you do that
+# ----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------
+# Usage:    ssh git@host D <subcommand> <argument>
+#
+# The whimsically named "D" command deletes repos ("D" is a counterpart to the
+# "C" permission which lets you create repos!)
+#
+# There are two kinds of deletions: 'rm' removes a repo completely, while
+# 'trash' moves it to a trashcan which can be recovered later (upto a time
+# limit that your admin will tell you).
+#
+# The 'rm', 'lock', and 'unlock' subcommands:
+#     Initially, all repos are "locked" against 'rm'.  The correct sequence is
+#         ssh git@host D unlock repo
+#         ssh git@host D rm repo
+#     Since the initial condition is always locked, the "lock" command is
+#     rarely used but it is there if you want it.
+#
+# The 'trash', 'list-trash', and 'restore' subcommands:
+#     You can 'trash' a repo, which moves it to a special place:
+#         ssh git@host D trash repo
+#     You can then 'list-trash'
+#         ssh git@host D list-trash
+#     which prints something like
+#         repo/2012-04-11_05:58:51
+#     allowing you to restore by saying
+#         ssh git@host D restore repo/2012-04-11_05:58:51
+
+die() { echo "$@" >&2; exit 1; }
+usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
+[ -z "$1" ] && usage
+[ "$1" = "-h" ] && usage
+[ -z "$GL_USER" ] && die GL_USER not set
+
+# ----------------------------------------------------------------------
+cmd=$1; shift
+repo=$1; shift  # may not be present for 'list-trash' command
+# ----------------------------------------------------------------------
+RB=`gitolite query-rc GL_REPO_BASE`;            cd $RB
+TRASH_CAN=`gitolite query-rc TRASH_CAN`;        tcan=Trash;                     TRASH_CAN=${TRASH_CAN:-$tcan}
+TRASH_SUFFIX=`gitolite query-rc TRASH_SUFFIX`;  tsuf=`date +%Y-%m-%d_%H:%M:%S`; TRASH_SUFFIX=${TRASH_SUFFIX:-$tsuf}
+# ----------------------------------------------------------------------
+
+owner_or_die() {
+    gitolite creator "$repo" $GL_USER || die You are not authorised
+}
+
+# ----------------------------------------------------------------------
+
+if [ "$cmd" = "rm" ]
+then
+
+    owner_or_die
+    [ -f $repo.git/gl-rm-ok ] || die "'$repo' is locked!"
+    rm -rf $repo.git
+    echo "'$repo' is now gone!"
+
+elif [ "$cmd" = "lock" ]
+then
+
+    owner_or_die
+    rm -f $repo.git/gl-rm-ok
+    echo "'$repo' is now locked"
+
+elif [ "$cmd" = "unlock" ]
+then
+
+    owner_or_die
+    touch $repo.git/gl-rm-ok
+    echo "'$repo' is now unlocked"
+
+elif [ "$cmd" = "trash" ]
+then
+
+    owner_or_die
+    mkdir -p $TRASH_CAN/$repo 2>/dev/null || die "failed creating directory in trashcan"
+    [ -d $TRASH_CAN/$repo/$TRASH_SUFFIX ] && die "try again in a few seconds..."
+    mv $repo.git $TRASH_CAN/$repo/$TRASH_SUFFIX
+    echo "'$repo' moved to trashcan"
+
+elif [ "$cmd" = "list-trash" ]
+then
+
+    cd $TRASH_CAN 2>/dev/null || exit 0
+    find . -name gl-creator | sort | while read t
+    do
+        owner=
+        owner=`cat "$t"`
+        [ "$owner" = "$GL_USER" ] && dirname $t
+    done | cut -c3-
+
+elif [ "$cmd" = "restore" ]
+then
+
+    owner=
+    owner=`cat $TRASH_CAN/$repo/gl-creator 2>/dev/null`
+    [ "$owner" = "$GL_USER" ] || die "'$repo' is not yours!"
+
+    cd $TRASH_CAN
+    realrepo=`dirname $repo`
+    [ -d $RB/$realrepo.git ] && die "'$realrepo' already exists"
+    mv $repo $RB/$realrepo.git
+    echo "'$repo' restored to '$realrepo'"
+
+else
+    die "unknown subcommand '$cmd'"
+fi

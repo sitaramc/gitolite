@@ -17,6 +17,7 @@ Here's a list of remote commands that are shipped:
   * 'perms' -- get/set the gl-perms file; see [perms][] for more
   * 'sskm' -- self-service key management
   * 'writable' -- disabling pushes to take backups etc
+  * 'D' -- deleting user-created repos
 
 ## syntactic sugar
 

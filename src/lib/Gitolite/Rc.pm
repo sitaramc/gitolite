@@ -287,11 +287,13 @@ __DATA__
     COMMANDS                    =>
         {
             'help'              =>  1,
-            'info'              =>  1,
             'desc'              =>  1,
-            'perms'             =>  1,
+            'info'              =>  1,
             # 'mirror'          =>  1,
+            'perms'             =>  1,
+            # 'sskm'            =>  1,
             'writable'          =>  1,
+            # 'D'               =>  1,
         },
 
     # comment out or uncomment as needed
