@@ -6,7 +6,7 @@ The following activities require command line access to the server
 
   * changing anything in the [rc][] file
   * installing custom [hooks][], whether to all repos or just some repos
-  * moving [existing][] (bare) repos into gitolite control
+  * moving [existing][] repos into gitolite control
 
 Please read the [WARNINGS][] page first.
 

@@ -161,6 +161,9 @@ sub new_repos {
         next unless $repo =~ $REPONAME_PATT;    # skip repo patterns
         next if $repo =~ m(^\@|EXTCMD/);        # skip groups and fake repos
 
+        # use gl-conf as a sentinel
+        hook_1($repo) if -d "$repo.git" and not -f "$repo.git/gl-conf";
+
         new_repo($repo) if not -d "$repo.git";
     }
 }

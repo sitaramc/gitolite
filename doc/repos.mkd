@@ -1,8 +1,11 @@
 # adding and removing repos
 
+**NOTE**: this page describes how to add new repos.  To bring already existing
+repos into gitolite control, click [here][existing].
+
 >   ----
 
->   *WARNING: Do NOT add repos directly on the server.  Clone the
+>   *WARNING: Do NOT add new repos directly on the server.  Clone the
 >   'gitolite-admin' repo to your workstation, make changes to it, then add,
 >   commit, and push.  When the push hits the server, the server "acts" upon
 >   your changes.*
