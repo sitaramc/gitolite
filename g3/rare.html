@@ -21,15 +21,30 @@
 
 <h2><a name="existing"></a> moving existing repos into gitolite</h2>
 
+<p>On the server:</p>
+
 <ul>
-<li><p>move the repos to <code>$HOME/repositories</code>.  Make sure they are all <em>bare</em>
-repos, and the directory names end in ".git".</p></li>
+<li><p>move the repos to <code>$HOME/repositories</code>.</p></li>
+<li><p>make sure that:</p>
+
+<ul>
+<li>they are all <em>bare</em> repos</li>
+<li>all the repo names end in ".git"</li>
+<li>all the files and directories are owned and writable by the gitolite
+hosting user (especially true if you copied them as root)</li>
+</ul></li>
+<li><p>run <code>gitolite setup</code>.  <strong>If you forget this step, you can also forget
+about write access control!</strong></p></li>
+</ul>
+
+<p>Back on your workstation:</p>
+
+<ul>
 <li><p><a href="repos.html">add them</a> to conf/gitolite.conf in your clone of the admin repo,
 then commit and push the change.</p>
 
 <p>If the repos are already covered by some <a href="wild.html">wild</a> pattern, this is
 optional.</p></li>
-<li><p>run <code>gitolite setup</code> to fix up the hooks on all repos, just in case.</p></li>
 </ul>
 
 <h2><a name="moving"></a> moving servers</h2>
