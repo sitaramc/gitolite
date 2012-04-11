@@ -50,7 +50,8 @@ try "
 
     # clean install
     mkdir -p $ENV{HOME}/bin
-    ln -sf $ENV{PWD}/src/gitolite $ENV{PWD}/t/glt ~/bin
+    ln -sf $ENV{PWD}/t/glt ~/bin
+    ./install -ln
     cd; rm -vrf .gito* repositories
     git config --global user.name \"gitolite tester\"
     git config --global user.email \"tester\@example.com\"
