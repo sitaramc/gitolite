@@ -21,7 +21,7 @@
 
 <p><font color="red"><strong>NOTE</strong>: if you're migrating from g2, there are some
 settings that MUST be dealt with <strong>before</strong> running <code>gitolite setup</code>; please
-read the <a href="g2migr.html">g2 migration</a> page and linked pages.</font></p>
+start <a href="install.html#migr">here</a>.  RTFM is <em>mandatory</em> for migrations.</font></p>
 
 <h2>notes and naming conventions</h2>
 
@@ -165,26 +165,69 @@ git's 150 executables in /usr/libexec/git-core, so maybe
 perl's <code>@INC</code> path.</li>
 </ul>
 
-<h2>migrating</h2>
+<h2><a name="migr"></a> migrating</h2>
 
-<p>There are a lot of migration hints and notes; see links at the top of this
-document.</p>
+<p><font color="gray">If you're migrating from gitosis, <a href="gsmigr.html">this</a> is what
+you want to start with.</font></p>
 
-<p>But here's the <strong>bottom line</strong> on migrating: nothing in any of the gitolite
-install/setup/etc will ever touch the <em>data</em> in any repository except the
-gitolite-admin repo.  The only thing it will normally touch is the <code>update</code>
-hook.</p>
+<p>First things first: g2 will be supported for a good long time for critical
+bugs, although enhancements and new features won't happen.</p>
 
-<p>So one fool-proof way of "migrating" from any older gitolite is this:</p>
+<p>If you're an existing (gitolite v1.x or v2.x) user, and wish to migrate , here
+are the steps:</p>
+
+<h3>pre-migration</h3>
 
 <ol>
-<li><p>Wipe out the old gitolite, but <strong>carefully</strong></p>
+<li><p>Check the <a href="dev-status.html">dev-status</a> page to make sure all the features you want have
+been implemented in g3.</p></li>
+<li><p>Read the <a href="g2migr.html">g2 migration</a> page to see what changes affect you and
+your users, and how much time it might take you to migrate.  (The closer
+you were to a default install of the old gitolite, the less time a
+migration will take.)</p></li>
+</ol>
+
+<h3>migration</h3>
+
+<p><strong>Note</strong>: nothing in any of the gitolite install/setup/etc will ever touch the
+<em>data</em> in any repository except the gitolite-admin repo.  The only thing it
+will normally touch in normal repos is the <code>update</code> hook.</p>
+
+<ol>
+<li><p>Carefully wipe out the old gitolite</p>
 
 <ul>
-<li>clone <code>~/repositories/gitolite-admin.git</code> to someplace, then delete it
-(and only it, none of the other repos!) from <code>~/repositories</code></li>
+<li><p>the <strong>code</strong></p>
+
+<ul>
+<li><p>delete or move away all the old gitolite scripts.  Check the path
+to the gl-auth-command in <code>~/.ssh/authorized_keys</code> if you forgot
+where you put them.</p></li>
+<li><p>delete or move away the two directories named in the two variables
+<code>GL_PACKAGE_CONF</code> and <code>GL_PACKAGE_HOOKS</code> in <code>~/.gitolite.rc</code></p></li>
+</ul></li>
+<li><p>the <strong>rc file</strong></p>
+
+<ul>
 <li>rename <code>~/.gitolite.rc</code> to something else</li>
-<li>move the ~/.gitolite/logs<code>directory somewhere else, then delete</code>~/.gitolite`</li>
+</ul></li>
+<li><p>the <strong>admin repo</strong></p>
+
+<ul>
+<li>clone <code>~/repositories/gitolite-admin.git</code> to someplace safe</li>
+<li>then delete <code>~/repositories/gitolite-admin.git</code></li>
+</ul>
+
+<p>(make sure you do not delete any other repos!)</p></li>
+<li><p>the <strong>admin directory</strong></p>
+
+<ul>
+<li><p>if you need to preserve logs, move the ~/.gitolite/logs` directory
+somewhere else</p></li>
+<li><p>if you added any custom hooks and wish to preserve them, move the
+~/.gitolite/hooks` directory somewhere else</p></li>
+<li><p>delete <code>~/.gitolite</code></p></li>
+</ul></li>
 </ul></li>
 <li><p>Read about <a href="g2migr.html#rc-preset">presetting</a> the rc file; if you're using any
 variables listed as requiring preset, follow those instructions to create

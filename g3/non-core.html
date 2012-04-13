@@ -19,6 +19,24 @@
 </p>
 <h1>non-core programs shipped with gitolite</h1>
 
+<hr />
+
+<ul>
+<li><a href="non-core.html">non-core programs shipped with gitolite</a>
+<ul>
+<li>commands</li>
+<li>syntactic sugar</li>
+<li>triggers</li>
+<li>VREFs</li>
+<li>special cases
+<ul>
+<li><a href="non-core.html#partial-copy">partial-copy: selective read control for branches</a></li>
+</ul></li>
+</ul></li>
+</ul>
+
+<hr />
+
 <h2>commands</h2>
 
 <p>A list of these commands can be obtained by running <code>gitolite help</code> on the
@@ -108,7 +126,7 @@ obvious reasons.</li>
 
 <h2>special cases</h2>
 
-<h3><a name="partial-copy"></a> partial-copy</h3>
+<h3><a name="partial-copy"></a> partial-copy: selective read control for branches</h3>
 
 <p>Git (and therefore gitolite) cannot do selective read control -- allowing
 someone to read branch A but not branch B.  It's the entire repo or nothing.</p>
@@ -118,7 +136,10 @@ because they have their own git stack (and their own sshd, and so on) all in
 one big Java program.  Gerrit is <em>really</em> useful if you want code review to be
 part of the access control decision] </font></p>
 
-<p>Gitolite can now help you do this, as follows:</p>
+<p>Gitolite can now help you do this.  Note that this is only for branches; you
+can't do this for files and directories.</p>
+
+<p>Here's how:</p>
 
 <ol>
 <li><p>enable 'partial-copy' in the <code>PRE_GIT</code> section in the rc file.</p></li>
