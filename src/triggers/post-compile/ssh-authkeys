@@ -16,11 +16,11 @@ $|++;
 tsh_try("sestatus");
 my $selinux = ( tsh_text() =~ /enabled/ );
 
-my $ab = `gitolite query-rc -n GL_ADMIN_BASE`;
+my $ab = $rc{GL_ADMIN_BASE};
 trace( 2, "'keydir' not found in '$ab'; exiting" ), exit if not -d "$ab/keydir";
 my $akdir        = "$ENV{HOME}/.ssh";
 my $akfile       = "$ENV{HOME}/.ssh/authorized_keys";
-my $glshell      = `gitolite query-rc -n GL_BINDIR` . "/gitolite-shell";
+my $glshell      = $rc{GL_BINDIR} . "/gitolite-shell";
 my $auth_options = auth_options();
 
 sanity();
@@ -76,8 +76,7 @@ sub sanity {
 }
 
 sub auth_options {
-    my $auth_options = `gitolite query-rc AUTH_OPTIONS`;
-    chomp($auth_options);
+    my $auth_options = $rc{AUTH_OPTIONS};
     $auth_options ||= "no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty";
 
     return $auth_options;

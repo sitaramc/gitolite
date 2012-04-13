@@ -13,8 +13,8 @@ in doc/sskm.mkd or online at http://sitaramc.github.com/gitolite/sskm.html.
 
 usage() if @ARGV and $ARGV[0] eq '-h';
 
-my $rb = `gitolite query-rc -n GL_REPO_BASE`;
-my $ab = `gitolite query-rc -n GL_ADMIN_BASE`;
+my $rb = $rc{GL_REPO_BASE};
+my $ab = $rc{GL_ADMIN_BASE};
 # get to the keydir
 _chdir("$ab/keydir");
 
