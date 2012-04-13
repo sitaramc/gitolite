@@ -2,7 +2,7 @@
 
 <font color="red">**NOTE**: if you're migrating from g2, there are some
 settings that MUST be dealt with **before** running `gitolite setup`; please
-read the [g2 migration][g2migr] page and linked pages.</font>
+start [here][migr].  RTFM is *mandatory* for migrations.</font>
 
 ## notes and naming conventions
 
@@ -132,24 +132,64 @@ Creating a symlink doesn't need a separate program but 'install' also runs
   * The `Gitolite` directory can also be there, or it can be anywhere in
     perl's `@INC` path.
 
-## migrating
+## #migr migrating
 
-There are a lot of migration hints and notes; see links at the top of this
-document.
+<font color="gray">If you're migrating from gitosis, [this][gsmigr] is what
+you want to start with.</font>
 
-But here's the **bottom line** on migrating: nothing in any of the gitolite
-install/setup/etc will ever touch the *data* in any repository except the
-gitolite-admin repo.  The only thing it will normally touch is the `update`
-hook.
+First things first: g2 will be supported for a good long time for critical
+bugs, although enhancements and new features won't happen.
 
-So one fool-proof way of "migrating" from any older gitolite is this:
+If you're an existing (gitolite v1.x or v2.x) user, and wish to migrate , here
+are the steps:
 
-1.  Wipe out the old gitolite, but **carefully**
+### pre-migration
 
-      * clone `~/repositories/gitolite-admin.git` to someplace, then delete it
-        (and only it, none of the other repos!) from `~/repositories`
-      * rename `~/.gitolite.rc` to something else
-      * move the ~/.gitolite/logs` directory somewhere else, then delete `~/.gitolite`
+1.  Check the [dev-status][] page to make sure all the features you want have
+    been implemented in g3.
+
+2.  Read the [g2 migration][g2migr] page to see what changes affect you and
+    your users, and how much time it might take you to migrate.  (The closer
+    you were to a default install of the old gitolite, the less time a
+    migration will take.)
+
+### migration
+
+**Note**: nothing in any of the gitolite install/setup/etc will ever touch the
+*data* in any repository except the gitolite-admin repo.  The only thing it
+will normally touch in normal repos is the `update` hook.
+
+1.  Carefully wipe out the old gitolite
+
+      * the **code**
+
+          * delete or move away all the old gitolite scripts.  Check the path
+            to the gl-auth-command in `~/.ssh/authorized_keys` if you forgot
+            where you put them.
+
+          * delete or move away the two directories named in the two variables
+            `GL_PACKAGE_CONF` and `GL_PACKAGE_HOOKS` in `~/.gitolite.rc`
+
+      * the **rc file**
+
+          * rename `~/.gitolite.rc` to something else
+
+      * the **admin repo**
+
+          * clone `~/repositories/gitolite-admin.git` to someplace safe
+          * then delete `~/repositories/gitolite-admin.git`
+
+        (make sure you do not delete any other repos!)
+
+      * the **admin directory**
+
+          * if you need to preserve logs, move the ~/.gitolite/logs` directory
+            somewhere else
+
+          * if you added any custom hooks and wish to preserve them, move the
+            ~/.gitolite/hooks` directory somewhere else
+
+          * delete `~/.gitolite`
 
 2.  Read about [presetting][rc-preset] the rc file; if you're using any
     variables listed as requiring preset, follow those instructions to create

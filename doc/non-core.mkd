@@ -1,5 +1,11 @@
 # non-core programs shipped with gitolite
 
+----
+
+[[TOC]]
+
+----
+
 ## commands
 
 A list of these commands can be obtained by running `gitolite help` on the
@@ -82,7 +88,7 @@ VREFs have their [own page][vref].
 
 ## special cases
 
-### #partial-copy partial-copy
+### #partial-copy partial-copy: selective read control for branches
 
 Git (and therefore gitolite) cannot do selective read control -- allowing
 someone to read branch A but not branch B.  It's the entire repo or nothing.
@@ -92,7 +98,10 @@ because they have their own git stack (and their own sshd, and so on) all in
 one big Java program.  Gerrit is *really* useful if you want code review to be
 part of the access control decision] </font>
 
-Gitolite can now help you do this, as follows:
+Gitolite can now help you do this.  Note that this is only for branches; you
+can't do this for files and directories.
+
+Here's how:
 
 1.  enable 'partial-copy' in the `PRE_GIT` section in the rc file.
 

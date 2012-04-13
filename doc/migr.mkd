@@ -1,6 +1,0 @@
-# migrating to gitolite
-
-If you're an existing (gitolite v1.x or v2.x) user, start with the [g2
-migration][g2migr] page.
-
-If you're migrating from gitosis, [this][gsmigr] is what you want.
