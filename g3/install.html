@@ -143,26 +143,31 @@ gitolite/install -to /usr/local/gitolite/bin
 <li>Update your clone of the gitolite source.</li>
 <li>Repeat the install command you used earlier (make sure you use the same
 arguments as before).</li>
-<li>Run <code>gitolite setup</code> just in case the hooks changed.</li>
+<li>Run <code>gitolite setup</code>.</li>
 </ul>
 
 <h2>packaging gitolite</h2>
 
-<ol>
-<li><p>Put src/Gitolite in <code>/usr/share/perl5/vendor_perl</code> or some such place.</p></li>
-<li><p>Put the rest of src anywhere your distro policy allows.  (Fedora keeps
-git's 150 executables in /usr/libexec/git-core, so maybe
-/usr/libexec/gitolite?)</p></li>
-<li><p>Symlink 'gitolite' to /usr/bin or something, similar to option 2.</p></li>
-</ol>
-
-<p><strong>Bottom line</strong>:</p>
+<p>Here are the requirements for gitolite:</p>
 
 <ul>
-<li><code>GL_BINDIR</code> must point to a place that contains <code>commands</code>, <code>VREF</code>, and
-<code>syntactic-sugar</code> (so they must all be sibling directories).</li>
-<li>The <code>Gitolite</code> directory can also be there, or it can be anywhere in
-perl's <code>@INC</code> path.</li>
+<li><p>The programs <code>gitolite</code> and <code>gitolite-shell</code>, and the directories
+<code>commands</code>, <code>lib</code>, <code>syntactic-sugar</code>, <code>triggers</code>, and <code>VREF</code> must all be
+in the same directory.</p>
+
+<p>It doesn't matter what this directory is.  As an example, Fedora keeps
+git's 150 executables in /usr/libexec/git-core, so /usr/libexec/gitolite
+may be a good choice; it's upto you.</p>
+
+<p>The rest of this section will assume you chose /usr/libexec/gitolite as
+the location.  Adjust as needed.</p></li>
+<li><p>The program <code>/usr/libexec/gitolite/gitolite</code> must then be <em>symlinked</em> to
+some directory in the PATH.  Do not <em>copy</em> it; it must be a symlink.</p></li>
+<li><p>The <code>Gitolite</code> subdirectory in <code>/usr/libexec/gitolite/lib</code> can stay there,
+<strong>OR</strong>, if your distro policies don't allow that, can be put in any
+directory in perl's <code>@INC</code> path (such as <code>/usr/share/perl5/vendor_perl</code>).</p></li>
+<li><p>Finally, a file called <code>/usr/libexec/gitolite/VERSION</code> must contain a
+suitable version string.</p></li>
 </ul>
 
 <h2><a name="migr"></a> migrating</h2>
