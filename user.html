@@ -133,6 +133,12 @@ given read access to the special 'gitolite-admin' repo.  Sorry.  The idea is
 that your admin will tell you what "roles" he added into rules for your repos,
 and what permissions those roles have.</p>
 
+To allow users to actually create wildcard repos, you need to add create permissions:
+<pre><code>    C       =   ALL
+    RW      =   WRITERS
+    R       =   READERS
+</code></pre>
+
 <p><a name="setdesc"></a></p>
 
 <h3>adding a description to repos you created</h3>
