@@ -113,24 +113,32 @@ Creating a symlink doesn't need a separate program but 'install' also runs
   * Update your clone of the gitolite source.
   * Repeat the install command you used earlier (make sure you use the same
     arguments as before).
-  * Run `gitolite setup` just in case the hooks changed.
+  * Run `gitolite setup`.
 
 ## packaging gitolite
 
-1.  Put src/Gitolite in `/usr/share/perl5/vendor_perl` or some such place.
+Here are the requirements for gitolite:
 
-2.  Put the rest of src anywhere your distro policy allows.  (Fedora keeps
-    git's 150 executables in /usr/libexec/git-core, so maybe
-    /usr/libexec/gitolite?)
+  * The programs `gitolite` and `gitolite-shell`, and the directories
+    `commands`, `lib`, `syntactic-sugar`, `triggers`, and `VREF` must all be
+    in the same directory.
 
-3.  Symlink 'gitolite' to /usr/bin or something, similar to option 2.
+    It doesn't matter what this directory is.  As an example, Fedora keeps
+    git's 150 executables in /usr/libexec/git-core, so /usr/libexec/gitolite
+    may be a good choice; it's upto you.
 
-**Bottom line**:
+    The rest of this section will assume you chose /usr/libexec/gitolite as
+    the location.  Adjust as needed.
 
-  * `GL_BINDIR` must point to a place that contains `commands`, `VREF`, and
-    `syntactic-sugar` (so they must all be sibling directories).
-  * The `Gitolite` directory can also be there, or it can be anywhere in
-    perl's `@INC` path.
+  * The program `/usr/libexec/gitolite/gitolite` must then be *symlinked* to
+    some directory in the PATH.  Do not *copy* it; it must be a symlink.
+
+  * The `Gitolite` subdirectory in `/usr/libexec/gitolite/lib` can stay there,
+    **OR**, if your distro policies don't allow that, can be put in any
+    directory in perl's `@INC` path (such as `/usr/share/perl5/vendor_perl`).
+
+  * Finally, a file called `/usr/libexec/gitolite/VERSION` must contain a
+    suitable version string.
 
 ## #migr migrating
 

@@ -42,12 +42,12 @@ more info.
   * `gitolite query-rc` to check the value of an RC variable.  Example use:
     src/commands/desc.
 
-In addition, you can also look at the comments in src/Gitolite/Easy.pm (the
-perl API module) for ideas.
+In addition, you can also look at the comments in src/lib/Gitolite/Easy.pm
+(the perl API module) for ideas.
 
 ### the perl API
 
-...is implemented by Gitolite::Easy; the comments in src/Gitolite/Easy.pm
+...is implemented by Gitolite::Easy; the comments in src/lib/Gitolite/Easy.pm
 serve as documentation.
 
 ## writing your own...
