@@ -45,8 +45,7 @@ Notes:
   * any Unix system with a posix compatible "sh".
   * git version 1.6.6 or later
   * perl 5.8.8 or later
-  * openssh (almost any version).  Optional if you're using the http backend
-    (which is still a TODO item!)
+  * openssh (almost any version).  Optional if you're using [smart http][http]
   * a dedicated Unix userid to be the hosting user, usually "git" but it can
     be any user, even your own normal one.  (If you're using an RPM/DEB the
     install probably created one called "gitolite").

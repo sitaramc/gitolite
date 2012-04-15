@@ -46,7 +46,7 @@ most people see:
   * Can be installed without root access, assuming git and perl are already
     installed.
   * Authentication is most commonly done using sshd, but you can also use
-    httpd if you prefer (this may require root access).
+    [http][] if you prefer (this may require root access).
 
 ## #contact contact
 

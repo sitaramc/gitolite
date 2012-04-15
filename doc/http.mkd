@@ -1,0 +1,70 @@
+# how to setup gitolite to use smart http mode
+
+**Note**: "smart http" refers to the feature that came with git 1.6.6, late
+2009 or so.  The base documentation for this is `man git-http-backend`.  Do
+**NOT** read `Documentation/howto/setup-git-server-over-http.txt` and think
+that is the same or even relevant -- that is from 2006 and is quite different
+(and arguably obsolete).
+
+## WARNINGS and important notes
+
+  * Please read [authentication versus authorisation][auth] first, and make
+    sure you understand what is gitolite's responsibility and what isn't.
+
+  * The 'gitolite' command (for example, 'gitolite compile', 'gitolite
+    query-rc', and so on) *can* be run on the server, but it's not
+    straightforward.  Assuming you installed using the exact same values as in
+    this document:
+
+      * get a shell by using, say, `su -s /bin/bash - apache`
+      * run `export HOME=$HOME/gitolite-home`
+      * run `export PATH=$PATH:$HOME/bin`
+
+    Now you can run `gitolite <subcommand>`
+
+  * I have tested only on stock Fedora 16; YDMV
+
+  * As before, I have not tried making repos available to both ssh *and* http
+    mode clients but it ought to work.  If you managed it, I'd appreciate a
+    doc patch describing how you did it.
+
+## additional requirements
+
+  * requires `GIT_PROJECT_ROOT` (see "man git-http-backend" for what this is)
+    set explicitly (i.e., it is no longer optional).  Please set it to some
+    place outside apache's `DOCUMENT_ROOT`.
+
+## assumptions:
+
+  * apache 2.x and git installed.
+  * httpd runs under the "apache" userid; adjust instructions below if not.
+  * similarly for "/var/www" and other file names/locations.
+
+## instructions
+
+The detailed instructions I used to have in g2 have now been replaced by a
+script called `t/smart-http.root-setup`.  **Do NOT run this script as is -- it
+is actually meant for my testing setup and deletes stuff**.  However, it does
+provide an excellent (and working!) narration of what you need to do to
+install gitolite in smart http mode.
+
+Make a copy of the script, go through it carefully, (possibly removing lines
+that delete files etc.), change values per your system, and only then run it.
+
+## usage
+
+Git URLs look like `http://user:password@server/git/reponame.git`.
+
+The custom commands, like "info", "expand" should be handled as follows.  The
+command name will come just after the `/git/`, followed by a `?`, followed by
+the arguments, with `+` representing a space.  Here are some examples:
+
+    # ssh git@server info
+    curl http://user:password@server/git/info
+    # ssh git@server info repopatt
+    curl http://user:password@server/git/info?repopatt
+    # ssh git@server info repopatt user1 user2
+    curl http://user:password@server/git/info?repopatt+user1+user2
+
+With a few nice shell aliases, you won't even notice the horrible convolutions
+here ;-)  See t/smart-http for a couple of useful ones.

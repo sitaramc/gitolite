@@ -7,9 +7,11 @@ package Gitolite::Setup;
 Usage:  gitolite setup [<option>]
 
     -pk, --pubkey <file>        pubkey file name
+    -a, --admin <name>          admin name
 
-Setup gitolite, compile conf, and fixup hooks.  The pubkey is required on the
-first run.
+Setup gitolite, compile conf, and fixup hooks.  Either the pubkey or the admin
+name is required on the first run, depending on whether you're using ssh mode
+or http mode.
 
 Subsequent runs:
 
@@ -87,7 +89,7 @@ sub setup_glrc {
 
 sub setup_gladmin {
     my ( $admin, $pubkey, $argv ) = @_;
-    _die "no existing conf file found, '-a' required"
+    _die "no existing conf file found, '-pk' or '-a' required"
       if not $admin and not -f "$rc{GL_ADMIN_BASE}/conf/gitolite.conf";
 
     # reminder: 'admin files' are in ~/.gitolite, 'admin repo' is

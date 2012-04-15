@@ -1,0 +1,82 @@
+#!/bin/bash
+
+# ----------------------------------------------------------------------
+# please do not even LOOK at this file without reading doc/http.mkd
+# ----------------------------------------------------------------------
+
+die() { echo "$@"; exit 1; }
+
+# scare the sh*t out of people who run it blindly
+[ -f /tmp/gitolite-smart-http-test-OK ] || {
+    # scary message
+    echo '+ rm -rf /'
+    # lots of disk activity
+    find / >/dev/null 2>/dev/null
+    # and it he's still clueless, God bless!
+    echo 'root file system erased successfully.  Goodbye and God bless!'
+    exit 1
+}
+
+id | grep '=0(root)' || die "you must run this as root"
+
+# delete any existing apache conf for gitolite
+rm /etc/httpd/conf.d/gitolite.conf
+
+# build your "home within a home"
+cd ~apache
+rm -rf gitolite-home
+mkdir gitolite-home
+export GITOLITE_HTTP_HOME=$PWD/gitolite-home
+
+# get the gitolite sources
+cd gitolite-home
+git clone /tmp/gitolite.git gitolite-source
+# NOTE: I use a bare repo in /tmp for convenience; you'd use
+# 'git://github.com/sitaramc/gitolite'
+
+# make the bin directory, and add it to PATH
+cd gitolite-source
+mkdir         $GITOLITE_HTTP_HOME/bin
+./install -ln $GITOLITE_HTTP_HOME/bin
+export PATH=$PATH:$GITOLITE_HTTP_HOME/bin
+
+# come back to base, then run setup.  Notice that you have to point HOME to
+# the right place, even if it is just for this command
+cd $GITOLITE_HTTP_HOME
+HOME=$GITOLITE_HTTP_HOME gitolite setup -a admin
+
+# insert some essential lines at the beginning of the rc file
+echo '$ENV{GIT_HTTP_BACKEND} = "/usr/libexec/git-core/git-http-backend";' > 1
+echo '$ENV{PATH} .= ":$ENV{GITOLITE_HTTP_HOME}/bin";'  >> 1
+echo >> 1
+cat .gitolite.rc >> 1
+\mv 1 .gitolite.rc
+
+# fix up ownership
+chown -R apache.apache $GITOLITE_HTTP_HOME
+
+# create the apache config.  Note the trailing slashes on the 2 ScriptAlias
+# lines.  (The second one is optional for most sites).  NOTE: you also need to
+# give the AuthUserFile a better name/location than what I have below.
+cat <<EOF1 > /etc/httpd/conf.d/gitolite.conf
+SetEnv GIT_PROJECT_ROOT $GITOLITE_HTTP_HOME/repositories
+ScriptAlias /git/ $GITOLITE_HTTP_HOME/gitolite-source/src/gitolite-shell/
+ScriptAlias /gitmob/ $GITOLITE_HTTP_HOME/gitolite-source/src/gitolite-shell/
+SetEnv GITOLITE_HTTP_HOME $GITOLITE_HTTP_HOME
+SetEnv GIT_HTTP_EXPORT_ALL
+
+<Location /git>
+    AuthType Basic
+    AuthName "Private Git Access"
+    Require valid-user
+    AuthUserFile /tmp/gitolite-http-authuserfile
+</Location>
+EOF1
+
+# NOTE: this is for testing only
+htpasswd -bc /tmp/gitolite-http-authuserfile admin admin
+map "htpasswd -b /tmp/gitolite-http-authuserfile % %" u{1..6}
+
+# restart httpd to make it pick up all the new stuff
+service httpd restart
+

@@ -8,6 +8,10 @@ use FindBin;
 BEGIN { $ENV{GL_BINDIR} = $FindBin::RealBin; }
 BEGIN { $ENV{GL_LIBDIR} = "$ENV{GL_BINDIR}/lib"; }
 use lib $ENV{GL_LIBDIR};
+
+# set HOME
+BEGIN { $ENV{HOME} = $ENV{GITOLITE_HTTP_HOME} if $ENV{GITOLITE_HTTP_HOME}; }
+
 use Gitolite::Rc;
 use Gitolite::Common;
 use Gitolite::Conf::Load;
@@ -48,7 +52,20 @@ sub in_file {
 }
 
 sub in_http {
-    _die 'http not yet implemented...';
+    http_setup_die_handler();
+
+    _die "GITOLITE_HTTP_HOME not set" unless $ENV{GITOLITE_HTTP_HOME};
+
+    _die "fallback to DAV not supported" if $ENV{REQUEST_METHOD} eq 'PROPFIND';
+
+    # fake out SSH_ORIGINAL_COMMAND and SSH_CONNECTION when called via http,
+    # so the rest of the code stays the same (except the exec at the end).
+    http_simulate_ssh_connection();
+
+    $ENV{REMOTE_USER} ||= $rc{HTTP_ANON_USER};
+    @ARGV = ( $ENV{REMOTE_USER} );
+
+    return 'http';
 }
 
 sub in_ssh {
@@ -104,6 +121,8 @@ sub main {
         gl_log( "pre_git", $repo, $user, $aa, 'any', "-> $ret" );
     }
 
+    exec $ENV{GIT_HTTP_BACKEND} if $ENV{REQUEST_URI};
+
     trigger( 'PRE_GIT', $repo, $user, $aa, 'any', $verb );
     my $repodir = "'$rc{GL_REPO_BASE}/$repo.git'";
     _system( "git", "shell", "-c", "$verb $repodir" );
@@ -145,4 +164,68 @@ sub sanity {
     _die "'$repo' contains bad characters" if $repo !~ $REPONAME_PATT;
     _die "'$repo' ends with a '/'"         if $repo =~ m(/$);
     _die "'$repo' contains '..'"           if $repo =~ m(\.\.$);
+}
+
+# ----------------------------------------------------------------------
+# helper functions for "in_http"
+
+sub http_setup_die_handler {
+
+    $SIG{__DIE__} = sub {
+        my $service = ($ENV{SSH_ORIGINAL_COMMAND} =~ /git-receive-pack/ ?  'git-receive-pack' : 'git-upload-pack');
+        my $message = shift; chomp($message);
+        print STDERR "$message\n";
+
+        # format the service response, then the message.  With initial
+        # help from Ilari and then a more detailed email from Shawn...
+        $service = "# service=$service\n"; $message = "ERR $message\n";
+        $service = sprintf("%04X", length($service)+4) . "$service";        # no CRLF on this one
+        $message = sprintf("%04X", length($message)+4) . "$message";
+
+        http_print_headers();
+        print $service;
+        print "0000";       # flush-pkt, apparently
+        print $message;
+        print STDERR $service;
+        print STDERR $message;
+        exit 0;     # if it's ok for die_webcgi in git.git/http-backend.c, it's ok for me ;-)
+    }
+}
+
+sub http_simulate_ssh_connection {
+    # these patterns indicate normal git usage; see "services[]" in
+    # http-backend.c for how I got that.  Also note that "info" is overloaded;
+    # git uses "info/refs...", while gitolite uses "info" or "info?...".  So
+    # there's a "/" after info in the list below
+    if ($ENV{PATH_INFO} =~ m(^/(.*)/(HEAD$|info/refs$|objects/|git-(?:upload|receive)-pack$))) {
+        my $repo = $1;
+        my $verb = ($ENV{REQUEST_URI} =~ /git-receive-pack/) ?  'git-receive-pack' : 'git-upload-pack';
+        $ENV{SSH_ORIGINAL_COMMAND} = "$verb '$repo'";
+    } else {
+        # this is one of our custom commands; could be anything really,
+        # because of the adc feature
+        my ($verb) = ($ENV{PATH_INFO} =~ m(^/(\S+)));
+        my $args = $ENV{QUERY_STRING};
+        $args =~ s/\+/ /g;
+        $ENV{SSH_ORIGINAL_COMMAND} = $verb;
+        $ENV{SSH_ORIGINAL_COMMAND} .= " $args" if $args;
+        http_print_headers();  # in preparation for the eventual output!
+    }
+    $ENV{SSH_CONNECTION} = "$ENV{REMOTE_ADDR} $ENV{REMOTE_PORT} $ENV{SERVER_ADDR} $ENV{SERVER_PORT}";
+}
+
+my $http_headers_printed = 0;
+sub http_print_headers {
+    my($code, $text) = @_;
+
+    return if $http_headers_printed++;
+    $code ||= 200;
+    $text ||= "OK - gitolite";
+
+    $|++;
+    print "Status: $code $text\r\n";
+    print "Expires: Fri, 01 Jan 1980 00:00:00 GMT\r\n";
+    print "Pragma: no-cache\r\n";
+    print "Cache-Control: no-cache, max-age=0, must-revalidate\r\n";
+    print "\r\n";
 }

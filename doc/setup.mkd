@@ -37,5 +37,7 @@ after the install as well:
 
   * to replace a [lost admin key][lost-key].
 
+  * to setup gitolite for http mode (run 'gitolite setup -h' for more info)
+
 When in doubt, run 'gitolite setup' anyway; it doesn't do any harm, though it
 may take a minute or so if you have more than a few thousand repos!

@@ -2,7 +2,6 @@
 
 Not yet done (will be tackled in this order unless someone asks):
 
-  * smart http
   * svnserve (someone is testing it)
   * mechanism for ADCs using unchecked arguments -- this is not just a matter
     of writing it; I have to think about *how* it will be done.  (AFAIK the
@@ -33,3 +32,4 @@ Done:
   * migration documentation
   * distro packaging instructions
   * migration advice for common cases
+  * smart http
