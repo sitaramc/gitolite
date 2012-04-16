@@ -73,7 +73,7 @@ if ( defined($GL_ADMINDIR) ) {
 # ----------------------------------------------------------------------
 
 # is the server/repo in a writable state (i.e., not down for maintenance etc)
-unshift @{ $rc{ACCESS_1} }, 'Writable::writable';
+unshift @{ $rc{ACCESS_1} }, 'Writable::access_1';
 
 # (testing only) override the rc file silently
 # ----------------------------------------------------------------------
