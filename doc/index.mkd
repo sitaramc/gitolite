@@ -7,9 +7,9 @@ Here's more on [what][] it is and [why][] you might need it.
 
 <font color="gray">
 
-## #g2 (for current gitolite (v2) users)
+## #g2 (for older gitolite (v1.x and v2.x) users)
 
-For current gitolite (call it "g2" for convenience) users,
+For users of gitolite v2.x (call it "g2" for convenience),
 
   * [Why][g3why] I rewrote gitolite.
   * Development [status][dev-status].

@@ -28,12 +28,11 @@ try "
     git checkout gh-pages;              ok
     git reset --hard github/gh-pages;   ok
     cd ..;                              ok
-    git rm g3/*.html;                   ok
-    mkdir g3;                           ok
-    mv html/*.html g3;                  ok
-    git add g3;                         ok
+    git rm *.html;                      ok
+    mv html/*.html .;                   ok
+    git add *.html;                     ok
     git commit -m '$head';              ok
-    git checkout g3;                    ok
+    git checkout master;                ok
     rmdir html;                         ok
 " or die 2;
 
