@@ -138,7 +138,7 @@ sub setup_gladmin {
     tsh_try("git config --get user.name")  or tsh_run( "git config user.name '$ENV{USER} on '" . `hostname` );
     tsh_try("git diff --cached --quiet")
       or tsh_try("git commit -am 'gl-setup $argv'")
-      or die "setup failed to commit to the admin repo";
+      or _die "setup failed to commit to the admin repo";
     delete $ENV{GIT_WORK_TREE};
 }
 

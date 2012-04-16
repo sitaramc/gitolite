@@ -25,9 +25,9 @@ my $repo = shift;
 my $on = ( shift eq 'on' );
 
 if ( $repo eq '@all' ) {
-    die "you are not authorized\n" if $ENV{GL_USER} and not is_admin();
+    _die "you are not authorized" if $ENV{GL_USER} and not is_admin();
 } else {
-    die "you are not authorized\n" if $ENV{GL_USER} and not owns($repo);
+    _die "you are not authorized" if $ENV{GL_USER} and not owns($repo);
 }
 
 my $msg = join( " ", @ARGV );

@@ -64,6 +64,7 @@ sub dbg {
 }
 
 sub _warn {
+    gl_log( 'warn', @_ );
     if ( $ENV{D} and $ENV{D} >= 3 ) {
         cluck "WARNING: ", @_, "\n";
     } elsif ( defined( $ENV{D} ) ) {
@@ -72,6 +73,7 @@ sub _warn {
         warn "WARNING: ", @_, "\n";
     }
 }
+$SIG{__WARN__} = \&_warn;
 
 sub _die {
     gl_log( 'die', @_ );
@@ -83,6 +85,7 @@ sub _die {
         die "FATAL: " . join( ",", @_ ) . "\n";
     }
 }
+$SIG{__DIE__} = \&_die;
 
 sub usage {
     _warn(shift) if @_;

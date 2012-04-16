@@ -62,14 +62,14 @@ sub check_vrefs {
         } else {
             my ( $dummy, $pgm, @args ) = split '/', $vref;
             $pgm = "$ENV{GL_BINDIR}/VREF/$pgm";
-            -x $pgm or die "$vref: helper program missing or unexecutable\n";
+            -x $pgm or _die "$vref: helper program missing or unexecutable";
 
-            open( my $fh, "-|", $pgm, @_, $vref, @args ) or die "$vref: can't spawn helper program: $!\n";
+            open( my $fh, "-|", $pgm, @_, $vref, @args ) or _die "$vref: can't spawn helper program: $!";
             while (<$fh>) {
                 my ( $ref, $deny_message ) = split( ' ', $_, 2 );
                 check_vref( $aa, $ref, $deny_message );
             }
-            close($fh) or die $!
+            close($fh) or _die $!
               ? "Error closing sort pipe: $!"
               : "$vref: helper program exit status $?";
         }

@@ -25,6 +25,8 @@ package Gitolite::Easy;
   %rc
   say
   say2
+  _die
+  _warn
   _print
   usage
 );

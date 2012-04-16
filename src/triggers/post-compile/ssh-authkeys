@@ -34,7 +34,6 @@ my $old_ak = slurp($akfile);
 my @non_gl = grep { not /^# gito.*start/ .. /^# gito.*end/ } slurp($akfile);
 chomp(@non_gl);
 my %seen = map { $_ => 'a non-gitolite key' } ( fp(@non_gl) );
-# die 1;
 
 # pubkey files
 chomp( my @pubkeys = `find keydir -type f -name "*.pub" | sort` );
