@@ -13,7 +13,7 @@ my $workdir = getcwd();
 
 my $sf = ".gitolite.down";
 
-try "plan 58";
+try "plan 66";
 try "DEF POK = !/DENIED/; !/failed to push/";
 
 # delete the down file
@@ -27,7 +27,7 @@ confreset;confadd '
 
     repo bar/..*
         C   =   u2 u4 u6
-        RW  =   CREATOR
+        RW  =   CREATOR u3
 ';
 
 try "ADMIN_PUSH set1; !/FATAL/" or die text();
@@ -112,4 +112,13 @@ try "
     cd ../u2
     tc h4
     PUSH u2;                    !ok;    /the bar is closed/
+
+    ssh u3 writable bar/u2 on;  !ok;    /you are not authorized/
+    ssh u3 writable \@all on;   !ok;    /you are not authorized/
+
+    ssh u2 writable bar/u2 on;  ok
+    ssh u2 writable \@all on;   !ok;    /you are not authorized/
+
+    ssh admin writable \@all on;
+                                ok
 ";
