@@ -56,23 +56,23 @@ functionality, and invoke *that* from the rc file instead.
 
 There are several changes with regard to mirroring:
 
-  * there is no 'post-receive' hook to be installed.  Mirroring is handled by
+  * There is no 'post-receive' hook to be installed.  Mirroring is handled by
     g3's [triggers][] mechanism.  Gitolite triggers are enabled by adding (or
     uncommenting, in this case) appropriate lines in the rc file.
 
-  * the `GL_HOSTNAME` variable is now `HOSTNAME`.  (Note that the rc file
+  * The `GL_HOSTNAME` variable is now `HOSTNAME`.  (Note that the rc file
     syntax itself has changed quite a bit; to be accurate, HOSTNAME is not a
     variable but a hash key with an associated value).
 
-  * the `GL_GITCONFIG_KEYS` variable is now `GIT_CONFIG_KEYS`, **but** you no
+  * The `GL_GITCONFIG_KEYS` variable is now `GIT_CONFIG_KEYS`, **but** you no
     longer need to set it to anything for mirroring to work.
 
-  * the `gl-tool` program does not exist anymore.  Adding keys for peer
+  * The `gl-tool` program does not exist anymore.  Adding keys for peer
     servers is done just like adding user keys, except that the pubkey file
     name must start with `server-`.  For example, to add a peer host called
     frodo, you will acquire its pubkey and add it as `server-frodo.pub`.
 
-  * the config variables are quite different now.  The main ones now look like
+  * The config variables are quite different now.  The main ones now look like
     this:
 
         option mirror.master        =   sam
@@ -86,7 +86,7 @@ There are several changes with regard to mirroring:
 
         option mirror.redirectOK    =   all
 
-  * there are no more mirroring "keys", (lists of servers named in config keys
+  * There are no more mirroring "keys", (lists of servers named in config keys
     like 'gitolite.mirror.nightly', etc).  You can certainly add lines like
 
         option mirror.nightly       =   merry pippin
@@ -95,7 +95,7 @@ There are several changes with regard to mirroring:
     `gitolite git-config` to query this variable, grab the list of repos, and
     run `gitolite mirror` on each of them.
 
-  * the external command to resync mirrors is 'mirror', run just like any
+  * The external command to resync mirrors is 'mirror', run just like any
     other [command][commands].  In particular, you can run `gitolite mirror
     -h` to get help.  It cannot be run from a slave to ask a master to push
     (unlike in the old system) but what's more convenient is that any user who

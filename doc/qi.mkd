@@ -5,7 +5,7 @@
 On the server:
 
     # get the software
-    git clone -b g3 git://github.com/sitaramc/gitolite
+    git clone git://github.com/sitaramc/gitolite
 
     # install it
     gitolite/install -ln
@@ -20,18 +20,18 @@ On your workstation:
 
 ## ASSUMPTIONS
 
-  * this is a fresh install, not a migration from the old gitolite (v1.x,
+  * This is a fresh install, not a migration from the old gitolite (v1.x,
     v2.x).
 
-  * on the server, your `$PATH` contains `$HOME/bin`.  If you don't like that,
+  * On the server, your `$PATH` contains `$HOME/bin`.  If you don't like that,
     there are [other install methods][install].
 
   * "your-name.pub" is your public key from your workstation.
-      * also, this key does not already have shell access to this gitolite
-        hosting user
+      * Also, this key does not already have shell access to this gitolite
+        hosting user.
 
-  * the setup command does not generate any warnings.
-      * if it does, please see [common errors][ce] and fix things before
+  * The setup command does not generate any warnings.
+      * If it does, please see [common errors][ce] and fix things before
         continuing, or read the more complete [setup][] page.
 
 ## Notes

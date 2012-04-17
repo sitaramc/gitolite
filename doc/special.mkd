@@ -34,13 +34,13 @@ A user "alice" (if she's in the userlist) can then push any branches inside
 (Background: at runtime the "USER" component will be replaced by the name of
 the invoking user.  Access is determined by the right hand side, as usual).
 
-Compared to using arbitrary branch names on the same server, this
+Compared to using arbitrary branch names on the same server, this:
 
-  * reduces namespace pollution by corralling all these ad hoc branches into
+  * Reduces namespace pollution by corralling all these ad hoc branches into
     the "personal/" namespace.
-  * reduces branch name collision by giving each developer her own
+  * Reduces branch name collision by giving each developer her own
     sub-hierarchy within that.
-  * removes the need to think about access control, because a user can push
+  * Removes the need to think about access control, because a user can push
     only to his own sub-hierarchy.
 
 ## delegating access control responsibilities

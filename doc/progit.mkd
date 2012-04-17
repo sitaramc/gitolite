@@ -18,12 +18,10 @@ Gitolite is somewhat unusual as far as "server" software goes -- access is via s
 
 To begin, create a user called `git` on your server and login to this user.  Copy your ssh pubkey (a file called `~/.ssh/id_rsa.pub` if you did a plain `ssh-keygen` with all the defaults) from your workstation, renaming it to `YourName.pub`.  Then run these commands:
 
-    git clone -b g3 git://github.com/sitaramc/gitolite
+    git clone git://github.com/sitaramc/gitolite
     gitolite/install -ln
     gitolite setup -pk $HOME/YourName.pub
         # for example, I would run 'gitolite setup -pk $HOME/sitaram.pub'
-
-(Note: the "-b g3" will not be needed once gitolite v3 becomes the "master" version.)
 
 Finally, back on your workstation, run `git clone git@server:gitolite-admin`.
 

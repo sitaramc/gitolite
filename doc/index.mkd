@@ -19,6 +19,7 @@ For users of gitolite v2.x (call it "g2" for convenience),
 
 ## #ql quick links
 
+  * [Trying][trying] out gitolite.
   * Minimum [requirements][req].
   * Here's how to do a [quick install, setup, and clone][qi].
   * Don't know ssh well enough?  [Learn][ssh].  It's **IMPORTANT**.
@@ -37,12 +38,12 @@ most people see:
 
   * Use a single unix user ("real" user) on the server.
   * Provide access to many gitolite users:
-      * they are not "real" users
-      * they do not get shell access
+      * they are not "real" users,
+      * they do not get shell access.
   * Control access to many git repositories:
-      * read access controlled at the repo level
+      * read access controlled at the repo level,
       * write access controlled at the branch/tag/file/directory level,
-        including who can rewind, create, and delete branches/tags
+        including who can rewind, create, and delete branches/tags.
   * Can be installed without root access, assuming git and perl are already
     installed.
   * Authentication is most commonly done using sshd, but you can also use

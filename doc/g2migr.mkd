@@ -17,11 +17,11 @@ differences are in the rc file, mirroring, "NAME/" rules, and delegation.
 
 >   ----
 
->   **presetting the rc file**
+>   **Presetting the rc file**
 
 >   Some rc settings in the older gitolite are such that you cannot directly
->   run `gitolite setup` when you're ready to migrate.  Doing that will
->   **clobber** something important.  See [presetting the rc file][rc-preset]
+>   run `gitolite setup` when you're ready to migrate.  **Doing that will
+>   clobber something important**.  See [presetting the rc file][rc-preset]
 >   for details.
 
 >   ----
@@ -48,7 +48,7 @@ Some of them have links where there is more detail than I want to put here.
   * [subconf][g2i-subconf]: if you're using [delegation][deleg], there is no
     implicit "subconf" at the end; you'll have to add it in.
 
-  * there are several important differences in mirroring.  You can start from
+  * There are several important differences in mirroring.  You can start from
     scratch by reading the new [mirroring][mirroring] doc or
     [migrate][g2i-mirroring] (carefully!).
 
@@ -236,8 +236,8 @@ put that contain the words "see docs":
 ## #rc-preset presetting the rc file
 
 Some rc settings in the older gitolite are such that you cannot directly run
-`gitolite setup` when you're ready to migrate.  Doing that will **clobber**
-something important.  You have to create a default rc file, edit it
+`gitolite setup` when you're ready to migrate.  **Doing that will clobber
+something important**.  You have to create a default rc file, edit it
 appropriately, and *then* run `gitolite setup`.
 
 The most serious example of this is `GL_NO_SETUP_AUTHKEYS`, which tells the

@@ -82,14 +82,14 @@ exit.
 
 ## how it works -- details
 
-  * the VREF code is only called if there are any VREF rules for the user,
+  * The VREF code is only called if there are any VREF rules for the user,
     which means when the lead developer pushes, the VREF is not called at all.
 
     Side note: this is enormously more efficient than adding additional
     `update` hooks, which will get executed whether they are needed or not,
     for every repo and every user!
 
-  * when dev2 or dev3 push, gitolite first checks the real ref
+  * When dev2 or dev3 push, gitolite first checks the real ref
     (`ref/heads/master` or whatever).  After this it looks at VREF rules, and
     calls an external program for every one it finds.  Specifically, in a line
     like
@@ -102,29 +102,29 @@ exit.
     The program is passed **nine arguments** in this case (see next section
     for details).
 
-  * the script can print anything it wants to STDOUT; the first word in each
+  * The script can print anything it wants to STDOUT; the first word in each
     such line will be treated as a virtual ref to be matched against all the
     rules, while the rest, if any, is a message to be added to the standard
     "...DENIED..." message that gitolite prints if that refex matches.
 
     Usually it only makes sense to either
 
-      * print nothing -- if you don't want the rule that triggered it to match
+      * Print nothing -- if you don't want the rule that triggered it to match
         (ie., whatever condition being tested was not violated; like if the
-        count of changed files did not exceed 9, in our earlier example)
-      * print the refex itself (plus an optional message), so that it matches
-        the line which invoked it
+        count of changed files did not exceed 9, in our earlier example).
+      * Print the refex itself (plus an optional message), so that it matches
+        the line which invoked it.
 
 ### arguments passed to the vref code
 
-  * arguments **1, 2, 3**: the 'ref', 'oldsha', and 'newsha' that git passed
-    to the update hook (see 'man githooks')
+  * Arguments **1, 2, 3**: the 'ref', 'oldsha', and 'newsha' that git passed
+    to the update hook (see 'man githooks').
 
     This, combined with the fact that non-zero exits are detected, mean that
     you can simply use an existing update.secondary as a new VREF as-is, no
     changes needed.
 
-  * arguments **4 and 5**: the 'oldtree' and 'newtree' SHAs.  These are the
+  * Arguments **4 and 5**: the 'oldtree' and 'newtree' SHAs.  These are the
     same as the oldsha and newsha values, except if one of them is all-0.
     (indicating a ref creation or deletion).  In that case the corresponding
     'tree' SHA is set (by gitolite, as a courtesy) to the special SHA
@@ -134,15 +134,15 @@ exit.
     (None of these shenanigans would have been needed if `git diff $oldsha
     $newsha` would not error out when passed an all-0 SHA.)
 
-  * argument **6**: the attempted access flag.  Typically `W` or `+`, but
+  * Argument **6**: the attempted access flag.  Typically `W` or `+`, but
     could also be `C`, `D`, or any of these 4 followed by `M`.  If you have to
     ask what they mean, you haven't read enough gitolite documentation to be
     able to make virtual refs work.
 
-  * argument **7**: is the entire refex; in our example
+  * Argument **7**: is the entire refex; in our example
     `VREF/COUNT/3/NEWFILES`.
 
-  * arguments **8 onward**: are the split out (by `/`) portions of the refex,
+  * Arguments **8 onward**: are the split out (by `/`) portions of the refex,
     excluding the first two components.  In our example they would be `3`
     followed by `NEWFILES`.
 
@@ -288,14 +288,14 @@ quite different.
 
 Here are some more ideas:
 
-  * number of commits (`git rev-list --count $old $new`)
-  * number of binary files in commit (currently I only know to count
-    occurrences of ` Bin ` in the output of `git diff --stat`
-  * number of *new* binary files (count ` Bin 0 ->` in `git diff --stat`
-    output)
-  * time of day/day of week (see example snippet somewhere above)
-  * IP address
-  * phase of the moon
+  * Number of commits (`git rev-list --count $old $new`).
+  * Number of binary files in commit (currently I only know to count
+    occurrences of ` Bin ` in the output of `git diff --stat`.
+  * Number of *new* binary files (count ` Bin 0 ->` in `git diff --stat`
+    output).
+  * Time of day/day of week (see example snippet somewhere above).
+  * IP address.
+  * Phase of the moon.
 
 Note that pretty much anything that involves `$oldsha..$newsha` will have to
 deal with the issue that when you push a new tag or branch, the "old" part

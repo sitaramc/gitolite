@@ -1,47 +1,97 @@
 # why might you need gitolite
 
-Gitolite is separate from git, and needs to be installed and configured.  So...
-why do we bother?
+[[TOC]]
+
+----
+
+## basic use case
 
 Gitolite is useful in any server that is going to host multiple git
-repositories, each with many developers, where some sort of access control is
-required.
+repositories, each with many developers, where "anyone can do anything to any
+repo" is not a good idea.  Here're two examples to illustrate.
 
-In theory, this can be done with plain old Unix permissions: each user is a
-member of one or more groups, each group "owns" one or more repositories, and
-using unix permissions (especially the setgid bit -- `chmod g+s`) you can
-allow/disallow users access to repos.
+Example 1, 3 repos, 3 developers with different levels of access to each repo:
 
-But there are several disadvantages here:
+    repo foo
+        RW+     =   alice
+        R       =   bob
 
-  * Every user needs a userid and password on the server.  This is usually a
-    killer, especially in tightly controlled environments.
-  * Adding/removing access rights involves complex `usermod -G ...` mumblings
-    which most admins would rather not deal with.
-  * *Viewing* (aka auditing) the current set of permissions requires running
-    multiple commands to list directories and their permissions/ownerships,
-    users and their group memberships, and then correlating all these
-    manually.
-  * Auditing historical permissions or permission changes is pretty much
-    impossible without extraneous tools.
-  * Errors or omissions in setting the permissions exactly can cause problems
-    of either kind: false accepts or false rejects.
-  * Without going into ACLs it is not possible to give some people read-only
-    access while some others have read-write access to a repo (unless you make
-    it world-readable).  Group access just doesn't have enough granularity.
-  * It is absolutely impossible to restrict pushing by branch name or tag
-    name.
+    repo bar
+        RW+     =   bob
+        R       =   alice
 
-Gitolite does away with all this:
+    repo baz
+        RW+     =   carol
+        R       =   alice bob
 
-  * It uses ssh magic to remove the need to give actual unix userids to
-    developers.
-  * It uses a simple but powerful config file format to specify access rights.
-  * Access control changes are affected by modifying this file, adding or
-    removing user's public keys, and "compiling" the configuration.
-  * This also makes auditing trivial -- all the data is in one place, and
-    changes to the configuration are also logged, so you can audit them.
-  * Finally, the config file allows distinguishing between read-only and
-    read-write access, not only at the repository level, but at the branch
-    level within repositories.
+Example 2, one repo, but different levels of access to different branches and
+tags for different developers:
 
+    repo foo
+        RW+ master                  =   alice
+        RW+ dev/                    =   bob
+        RW  refs/heads/tags/v[0-9]  =   ashok
+
+## #alt alternatives
+
+### unix permissions and ACLs
+
+If you're a masochist, you could probably do example 1 with Unix permissions
+and facls.  But you can't do example 2 -- git is not designed to allow that!
+
+Here are some other disadvantages of the Unix ACL method:
+
+  * Every user needs a userid and password on the server.
+  * Changing access rights involves complex `usermod -G ...` mumblings
+    (I.e., the "pain" mentioned above is not a one-time pain!)
+  * *Viewing* the current set of permissions requires running multiple
+    commands to list directories and their permissions/ownerships, users and
+    their group memberships, and then correlating all these manually.
+  * Auditing historical permissions or permission changes is impossible.
+
+### #gcr Gerrit Code Review
+
+The best real alternative to gitolite is Gerrit Code Review.  If code review
+is an essential part of your workflow, you should use Gerrit.
+
+Here're some high level differences between gitolite and Gerrit:
+
+**Size**: 3000+ lines of perl versus of 56,000+ lines of Java
+
+**Architecture**: Gitolite sits on top of "standard" git and openssh, which
+are assumed to already be installed.  Gerrit includes its own git stack (jgit)
+and sshd (Apache Mina).  In Java tradition, they all come bundled together.
+
+(Corollary: As far as I know jgit does not support the same hooks that 'man
+githooks' talks about).
+
+Gitolite uses a plain text config file; gerrit uses a database.
+
+**User view**: Gitolite is invisible to users except when access is denied.  I
+think Gerrit is much more visible to devs.
+
+On a related note, gitolite does not do anything special with signed or
+annotated tags, nor does it check author/committer identity.  However, it is
+trivial to add your own code to do either (or if someone contributes it, to
+just "enable" what ships with gitolite in a disabled state).
+
+### gitorious
+
+Anecdotally, gitorious is very hard to install.  Comparison with gitolite may
+be useless because I believe it doesn't have branch/tag level access control.
+However, I can't confirm or deny this because I can't find any documentation
+on the website.
+
+In addition, the main website hides the source code very well, so you already
+have a challenge!  [The only link I could find was tucked away at the bottom
+of the About page, in the License section].
+
+### gitlab
+
+Gitlab is built on top of gitolite, but I don't know more than that as yet.
+Patches welcome.
+
+### others
+
+Please send in patches to this doc if you know of other open source git
+hosting solutions that do access control.

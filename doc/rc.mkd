@@ -20,7 +20,7 @@ sure the brackets and braces stay matched up!
 Please look at the `~/.gitolite.rc` file that gets installed when you setup
 gitolite.  As you can see there are 3 types of variables in it:
 
-  * simple variables (like UMASK)
+  * simple variables (like `UMASK`)
   * lists (like `POST_COMPILE`, `POST_CREATE`)
   * hashes (like `ROLES`, `COMMANDS`)
 

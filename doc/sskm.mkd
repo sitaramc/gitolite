@@ -223,12 +223,12 @@ Listing the keys shows that that new key is now marked active again:
 
 These are the things that can break if you allows your users to use this command:
 
-  * if you, as the gitolite admin, are in the habit of force-pushing changes
+  * If you, as the gitolite admin, are in the habit of force-pushing changes
     to the admin repo instead of doing a `git pull` (or, even better, a `git
     pull --rebase`) then you had better not enable this command.  Your users
     will eventually come after you with pitchforks ;-)
 
-  * there is no way to distinguish `foo/alice.pub` from `bar/alice.pub` using
+  * There is no way to distinguish `foo/alice.pub` from `bar/alice.pub` using
     this command.  You can distinguish `foo/alice.pub` from
     `bar/alice@home.pub`, but that's not because of the foo and bar, it's
     because the two files have different keyids.
@@ -236,7 +236,7 @@ These are the things that can break if you allows your users to use this command
     In other words, sskm only works with the older style, not with the
     "subdirectory" style of [multi-key][] management.
 
-  * keys placed in specific folders (for whatever reasons), will probably not
+  * Keys placed in specific folders (for whatever reasons), will probably not
     stay in those folders if this command is used.  Even a key delete, followed
     by undoing the delete, will cause the key to effectively move to the root
     of the key store (i.e., the `keydir` directory in the gitolite-admin repo).

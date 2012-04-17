@@ -11,34 +11,17 @@ that is the same or even relevant -- that is from 2006 and is quite different
   * Please read [authentication versus authorisation][auth] first, and make
     sure you understand what is gitolite's responsibility and what isn't.
 
-  * The 'gitolite' command (for example, 'gitolite compile', 'gitolite
-    query-rc', and so on) *can* be run on the server, but it's not
-    straightforward.  Assuming you installed using the exact same values as in
-    this document:
-
-      * get a shell by using, say, `su -s /bin/bash - apache`
-      * run `export HOME=$HOME/gitolite-home`
-      * run `export PATH=$PATH:$HOME/bin`
-
-    Now you can run `gitolite <subcommand>`
-
-  * I have tested only on stock Fedora 16; YDMV
+  * I have tested this only on stock Fedora 16; YDMV.
 
   * As before, I have not tried making repos available to both ssh *and* http
     mode clients but it ought to work.  If you managed it, I'd appreciate a
     doc patch describing how you did it.
 
-## additional requirements
-
-  * requires `GIT_PROJECT_ROOT` (see "man git-http-backend" for what this is)
-    set explicitly (i.e., it is no longer optional).  Please set it to some
-    place outside apache's `DOCUMENT_ROOT`.
-
 ## assumptions:
 
-  * apache 2.x and git installed.
-  * httpd runs under the "apache" userid; adjust instructions below if not.
-  * similarly for "/var/www" and other file names/locations.
+  * Apache 2.x and git installed.
+  * Httpd runs under the "apache" userid; adjust instructions below if not.
+  * Similarly for "/var/www" and other file names/locations.
 
 ## instructions
 
@@ -51,7 +34,13 @@ install gitolite in smart http mode.
 Make a copy of the script, go through it carefully, (possibly removing lines
 that delete files etc.), change values per your system, and only then run it.
 
+<font color="gray">Note that the `GIT_PROJECT_ROOT` variable (see "man
+git-http-backend") is no longer optional.  Make sure you set it to some place
+outside apache's `DOCUMENT_ROOT`.</font>
+
 ## usage
+
+### client side
 
 Git URLs look like `http://user:password@server/git/reponame.git`.
 
@@ -68,3 +57,16 @@ the arguments, with `+` representing a space.  Here are some examples:
 
 With a few nice shell aliases, you won't even notice the horrible convolutions
 here ;-)  See t/smart-http for a couple of useful ones.
+
+### server side
+
+The 'gitolite' command (for example, 'gitolite compile', 'gitolite query-rc',
+and so on) *can* be run on the server, but it's not straightforward.  Assuming
+you installed exactly as given in this document, you should
+
+  * get a shell by using, say, `su -s /bin/bash - apache`
+  * run `export HOME=$HOME/gitolite-home`
+  * run `export PATH=$PATH:$HOME/bin`
+
+and *then* you can run `gitolite <subcommand>`
+

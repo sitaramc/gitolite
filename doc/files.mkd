@@ -10,8 +10,7 @@ Let's say you start from a totally clean slate:
     $ ls -a
     .  ..  .bash_logout  .bash_profile  .bashrc
 
-You run `git clone -b g3 git://github.com/sitaramc/gitolite` (the '-b' option
-does the equivalent of 'git checkout g3' after the clone is done).
+You run `git clone git://github.com/sitaramc/gitolite`.
 
 Now you have
 

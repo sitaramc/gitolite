@@ -7,8 +7,10 @@ so be sure to use a throwaway userid**.</font>
 
     git clone git://github.com/sitaramc/gitolite
     cd gitolite
-    git checkout -f g3
     prove
+
+(Make sure sshd allows incoming ssh to this userid at least from localhost.
+Out of scope for this document: sshd config, 'AllowUsers', etc...)
 
 Gitolite's test suite is mostly written using [tsh][] -- the "testing shell".
 Take a look at some of the scripts and you will see what it looks like.  It
@@ -23,3 +25,24 @@ would otherwise take.
 
 If you think that defeats the purpose of the testing, you haven't read
 [this][auth] yet.
+
+## #trying trying out gitolite
+
+It's easy to take gitolite for a trial run, in ssh mode, and play with all of
+its features (except mirroring).
+
+Create a **throw-away userid**, log in to it, then do what the "testing
+gitolite" section above says, except instead of running `prove`, you run
+`prove t/ssh*`.
+
+When this is done, you get a gitolite installation with 7 gitolite users
+("admin", and "u1" through "u6").
+
+Don't forget that the client and the server are all on the same user on the
+same machine; we're *simulating* 7 gitolite users using ssh keys!  (How?
+Maybe `~/.ssh/config` will give you a hint).
+
+URLs look like `user:repo`, so for example you can clone the admin repo by
+`git clone admin:gitolite-admin`.  Remote commands look like `ssh u1 info`.
+
+So start by cloning the admin repo, and try out whatever you want!

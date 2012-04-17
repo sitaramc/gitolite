@@ -17,12 +17,12 @@ even mirroring is not in core now!)
 
 There are 5 basic types of non-core programs.
 
-  * *commands* can be run from the shell command line.  Among those, the ones
+  * *Commands* can be run from the shell command line.  Among those, the ones
     listed in the COMMANDS hash of the rc file can also be run remotely.
-  * *hooks* are standard git hooks; see below.
-  * *sugar scripts* change the conf language for your convenience.  The word
+  * *Hooks* are standard git hooks; see below.
+  * *Sugar scripts* change the conf language for your convenience.  The word
     sugar comes from "syntactic sugar".
-  * *triggers* are to gitolite what hooks are to git.  I just chose a
+  * *Triggers* are to gitolite what hooks are to git.  I just chose a
     different name to avoid confusion and constant disambiguation in the docs.
   * **VREFs** are extensions to the access control check part of gitolite.
 

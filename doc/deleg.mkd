@@ -38,21 +38,22 @@ And that's it.
 
 Subconf is exactly like the include command in syntax:
 
-    subconf "foo/bar.conf"
+    subconf "foo.conf"
 
-but while reading the included file, it sets a "subconf name" of "foo".
+but while reading the included file (as well as anything included from it),
+gitolite sets the "subconf name" to "foo".
 
-When a subconf name is in effect, there are some restrictions on what repos
-can be managed.
+A "subconf" imposes some restrictions on what repos can be managed.
 
-For example, in the include file in the above example, you can only have
-"repo" lines for:
+For example, while the subconf name is "foo", as in the above example,
+gitolite will only process "repo" lines for:
 
-  * a repo called "foo"
-  * a group called "@foo" defined outside the include file
-  * a member of a group called "@foo" (again, defined outside)
-  * a repo that matches a member of a group called "@foo" if that member is a
-    regular expression pattern
+  * A repo called "foo".
+  * A group called "@foo", as long as the group is defined in the main conf
+    file (i.e., *outside* "foo.conf").
+  * A member of a group called "@foo" (again, defined outside).
+  * A repo that matches a member of a group called "@foo" if that member is a
+    regular expression pattern.
 
 Here's an example.  If the main conf file contains
 
@@ -60,6 +61,9 @@ Here's an example.  If the main conf file contains
 
 then the subconf can only accept repo statements that refer to 'foo', '@foo',
 'aa', 'bb', or any repo whose name starts with 'cc/'.
+
+**Note**: the subconf name "master" is special; it is the default subconf in
+effect for the main conf file and has no restrictions.
 
 ### how the "subconf name" is derived
 

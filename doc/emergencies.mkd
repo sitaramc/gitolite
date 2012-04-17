@@ -46,19 +46,19 @@ just rewind) and push that.  Here's how to do that:
 If you've read the [files involved in gitolite][files] page, you probably know
 the answer, but here's a list of files you should blow away.
 
-  * **gitolite sources** -- can be found by running `which gitolite`.  If it's
+  * **Gitolite sources** -- can be found by running `which gitolite`.  If it's
     a symlink, go to its target directory.
 
-  * **gitolite admin directory** -- `$HOME/.gitolite`.  Save the 'logs'
+  * **Gitolite admin directory** -- `$HOME/.gitolite`.  Save the 'logs'
     directory if you want to preserve them for any reason.
 
-  * **the rc file** -- `$HOME/.gitolite.rc`.  If you made any changes to it
+  * **The rc file** -- `$HOME/.gitolite.rc`.  If you made any changes to it
     you can save it as some other name instead of deleting it.
 
-  * **the gitolite-admin repo** -- `$HOME/repositories/gitolite-admin.git`.
+  * **The gitolite-admin repo** -- `$HOME/repositories/gitolite-admin.git`.
     You can clone it somewhere to save it before blowing it away if you wish.
 
-  * **git repositories** -- `$HOME/repositories`.  The install process will
+  * **Git repositories** -- `$HOME/repositories`.  The install process will
     not touch any existing repos except 'gitolite-admin.git', so you do not
     have to blow away (or move) your work repos to fix a botched install.
 
@@ -66,7 +66,7 @@ the answer, but here's a list of files you should blow away.
     will those repos be touched.  And even then all that happens is that the
     update hook, if any, is replaced with gitolite's own hook.
 
-  * **ssh stuff** -- exercise caution when doing this, but in general it
+  * **Ssh stuff** -- exercise caution when doing this, but in general it
     should be safe to delete all lines between the "gitolite start" and
     "gitolite end" markers in `$HOME/.ssh/authorized_keys`.
 
@@ -103,12 +103,12 @@ the answer, but here's a list of files you should blow away.
 
   * `WARNING: split conf not set, gl-conf present for <repo>`
 
-    (case 1) This can happen if you have a *bare* repo (i.e., some `repo.git`
+    (Case 1) This can happen if you have a *bare* repo (i.e., some `repo.git`
     directory) copied from g2 with `GL_BIG_CONFIG` on, and you pushed a change
     to the conf or ran certain commands *before* adding the newly added repo
     to the conf file.
 
-    (case 2) This can also happen if you changed something like this
+    (Case 2) This can also happen if you changed something like this
 
         repo foo
             ...<some rules>...
@@ -141,7 +141,7 @@ cannot help with most of these (although the good folks on irc or the mailing
 list -- see [contact][] -- might be able to; they certainly appear to have a
 lot more patience than I do, bless 'em!)
 
-  * **client side software**
+  * **Client side software**
 
       * putty/plink
       * jgit/Eclipse
@@ -151,7 +151,7 @@ lot more patience than I do, bless 'em!)
       * ...probably some more I forgot; will update this list as I remember...
       * did I mention putty/plink?
 
-  * **ssh**
+  * **Ssh**
 
     The *superstar* of the "not a gitolite problem" category is actually ssh.
 
@@ -162,7 +162,7 @@ lot more patience than I do, bless 'em!)
     Everything I know is in that latter link.  Please email me about ssh ONLY
     if you find something wrong or missing in those documents.
 
-  * **git**
+  * **Git**
 
     I wish I had a dollar for each time someone did a *first push* on a new
     repo, got an error because there were "no refs in common (etc.)", and

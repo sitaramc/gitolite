@@ -44,10 +44,10 @@ Here are the steps on the server:
 Now, log off the server and get back to the client.  All subsequent
 instructions are to be read as "on gitolite admin's workstation".
 
-  * **clone** the new gitolite-admin repo to your workstation.  (You already
+  * **Clone** the new gitolite-admin repo to your workstation.  (You already
     have a clone of the gitosis-admin repo so now you have both).
 
-  * **convert** your gitosis config file and append it to your gitolite config
+  * **Convert** your gitosis config file and append it to your gitolite config
     file.  Substitute the path for your gitosis-admin clone in `$GSAC` below,
     and similarly the path for your gito**lite**-admin clone in `$GLAC`.  (The
     convert-gitosis-conf program is a standalone program that you can bring
@@ -63,7 +63,7 @@ instructions are to be read as "on gitolite admin's workstation".
   * Remove the entry for the 'gitosis-admin' repo.  You do not need it here
     and it may cause confusion.
 
-  * **copy** the keys from gitosis's keydir (same meanings for GSAC and GLAC)
+  * **Copy** the keys from gitosis's keydir (same meanings for GSAC and GLAC)
 
         cp $GSAC/keydir/* $GLAC/keydir
 
@@ -122,5 +122,4 @@ instructions are to be read as "on gitolite admin's workstation".
     "sitaram@laptop.pub" and "sitaram@desktop.pub" or whatever.  *Please check
     the files to make sure this worked properly*
 
-  * Check all your changes to your gitolite-admin clone, commit, and push
-
+  * Check all your changes to your gitolite-admin clone, commit, and push.

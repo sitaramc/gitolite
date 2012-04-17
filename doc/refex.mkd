@@ -5,12 +5,12 @@ A refex is a word I made up to mean "a regex that matches a ref".  If you know
 
 In addition:
 
-  * if no refex is supplied, it defaults to `refs/.*`, for example in a rule
+  * If no refex is supplied, it defaults to `refs/.*`, for example in a rule
     like this:
 
         RW              =   alice
 
-  * a refex not starting with `refs/` is assumed to start with `refs/heads/`.
+  * A refex not starting with `refs/` is assumed to start with `refs/heads/`.
     This means normal branches can be conveniently written like this:
 
         RW  master      =   alice
@@ -20,7 +20,7 @@ In addition:
 
         RW  refs/tags/v[0-9]    =   bob
 
-  * a refex is implicitly anchored at the start, but not at the end.  In
+  * A refex is implicitly anchored at the start, but not at the end.  In
     regular expression lingo, a `^` is assumed at the start (but no `$` at the
     end is assumed).  So a refex of `master` will match all these:
 

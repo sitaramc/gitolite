@@ -3,10 +3,6 @@
 ...written for the one guy in the world no one will think of as "just a normal
 user" ;-)
 
-This document has some text, and a lot of links.  Most of this info *is*
-available in the rest of the documentation, but it's scattered and sparse.
-Collecting all of it, or at least links to it, in one place sounds useful.
-
 ----
 
 [[TOC]]
@@ -42,7 +38,7 @@ that look like regex patterns, (with a "C" permission).
 
 If you see any, it means you are allowed to create brand new repos whose names
 fit that pattern.  When you create such a repo, your "ownership" of it (as far
-as gitolite is concerned) is *automatically* recorded by gitolite.
+as gitolite is concerned) is automatically recorded by gitolite.
 
 ## other commands
 

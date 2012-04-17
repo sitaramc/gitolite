@@ -2,11 +2,11 @@
 
 ## #server server-side administration
 
-The following activities require command line access to the server
+The following activities require command line access to the server:
 
-  * changing anything in the [rc][] file
-  * installing custom [hooks][], whether to all repos or just some repos
-  * moving [existing][] repos into gitolite control
+  * Changing anything in the [rc][] file.
+  * Installing custom [hooks][], whether to all repos or just some repos.
+  * Moving [existing][] repos into gitolite control.
 
 Please read the [WARNINGS][] page first.
 
@@ -32,11 +32,11 @@ Here is an example of a simple conf/gitolite.conf file.
 
 Use the following links to learn more:
 
-  * the basic [syntax][] -- comments, whitespace, include files, etc.
-  * defining [groups][], as in lines 1 and 2
-  * adding and removing [users][]
-  * adding and removing [repos][], as in line 3
-  * defining access [rules][], as in lines 4, 5, 6, and 7
-  * gitolite [options][]
-  * [git config][git-config] keys and values, as in line 8
-  * ["wild"][wild] repos -- ad hoc, user-created, repos
+  * The basic [syntax][] -- comments, whitespace, include files, etc.
+  * Defining [groups][], as in lines 1 and 2.
+  * Adding and removing [users][].
+  * Adding and removing [repos][], as in line 3.
+  * Defining access [rules][], as in lines 4, 5, 6, and 7.
+  * Gitolite [options][].
+  * [Git config][git-config] keys and values, as in line 8.
+  * ["Wild"][wild] repos -- ad hoc, user-created, repos.

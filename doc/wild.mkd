@@ -90,9 +90,11 @@ But you may be surprised to find that it does not match even
 `^assignments/S[0-9]+/A[0-9]+$` -- notice the line beginning and ending
 metacharacters.
 
-Side-note: contrast with refexes
+>   ----
 
->   Just for interest, note that this is in contrast to the refexes for the >
+>   *Side-note: contrast with refexes*
+
+>   Just for interest, note that this is in contrast to the refexes for the
 >   normal "branch" permissions, as described in `doc/gitolite.conf.mkd` and
 >   elsewhere.  These "refexes" are only anchored at the start; a pattern like
 >   `refs/heads/master` actually can match `refs/heads/master01/bar` as well,
@@ -100,11 +102,13 @@ Side-note: contrast with refexes
 >   sides if you really care, by using `master$` instead of `master`, but that
 >   is *not* the default for refexes.
 
+>   ----
+
 ## roles
 
-The tokens READERS and WRITERS are called "role" names.  The access rules that
-the admin specifies say what permissions these roles have, but they don't say
-what users are in these roles.
+The tokens READERS and WRITERS are called "role" names.  The access rules in
+the conf file decide what permissions these roles have, but they don't say
+what users are in each of these roles.
 
 That needs to be done by the creator of the repo, using the `perms` command.
 You can run `ssh git@host perms -h` for detailed help, but in brief, that
@@ -146,4 +150,8 @@ command.  Try `ssh git@host info -h` to get help on the info command.
 
 ## deleting a wild repo
 
-TBD
+Run the whimsically named "D" command -- try `ssh git@host D -h` for more info
+on how to delete a wild repo.  (Yes the command is "D"; it's meant to be a
+counterpart to the "C" permission that allowed you to create the repo in the
+first place).  Of course this only works if your admin has enabled the command
+(gitolite ships with the command disabled for remote use).

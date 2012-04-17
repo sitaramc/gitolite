@@ -29,11 +29,11 @@ Here's a list of remote commands that are shipped:
 
 The following "sugar" programs are available:
 
-  * continuation-lines -- allow the use of C-style backslash escaped
+  * Continuation-lines -- allow the use of C-style backslash escaped
     continuation lines in the conf file.  I don't like it but some people do,
     and now I can support them without bulking up the "core" conf parser!
 
-  * keysubdirs-as-groups -- someone wanted the sub-directory name (of
+  * Keysubdirs-as-groups -- someone wanted the sub-directory name (of
     "keydir/") in which the pubkey was placed to be a group to which the user
     automatically belonged.  A very unusual requirement, and one which would
     *never* have seen the light of day in g2, but in g3 it's easy, and doesn't
@@ -46,9 +46,9 @@ The following "sugar" programs are available:
 
 The `PRE_GIT` triggers are:
 
-  * partial-copy -- this has its own section later in this page
+  * partial-copy -- this has its own section later in this page.
 
-  * renice -- this renices the entire job to whatever value you specify
+  * renice -- this renices the entire job to whatever value you specify.
 
 The `POST_GIT` triggers are:
 
@@ -79,7 +79,7 @@ The `POST_COMPILE` triggers are:
 
 The `POST_CREATE` triggers are:
 
-  * the last 3 in the `POST_COMPILE` list also run from `POST_CREATE`, for
+  * The last 3 in the `POST_COMPILE` list also run from `POST_CREATE`, for
     obvious reasons.
 
 ## VREFs
@@ -124,10 +124,10 @@ And that should be it.  **Please test it and let me know if it doesn't work!**
 
 WARNINGS:
 
-  * if you change the config to disallow something that used to be allowed,
+  * If you change the config to disallow something that used to be allowed,
     you should delete the partial repo on the server and then run 'gitolite
     compile' to let it build again.  See t/partial-copy.t for details.
 
-  * not tested with smart http; probably won't work
+  * Not tested with smart http; probably won't work.
 
-  * also not tested with mirroring, or with wild card repos.
+  * Also not tested with mirroring, or with wild card repos.

@@ -58,35 +58,35 @@ example will pass the pre-git check.
 
 For the **update check**, git gives us all the information we need.  Then:
 
-  * all the rules for a repo are [accumulated][rule-accum]
+  * All the rules for a repo are [accumulated][rule-accum].
 
-  * the rules pertaining to this repo *and* this user (or to a group to which
-    they belong, respectively) are kept; the rest are ignored
+  * The rules pertaining to this repo *and* this user (or to a group to which
+    they belong, respectively) are kept; the rest are ignored.
 
-  * these rules are examined *in the sequence they appeared in the conf file*.
+  * These rules are examined *in the sequence they appeared in the conf file*.
     For each rule:
 
-      * if the ref does not match the [refex][], the rule is skipped
-      * if it's a deny rule (the permissions field is a `-`), access is
-        **rejected** and the matching stops
-      * if the permission field matches the specific [type of
+      * If the ref does not match the [refex][], the rule is skipped.
+      * If it's a deny rule (the permissions field is a `-`), access is
+        **rejected** and the matching stops.
+      * If the permission field matches the specific [type of
         write][write-types] operation, access is **allowed** and the matching
-        stops
+        stops.
 
-  * if no rule ends with a decision, ("fallthru"), access is **rejected**.
+  * If no rule ends with a decision, ("fallthru"), access is **rejected**.
 
 Now you need to understand how [refex][] matching happens and how the
 permissions match the various [types of write operations][write-types].
 
 Using these, you can see, in our example, that:
 
-  * everyone, even wally, can read the repo.
-  * dilbert can push, rewind, or delete any ref.
-  * alice can push, rewind, or delete any ref whose name starts with 'dev';
+  * Everyone, even wally, can read the repo.
+  * Dilbert can push, rewind, or delete any ref.
+  * Alice can push, rewind, or delete any ref whose name starts with 'dev';
     see [refex][] for details.
-  * alice can also push (but not rewind or delete) any ref whose name starts
+  * Alice can also push (but not rewind or delete) any ref whose name starts
     with 'temp/'.  This applies to bob also.
-  * if it weren't for line 3, the previous statement would apply to wally
+  * If it weren't for line 3, the previous statement would apply to wally
     also.
 
 Interestingly, wally can get past the pre-git check because gitolite ignores
@@ -94,7 +94,7 @@ deny rules for pre-git, but having got past it, he can't actually do anything.
 That's by design, and as I said if you don't like it you can ask gitolite to
 [deny at pre-git][deny-rules].
 
-### #perms summary of permissions
+### #permsum summary of permissions
 
 The full set of permissions, in regex syntax: `-|R|RW+?C?D?M?`.  This expands
 to one of `-`, `R`, `RW`, `RW+`, `RWC`, `RW+C`, `RWD`, `RW+D`, `RWCD`, or

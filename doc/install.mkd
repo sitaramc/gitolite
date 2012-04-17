@@ -42,11 +42,12 @@ Notes:
 
 ### server
 
-  * any Unix system with a posix compatible "sh".
-  * git version 1.6.6 or later
-  * perl 5.8.8 or later
-  * openssh (almost any version).  Optional if you're using [smart http][http]
-  * a dedicated Unix userid to be the hosting user, usually "git" but it can
+  * Any Unix system with a posix compatible "sh".
+  * Git version 1.6.6 or later.
+  * Perl 5.8.8 or later.
+  * Openssh (almost any version).  Optional if you're using [smart
+    http][http].
+  * A dedicated Unix userid to be the hosting user, usually "git" but it can
     be any user, even your own normal one.  (If you're using an RPM/DEB the
     install probably created one called "gitolite").
 
@@ -55,17 +56,13 @@ side.
 
 ### client
 
-  * openssh client
-  * git 1.6.6 or later.  Almost any git client will work, as long as it knows
+  * Openssh client.
+  * Git 1.6.6 or later.  Almost any git client will work, as long as it knows
     how to use ssh keys and send the right one along.
 
 ## getting the software
 
-    git clone -b g3 git://github.com/sitaramc/gitolite
-
-The -b g3' is needed until g3 becomes "master".  Current estimates put this
-around June 2012, when the old gitolite (upto v2.x) will be retired and
-supported only for security issues.
+    git clone git://github.com/sitaramc/gitolite
 
 ## the actual install
 
@@ -87,7 +84,7 @@ Option 2 is the best for general use.
 There is a program called 'install' that helps you do these easily.  Assuming
 your cloned the repo like this:
 
-    git clone -b g3 git://github.com/sitaramc/gitolite
+    git clone git://github.com/sitaramc/gitolite
 
 you can run the 'install' command in 3 different ways:
 
@@ -168,35 +165,35 @@ will normally touch in normal repos is the `update` hook.
 
 1.  Carefully wipe out the old gitolite
 
-      * the **code**
+      * The **code**
 
-          * delete or move away all the old gitolite scripts.  Check the path
+          * Delete or move away all the old gitolite scripts.  Check the path
             to the gl-auth-command in `~/.ssh/authorized_keys` if you forgot
             where you put them.
 
-          * delete or move away the two directories named in the two variables
-            `GL_PACKAGE_CONF` and `GL_PACKAGE_HOOKS` in `~/.gitolite.rc`
+          * Delete or move away the two directories named in the two variables
+            `GL_PACKAGE_CONF` and `GL_PACKAGE_HOOKS` in `~/.gitolite.rc`.
 
-      * the **rc file**
+      * The **rc file**
 
-          * rename `~/.gitolite.rc` to something else
+          * Rename `~/.gitolite.rc` to something else.
 
-      * the **admin repo**
+      * The **admin repo**
 
           * clone `~/repositories/gitolite-admin.git` to someplace safe
           * then delete `~/repositories/gitolite-admin.git`
 
-        (make sure you do not delete any other repos!)
+        (Make sure you do not delete any other repos!)
 
-      * the **admin directory**
+      * The **admin directory**.
 
-          * if you need to preserve logs, move the ~/.gitolite/logs` directory
-            somewhere else
+          * If you need to preserve logs, move the ~/.gitolite/logs` directory
+            somewhere else.
 
-          * if you added any custom hooks and wish to preserve them, move the
-            ~/.gitolite/hooks` directory somewhere else
+          * If you added any custom hooks and wish to preserve them, move the
+            ~/.gitolite/hooks` directory somewhere else.
 
-          * delete `~/.gitolite`
+          * Delete `~/.gitolite`.
 
 2.  Read about [presetting][rc-preset] the rc file; if you're using any
     variables listed as requiring preset, follow those instructions to create

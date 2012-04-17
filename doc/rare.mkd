@@ -4,21 +4,21 @@
 
 On the server:
 
-  * move the repos to `$HOME/repositories`.
+  * Move the repos to `$HOME/repositories`.
 
-  * make sure that:
+  * Make sure that:
 
-      * they are all *bare* repos
-      * all the repo names end in ".git"
-      * all the files and directories are owned and writable by the gitolite
-        hosting user (especially true if you copied them as root)
+      * They are all *bare* repos.
+      * All the repo names end in ".git".
+      * All the files and directories are owned and writable by the gitolite
+        hosting user (especially true if you copied them as root).
 
-  * run `gitolite setup`.  **If you forget this step, you can also forget
+  * Run `gitolite setup`.  **If you forget this step, you can also forget
     about write access control!**
 
 Back on your workstation:
 
-  * [add them][repos] to conf/gitolite.conf in your clone of the admin repo,
+  * [Add them][repos] to conf/gitolite.conf in your clone of the admin repo,
     then commit and push the change.
 
     If the repos are already covered by some [wild][] pattern, this is
@@ -42,11 +42,11 @@ servers is this (untested but should work; feedback appreciated):
 3.  [Disable][writable] the old server so people won't push to it.
 
 4.  Copy all the repos over from the old server, including gitolite-admin.
-    Make sure the files end up with right ownership and permissions; if not,
-    chown/chmod them.
+    Make sure the files end up with the right ownership and permissions; if
+    not, chown/chmod them.
 
-5.  On a clone of the old gitolite-admin, add a new remote (or change an
+5.  Run `gitolite setup`.
+
+6.  On a clone of the old gitolite-admin, add a new remote (or change an
     existing one) to point to the new server.  Then `git push -f` to this
     remote.
-
-6.  On the server, run `gitolite setup`.

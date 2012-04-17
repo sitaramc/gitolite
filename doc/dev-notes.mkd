@@ -29,15 +29,15 @@ easily with gitolite.  Each of them responds to `-h` so please run that for
 more info.
 
   * `gitolite access` to check access rights given repo, user, type of access
-    (R, W, ...) and refname (optional).  Example use: src/commands/desc
+    (R, W, ...) and refname (optional).  Example use: src/commands/desc.
 
   * `gitolite creator` to get/check the creator of a repo.  Example use:
-    src/commands/desc
+    src/commands/desc.
 
   * `gitolite git-config` to check gitolite options or git config variables
     directly from gitolite's "compiled" output, (i.e., without looking at the
     actual `repo.git/config` file or using the `git config` command).  Example
-    use: none yet
+    use: none yet.
 
   * `gitolite query-rc` to check the value of an RC variable.  Example use:
     src/commands/desc.
@@ -65,11 +65,11 @@ The rest is between you and 'man githooks' :-)
 
 If you want to add additional `update` hook functionality, do this:
 
-  * write and test your update hook separately from gitolite
+  * Write and test your update hook separately from gitolite.
 
-  * now add the code to src/VREF.  Let's say it is called "foo".
+  * Now add the code to src/VREF.  Let's say it is called "foo".
 
-  * to call your new update hook to all accesses for all repos, add this to
+  * To call your new update hook to all accesses for all repos, add this to
     the end of your conf file:
 
         repo @all

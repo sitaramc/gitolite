@@ -52,5 +52,5 @@ server and do what you need to.
 **Renaming** a repo is also not automatic.  Here's what you do (and the order
 is important):
 
-  * go to the server and rename the repo at the Unix command line
-  * change the name in the conf/gitolite.conf file and add/commit/push.
+  * Go to the server and rename the repo at the Unix command line.
+  * Change the name in the conf/gitolite.conf file and add/commit/push.

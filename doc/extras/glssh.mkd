@@ -31,18 +31,18 @@ from somewhere, or maybe buy the OReilly ssh book.
     and give the server the public key.  (I need not add that the "private"
     key must be, well, kept *private*!)
 
-  * **generating a key pair on your workstation** is done by running the
+  * **Generating a key pair on your workstation** is done by running the
     command `ssh-keygen -t rsa`.  This produces two files in `~/.ssh`.  One is
     `id_rsa`; this is the **private** key -- ***never*** let it out of your
     machine.  The other is `id_rsa.pub`, which is the corresponding public
     key.  This public key is usually just one long line of text.
 
-    * on Windows machines with msysgit installed, you should do this from
+    * On Windows machines with msysgit installed, you should do this from
       within a "git bash" window.  The command will report the full path where
       the files have been written; make a note of this, and use those files in
-      any of the description that follows
+      any of the description that follows.
 
-  * **adding your public key to the server**'s `~/.ssh/authorized_keys`
+  * **Adding your public key to the server**'s `~/.ssh/authorized_keys`
     file is how ssh uses pubkeys to authenticate users.  Let's say
     sita@work.station is trying to log in as git@serv.er.  What you have to do
     is take the `~/.ssh/id_rsa.pub` file for user sita on work.station and
@@ -62,12 +62,12 @@ from somewhere, or maybe buy the OReilly ssh book.
 
     But in the gitolite case, it's different; we'll get to that in a minute.
 
-    * **troubleshooting pubkey authentication failures**: if you are unable to
+    * **Troubleshooting pubkey authentication failures**: if you are unable to
       get ssh access to the server after doing all this, you'll have to look
       in `/var/log/secure` or `/var/log/auth.log` or some such file on the
       server to see what specific error `sshd` is complaining about.
 
-  * **restricting users to specific commands** is very important for gitolite.
+  * **Restricting users to specific commands** is very important for gitolite.
     If you read `man sshd` and look for `authorized_keys file format`, you'll
     see a lot of options you can add to the public key line, which restrict
     the incoming user in various ways.  In particular, note the `command=`
@@ -89,9 +89,9 @@ from somewhere, or maybe buy the OReilly ssh book.
 
 These are two different questions you ought to be having by now: 
 
-  * how does it distinguish between me and someone else, since we're all
-    logging in as the same remote user "git"
-  * how does it restrict what I can do within a repository
+  * How does it distinguish between me and someone else, since we're all
+    logging in as the same remote user "git".
+  * How does it restrict what I can do within a repository.
 
 #### restricting shell access/distinguishing one user from another
 
