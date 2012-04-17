@@ -333,7 +333,7 @@ sub _sh {
     # TODO: switch to IPC::Open3 or something...?
 
     dbg( 4, "  running: ( $cmd ) 2>&1" );
-    $text = `( $cmd ) 2>&1; echo -n RC=\$?`;
+    $text = `( $cmd ) 2>&1; /bin/echo -n RC=\$?`;
     $lec  = $cmd;
     dbg( 4, "  results:\n$text" );
 

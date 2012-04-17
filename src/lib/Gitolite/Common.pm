@@ -274,7 +274,7 @@ sub logger_plus_stderr {
 
     sub tsh_try {
         my $cmd = shift; die "try: expects only one argument" if @_;
-        $text = `( $cmd ) 2>&1; echo -n RC=\$?`;
+        $text = `( $cmd ) 2>&1; /bin/echo -n RC=\$?`;
         if ( $text =~ s/RC=(\d+)$// ) {
             $rc = $1;
             trace( 3, $text );
