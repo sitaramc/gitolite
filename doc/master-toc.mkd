@@ -1,0 +1,162 @@
+# gitolite documentation
+
+## [Introduction][index]
+
+  * (for [current][g2] gitolite (v2) users)
+  * [quick links][ql]
+  * [what][] is gitolite
+  * [why][] might you need it
+  * [contact][] info, mailing list, IRC channel
+  * [license][] info
+
+## help for [emergencies][]
+
+  * [lost][lost-key] admin key/access
+  * [bypass][]ing gitolite
+  * [clean][]ing out a botched install
+  * [common][ce] errors (TBD)
+  * [uncommon][ue] errors
+  * things that are [not gitolite problems][ngp]
+
+## [WARNINGS][]
+
+
+## [trying][] out gitolite
+
+
+## [quick][qi] install, setup, and clone
+
+
+## [install][]
+
+  * notes and naming conventions
+  * requirements
+      * your skills
+      * server
+      * client
+  * getting the software
+  * the actual install
+  * upgrading
+  * packaging gitolite
+  * [migr][]ating
+
+## [setup][]
+
+
+## gitolite [admin][]istration
+
+  * [server][]-side
+      * ([link][WARNINGS]: important cautions on server side activity)
+      * changing settings in the [rc][] file
+      * installing custom [hooks][]
+      * ([link][existing]: moving existing repos into gitolite)
+  * [access control][conf] (the gitolite.conf file)
+      * [example][confex] of a conf file
+      * basic [syntax][]
+          * include files
+          * ([link][sugar]: syntactic sugar)
+      * [groups][] (of users and repos)
+          * special: '@all'
+          * (link: storing user group info in LDAP)
+      * adding and removing [users][]
+          * multiple keys per user
+      * adding and removing [repos][]
+          * renaming repos
+      * defining access [rules][]
+          * what does a rule look like?
+          * when are the rules checked?
+          * how are the rules matched?
+          * summary of [permissions][permsum]
+          * additional topics
+              * [rule accumulation][rule-accum]
+              * applying [deny rules][deny-rules] during the pre-git check
+          * ([link][refex]: refexes)
+          * ([link][write-types]: different types of write operations)
+          * ([link][vref]: virtual refs)
+      * gitolite [options][]
+      * "[git config][git-config]" keys and values
+      * ["wild"][wild] repos (user created repos)
+          * quick introduction
+          * (admin) declaring wild repos in the conf file
+          * (user) [creating][create] a specific repo
+          * repo patterns
+          * roles
+          * adding other roles
+              * [IMPORTANT WARNING ABOUT THIS FEATURE][rolenamewarn]
+          * listing wild repos
+          * deleting wild repos
+
+## what your [user][]s need to know
+
+
+## [special][] features/setups
+
+  * [disabling pushes][writable] to take backups
+  * [personal][pers] branches
+  * [delegating][deleg] access control responsibilities
+      * ([link][NAME]: the NAME VREF)
+      * the [subconf][] command
+  * ([link][partial-copy]: faking selective READ control)
+
+## interfacing with [external][] tools
+
+  * gitweb
+      * changing the [UMASK][umask]
+  * git-daemon
+
+## [mirroring][]
+
+
+## [rare][]/one-time activities
+
+  * moving [existing][] repos into gitolite
+  * [moving][] servers
+
+## [customisation][cust]
+
+  * types of non-core programs
+      * ([link][non-core]: non-core programs shipped with gitolite)
+  * [commands][]
+  * [hooks][]
+  * syntactic [sugar][]
+  * ([link][triggers]: triggers)
+  * ([link][vref]: VREFs)
+  * [developer notes][dev-notes]
+      * environment variables and other inputs
+      * APIs
+          * the shell API
+          * the perl API
+      * writing your own...
+          * hooks
+          * commands
+          * trigger programs
+          * sugar
+
+## [non-core][] programs shipped with gitolite
+
+  * commands
+  * syntactic sugar
+  * triggers
+  * ([link][vref]: VREFs)
+  * special cases
+      * [partial-copy][]: selective read control for branches
+
+## background info
+
+  * [files and directories][files] involved in install+setup
+  * [auth][]entication versus authorisation
+      * interfacing with [other authentication][otherauth] systems
+      * getting user group info from [LDAP][ldap]
+  * [ssh][]
+  * [regular expressions][regex]
+
+## contributed software, tools, and documentation
+
+  * TBD
+
+## TBD
+
+  * log file format, LOG_EXTRA
+  * hub
+  * mob branches
+  * password access

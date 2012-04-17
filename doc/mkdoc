@@ -13,8 +13,6 @@ use Tsh;
 $ENV{TSH_ERREXIT} = 1;
 
 try "
-    ./fm2mt.pl < g3-master-toc.mm > master-toc.mkd
-
     mkdir ../html;                      ok
     git status -s -uno;                 !/./
     git log --oneline -1
