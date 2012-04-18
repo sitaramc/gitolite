@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Rc;
+my $svnserve = $rc{SVNSERVE} || '';
+$svnserve ||= "/usr/bin/svnserve -r /var/svn/ -t --tunnel-user=%u";
+
+my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
+
+die "expecting 'svnserve -t', got '$cmd'\n" unless $cmd eq 'svnserve -t';
+
+$svnserve =~ s/%u/$ENV{GL_USER}/g;
+exec $svnserve;
+die "svnserve exec failed\n";
