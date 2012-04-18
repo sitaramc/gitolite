@@ -4,7 +4,7 @@
 # whatever you want and contribute it back, as long as it is upward
 # compatible.
 
-plf=$(gitolite query-rc GITWEB_PROJECTS_LIST)
+plf=`gitolite query-rc GITWEB_PROJECTS_LIST`
 [ -z "$plf" ] && plf=$HOME/projects.list
 
 (

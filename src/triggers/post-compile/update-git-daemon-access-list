@@ -2,8 +2,9 @@
 
 # this is probably the *fastest* git-daemon update possible.
 
-export EO=git-daemon-export-ok
-export RB=$(gitolite query-rc GL_REPO_BASE)
+EO=git-daemon-export-ok
+RB=`gitolite query-rc GL_REPO_BASE`
+export EO RB
 
 gitolite list-phy-repos | gitolite access % daemon R any |
     perl -lane '
