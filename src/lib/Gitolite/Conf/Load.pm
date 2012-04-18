@@ -392,12 +392,12 @@ sub creator {
 
     sub ext_grouplist {
         my $user = shift;
-        my $pgm = $rc{GROUPLIST_PGM};
+        my $pgm  = $rc{GROUPLIST_PGM};
         return [] if not $pgm;
 
         return $cache{$user} if $cache{$user};
         my @extgroups = map { s/^@?/@/; $_; } split ' ', `$rc{GROUPLIST_PGM} $user`;
-        return ($cache{$user} = \@extgroups);
+        return ( $cache{$user} = \@extgroups );
     }
 }
 

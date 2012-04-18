@@ -72,7 +72,7 @@ sub in_ssh {
     my $ip;
     ( $ip = $ENV{SSH_CONNECTION} || '(no-IP)' ) =~ s/ .*//;
 
-    gl_log( 'ssh', "ARGV=" . join( ",", @ARGV ), "SOC=" . ( $ENV{SSH_ORIGINAL_COMMAND} || ''), "FROM=$ip" );
+    gl_log( 'ssh', "ARGV=" . join( ",", @ARGV ), "SOC=" . ( $ENV{SSH_ORIGINAL_COMMAND} || '' ), "FROM=$ip" );
 
     $ENV{SSH_ORIGINAL_COMMAND} ||= '';
     my $soc = $ENV{SSH_ORIGINAL_COMMAND};
@@ -172,24 +172,24 @@ sub sanity {
 sub http_setup_die_handler {
 
     $SIG{__DIE__} = sub {
-        my $service = ($ENV{SSH_ORIGINAL_COMMAND} =~ /git-receive-pack/ ?  'git-receive-pack' : 'git-upload-pack');
+        my $service = ( $ENV{SSH_ORIGINAL_COMMAND} =~ /git-receive-pack/ ? 'git-receive-pack' : 'git-upload-pack' );
         my $message = shift; chomp($message);
         print STDERR "$message\n";
 
         # format the service response, then the message.  With initial
         # help from Ilari and then a more detailed email from Shawn...
         $service = "# service=$service\n"; $message = "ERR $message\n";
-        $service = sprintf("%04X", length($service)+4) . "$service";        # no CRLF on this one
-        $message = sprintf("%04X", length($message)+4) . "$message";
+        $service = sprintf( "%04X", length($service) + 4 ) . "$service";    # no CRLF on this one
+        $message = sprintf( "%04X", length($message) + 4 ) . "$message";
 
         http_print_headers();
         print $service;
-        print "0000";       # flush-pkt, apparently
+        print "0000";                                                       # flush-pkt, apparently
         print $message;
         print STDERR $service;
         print STDERR $message;
-        exit 0;     # if it's ok for die_webcgi in git.git/http-backend.c, it's ok for me ;-)
-    }
+        exit 0;                                                             # if it's ok for die_webcgi in git.git/http-backend.c, it's ok for me ;-)
+      }
 }
 
 sub http_simulate_ssh_connection {
@@ -197,26 +197,27 @@ sub http_simulate_ssh_connection {
     # http-backend.c for how I got that.  Also note that "info" is overloaded;
     # git uses "info/refs...", while gitolite uses "info" or "info?...".  So
     # there's a "/" after info in the list below
-    if ($ENV{PATH_INFO} =~ m(^/(.*)/(HEAD$|info/refs$|objects/|git-(?:upload|receive)-pack$))) {
+    if ( $ENV{PATH_INFO} =~ m(^/(.*)/(HEAD$|info/refs$|objects/|git-(?:upload|receive)-pack$)) ) {
         my $repo = $1;
-        my $verb = ($ENV{REQUEST_URI} =~ /git-receive-pack/) ?  'git-receive-pack' : 'git-upload-pack';
+        my $verb = ( $ENV{REQUEST_URI} =~ /git-receive-pack/ ) ? 'git-receive-pack' : 'git-upload-pack';
         $ENV{SSH_ORIGINAL_COMMAND} = "$verb '$repo'";
     } else {
         # this is one of our custom commands; could be anything really,
         # because of the adc feature
-        my ($verb) = ($ENV{PATH_INFO} =~ m(^/(\S+)));
+        my ($verb) = ( $ENV{PATH_INFO} =~ m(^/(\S+)) );
         my $args = $ENV{QUERY_STRING};
         $args =~ s/\+/ /g;
         $ENV{SSH_ORIGINAL_COMMAND} = $verb;
         $ENV{SSH_ORIGINAL_COMMAND} .= " $args" if $args;
-        http_print_headers();  # in preparation for the eventual output!
+        http_print_headers();    # in preparation for the eventual output!
     }
     $ENV{SSH_CONNECTION} = "$ENV{REMOTE_ADDR} $ENV{REMOTE_PORT} $ENV{SERVER_ADDR} $ENV{SERVER_PORT}";
 }
 
 my $http_headers_printed = 0;
+
 sub http_print_headers {
-    my($code, $text) = @_;
+    my ( $code, $text ) = @_;
 
     return if $http_headers_printed++;
     $code ||= 200;

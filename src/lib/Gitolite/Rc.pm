@@ -32,11 +32,11 @@ our %rc;
 # pre-populate some important rc keys
 # ----------------------------------------------------------------------
 
-$rc{GL_BINDIR}    = $ENV{GL_BINDIR};
-$rc{GL_LIBDIR}    = $ENV{GL_LIBDIR};
+$rc{GL_BINDIR} = $ENV{GL_BINDIR};
+$rc{GL_LIBDIR} = $ENV{GL_LIBDIR};
 
 # these keys could be overridden by the rc file later
-$rc{GL_REPO_BASE} = "$ENV{HOME}/repositories";
+$rc{GL_REPO_BASE}  = "$ENV{HOME}/repositories";
 $rc{GL_ADMIN_BASE} = "$ENV{HOME}/.gitolite";
 $rc{LOG_TEMPLATE}  = "$ENV{HOME}/.gitolite/logs/gitolite-%y-%m.log";
 
@@ -183,7 +183,7 @@ sub trigger {
                 if ( my ( $module, $sub ) = ( $pgm =~ /^(.*)::(\w+)$/ ) ) {
 
                     require Gitolite::Triggers;
-                    trace(1, 'trigger', $module, $sub, @args, $rc_section, @_ );
+                    trace( 1, 'trigger', $module, $sub, @args, $rc_section, @_ );
                     Gitolite::Triggers::run( $module, $sub, @args, $rc_section, @_ );
 
                 } else {

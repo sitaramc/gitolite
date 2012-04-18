@@ -42,7 +42,7 @@ sub update {
 sub bypass {
     require Cwd;
     Cwd->import;
-    gl_log( 'update', getcwd(), '(' . ($ENV{USER} || '?') . ')', 'bypass', @ARGV );
+    gl_log( 'update', getcwd(), '(' . ( $ENV{USER} || '?' ) . ')', 'bypass', @ARGV );
     exit 0;
 }
 
