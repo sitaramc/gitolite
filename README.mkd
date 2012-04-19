@@ -12,20 +12,27 @@ If you're reading this on the main gitolite page on github, several
     branch, and is now the actively maintained and supported software.  Do NOT
     try to merge this with your old "master" branch!
 
+    The [main page][h-mp] leads to several useful starting points.  The [table
+    of contents][h-mt] is a much more meaningfully ordered/structured list of
+    links (instead of putting them in alphabetical order of the filename, like
+    in g2!)
+
+    If you are an existing (g2) user and wish to migrate, you MUST read
+    [this](http://sitaramc.github.com/gitolite/install.html#migr).
+
 2.  Versions v2.x are on branch "g2".  It will be supported for security
     issues and serious bugs in core functionality, but not for anything less
-    critical.  Versions v1.x are completely unsupported now.
-
-If you're an existing (v1.x, v2.x) gitolite user please spend some time with
-the documentation for the new version before upgrading.  The [main page][h-mp]
-leads to several useful starting points.  The [table of contents][h-mt] is a
-much more meaningfully ordered/structured list of links (instead of putting
-them in alphabetical order of the filename, like in g2!)
+    critical.  Versions v1.x are completely unsupported now.  (Documentation
+    links for this version are [here][o1] and [here][o2]).
 
 [h-mp]: http://sitaramc.github.com/gitolite/
 [h-mt]: http://sitaramc.github.com/gitolite/master-toc.html
+[o1]: http://sitaramc.github.com/gitolite/g2/
+[o2]: http://sitaramc.github.com/gitolite/g2/master-toc.html
 
 ----
 
 License information for code and documentation is at the end of doc/index.mkd
-(or you can read it online [here][license]).
+(or you can read it online
+[here](http://sitaramc.github.com/gitolite/index.html#license)).
+

@@ -13,7 +13,7 @@ For users of gitolite v2.x (call it "g2" for convenience),
 
   * [Why][g3why] I rewrote gitolite.
   * Development [status][dev-status].
-  * Specific migration [issues and steps][g2migr].
+  * Information on [migrating][migr] from g2 to g3.
 
 </font>
 

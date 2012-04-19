@@ -2,7 +2,6 @@
 
 Not yet done (will be tackled in this order unless someone asks):
 
-  * svnserve (someone is testing it)
   * mechanism for ADCs using unchecked arguments -- this is not just a matter
     of writing it; I have to think about *how* it will be done.  (AFAIK the
     only tool affected is git-annexe; if there are more let me know)
@@ -33,3 +32,4 @@ Done:
   * distro packaging instructions
   * migration advice for common cases
   * smart http
+  * svnserve
