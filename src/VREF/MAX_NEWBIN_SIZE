@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# gitolite VREF to check max size of new binary files
+
+# see gitolite docs for what the first 7 arguments mean
+
+# inputs:
+#   arg-8 is a number
+# outputs (STDOUT)
+#   arg-7 if any new binary files exist that are greater in size than arg-8
+#   *and* there is no "signed-off by" line for such a file in the top commit
+#   message.
+#
+#   Otherwise nothing
+# exit status:
+#   always 0
+
+die "not meant to be run manually" unless $ARGV[7];
+
+my ( $newsha, $oldtree, $newtree, $refex, $max ) = @ARGV[ 2, 3, 4, 6, 7 ];
+
+# / (.*) +\| Bin 0 -> (\d+) bytes/
+
+chomp( my $author_email = `git log --format=%ae -1 $newsha` );
+my $msg = `git cat-file -p $newsha`;
+$msg =~ s/\t/ /g;    # makes our regexes simpler
+
+for my $newbin (`git diff --stat=999,999 $oldtree $newtree | grep Bin.0.-`) {
+    next unless $newbin =~ /^ (.*) +\| +Bin 0 -> (\d+) bytes/;
+    my ( $f, $s ) = ( $1, $2 );
+    next if $s <= $max;
+
+    next if $msg =~ /^ *$f +signed-off by: *$author_email *$/mi;
+
+    print "$refex $f is larger than $max";
+}
+
+exit 0
