@@ -12,7 +12,8 @@ use Gitolite::Conf::Load;
 =for args
 Usage:  gitolite info [-lc] [<repo name pattern>]
 
-List all repos/repo groups you can access.
+List all existing repos you can access, as well as repo name patterns you can
+create repos from (if any).
 
     '-lc'       lists creators as an additional field at the end.
 
