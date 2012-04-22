@@ -20,14 +20,21 @@ Usage (from gitolite clone directory):
     ./install
         to run gitolite using an absolute or relative path, for example
         'src/gitolite' or '/full/path/to/this/dir/src/gitolite'
+
     ./install -ln [<dir>]
         to symlink just the gitolite executable to some <dir> that is in
-        $PATH.  <dir> defauls to $HOME/bin if <dir> not specified.
+        $PATH.  <dir> defaults to $HOME/bin if <dir> not specified.  <dir> is
+        assumed to exist; gitolite will not create it.
+
+        Please provide a full path, not a relative path.
+
     ./install -to <dir>
         to copy the entire 'src' directory to <dir>.  If <dir> is not in
         $PATH, use the full path to run gitolite commands.
 
-Simplest use, if you have $HOME/bin in $PATH, is:
+        Please provide a full path, not a relative path.
+
+Simplest use, if $HOME/bin exists and is in $PATH, is:
 
     git clone -b g3 git://github.com/sitaramc/gitolite
     gitolite/install -ln
@@ -46,6 +53,12 @@ GetOptions(
 );
 usage() if $to and $ln or $help;
 $ln = "$ENV{HOME}/bin" if defined($ln) and not $ln;
+for my $d ($ln, $to) {
+    if ($d and not -d $d) {
+        print STDERR "FATAL: '$d' does not exist.\n";
+        usage();
+    }
+}
 
 chdir($ENV{GL_BINDIR});
 my $version = `git describe --tags --long --dirty=-dt`;
