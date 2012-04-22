@@ -13,13 +13,30 @@ use Gitolite::Conf::Load;
 use strict;
 use warnings;
 
-# ----------------------------------------------------------------------
-
 my $RB = $rc{GL_REPO_BASE};
 _chdir($RB);
+
+# ----------------------------------------------------------------------
+# if called from POST_CREATE, we have only a single repo to worry about
+if (@ARGV and $ARGV[0] eq 'POST_CREATE') {
+    my $repo = $ARGV[1];
+    fixup_config($repo);
+
+    exit 0;
+}
+
+# ----------------------------------------------------------------------
+# else it's all repos (i.e., called from POST_COMPILE)
+
 my $lpr = list_phy_repos();
 
 for my $pr (@$lpr) {
+    fixup_config($pr);
+}
+
+sub fixup_config {
+    my $pr = shift;
+
     my $gc = git_config( $pr, '.' );
     while ( my ( $key, $value ) = each( %{$gc} ) ) {
         next if $key =~ /^gitolite-options\./;

@@ -34,8 +34,9 @@ if ( $ARGV[0] eq '-l' ) {
     getperms(@ARGV);    # doesn't return
 }
 
+my $repo = shift;
 setperms(@ARGV);
-_system( "gitolite", "trigger", "POST_CREATE" );
+_system( "gitolite", "trigger", "POST_CREATE", $repo, $ENV{GL_USER} );
 
 # ----------------------------------------------------------------------
 
@@ -50,7 +51,6 @@ sub getperms {
 }
 
 sub setperms {
-    my $repo = shift;
     _die "sorry you are not authorised" if repo_missing($repo) or creator($repo) ne $ENV{GL_USER};
     my $pf = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
 
