@@ -18,6 +18,7 @@ bug to me if they don't.
 Here's a list of remote commands that are shipped:
 
   * 'desc' -- get/set the 'description' file for a repo
+  * 'fork' -- fork a repo
   * 'info' -- already documented [here][info]
   * 'mirror' -- documented [here][sync]
   * 'perms' -- get/set the gl-perms file; see [perms][] for more

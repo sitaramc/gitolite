@@ -80,6 +80,11 @@ sub access {
         $iret =~ s/\^C/$aa/;
         return $iret if $iret =~ /DENIED/;
     }
+    # similarly, ^C must be denied if the repo exists
+    if ( $aa eq '^C' and not repo_missing($repo) ) {
+        trace( 2, "DENIED by existence" );
+        return "$aa $ref $repo $user DENIED by existence";
+    }
 
     my @rules = rules( $repo, $user );
     trace( 2, scalar(@rules) . " rules found" );
@@ -367,7 +372,8 @@ sub generic_name {
     # get the creator name.  For not-yet-born repos this is $ENV{GL_USER},
     # which should be set in all cases that we care about, viz., where we are
     # checking ^C permissions before new_wild_repo(), and the info command.
-    # In particular, 'gitolite access' can't be used to check ^C perms.
+    # In particular, 'gitolite access' can't be used to check ^C perms on wild
+    # repos that contain "CREATOR" if GL_USER is not set.
     $creator = creator($base);
 
     $base2 = $base;

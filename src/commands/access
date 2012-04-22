@@ -42,7 +42,7 @@ if ( $ARGV[0] eq '-q' ) { $quiet = 1; shift @ARGV; }
 my ( $repo, $user, $aa, $ref ) = @ARGV;
 $aa  ||= '+';
 $ref ||= 'any';
-_die "invalid perm" if not( $aa and $aa =~ /^(R|W|\+|C|D|M)$/ );
+_die "invalid perm" if not( $aa and $aa =~ /^(R|W|\+|C|D|M|\^C)$/ );
 _die "invalid ref name" if not( $ref and $ref =~ $REPONAME_PATT );
 
 my $ret = '';

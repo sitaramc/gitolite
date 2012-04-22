@@ -288,6 +288,7 @@ __DATA__
         {
             'help'              =>  1,
             'desc'              =>  1,
+            # 'fork'            =>  1,
             'info'              =>  1,
             # 'mirror'          =>  1,
             'perms'             =>  1,

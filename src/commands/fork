@@ -1,0 +1,62 @@
+#!/bin/sh
+
+# Usage:    ssh git@host fork <repo1> <repo2>
+#
+# Forks repo1 to repo2.  You must have read permissions on repo1, and create
+# ("C") permissions for repo2, which of course must not exist.
+#
+# A fork is functionally the same as cloning repo1 to a client and pushing it
+# to a new repo2.  It's just a little more efficient, not just in network
+# traffic but because it uses git clone's "-l" option to share the object
+# store also, so it is likely to be almost instantaneous, regardless of how
+# big the repo actually is.
+#
+# The only caveat is that the repo you cloned *from* must not later become
+# unavailable in any way.  If you cannot be sure of this, take the scenic
+# route (clone repo1, push to repo2).
+
+die() { echo "$@" >&2; exit 1; }
+usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
+[ -z "$1" ] && usage
+[ "$1" = "-h" ] && usage
+[ -z "$GL_USER" ] && die GL_USER not set
+
+# ----------------------------------------------------------------------
+from=$1; shift
+to=$1; shift
+[ -z "$to" ] && usage
+
+gitolite access -q "$from" $GL_USER R any || die "'$from' does not exist or you are not allowed to read it"
+gitolite access -q "$to"   $GL_USER ^C any || die "'$to' already exists or you are not allowed to create it"
+
+# ----------------------------------------------------------------------
+# IMPORTANT NOTE: checking whether someone can create a repo is done as above.
+# However, make sure that the env var GL_USER is set, and that too to the same
+# value as arg-2 of the access command), otherwise it won't work.
+
+# Ideally, you'll leave such code to me.  There's a reason ^C is not listed in
+# the help message for 'gitolite access'.
+# ----------------------------------------------------------------------
+
+# clone $from to $to
+git clone --bare -l $GL_REPO_BASE/$from.git $GL_REPO_BASE/$to.git
+[ $? -ne 0 ] && exit 1
+
+echo "$from forked to $to" >&2
+
+# fix up creator, default role permissions (gl-perms), and hooks
+cd $GL_REPO_BASE/$to.git
+echo $GL_USER > gl-creator
+
+if gitolite query-rc -q DEFAULT_ROLE_PERMS
+then
+    gitolite query-rc DEFAULT_ROLE_PERMS > gl-perms
+fi
+
+ln -sf `gitolite query-rc GL_ADMIN_BASE`/hooks/common/* hooks
+
+# record where you came from
+echo "$from" > gl-forked-from
+
+# trigger post_create
+gitolite trigger POST_CREATE
