@@ -116,6 +116,16 @@ Some of them have links where there is more detail than I want to put here.
 
 (ancillary, non-core, or minor functionality lost)
 
+  * Built-in command `expand` -- **dropped**.  The 'info' command shows you
+    both normal and wild repos now.  The output format is also much simpler.
+
+  * Built-in commands 'getperms', 'setperms' -- **merged** into external
+    command 'perms'.  Run `ssh git@host perms -h` for details.
+
+    Similarly, 'getdesc' and 'setdesc' have been merged into 'desc'.
+
+  * Several 'ADC's -- see the [dev-status][] page for more on this.
+
   * [gl-time][g2i-gl-time]: the CpuTime module replaces gl-time.
 
   * `BIG_INFO_CAP` -- **dropped**.  If you think you must have this, try it

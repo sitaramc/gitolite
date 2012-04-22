@@ -221,12 +221,12 @@ Listing the keys shows that that new key is now marked active again:
 
 ## important notes for the admin
 
-These are the things that can break if you allows your users to use this command:
+These are the things that can break if you allow your users to use this
+command:
 
-  * If you, as the gitolite admin, are in the habit of force-pushing changes
-    to the admin repo instead of doing a `git pull` (or, even better, a `git
-    pull --rebase`) then you had better not enable this command.  Your users
-    will eventually come after you with pitchforks ;-)
+  * "sskm" clones, changes, and pushes back the gitolite-admin repo.  This
+    means, even if you're the only administrator, you should never 'git push
+    -f', in case you end up overwriting something sskm did.
 
   * There is no way to distinguish `foo/alice.pub` from `bar/alice.pub` using
     this command.  You can distinguish `foo/alice.pub` from

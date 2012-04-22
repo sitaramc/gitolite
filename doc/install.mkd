@@ -99,10 +99,13 @@ you can run the 'install' command in 3 different ways:
 
     # option 2
     gitolite/install -ln
-    # defaults to $HOME/bin, or use a specific directory:
+    # defaults to $HOME/bin (which is assumed to exist)
+    #   ** or **
+    # or use a specific directory (please supply full path):
     gitolite/install -ln /usr/local/bin
 
     # option 3
+    # (again, please supply a full path)
     gitolite/install -to /usr/local/gitolite/bin
 
 Creating a symlink doesn't need a separate program but 'install' also runs

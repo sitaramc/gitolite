@@ -20,6 +20,7 @@ To begin, create a user called `git` on your server and login to this user.  Cop
 
     git clone git://github.com/sitaramc/gitolite
     gitolite/install -ln
+        # assumes $HOME/bin exists and is in your $PATH
     gitolite setup -pk $HOME/YourName.pub
         # for example, I would run 'gitolite setup -pk $HOME/sitaram.pub'
 

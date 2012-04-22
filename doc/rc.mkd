@@ -80,3 +80,20 @@ information.
     with regular expressions) is to allow anything and everything:
     `$GIT_CONFIG_KEYS = '.*';`
 
+  * `DEFAULT_ROLE_PERMS`, string, default undef
+
+    This sets default wildcard permissions for newly created wildcard repos.
+
+    If set, this value will be used as the default role permissions for new
+    wildcard repositories. The user can change this value with the perms
+    command as desired after repository creation; it is only a default.
+
+    Please be aware this is potentially a multi-line variable.  In most
+    setups, it will be left undefined.  Some installations may benefit from
+    setting it to `READERS @all`.
+
+    If you want multiple roles to be assigned by default, here is how.  Note
+    double quotes this time, due to the embedded newline, which in turn
+    require the '@' to be escaped:
+
+        DEFAULT_ROLE_PERMS  =>  "READERS \@all\nWRITERS \@senior_devs",
