@@ -112,14 +112,18 @@ sub can_read {
 }
 
 # can_write()
-# return true if $ENV{GL_USER} is set and can write to the given repo
+# return true if $ENV{GL_USER} is set and can write to the given repo.
+# Optional second argument can be '+' to check that instead of 'W'.  Optional
+# third argument can be a full ref name instead of 'any'.
 
 # shell equivalent
 #   if gitolite access -q $REPONAME $GL_USER W; then ...
 sub can_write {
     valid_user();
-    my $r = shift;
-    return not( access( $r, $user, 'W', 'any' ) =~ /DENIED/ );
+    my ($r, $aa, $ref) = @_;
+    $aa ||= 'W';
+    $ref ||= 'any';
+    return not( access( $r, $user, $aa, $ref ) =~ /DENIED/ );
 }
 
 # config()

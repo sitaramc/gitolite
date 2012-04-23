@@ -18,7 +18,7 @@ sub ok { (+shift) ? print "ok\n" : print "not ok\n"; }
 sub nok { (+shift) ? print "not ok\n" : print "ok\n"; }
 sub msg { return unless $ENV{D}; print STDERR "#" . +shift . "\n"; }
 
-try "plan 90";
+try "plan 98";
 
 try "
     cat $ENV{HOME}/.gitolite.rc
@@ -117,6 +117,11 @@ $ENV{GL_USER} = "u2"; ok(can_write("aa"));
 $ENV{GL_USER} = "u3"; nok(can_write("aa"));
 $ENV{GL_USER} = "u4"; nok(can_write("aa"));
 
+$ENV{GL_USER} = "u1"; ok(can_write("aa", "+"));
+$ENV{GL_USER} = "u2"; nok(can_write("aa", "+"));
+$ENV{GL_USER} = "u3"; nok(can_write("aa", "+"));
+$ENV{GL_USER} = "u4"; nok(can_write("aa", "+"));
+
 $ENV{GL_USER} = "u1"; nok(can_write("bb"));
 $ENV{GL_USER} = "u2"; nok(can_write("bb"));
 $ENV{GL_USER} = "u3"; nok(can_write("bb"));
@@ -131,6 +136,11 @@ $ENV{GL_USER} = "u3"; nok(can_write("cc/u4"));
 $ENV{GL_USER} = "u4"; ok(can_write("cc/u4"));
 $ENV{GL_USER} = "u5"; ok(can_write("cc/u4"));
 $ENV{GL_USER} = "u6"; nok(can_write("cc/u4"));
+
+$ENV{GL_USER} = "u3"; nok(can_write("cc/u4", "+"));
+$ENV{GL_USER} = "u4"; ok(can_write("cc/u4", "+"));
+$ENV{GL_USER} = "u5"; ok(can_write("cc/u4", "+"));
+$ENV{GL_USER} = "u6"; nok(can_write("cc/u4", "+"));
 
 # config
 try("glt ls-remote u4 cc/sub/one; /Initialized empty.*cc/sub/one/");
