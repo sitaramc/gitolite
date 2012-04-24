@@ -145,7 +145,7 @@ Some of them have links where there is more detail than I want to put here.
     business touching these anyway; if you did, move them into the expected
     default locations before attempting to run `gitolite setup`
 
-  * `GL_GITCONFIG_KEYS` -- is now `GITCONFIG_KEYS`.
+  * `GL_GITCONFIG_KEYS` -- is now `GIT_CONFIG_KEYS`.
 
   * `GL_LOGT` -- now has a fixed value; email me if this is a problem.
 

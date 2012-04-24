@@ -166,13 +166,21 @@ are the steps:
     you were to a default install of the old gitolite, the less time a
     migration will take.)
 
+    This includes at least running `check-g2-compat` to see what are the big
+    issues you might need to address during the migration.
+
 ### the actual migration
+
+(Note: You may also like the [example migration][g2migr-example] page).
 
 **Note**: nothing in any of the gitolite install/setup/etc will ever touch the
 *data* in any repository except the gitolite-admin repo.  The only thing it
 will normally touch in normal repos is the `update` hook.
 
-1.  **On the server**, carefully wipe out the old gitolite:
+**Note: all migration happens on the server; you do not need your
+workstation**.
+
+1.  Carefully wipe out the old gitolite:
 
       * The **code**
 
@@ -209,7 +217,11 @@ will normally touch in normal repos is the `update` hook.
     your new rc file.
 
 3.  Install gitolite g3; see [quick install and setup][qi] or [install][]
-    followed by [setup][].
+    followed by [setup][].  However, the 'setup' step need not supply a
+    private key.  You can run it as `gitolite setup -a admin`.
+
+    NOTE: ignore any 'split conf not set, gl-conf present...' errors at this
+    time.  You may see none, some, or many.  It does not matter right now.
 
 4.  Make sure your gitolite-admin clone has the correct pubkey for the
     administrator in its `keydir` directory, then run [`gitolite push
