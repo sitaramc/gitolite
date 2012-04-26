@@ -38,9 +38,10 @@ sub main {
     chomp(@ARGV = `find . -name "*.mkd" | cut -c3-`) if not @ARGV;
     @ARGV = grep { /./ } @ARGV;
     my @save = @ARGV;
-    my $css = join("", <DATA>);
+    my $css_block = join("", <DATA>);
 
     my %ct; # chapter tocs
+    my %title;
     my $mf = '';
     my $fh;
 
@@ -49,6 +50,7 @@ sub main {
         my $b = $1;
 
         if (/^(#+) (?:#(\S+) )?(.*)/) {
+            $title{$b} ||= $3;
             if ( length($1) == 1 ) {
                 $ct{$b} .= "\n";
                 $ct{$b} .= "  * [$3][$b]\n";
@@ -80,6 +82,9 @@ sub main {
         $mkd =~ /^(?:.*\/)?([^\/]+)\.mkd$/;
         my $b = $1;
 
+        my $css = $css_block;
+        $css =~ s/%TITLE/$title{$b} || $b/e;
+
         open($fh, ">", "../html/$b.html")
           and print $fh $css
           and close $fh;
@@ -95,7 +100,9 @@ sub main {
 
 __DATA__
 
-<head><style>
+<head>
+    <title>%TITLE</title>
+<style>
     body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
     h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
     h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
@@ -104,7 +111,8 @@ __DATA__
     code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
     pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
     pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
-</style></head>
+</style>
+</head>
 
 <p style="text-align:center">
     <a href="master-toc.html">master TOC</a>
