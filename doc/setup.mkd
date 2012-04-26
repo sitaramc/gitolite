@@ -1,11 +1,16 @@
 # setting up gitolite
 
+This is the second step in using gitolite, after [install][].  This also
+happens on the server,  (The next step is [clone][]).
+
+----
+
 Installing the software gets you ready to use it, but the first "use" of it is
 always the "setup" command.
 
-The first time you run it, you need to have a public key file ready.  If the
-main gitolite admin's username is "alice", this file should be named
-"alice.pub".  Then run
+The first time you run it, you need to have a public key file (usually from
+the admin's workstation) ready.  If the main gitolite admin's username is
+"alice", this file should be named "alice.pub".  Then run
 
     gitolite setup -pk alice.pub
 

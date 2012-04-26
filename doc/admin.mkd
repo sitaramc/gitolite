@@ -2,7 +2,8 @@
 
 ## #server server-side administration
 
-The following activities require command line access to the server:
+The following activities require command line access to the server.  They are
+usually one-time or rarely done activities.
 
   * Changing anything in the [rc][] file.
   * Installing custom [hooks][], whether to all repos or just some repos.
@@ -10,12 +11,19 @@ The following activities require command line access to the server:
 
 Please read the [WARNINGS][] page first.
 
-## #conf access control (the gitolite.conf file)
+## #adminrepo access control via the gitolite-admin repo
+
+Most day-to-day administration of a gitolite site happens like this:
+
+  * [clone][] the gitolite-admin repo to your workstation
+  * make appropriate changes
+  * add, commit, and push
+
+### #conf the conf/gitolite.conf file
 
 Most of gitolite's power is in the conf/gitolite.conf file, which specifies
-detailed access control for repos.
-
-### #confex example of a conf file
+detailed access control for repos.  Everything except [adding users][users]
+happens from this file.
 
 Here is an example of a simple conf/gitolite.conf file.
 

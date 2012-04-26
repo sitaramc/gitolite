@@ -6,6 +6,11 @@ start [here][migr].  RTFM is *mandatory* for migrations.</font>
 
 ----
 
+This is the first step in using gitolite, and happens on the server.  It is
+followed by [setup][], then [clone][].
+
+----
+
 [[TOC]]
 
 ----
@@ -19,6 +24,9 @@ The real user used is called the **hosting user**.  Typically this user is
 *git*, and that is what we will use throughout the documentation.  However
 RPMs and DEBs create a user called *gitolite* for this, so adjust instructions
 and examples accordingly.
+
+**Unless otherwise stated, everything in this page is to be done by logging in
+as this "hosting user"**.
 
 Notes:
 
@@ -71,6 +79,9 @@ side.
     git clone git://github.com/sitaramc/gitolite
 
 ## the actual install
+
+**Note**: This section describes installing an ssh-based setup.  For smart
+http setup click [here][http].
 
 Gitolite has only one server side "command" now, much like git itself.  This
 command is `gitolite`.  You don't need to place it anywhere special; worst

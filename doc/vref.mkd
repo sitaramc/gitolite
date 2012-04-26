@@ -6,6 +6,10 @@ who stop reading halfway!
 
 ----
 
+[[TOC]]
+
+----
+
 Here's an example to start you off.
 
     repo    r1
@@ -262,12 +266,13 @@ copied to `src/VREF/EMAIL-CHECK` and it works, because VREFs get
 the same first 3 arguments and those are all that it cares about.  (Note: you
 have to change one subroutine in that script if you want to use it)
 
-### catching duplicate pubkeys
+### #votes voting on commits
 
-This checks keydir/ for duplicate keys and aborts the push if it finds any.
-You should use this only on the gitolite-admin repo.
-
-We covered this as a teaser example at the start.
+Although gitolite can't/won't do the whole "code review + workflow
+enforcement" thing that Gerrit Code Review does, a basic implementation of
+voting on a commit is surprisingly easy.  See src/VREF/VOTES for details (and
+note that the actual *code* is just 2-3 lines; the rest is inline
+documentation).
 
 ## other ideas -- code welcome!
 

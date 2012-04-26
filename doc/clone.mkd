@@ -1,0 +1,19 @@
+# cloning the admin repo
+
+This is the third step in using gitolite, after [install][] and [setup][].
+
+To clone the admin repo, go to the workstation where the public key used in
+'setup' came from, and run this:
+
+    git clone git@host:gitolite-admin
+
+NOTE that (1) you must not include the `repositories/` part (gitolite handles
+that internally), and (2) you may include the ".git" at the end but it is
+optional.
+
+If this step succeeds, you can add [users][], [repos][], or anything else
+described [here][adminrepo].
+
+If this step fails, be sure to look at the [ssh][] documentation before asking
+for help.  (A very basic first step is to run `ssh git@host info`;
+[this][info] page tells you what to expect).
