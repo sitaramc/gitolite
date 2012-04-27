@@ -583,7 +583,7 @@ sub dummy_commits {
             test_tick();
             next;
         }
-        my $ts = ( $tick ? localtime($tick) : localtime() );
+        my $ts = ( $tick ? gmtime($tick+19800) : gmtime() );
         _sh("echo $f at $ts >> $f && git add $f && git commit -m '$f at $ts'");
     }
 }
