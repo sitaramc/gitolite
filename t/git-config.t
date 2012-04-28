@@ -15,6 +15,8 @@ try "pwd";
 my $od = text();
 chomp($od);
 
+my $t;  # temp
+
 # try an invalid config key
 confreset;confadd '
 
@@ -62,13 +64,15 @@ try "ADMIN_PUSH set1; !/FATAL/" or die text();
 my $rb = `gitolite query-rc -n GL_REPO_BASE`;
 try "
     cd $rb;                             ok
-    egrep foo\\|bar *.git/config | sort
+    egrep foo\\|bar *.git/config
 ";
-cmp 'bar.git/config:	bare = true
-bar.git/config:	bar = one
+$t = join("\n", sort (lines()));
+
+cmp $t, 'bar.git/config:	bar = one
+bar.git/config:	bare = true
 bar.git/config:[foo]
-foo.git/config:	bare = true
 foo.git/config:	bar = f1
+foo.git/config:	bare = true
 foo.git/config:[foo]
 frob.git/config:	bar = dft
 frob.git/config:	bare = true
@@ -76,8 +80,7 @@ frob.git/config:[foo]
 gitolite-admin.git/config:	bare = true
 testing.git/config:	bar = dft
 testing.git/config:	bare = true
-testing.git/config:[foo]
-';
+testing.git/config:[foo]';
 
 try "cd $od; ok";
 
@@ -97,23 +100,23 @@ try "ADMIN_PUSH set1; !/FATAL/" or die text();
 
 try "
     cd $rb;                             ok
-    egrep foo\\|bar *.git/config | sort
+    egrep foo\\|bar *.git/config
 ";
+$t = join("\n", sort (lines()));
 
-cmp 'bar.git/config:	bare = true
-bar.git/config:	bar = one
+cmp $t, 'bar.git/config:	bar = one
+bar.git/config:	bare = true
 bar.git/config:[foo]
-foo.git/config:	bare = true
 foo.git/config:	bar = f1
+foo.git/config:	bare = true
 foo.git/config:[foo]
-frob.git/config:	bare = true
 frob.git/config:	bar = none
+frob.git/config:	bare = true
 frob.git/config:[foo]
 gitolite-admin.git/config:	bare = true
 testing.git/config:	bar = dft
 testing.git/config:	bare = true
-testing.git/config:[foo]
-';
+testing.git/config:[foo]';
 
 try "cd $od; ok";
 
@@ -129,22 +132,22 @@ try "ADMIN_PUSH set1; !/FATAL/" or die text();
 
 try "
     cd $rb;                             ok
-    egrep foo\\|bar *.git/config | sort
+    egrep foo\\|bar *.git/config
 ";
+$t = join("\n", sort (lines()));
 
-cmp 'bar.git/config:	bare = true
+cmp $t, 'bar.git/config:	bare = true
 bar.git/config:[foo]
-foo.git/config:	bare = true
 foo.git/config:	bar = f1
+foo.git/config:	bare = true
 foo.git/config:[foo]
-frob.git/config:	bare = true
 frob.git/config:	bar = none
+frob.git/config:	bare = true
 frob.git/config:[foo]
 gitolite-admin.git/config:	bare = true
 testing.git/config:	bar = dft
 testing.git/config:	bare = true
-testing.git/config:[foo]
-';
+testing.git/config:[foo]';
 
 try "cd $od; ok";
 
@@ -170,21 +173,20 @@ try "
 
 try "
     cd $rb;                             ok
-    egrep foo\\|bar *.git/config | sort
-    find . -name config | xargs egrep foo\\|bar | sort
+    find . -name config | xargs egrep foo\\|bar
 ";
+$t = join("\n", sort (lines()));
 
-cmp './bar/u2/one.git/config:	bare = true
-./bar/u2/one.git/config:	bar = one
+cmp $t, './bar/u2/one.git/config:	bar = one
+./bar/u2/one.git/config:	bare = true
 ./bar/u2/one.git/config:[foo]
-./foo.git/config:	bare = true
 ./foo.git/config:	bar = f1
+./foo.git/config:	bare = true
 ./foo.git/config:[foo]
-./frob.git/config:	bare = true
 ./frob.git/config:	bar = f1
+./frob.git/config:	bare = true
 ./frob.git/config:[foo]
 ./gitolite-admin.git/config:	bare = true
 ./testing.git/config:	bar = dft
 ./testing.git/config:	bare = true
-./testing.git/config:[foo]
-';
+./testing.git/config:[foo]';

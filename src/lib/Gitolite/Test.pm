@@ -8,15 +8,18 @@ package Gitolite::Test;
   try
   put
   text
+  lines
   dump
   confreset
   confadd
   cmp
+  md5sum
 );
 #>>>
 use Exporter 'import';
 use File::Path qw(mkpath);
 use Carp qw(carp cluck croak confess);
+use Digest::MD5 qw(md5_hex);
 
 use Gitolite::Common;
 
@@ -25,6 +28,7 @@ BEGIN {
     *{'try'}  = \&Tsh::try;
     *{'put'}  = \&Tsh::put;
     *{'text'} = \&Tsh::text;
+    *{'lines'} = \&Tsh::lines;
     *{'cmp'}  = \&Tsh::cmp;
 }
 
@@ -98,6 +102,14 @@ sub confadd {
     chdir("../gitolite-admin") or die "in `pwd`, could not cd ../g-a";
     my ( $file, $string ) = _confargs(@_);
     put "|cat >> conf/$file", $string;
+}
+
+sub md5sum {
+    my $out = '';
+    for my $file (@_) {
+        $out .= md5_hex(slurp($file)) . "  $file\n";
+    }
+    return $out;
 }
 
 1;

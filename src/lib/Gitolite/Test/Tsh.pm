@@ -473,9 +473,9 @@ sub fail {
 }
 
 sub cmp {
-    # compare input string with text()
-    my $text = text();
+    # compare input string with second input string or text()
     my $in   = shift;
+    my $text = ( @_ ? +shift : text() );
 
     if ( $text eq $in ) {
         ok();

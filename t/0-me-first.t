@@ -32,7 +32,7 @@ try "
     glt clone u1 file://aa u1aa;    ok;     /Cloning into 'u1aa'.../
                                             /warning: You appear to have cloned an empty repository/
     ls -ald --time-style=long-iso u1aa;
-                                    ok;     /drwxr-xr-x 3 $ENV{USER} $ENV{USER} 4096 201.-..-.. ..:.. u1aa/
+                                    ok;     /drwxr-xr-x 3 $ENV{USER} $ENV{USER} \\d+ 201.-..-.. ..:.. u1aa/
 
     # basic clone deny
     glt clone u4 file://aa u4aa;    !ok;    /R any aa u4 DENIED by fallthru/

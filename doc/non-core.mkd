@@ -121,6 +121,9 @@ Here's how:
             -   VREF/partial-copy           =   @all
             config gitolite.partialCopyOf   =   foo
 
+    **IMPORTANT**: if you're using other VREFs, please make sure this one is
+    placed at the end, after all the others.
+
 And that should be it.  **Please test it and let me know if it doesn't work!**
 
 WARNINGS:

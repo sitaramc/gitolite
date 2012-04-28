@@ -20,13 +20,13 @@ exec >&2
 main=`git config --file $GL_REPO_BASE/$repo.git/config --get gitolite.partialCopyOf`;
 [ -z "$main" ] && exit 0
 
-rand=$RANDOM
+rand=$$
 export GL_BYPASS_ACCESS_CHECKS=1
 
-git push -f $GL_REPO_BASE/$main.git $new:refs/heads/br-$rand || die "FATAL: failed to send $new"
+git push -f $GL_REPO_BASE/$main.git $new:refs/partial/br-$rand || die "FATAL: failed to send $new"
 
 cd $GL_REPO_BASE/$main.git
-git update-ref -d refs/heads/br-$rand
+git update-ref -d refs/partial/br-$rand
 git update-ref $ref $new $old || die "FATAL: update-ref for $ref failed"
 
 exit 0

@@ -59,13 +59,14 @@ try "
 
 # now check the various files that should have been produced
 
-try "cd $rb; find . -name gl-perms | sort | xargs md5sum"; cmp
+my $t;
+try "cd $rb; find . -name gl-perms"; $t = md5sum(sort (lines())); cmp $t,
 '59b3a74b4d33c7631f08e75e7b60c7ce  ./foo/u1/u1a2.git/gl-perms
 59b3a74b4d33c7631f08e75e7b60c7ce  ./foo/u1/u1e.git/gl-perms
 ';
 
-try "cd $rb; find . -name gl-creator | sort | xargs md5sum"; cmp
-'346955ff2eadbf76e19373f07dd370a9  ./foo/u1/u1a2.git/gl-creator
-e4774cdda0793f86414e8b9140bb6db4  ./foo/u1/u1a.git/gl-creator
+try "cd $rb; find . -name gl-creator"; $t = md5sum(sort (lines())); cmp $t,
+'e4774cdda0793f86414e8b9140bb6db4  ./foo/u1/u1a.git/gl-creator
+346955ff2eadbf76e19373f07dd370a9  ./foo/u1/u1a2.git/gl-creator
 346955ff2eadbf76e19373f07dd370a9  ./foo/u1/u1e.git/gl-creator
 ';
