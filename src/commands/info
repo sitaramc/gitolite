@@ -49,7 +49,7 @@ sub args {
 }
 
 sub print_version {
-    chomp( my $hn = `hostname -s` );
+    chomp( my $hn = `hostname -s 2>/dev/null || hostname` );
     my $gv = substr( `git --version`, 12 );
     $ENV{GL_USER} or _die "GL_USER not set";
     print "hello $ENV{GL_USER}, this is $ENV{USER}\@$hn running gitolite3 " . version() . " on git $gv\n";
