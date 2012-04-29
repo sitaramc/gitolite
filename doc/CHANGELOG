@@ -1,3 +1,6 @@
+2012-04-29  v3.01   mostly BSD and Solaris compat
+                    also fork command added
+
 2012-04-18  v3.0    first release to "master"
                     This is a compete rewrite of gitolite; please see
                     documentation before upgrading.
