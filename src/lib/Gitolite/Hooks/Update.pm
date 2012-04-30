@@ -66,6 +66,12 @@ sub check_vrefs {
 
             open( my $fh, "-|", $pgm, @_, $vref, @args ) or _die "$vref: can't spawn helper program: $!";
             while (<$fh>) {
+                # print non-vref lines and skip processing (for example,
+                # normal STDOUT by a normal update hook)
+                unless (m(^VREF/)) {
+                    print;
+                    next;
+                }
                 my ( $ref, $deny_message ) = split( ' ', $_, 2 );
                 check_vref( $aa, $ref, $deny_message );
             }

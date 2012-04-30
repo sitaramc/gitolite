@@ -71,9 +71,9 @@ Briefly, a refex starting with `VREF/FOO` triggers a call to a program called
 `FOO` in `$GL_BINDIR/VREF`.
 
 That program is expected to print zero or more lines to its STDOUT; each line
-is taken by gitolite as a new "ref" to be matched against all the refexes for
-this user in the config.  Including the refex that caused the vref call, of
-course.
+that starts with `VREF/` is taken by gitolite as a new "ref" to be matched
+against all the refexes for this user in the config.  Including the refex that
+caused the vref call, of course.
 
 Normally, you send back the refex itself, if the test determines that the rule
 should be matched, otherwise nothing.  So, in our example, we print
@@ -102,16 +102,21 @@ exit.
     The program is passed **nine arguments** in this case (see next section
     for details).
 
-  * The script can print anything it wants to STDOUT; the first word in each
-    such line will be treated as a virtual ref to be matched against all the
-    rules, while the rest, if any, is a message to be added to the standard
-    "...DENIED..." message that gitolite prints if that refex matches.
+  * The script can print anything it wants to STDOUT.  Lines not starting with
+    `VREF/` are printed as is (so your VREF can do mostly-normal printing to
+    STDOUT).
+
+    For lines starting with `VREF/`, the first word in each such line will be
+    treated as a virtual ref to be matched against all the rules, while the
+    rest, if any, is a message to be added to the standard "...DENIED..."
+    message that gitolite prints if that refex matches.
 
     Usually it only makes sense to either
 
-      * Print nothing -- if you don't want the rule that triggered it to match
-        (ie., whatever condition being tested was not violated; like if the
-        count of changed files did not exceed 9, in our earlier example).
+      * Print nothing that starts with `VREF/` -- if you don't want the rule
+        that triggered it to match (ie., whatever condition being tested was
+        not violated; like if the count of changed files did not exceed 9, in
+        our earlier example).
       * Print the refex itself (plus an optional message), so that it matches
         the line which invoked it.
 
@@ -151,9 +156,9 @@ to write vref scripts in any language.  See script examples in source.
 
 ## what (else) can the vref code pass back
 
-Actually, the vref code can pass anything back; each line in its output will
-be matched against all the rules as usual (with the exception that fallthru is
-not failure).
+Actually, the vref code can pass anything back; each line in its output that
+starts with `VREF/` will be matched against all the rules as usual (with the
+exception that fallthru is not failure).
 
 For example, you could have a ruleset like this:
 
