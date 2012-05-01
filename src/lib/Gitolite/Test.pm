@@ -47,7 +47,7 @@ try "
     DEF ADMIN_PUSH = AP_2 %1; glt push admin origin; ok; gsh; /master -> master/
 
     DEF CS_1 = pwd; //tmp/tsh_tempdir.*gitolite-admin/; git remote -v; ok; /file://gitolite-admin/
-    DEF CHECK_SETUP = CS_1; git log; ok; /6b18ec2ab0f765122ec133959b36c57f77d4565c/
+    DEF CHECK_SETUP = CS_1; git log; ok; /fa7564c1b903ea3dce49314753f25b34b9e0cea0/
 
     DEF CLONE = glt clone %1 file:///%2
     DEF PUSH  = glt push %1 origin
