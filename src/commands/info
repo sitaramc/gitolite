@@ -10,12 +10,13 @@ use Gitolite::Common;
 use Gitolite::Conf::Load;
 
 =for args
-Usage:  gitolite info [-lc] [<repo name pattern>]
+Usage:  gitolite info [-lc] [-ld] [<repo name pattern>]
 
 List all existing repos you can access, as well as repo name patterns you can
 create repos from (if any).
 
     '-lc'       lists creators as an additional field at the end.
+    '-ld'       lists description as an additional field at the end.
 
 The optional pattern is an unanchored regex that will limit the repos
 searched, in both cases.  It might speed up things a little if you have more
@@ -23,7 +24,7 @@ than a few thousand repos.
 =cut
 
 # these two are globals
-my ( $lc, $patt ) = args();
+my ( $lc, $ld, $patt ) = args();
 
 print_version();
 
@@ -34,18 +35,19 @@ print "\n$rc{SITE_INFO}\n" if $rc{SITE_INFO};
 # ----------------------------------------------------------------------
 
 sub args {
-    my ( $lc, $patt ) = ( '', '' );
+    my ( $lc, $ld, $patt ) = ( '', '', '' );
     my $help = '';
 
     GetOptions(
         'lc' => \$lc,
+        'ld' => \$ld,
         'h'  => \$help,
     ) or usage();
 
     usage() if @ARGV > 1 or $help;
     $patt = shift @ARGV || '.';
 
-    return ( $lc, $patt );
+    return ( $lc, $ld, $patt );
 }
 
 sub print_version {
@@ -61,8 +63,8 @@ sub print_patterns {
     # find repo patterns only, call them with ^C flag included
     @$repos = grep { !/$REPONAME_PATT/ } @{ lister_dispatch('list-repos')->() };
     @aa = qw(R W ^C);
-    listem( $repos, '', @aa );
-    # but squelch the 'lc' flag for these
+    listem( $repos, '', '', @aa );
+    # but squelch the 'lc' and 'ld' flags for these
 }
 
 sub print_phy_repos {
@@ -72,16 +74,19 @@ sub print_phy_repos {
     _chdir( $rc{GL_REPO_BASE} );
     $repos = list_phy_repos(1);
     @aa    = qw(R W);
-    listem( $repos, $lc, @aa );
+    listem( $repos, $lc, $ld, @aa );
 }
 
 sub listem {
-    my ( $repos, $lc, @aa ) = @_;
+    my ( $repos, $lc, $ld, @aa ) = @_;
     my $creator = '';
+    my $desc = '';
     for my $repo (@$repos) {
         next unless $repo =~ /$patt/;
         my $perm = '';
         $creator = creator($repo) if $lc;
+        $desc = slurp("$ENV{GL_REPO_BASE}/$repo.git/description") if $ld;
+        chomp($desc);
 
         for my $aa (@aa) {
             my $ret = access( $repo, $ENV{GL_USER}, $aa, 'any' );
@@ -91,6 +96,7 @@ sub listem {
         next unless $perm =~ /\S/;
         print "$perm\t$repo";
         print "\t$creator" if $lc;
+        print "\t$desc" if $ld;
         print "\n";
     }
 }
