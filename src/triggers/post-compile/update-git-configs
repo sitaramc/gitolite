@@ -37,7 +37,7 @@ for my $pr (@$lpr) {
 sub fixup_config {
     my $pr = shift;
 
-    my $gc = git_config( $pr, '.' );
+    my $gc = git_config( $pr, '.', 1 );
     while ( my ( $key, $value ) = each( %{$gc} ) ) {
         next if $key =~ /^gitolite-options\./;
         if ( $value ne "" ) {

@@ -23,9 +23,9 @@ For example:
         config foo.bar = ""
         config foo.baz =
 
-This does either a plain "git config section.key value" (for the first 3
-examples above) or "git config --unset-all section.key" (for the last
-example).  Other forms of the `git config` command (`--add`, the
+This does either a plain "git config section.key value" (for the first 2
+examples above) or "git config --unset-all section.key" (for the last 2
+examples).  Other forms of the `git config` command (`--add`, the
 `value_regex`, etc) are not supported.
 
 >   ----

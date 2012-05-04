@@ -114,7 +114,7 @@ sub access {
 }
 
 sub git_config {
-    my ( $repo, $key ) = @_;
+    my ( $repo, $key, $empty_values_OK ) = @_;
     $key ||= '.';
 
     return {} if repo_missing($repo);
@@ -148,6 +148,15 @@ sub git_config {
     #            [ 6, 'foo.bar', 'repo' ], [ 7, 'foodbar', 'repoD' ]
     # and the final map does this:
     #                 'foo.bar'=>'repo'  ,      'foodbar'=>'repoD'
+
+    # now some of these will have an empty key; we need to delete them unless
+    # we're told empty values are OK
+    unless ($empty_values_OK) {
+        my($k, $v);
+        while (($k, $v) = each %ret) {
+            delete $ret{$k} if not $v;
+        }
+    }
 
     trace( 3, map { ( "$_" => "-> $ret{$_}" ) } ( sort keys %ret ) );
     return \%ret;
