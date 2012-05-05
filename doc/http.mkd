@@ -52,7 +52,6 @@ Please adjust the instructions below to reflect your setup (users and paths).
 
 Edit your .gitolite.rc and add
 
-    $ENV{GIT_HTTP_BACKEND} = "/usr/libexec/git-core/git-http-backend";
     $ENV{PATH} .= ":/opt/git/bin";
 
 at the very top (as described in `t/smart-http.root-setup`).

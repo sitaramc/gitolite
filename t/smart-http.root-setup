@@ -46,7 +46,6 @@ cd $GITOLITE_HTTP_HOME
 HOME=$GITOLITE_HTTP_HOME gitolite setup -a admin
 
 # insert some essential lines at the beginning of the rc file
-echo '$ENV{GIT_HTTP_BACKEND} = "/usr/libexec/git-core/git-http-backend";' > 1
 echo '$ENV{PATH} .= ":$ENV{GITOLITE_HTTP_HOME}/bin";'  >> 1
 echo >> 1
 cat .gitolite.rc >> 1
