@@ -67,6 +67,8 @@ my $last_repo = '';
 
 sub access {
     my ( $repo, $user, $aa, $ref ) = @_;
+    _die "invalid repo '$repo'" if not( $repo and $repo =~ $REPOPATT_PATT );
+    _die "invalid user '$user'" if not( $user and $user =~ $USERNAME_PATT );
     my $deny_rules = option( $repo, 'deny-rules' );
     load($repo);
 

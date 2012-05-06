@@ -49,8 +49,6 @@ my $ret = '';
 
 if ( $repo ne '%' and $user ne '%' ) {
     # single repo, single user; no STDIN
-    _die "invalid repo name" if not( $repo and $repo =~ $REPONAME_PATT );
-    _die "invalid user name" if not( $user and $user =~ $USERNAME_PATT );
     $ret = access( $repo, $user, $aa, $ref );
 
     if ( $ret =~ /DENIED/ ) {
