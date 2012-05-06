@@ -93,16 +93,13 @@ try "
 try "
     glt ls-remote u1 file:///foo/one;   ok
     glt info u1 -lc; ok; GS u1
-    put
         /C\tfoo/\\.\\.\\*/
         !/C\tfoo.*u1/
         /R W *\tfoo/one\tu1/
     glt info u2 -lc; ok; GS u2
-    put
         !/C\tfoo/
         !/R W *\tfoo/one/
     glt info u3 -lc; ok; GS u3
-    put
         !/C\tfoo/
         /R W *\tfoo/one\tu1/
 ";
