@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# gitolite VREF to count votes before allowing pushes to certain branches.
+
+# This approximates gerrit's voting (but it is SHA based; I believe Gerrit is
+# more "changeset" based).  Here's how it works:
+
+# - A normal developer "bob" proposes changes to master by pushing a commit to
+#   "pers/bob/master", then informs the voting members by email.
+
+# - Some or all of the voting members fetch and examine the commit.  If they
+#   approve, they "vote" for the commit like so.  For example, say voting
+#   member "alice" fetched bob's proposed commit into "bob-master" on her
+#   clone, then tested or reviewed it.  She would approve it by running:
+#       git push origin bob-master:votes/alice/master
+
+# - Once enough votes have been tallied (hopefully there is normal team
+#   communication that says "hey I approved your commit", or it can be checked
+#   by 'git ls-remote origin' anyway), Bob, or any developer, can push the
+#   same commit (same SHA) to master and the push will succeed.
+
+# - Finally, a "trusted" developer can push a commit to master without
+#   worrying about the voting restriction at all.
+
+# The config for this example would look like this:
+
+#   repo foo
+#       # allow personal branches (to submit proposed changes)
+#       RW+ pers/USER/          =   @devs
+#       -   pers/               =   @all
+#
+#       # allow only voters to vote
+#       RW+ votes/USER/         =   @voters
+#       -   votes/              =   @all
+#
+#       # normal access rules go here; should allow *someone* to push master
+#       RW+                     =   @devs
+#
+#       # 2 votes required to push master, but trusted devs don't have this restriction
+#       RW+ VREF/VOTES/2/master =   @trusted-devs
+#       -   VREF/VOTES/2/master =   @devs
+
+# Note: "2 votes required to push master" means at least 2 refs matching
+# "votes/*/master" have the same SHA as the one currently being pushed.
+
+# ----------------------------------------------------------------------
+
+# see gitolite docs for what the first 7 arguments mean
+
+# inputs:
+#   arg-8 is a number; see below
+#   arg-9 is a simple branch name (i.e., "master", etc).  Currently this code
+#   does NOT do vote counting for branch names with more than one component
+#   (like foo/bar).
+# outputs (STDOUT)
+#   nothing
+# exit status:
+#   always 0
+
+die() { echo "$@" >&2; exit 1; }
+[ -z "$8" ] && die "not meant to be run manually"
+
+ref=$1
+newsha=$3
+refex=$7
+votes_needed=$8
+branch=$9
+
+# nothing to do if the branch being pushed is not "master" (using our example)
+[ "$ref" = "refs/heads/$branch" ] || exit 0
+
+# find how many votes have come in
+votes=`git for-each-ref refs/heads/votes/*/$branch | grep -c $newsha`
+
+# send back a vref if we don't have the minimum votes needed.  For trusted
+# developers this will invoke the RW+ rule and pass anyway, but for others it
+# will invoke the "-" rule and fail.
+[ $votes -ge $votes_needed ] || echo $refex "require at least $votes_needed votes to push $branch"
+
+exit 0
