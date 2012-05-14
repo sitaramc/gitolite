@@ -2,6 +2,11 @@ Major changes to gitolite, master branch only, most recent first, no dates but
 the tags can help you position stuff approximately
 [NYD = not yet documented due to lack of time...]
 
+  - v2.3.1
+
+  - fix bug where config statements would get ignored if you had a description
+    set.  The biggest problem was that this would affect mirroring.
+
   - v2.3
 
   - added "M" permission to allow enforcing a "no-merges" policy.
