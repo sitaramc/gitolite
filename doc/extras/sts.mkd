@@ -1,15 +1,22 @@
-## #sts ssh troubleshooting
+# #sts ssh troubleshooting and tips
 
 **This document must be read in full the first time.  If you start from some
 nice looking section in the middle it may not help you unless you're already
 an expert at ssh**.
 
 This document should help you troubleshoot ssh-related problems in installing
-and accessing gitolite.
+and accessing gitolite.  It also has a section of random ssh-related tips and
+tricks that gitolite can do.
 
-### IMPORTANT -- READ THIS FIRST
+----
 
-#### caveats
+[[TOC]]
+
+----
+
+## IMPORTANT -- READ THIS FIRST
+
+### caveats
 
   * Before reading this document, it is **mandatory** to read and **completely
     understand** [this][ssh], which is a very detailed look at how gitolite
@@ -28,7 +35,7 @@ and accessing gitolite.
 
     Surprised?  [This][auth] might help explain better.
 
-#### naming conventions used
+### naming conventions used
 
   * Your workstation is the **client**.  Your userid on the client does not
     matter, and it has no relation to your gitolite username.
@@ -37,7 +44,7 @@ and accessing gitolite.
     this is an RPM/DEB install, the hosting user is probably called
     "gitolite", however we will use "git" in this document.
 
-#### taking stock -- relevant files and directories
+### taking stock -- relevant files and directories
 
   * The client has a `~/.ssh` containing a few keypairs.  It may also have a
     `config` file.
@@ -54,7 +61,7 @@ and accessing gitolite.
   * The server also has a `~/.gitolite/keydir` which contains a bunch of
     `*.pub` files.
 
-#### normal gitolite key handling
+### normal gitolite key handling
 
 Here's how normal gitolite key handling works:
 
@@ -80,7 +87,7 @@ Here's how normal gitolite key handling works:
         between gitolite's "marker" lines (`# gitolite start` and `# gitolite
         end`).
 
-### common ssh problems
+## common ssh problems
 
 Since I'm pretty sure at least some of you didn't bother to read the
 "IMPORTANT: PLEASE READ FIRST" section above, let me take a minute to point
@@ -121,7 +128,7 @@ background info.
     does not appear to be a git repository`, and yet you are sure 'reponame'
     exists, you haven't mis-spelled it, etc.
 
-### step by step
+## step by step
 
 Since I'm pretty sure at least some of you didn't bother to read the
 "IMPORTANT: PLEASE READ FIRST" section above, let me take a minute to point
@@ -144,9 +151,9 @@ Done?  OK, now the general outline for ssh troubleshooting is this:
     client, instead of the default key.  See [appendix 3][stsapp3] and
     [appendix 4][ssh-ha].
 
-### random tips, tricks, and notes
+## random tips, tricks, and notes
 
-#### giving shell access to gitolite users
+### giving shell access to gitolite users
 
 Thanks to an idea from Jesse Keating, a single key can allow both gitolite
 access *and* shell access.
@@ -169,7 +176,7 @@ To do this:
 Then run `gitolite compile; gitolite trigger POST_COMPILE` or push a dummy
 change to the admin repo.
 
-#### simulating ssh-copy-id
+### simulating ssh-copy-id
 
 don't have `ssh-copy-id`?  This is broadly what that command does, if you want
 to replicate it manually.  The input is your pubkey, typically
@@ -192,7 +199,7 @@ typically) also must be `go-w`, but that needs root.  And typically
 they're already set that way anyway.  (Or if they're not, you've got
 bigger problems than gitolite install not working!)]
 
-#### problems with using non-openssh public keys
+### problems with using non-openssh public keys
 
 Gitolite accepts public keys only in openssh format.  Trying to use an "ssh2"
 key (used by proprietary SSH software) will not be a happy experience.
@@ -206,7 +213,7 @@ be done with it, is:
 
 then use the resulting pubkey as you normally would in gitolite.
 
-#### windows issues
+### windows issues
 
 On windows, I have only used msysgit, and the openssh that comes with it.
 Over time, I have grown to distrust putty/plink due to the number of people
@@ -217,7 +224,7 @@ putty/plink, including environment variables, etc., and then try again.
 
 Thankfully, someone contributed [this][putty].
 
-### #stsapp1 appendix 1: ssh daemon asks for a password
+## #stsapp1 appendix 1: ssh daemon asks for a password
 
 >   **NOTE**: This section should be useful to anyone trying to get
 >   password-less access working.  It is not necessarily specific to gitolite,
@@ -289,7 +296,7 @@ This is a quick checklist:
     this file for messages matching the approximate time of your last attempt
     to login, to see if they tell you what is the problem.
 
-### #sshkeys-lint appendix 2: which key is which -- running sshkeys-lint
+## #sshkeys-lint appendix 2: which key is which -- running sshkeys-lint
 
 The sshkeys-lint program can be run on the server or the client.  Run it with
 '-h' to get a help message.
@@ -324,7 +331,7 @@ need.  Be careful:
   * If you're running ssh-agent, you may have to delete (using `ssh-add -D`)
     and re-add identities for it to pick up the renamed ones correctly.
 
-#### typical cause(s)
+### typical cause(s)
 
 The admin often has passwordless shell access to `git@server` already, and
 then used that same key to get access to gitolite (i.e., copied that same
@@ -340,7 +347,7 @@ as YourName.pub, then run `gitolite setup -pk YourName.pub` on the server.
 Remember to adjust your agent identities using ssh-add -D and ssh-add if
 you're using ssh-agent, otherwise these new keys may not work.
 
-### #stsapp3 appendix 3: ssh client may not be offering the right key
+## #stsapp3 appendix 3: ssh client may not be offering the right key
 
   * Make sure the right private key is being offered.  Run ssh in very
     verbose mode and look for the word "Offering", like so:
@@ -362,7 +369,7 @@ you're using ssh-agent, otherwise these new keys may not work.
     In that case, add the key you want using `ssh-add ~/.ssh/YourName` and try
     the access again.
 
-### #ssh-ha appendix 4: ssh host aliases
+## #ssh-ha appendix 4: ssh host aliases
 
 (or "making git use the right options for ssh")
 
@@ -398,7 +405,7 @@ way to do this, as far as I know.
 
 [tut]: http://sites.google.com/site/senawario/home/gitolite-tutorial
 
-### #ybpfail appendix 5: why bypassing gitolite causes a problem
+## #ybpfail appendix 5: why bypassing gitolite causes a problem
 
 When you bypass gitolite, you end up running your normal shell instead of the
 special gitolite entry point script `gitolite-shell`.

@@ -242,6 +242,9 @@ put that contain the words "see docs":
     Setting perms of R and RW will no longer work; you have to say READERS and
     WRITERS now.  Suggested command:
 
+        find `gitolite query-rc GL_REPO_BASE` -name gl-perms |
+            xargs perl -pi -e 's/\bR\b/READERS/;s/\bRW\b/WRITERS/'
+
 ## #rc-preset presetting the rc file
 
 Some rc settings in the older gitolite are such that you cannot directly run

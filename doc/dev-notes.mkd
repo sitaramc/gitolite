@@ -1,5 +1,9 @@
 # notes for developers
 
+[[TOC]]
+
+----
+
 Gitolite has a huge bunch of existing features that gradually need to moved
 over.  Plus you may want to write your own programs to interact with it.
 
@@ -37,7 +41,7 @@ more info.
   * `gitolite git-config` to check gitolite options or git config variables
     directly from gitolite's "compiled" output, (i.e., without looking at the
     actual `repo.git/config` file or using the `git config` command).  Example
-    use: none yet.
+    use: src/triggers/post-compile/update-gitweb-access-list.
 
   * `gitolite query-rc` to check the value of an RC variable.  Example use:
     src/commands/desc.

@@ -103,10 +103,12 @@ the answer, but here's a list of files you should blow away.
 
   * `WARNING: split conf not set, gl-conf present for <repo>`
 
-    (Case 1) This can happen if you have a *bare* repo (i.e., some `repo.git`
-    directory) copied from g2 with `GL_BIG_CONFIG` on, and you pushed a change
-    to the conf or ran certain commands *before* adding the newly added repo
-    to the conf file.
+    (Case 1) you copied a bare repo ("repo.git") from another g3 site (or g2
+    with `GL_BIG_CONFIG` on).  Then you pushed a change to "gitolite.conf" or
+    ran certain server-side commands without adding the repo to the conf.
+
+    Conversely, you removed "repo" from "gitolite.conf" but did not remove the
+    actual "repo.git" on disk.
 
     (Case 2) This can also happen if you changed something like this
 
