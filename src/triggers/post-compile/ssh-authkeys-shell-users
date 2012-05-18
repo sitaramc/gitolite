@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use File::Temp qw(tempfile);
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+
+$|++;
+
+my $akfile = "$ENV{HOME}/.ssh/authorized_keys";
+my $sufile = $rc{SHELL_USERS_LIST} or exit 0;
+-r $sufile or _die "'$sufile' not readable";
+
+# ----------------------------------------------------------------------
+
+my $aktext = slurp($akfile);
+
+for my $su ( shell_users() ) {
+    $aktext =~ s(/gitolite-shell $su",(.*?),no-pty )(/gitolite-shell -s $su",$1 );
+}
+
+_print( $akfile, $aktext );
+
+sub shell_users {
+    my @ret = grep { not /^#/ } slurp($sufile);
+    chomp(@ret);
+    return @ret;
+}

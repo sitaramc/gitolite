@@ -151,20 +151,23 @@ Done?  OK, now the general outline for ssh troubleshooting is this:
 Thanks to an idea from Jesse Keating, a single key can allow both gitolite
 access *and* shell access.
 
-This is done by manually prefixing the username with "-s" as an extra argument
-in the "command=" part of `~/.ssh/authorized_keys`.  For example
+To do this:
 
-    command="/home/g3/gitolite/src/gitolite-shell u1",no-port-[...etc...]
+  * add the list of users who will have shell access -- one username per line,
+    no extra whitespace -- to a plain text file of your choice.
 
-should be edited to be
+  * put the name of this file in a new rc variable `SHELL_USERS_LIST`.  For
+    example it could be
 
-    command="/home/g3/gitolite/src/gitolite-shell -s u1",no-port-[...etc...]
+        SHELL_USERS_LIST        =>  "$ENV{HOME}/.gitolite.shell-users",
 
-and moved out of the gitolite area of the authkeys file.
+  * add the line `'Shell::input',` to the `INPUT` list in the rc file.
 
-It should be easy to make src/triggers/post-compile/ssh-authkeys read a list
-of shell capable users from some file on the server and put in the "-s" for
-those users.  Patches welcome.
+  * add the line `'post-compile/ssh-authkeys-shell-users',` to the
+    `POST_COMPILE` list, *after* the `'post-compile/ssh-authkeys',` line.
+
+Then run `gitolite compile; gitolite trigger POST_COMPILE` or push a dummy
+change to the admin repo.
 
 #### simulating ssh-copy-id
 
