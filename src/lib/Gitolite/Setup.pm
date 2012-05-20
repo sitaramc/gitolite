@@ -46,8 +46,8 @@ sub setup {
     setup_glrc();
     setup_gladmin( $admin, $pubkey, $argv );
 
-    _system("$ENV{GL_BINDIR}/gitolite compile");
-    _system("$ENV{GL_BINDIR}/gitolite trigger POST_COMPILE");
+    _system("gitolite compile");
+    _system("gitolite trigger POST_COMPILE");
 
     hook_repos();    # all of them, just to be sure
 }

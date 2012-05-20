@@ -29,8 +29,8 @@ sub post_update {
         local $ENV{GIT_WORK_TREE} = $rc{GL_ADMIN_BASE};
         tsh_try("git checkout -f --quiet master");
     }
-    _system("$ENV{GL_BINDIR}/gitolite compile");
-    _system("$ENV{GL_BINDIR}/gitolite trigger POST_COMPILE");
+    _system("gitolite compile");
+    _system("gitolite trigger POST_COMPILE");
 
     exit 0;
 }

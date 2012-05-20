@@ -152,15 +152,16 @@ Gitolite has broad similarities to git in terms of packaging requirements.
 
 With that said, here's one way to package gitolite:
 
-  * Put the two executables (gitolite and gitolite-shell) somewhere in PATH.
-    Then change the 2 assignments to `$ENV{GL_BINDIR}`, one in 'gitolite', one
-    in 'gitolite-shell', to "/usr/libexec/gitolite".
+  * Put the executable `gitolite` somewhere in PATH.  Put the executable
+    `gitolite-shell` in /usr/libexec/gitolite (along with those 5 directories).
 
+    Change the 2 assignments to `$ENV{GL_BINDIR}`, one in 'gitolite', one in
+    'gitolite-shell', to "/usr/libexec/gitolite" from `$FindBin::RealBin`.
     This is equivalent to "make" embedding the exec-path into the executable.
 
     **OR**
 
-    Put the two executables `gitolite` and `gitolite-shell` also into
+    Put both executables `gitolite` and `gitolite-shell` also into
     /usr/libexec/gitolite (i.e., as siblings to the 5 directories mentioned
     above).  Then *symlink* `/usr/libexec/gitolite/gitolite` to some directory
     in the PATH.  Do not *copy* it; it must be a symlink.
