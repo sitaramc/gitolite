@@ -1,3 +1,19 @@
+2012-05-20  v3.02   packaging instructions fixed up and smoke tested
+
+                    make it easier to give some users a full shell
+
+                    allow aliasing a repo to another name
+
+                    simulate POST_CREATE for new normal (non-wild) repos
+
+                    (just for kicks) a VREF that allows for voting on changes
+                    to a branch
+
+                    bug fix: smart http was not running PRE_ and POST_GIT
+                    triggers
+
+                    htpasswd migrated
+
 2012-04-29  v3.01   mostly BSD and Solaris compat
                     also fork command added
 
