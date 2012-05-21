@@ -4,7 +4,7 @@ package SugarBox;
 
 sub run_sugar_script {
     my ( $ss, $lref ) = @_;
-    do $ss if -x $ss;
+    do $ss if -r $ss;
     $lref = sugar_script($lref);
     return $lref;
 }
@@ -54,7 +54,7 @@ sub sugar {
                 # aliasing, which would happen if you touched $s itself
                 my $sfp = "$ENV{GL_BINDIR}/syntactic-sugar/$s";
 
-                _warn("skipped sugar script '$s'"), next if not -x $sfp;
+                _warn("skipped sugar script '$s'"), next if not -r $sfp;
                 $lines = SugarBox::run_sugar_script( $sfp, $lines );
                 $lines = [ grep /\S/, map { cleanup_conf_line($_) } @$lines ];
             }
