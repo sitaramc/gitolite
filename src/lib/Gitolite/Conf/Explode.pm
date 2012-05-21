@@ -52,7 +52,7 @@ sub incsub {
     my $is_subconf = ( +shift eq 'subconf' );
     my ( $new_subconf, $include_glob, $current_subconf, $out ) = @_;
 
-    _die "subconf $current_subconf attempting to run 'subconf'\n" if $is_subconf and $current_subconf ne 'master';
+    _die "subconf '$current_subconf' attempting to run 'subconf'\n" if $is_subconf and $current_subconf ne 'master';
 
     _die "invalid include/subconf file/glob '$include_glob'"
       unless $include_glob =~ /^"(.+)"$/
@@ -63,7 +63,7 @@ sub incsub {
 
     for my $file ( glob($include_glob) ) {
         _warn("included file not found: '$file'"), next unless -f $file;
-        _die "invalid include/subconf filename $file" unless $file =~ m(([^/]+).conf$);
+        _die "invalid include/subconf filename '$file'" unless $file =~ m(([^/]+).conf$);
         my $basename = $1;
 
         next if already_included($file);

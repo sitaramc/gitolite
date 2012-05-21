@@ -161,7 +161,7 @@ sub parse_soc {
         exit 0;
     }
 
-    _die "unknown git/gitolite command: $soc";
+    _die "unknown git/gitolite command: '$soc'";
 }
 
 sub sanity {

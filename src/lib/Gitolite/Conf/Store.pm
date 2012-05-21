@@ -137,7 +137,7 @@ sub expand_list {
     for my $item (@list) {
         if ( $item =~ /^@/ and $item ne '@all' )    # nested group
         {
-            _die "undefined group $item" unless $groups{$item};
+            _die "undefined group '$item'" unless $groups{$item};
             # add those names to the list
             push @new_list, sort keys %{ $groups{$item} };
         } else {

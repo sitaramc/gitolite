@@ -29,7 +29,7 @@ try "
     glt ls-remote u1 file:///foo/u1/u1a;ok;     gsh
                                                 /Initialized empty Git repository in .*/foo/u1/u1a.git/
     # vrc doesn't have the fork command
-    glt fork u1 foo/u1/u1a foo/u1/u1a2; !ok;    /FATAL: unknown git/gitolite command: fork/
+    glt fork u1 foo/u1/u1a foo/u1/u1a2; !ok;    /FATAL: unknown git/gitolite command: \\'fork/
 ";
 
 # allow fork as a valid command

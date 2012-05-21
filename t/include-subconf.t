@@ -78,7 +78,7 @@ confadd 'g2.conf', '
 ';
 
 try "
-    ADMIN_PUSH set3;           ok;     /FATAL: subconf g2 attempting to run 'subconf'/
+    ADMIN_PUSH set3;           ok;     /FATAL: subconf \\'g2\\' attempting to run 'subconf'/
 ";
 
 # ----------------------------------------------------------------------

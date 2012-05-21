@@ -50,7 +50,7 @@ glt push u1 origin master:dd,ee
 
 # push to branch dd=ee fail
 glt push u1 origin master:dd=ee
-        /invalid characters in ref or filename: refs/heads/dd=ee/
+        /invalid characters in ref or filename: \\'refs/heads/dd=ee/
         reject
 ";
 
@@ -84,7 +84,7 @@ glt push u1 origin HEAD
 tc  aa=bb
 glt push u1 origin HEAD
         /To file:///aa/
-        /invalid characters in ref or filename: VREF/NAME/aa=bb/
+        /invalid characters in ref or filename: \\'VREF/NAME/aa=bb/
         reject
 
 # push to branch dd,ee ok
@@ -96,6 +96,6 @@ glt push u1 origin master:dd,ee
 
 # push to branch dd=ee fail
 glt push u1 origin master:dd=ee
-        /invalid characters in ref or filename: refs/heads/dd=ee/
+        /invalid characters in ref or filename: \\'refs/heads/dd=ee/
         reject
 ";

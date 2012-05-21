@@ -73,7 +73,7 @@ sub access {
     load($repo);
 
     # sanity check the only piece the user can control
-    _die "invalid characters in ref or filename: $ref\n" unless $ref =~ $REF_OR_FILENAME_PATT;
+    _die "invalid characters in ref or filename: '$ref'\n" unless $ref =~ $REF_OR_FILENAME_PATT;
 
     # when a real repo doesn't exist, ^C is a pre-requisite for any other
     # check to give valid results.
@@ -193,11 +193,11 @@ sub load_common {
 
     my $cc = "conf/gitolite.conf-compiled.pm";
 
-    _die "parse $cc failed: " . ( $! or $@ ) unless do $cc;
+    _die "parse '$cc' failed: " . ( $! or $@ ) unless do $cc;
 
     if ( data_version_mismatch() ) {
         _system("gitolite setup");
-        _die "parse $cc failed: " . ( $! or $@ ) unless do $cc;
+        _die "parse '$cc' failed: " . ( $! or $@ ) unless do $cc;
         _die "data version update failed; this is serious" if data_version_mismatch();
     }
 }
@@ -223,7 +223,7 @@ sub load_1 {
         _warn "split conf not set, gl-conf present for '$repo'" if not $split_conf{$repo};
 
         my $cc = "gl-conf";
-        _die "parse $cc failed: " . ( $! or $@ ) unless do $cc;
+        _die "parse '$cc' failed: " . ( $! or $@ ) unless do $cc;
 
         $last_repo = $repo;
         $repos{$repo} = $one_repo{$repo};

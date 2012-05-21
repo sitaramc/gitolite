@@ -60,11 +60,11 @@ try "
 
     # a bad key
     ls -al > bad.pub
-    $pgm;                       !ok;    /fingerprinting failed for keydir/bad.pub/
+    $pgm;                       !ok;    /fingerprinting failed for \\'keydir/bad.pub\\'/
     wc < $ak;                   ok;     /^ *9 .*/;
     # a good key doesn't get added
     ssh-keygen -N '' -q -f good
-    $pgm;                       !ok;    /fingerprinting failed for keydir/bad.pub/
+    $pgm;                       !ok;    /fingerprinting failed for \\'keydir/bad.pub\\'/
     wc < $ak;                   ok;     /^ *9 .*/;
     # till the bad key is removed
     rm bad.pub

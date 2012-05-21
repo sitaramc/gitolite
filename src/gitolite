@@ -103,7 +103,7 @@ sub args {
 sub run_command {
     my $pgm      = shift;
     my $fullpath = "$ENV{GL_BINDIR}/commands/$pgm";
-    _die "$pgm not found or not executable" if not -x $fullpath;
+    _die "'$pgm' not found or not executable" if not -x $fullpath;
     _system( $fullpath, @_ );
     exit 0;
 }

@@ -26,7 +26,7 @@ confreset;confadd '
 
 try "ADMIN_PUSH set1; /FATAL/" or die text();
 try "
-    /git config foo.bar not allowed/
+    /git config \\'foo.bar\\' not allowed/
     /check GIT_CONFIG_KEYS in the rc file/
 ";
 
