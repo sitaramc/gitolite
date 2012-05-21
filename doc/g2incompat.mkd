@@ -92,7 +92,7 @@ There are several changes with regard to mirroring:
         option mirror.nightly       =   merry pippin
 
     but they will not be processed by gitolite.  Your cron jobs should use
-    `gitolite git-config` to query this variable, grab the list of repos, and
+    `gitolite git-config` to query this variable, grab the list of peers, and
     run `gitolite mirror` on each of them.
 
   * The external command to resync mirrors is 'mirror', run just like any

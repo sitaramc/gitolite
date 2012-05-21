@@ -10,7 +10,7 @@ Help needed:
 
   * I'd like distro packagers to play with it and help with migration advice
     for distro-upgrades
-  * rsync, htpasswd
+  * rsync
   * git-annexe support (but this has a pre-requisite in the previous list)
 
 Won't be done unless someone asks (saw no evidence that anyone used them in g2
@@ -33,3 +33,4 @@ Done:
   * migration advice for common cases
   * smart http
   * svnserve
+  * htpasswd

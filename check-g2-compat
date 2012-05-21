@@ -39,7 +39,7 @@ sub intro {
     msg( ''   => "It does NOT attempt to catch all the differences described in the docs." );
     msg( '', '' );
     msg( INFO => "'see docs' usually means doc/g2migr.mkd" );
-    msg( '',  => "(online at http://sitaramc.github.com/gitolite/g3/g2migr.html)" );
+    msg( '',  => "(online at http://sitaramc.github.com/gitolite/g2migr.html)" );
     msg( '', '' );
 }
 
@@ -54,14 +54,13 @@ sub rc_basic {
 sub rest_of_rc {
     msg( SEVERE  => "GIT_PATH found; see docs" )                          if $GIT_PATH;
     msg( SEVERE  => "GL_ALL_INCLUDES_SPECIAL found; see docs" )           if $GL_ALL_INCLUDES_SPECIAL;
-    msg( SEVERE  => "GL_GET_MEMBERSHIPS_PGM not yet implemented" )        if $GL_GET_MEMBERSHIPS_PGM;
     msg( SEVERE  => "GL_NO_CREATE_REPOS not yet implemented" )            if $GL_NO_CREATE_REPOS;
-    msg( SEVERE  => 'htpasswd, rsync, and svnserve not yet implemented' ) if $HTPASSWD_FILE or $RSYNC_BASE or $SVNSERVE;
+    msg( SEVERE  => "rsync not yet implemented" )                         if $RSYNC_BASE;
     msg( WARNING => "ADMIN_POST_UPDATE_CHAINS_TO found; see docs" )       if $ADMIN_POST_UPDATE_CHAINS_TO;
     msg( WARNING => "GL_NO_DAEMON_NO_GITWEB found; see docs" )            if $GL_NO_DAEMON_NO_GITWEB;
     msg( WARNING => "GL_NO_SETUP_AUTHKEYS found; see docs" )              if $GL_NO_SETUP_AUTHKEYS;
     msg( WARNING => "UPDATE_CHAINS_TO found; see docs" )                  if $UPDATE_CHAINS_TO;
-    msg( WARNING => "GL_ADC_PATH found; many ADCs not yet implemented" )  if $GL_ADC_PATH;
+    msg( WARNING => "GL_ADC_PATH found; see docs" )                       if $GL_ADC_PATH;
     msg( WARNING => "non-default GL_WILDREPOS_PERM_CATS found" ) if $GL_WILDREPOS_PERM_CATS ne 'READERS WRITERS';
 }
 
