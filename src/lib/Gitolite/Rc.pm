@@ -43,12 +43,15 @@ $rc{LOG_TEMPLATE}  = "$ENV{HOME}/.gitolite/logs/gitolite-%y-%m.log";
 # variables that should probably never be changed but someone will want to, I'll bet...
 # ----------------------------------------------------------------------
 
-$REMOTE_COMMAND_PATT  = qr(^[- 0-9a-zA-Z\@\%_=+:,./]*$);
-$REF_OR_FILENAME_PATT = qr(^[0-9a-zA-Z][0-9a-zA-Z._\@/+ :,-]*$);
-$REPONAME_PATT        = qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@/+-]*$);
-$REPOPATT_PATT        = qr(^\@?[0-9a-zA-Z[][\\^.$|()[\]*+?{}0-9a-zA-Z._\@/,-]*$);
-$USERNAME_PATT        = qr(^\@?[0-9a-zA-Z][0-9a-zA-Z._\@+-]*$);
+#<<<
+$REMOTE_COMMAND_PATT  =                qr(^[-0-9a-zA-Z._\@/+ :,\%=]*$);
+$REF_OR_FILENAME_PATT =     qr(^[0-9a-zA-Z][-0-9a-zA-Z._\@/+ :,]*$);
+$REPONAME_PATT        =  qr(^\@?[0-9a-zA-Z][-0-9a-zA-Z._\@/+]*$);
+$REPOPATT_PATT        = qr(^\@?[[0-9a-zA-Z][-0-9a-zA-Z._\@/+\\^$|()[\]*?{},]*$);
+$USERNAME_PATT        =  qr(^\@?[0-9a-zA-Z][-0-9a-zA-Z._\@+]*$);
+
 $UNSAFE_PATT          = qr([`~#\$\&()|;<>]);
+#>>>
 
 # ----------------------------------------------------------------------
 
