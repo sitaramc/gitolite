@@ -31,6 +31,12 @@ if ( exists $ENV{G3T_USER} ) {
     _die "who the *heck* are you?";
 }
 
+# sanity...
+my $soc = $ENV{SSH_ORIGINAL_COMMAND};
+$soc =~ s/[\n\r]+/<<newline>>/g;
+_die "I don't like newlines in the command: '$soc'\n" if $ENV{SSH_ORIGINAL_COMMAND} ne $soc;
+
+# the INPUT trigger massages @ARGV and $ENV{SSH_ORIGINAL_COMMAND} as needed
 trigger('INPUT');
 
 main($id);
@@ -75,9 +81,6 @@ sub in_ssh {
     gl_log( 'ssh', "ARGV=" . join( ",", @ARGV ), "SOC=" . ( $ENV{SSH_ORIGINAL_COMMAND} || '' ), "FROM=$ip" );
 
     $ENV{SSH_ORIGINAL_COMMAND} ||= '';
-    my $soc = $ENV{SSH_ORIGINAL_COMMAND};
-    $soc =~ s/[\n\r]+/<<newline>>/g;
-    _die "I don't like newlines in the command: $soc\n" if $ENV{SSH_ORIGINAL_COMMAND} ne $soc;
 
     return $ip;
 }
