@@ -47,6 +47,9 @@ while (<>)
         $groupname = '';
         $reponame = $1;
         $reponame =~ s/\.git$//;
+    } elsif (/^\[gitosis\]$/) {
+        $groupname = '';
+        $reponame = '@all';
     } elsif (/^gitweb\s*=\s*yes/i) {
         push @{$repos{$reponame}{R}}, 'gitweb';
     } elsif (/^daemon\s*=\s*yes/i) {
