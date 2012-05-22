@@ -61,7 +61,7 @@ sub input {
     my $git_commands = "git-upload-pack|git-receive-pack|git-upload-archive";
     my $user = $ARGV[0] || '@all';    # user name is undocumented for now
 
-    if ( $ENV{SSH_ORIGINAL_COMMAND} =~ /(?:$git_commands) '(\S+)'$/ ) {
+    if ( $ENV{SSH_ORIGINAL_COMMAND} =~ /(?:$git_commands) '\/?(\S+)'$/ ) {
         my $repo = $1;
         ( my $norm = $repo ) =~ s/\.git$//;    # normalised repo name
 
@@ -73,7 +73,7 @@ sub input {
 
         _warn "'$norm' is an alias for '$target'";
 
-        $ENV{SSH_ORIGINAL_COMMAND} =~ s/'$repo'/'$target'/;
+        $ENV{SSH_ORIGINAL_COMMAND} =~ s/'\/?$repo'/'$target'/;
     }
 
 }
