@@ -1,3 +1,5 @@
+2012-05-23  v3.03   fix major bug that allowed an admin to get a shell
+
 2012-05-20  v3.02   packaging instructions fixed up and smoke tested
 
                     make it easier to give some users a full shell
