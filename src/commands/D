@@ -45,11 +45,12 @@ die() { echo "$@" >&2; exit 1; }
 usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
 [ -z "$1" ] && usage
 [ "$1" = "-h" ] && usage
+[ "$1" != "list-trash" ] && [ -z "$2" ] && usage
 [ -z "$GL_USER" ] && die GL_USER not set
 
 # ----------------------------------------------------------------------
-cmd=$1; shift
-repo=$1; shift  # may not be present for 'list-trash' command
+cmd=$1
+repo=$2
 # ----------------------------------------------------------------------
 RB=`gitolite query-rc GL_REPO_BASE`;            cd $RB
 TRASH_CAN=`gitolite query-rc TRASH_CAN`;        tcan=Trash;                     TRASH_CAN=${TRASH_CAN:-$tcan}
