@@ -80,13 +80,17 @@ sub print_phy_repos {
 sub listem {
     my ( $repos, $lc, $ld, @aa ) = @_;
     my $creator = '';
-    my $desc = '';
     for my $repo (@$repos) {
         next unless $repo =~ /$patt/;
         my $perm = '';
         $creator = creator($repo) if $lc;
-        $desc = slurp("$ENV{GL_REPO_BASE}/$repo.git/description") if $ld;
-        chomp($desc);
+
+        my $desc = '';
+        for my $d ("$ENV{GL_REPO_BASE}/$repo.git/description") {
+            next unless $ld and -r $d;
+            $desc = slurp($d);
+            chomp($desc);
+        }
 
         for my $aa (@aa) {
             my $ret = access( $repo, $ENV{GL_USER}, $aa, 'any' );
