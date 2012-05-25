@@ -5,6 +5,11 @@
 # compatible.
 
 # ----------------------------------------------------------------------
+# delete the 'description' file that 'git init' created if this is run from
+# the post-create trigger
+[ "$1" = "POST_CREATE" ] && rm -f $GL_REPO_BASE/$2.git/description 2>/dev/null
+
+# ----------------------------------------------------------------------
 # skip if arg-1 is POST_CREATE and no arg-3 (user name) exists; this means
 # it's been triggered by a *normal* (not "wild") repo creation, which in turn
 # means a POST_COMPILE should be following so there's no need to waste time
