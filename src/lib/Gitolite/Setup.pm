@@ -6,21 +6,30 @@ package Gitolite::Setup;
 =for args
 Usage:  gitolite setup [<option>]
 
-    -pk, --pubkey <file>        pubkey file name
-    -a, --admin <name>          admin name
+Setup gitolite, compile conf, run the POST_COMPILE trigger (see rc file) and
+propagate hooks.
 
-Setup gitolite, compile conf, and fixup hooks.  Either the pubkey or the admin
-name is required on the first run, depending on whether you're using ssh mode
-or http mode.
+    -a, --admin <name>          admin name
+    -pk, --pubkey <file>        pubkey file name
+    -ho, --hooks-only           skip other steps and just propagate hooks
+
+First run: either the pubkey or the admin name is *required*, depending on
+whether you're using ssh mode or http mode.
 
 Subsequent runs:
 
-  - 'gitolite setup': fix up hooks if you brought in repos from outside, or if
-    someone has been playing around with the hooks and may have deleted some.
+  - Without options, 'gitolite setup' is a general "fix up everything" command
+    (for example, if you brought in repos from outside, or someone messed
+    around with the hooks, or you made an rc file change that affects access
+    rules, etc.)
 
-  - 'gitolite setup -pk YourName.pub': replace keydir/YourName.pub and
-    recompile/push.  Useful if you lost your key.  In fact you can do this for
-    any key in keydir (but not in subdirectories).
+  - '-pk' can be used to replace the admin key; useful if you lost the admin's
+    private key but do have shell access to the server.
+
+  - '-ho' is mainly for scripting use.  Do not combine with other options.
+
+  - '-a' is ignored
+
 =cut
 
 # ----------------------------------------------------------------------
@@ -42,12 +51,15 @@ use warnings;
 # ----------------------------------------------------------------------
 
 sub setup {
-    my ( $admin, $pubkey, $argv ) = args();
-    setup_glrc();
-    setup_gladmin( $admin, $pubkey, $argv );
+    my ( $admin, $pubkey, $h_only, $argv ) = args();
 
-    _system("gitolite compile");
-    _system("gitolite trigger POST_COMPILE");
+    unless ($h_only) {
+        setup_glrc();
+        setup_gladmin( $admin, $pubkey, $argv );
+
+        _system("gitolite compile");
+        _system("gitolite trigger POST_COMPILE");
+    }
 
     hook_repos();    # all of them, just to be sure
 }
@@ -57,16 +69,19 @@ sub setup {
 sub args {
     my $admin  = '';
     my $pubkey = '';
+    my $h_only = 0;
     my $help   = 0;
     my $argv   = join( " ", @ARGV );
 
     GetOptions(
-        'admin|a=s'   => \$admin,
-        'pubkey|pk=s' => \$pubkey,
-        'help|h'      => \$help,
+        'admin|a=s'     => \$admin,
+        'pubkey|pk=s'   => \$pubkey,
+        'hooks-only|ho' => \$h_only,
+        'help|h'        => \$help,
     ) or usage();
 
     usage() if $help or ( $pubkey and $admin );
+    usage() if $h_only and ($admin or $pubkey);
 
     if ($pubkey) {
         $pubkey =~ /\.pub$/ or _die "'$pubkey' name does not end in .pub";
@@ -80,7 +95,7 @@ sub args {
         $admin =~ s/\.pub$//;
     }
 
-    return ( $admin || '', $pubkey || '', $argv );
+    return ( $admin || '', $pubkey || '', $h_only || 0, $argv );
 }
 
 sub setup_glrc {
