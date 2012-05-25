@@ -100,6 +100,8 @@
       * ([link][NAME]: the NAME VREF)
       * the [subconf][] command
   * ([link][partial-copy]: faking selective READ control)
+  * using pubkeys obtained [from elsewhere][keysonly]
+  * [updating hooks][pushhook] via the admin repo
 
 ## interfacing with [external][] tools
 
