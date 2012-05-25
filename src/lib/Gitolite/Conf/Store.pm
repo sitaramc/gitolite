@@ -164,7 +164,11 @@ sub new_repos {
         # use gl-conf as a sentinel
         hook_1($repo) if -d "$repo.git" and not -f "$repo.git/gl-conf";
 
-        new_repo($repo) if not -d "$repo.git";
+        if (not -d "$repo.git") {
+            push @{ $rc{NEW_REPOS_CREATED} }, $repo;
+            trigger( 'PRE_CREATE', $repo );
+            new_repo($repo);
+        }
     }
 }
 

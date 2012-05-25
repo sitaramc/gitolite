@@ -34,6 +34,10 @@ sub compile {
     # place to put the individual gl-conf files
     new_repos();
     store();
+
+    for my $repo ( @{ $rc{NEW_REPOS_CREATED} } ) {
+        trigger( 'POST_CREATE', $repo );
+    }
 }
 
 sub parse {

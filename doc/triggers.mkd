@@ -61,7 +61,7 @@ Triggers receive the following arguments:
 Here are the **rest of** the arguments for each trigger, plus a brief
 description of when the trigger runs:
 
-  * `ACCESS_1` runs after the first access check.  Arguments:
+  * `ACCESS_1` runs after the first access check.  Extra arguments:
       * repo
       * user
       * 'R' or 'W'
@@ -71,7 +71,7 @@ description of when the trigger runs:
         result contains the refex that caused the access to succeed.
 
   * `ACCESS_2` runs after the second access check, in the update hook.
-    Arguments:
+    Extra arguments:
       * repo
       * user
       * any of W, +, C, D, WM, +M, CM, DM
@@ -79,7 +79,7 @@ description of when the trigger runs:
       * result (see above)
 
   * `PRE_GIT` and `POST_GIT` run just before and after the git command.
-    Arguments:
+    Extra arguments:
       * repo
       * user
       * 'R' or 'W'
@@ -88,12 +88,16 @@ description of when the trigger runs:
         'git-upload-archive') being invoked.
 
   * `PRE_CREATE` and `POST_CREATE` run just before and after a new "[wild][]"
-    repo is created by user action.  Arguments:
+    repo is created by user action.  Extra arguments:
       * repo
       * user
+
+    They are also run when a *normal* repo is created (say by adding a "repo
+    foo" line to the conf file).  This case has only one extra argument:
+      * repo
 
   * `POST_COMPILE` runs after an admin push has successfully "compiled" the
     config file.  By default, the next thing is to update the ssh authkeys
     file, then all the 'git-config's, gitweb access, and daemon access.
 
-    No arguments.
+    No extra arguments.
