@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Usage:    ssh git@host symbolic-ref <repo> <arguments to git-symbolic-ref>
+#
+# allow 'git symbolic-ref' over a gitolite connection
+
+# Security: remember all arguments to commands must match a very conservative
+# pattern.  Once that is assured, the symbolic-ref command has no security
+# related side-effects, so we don't check arguments at all.
+
+# Note: because of the restriction on allowed characters in arguments, you
+# can't supply an arbitrary string to the '-m' option.  The simplest
+# work-around is-to-just-use-join-up-words-like-this if you feel the need to
+# supply a "reason" string.  In any case this is useless by default; you'd
+# have to have core.logAllRefUpdates set for it to have any meaning.
+
+die() { echo "$@" >&2; exit 1; }
+usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
+[ -z "$1" ] && usage
+[ "$1" = "-h" ] && usage
+[ -z "$GL_USER" ] && die GL_USER not set
+
+# ----------------------------------------------------------------------
+repo=$1; shift
+repo=${repo%.git}
+gitolite access -q "$repo" $GL_USER W any || die You are not authorised
+
+# change head
+cd $GL_REPO_BASE/$repo.git
+
+git symbolic-ref "$@"
