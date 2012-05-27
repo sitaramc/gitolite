@@ -1,0 +1,153 @@
+# locking binary files
+
+Locking is useful to make sure that binary files (office docs, images, ...)
+don't get into a merge state.  (<font color="gray">If you think it's not a big
+deal, you have never manually merged independent changes to an ODT or
+something!</font>)
+
+When git is used in a truly distributed fashion, locking is impossible.
+However, in most corporate setups, there is a single central server acting as
+the canonical source of truth and collaboration point for all developers.  In
+this situation it should be possible to at least prevent commits from being
+pushed that contains changes to files locked by someone else.
+
+The two "lock" programs (one a command that a user uses, and one a VREF that
+the admin adds to a repo's access rules) together achieve this.
+
+----
+
+[[TOC]]
+
+## problem description
+
+Our users are alice, bob, and carol.  Our repo is foo.  It has some "odt"
+files in the "doc/" directory.  We want to make sure these odt files never get
+into a "merge" situation.
+
+## admin/setup
+
+First, someone with shell access to the server must add 'lock' to the
+"COMMANDS" list in the rc file.
+
+Next, the gitolite.conf file should have something like this:
+
+    repo foo
+        <...other rules...>
+        -   VREF/lock      =   @all
+
+However, see below for the difference between "RW" and "RW+" from the point of
+view of this feature and adjust permissions accordingly.
+
+## user view
+
+Here's a summary:
+
+  * Any user with "W" permissions to any branch in the repo can "lock" any
+    file.  Once locked, no other user can push changes to that file, *in any
+    branch*, until it is unlocked.
+  * Any user with "+" permissions to any branch in the repo can "break" a lock
+    held by someone else if needed.
+
+For best results, everyone on the team should:
+
+  * Run 'git pull' or eqvt, then lock the binary file(s) before editing them.
+  * Finish the editing task as quickly as possible, then commit, push, and
+    unlock the file(s) so others are not needlessly blocked.
+  * Understand that breaking a lock require additional, (out of band)
+    communication.  It is upto the team's policies what that entails.
+
+## detailed example
+
+Alice declares her intent to work on "d1.odt":
+
+    $ git pull
+    $ ssh git@host lock -l foo doc/d1.odt
+
+Similarly Bob starts on "d2.odt"
+
+    $ git pull
+    $ ssh git@host lock -l foo doc/d2.odt
+
+Carol makes some changes to d2.odt (**without attempting to lock the file or
+checking to see if it is already locked**) and pushes:
+
+    $ ooffice doc/d2.odt
+    $ git add doc/d2.odt
+    $ git commit -m 'added footnotes to d2 in klingon'
+    $ git push
+    <...normal push progress output...>
+    remote: FATAL: W VREF/lock testing carol DENIED by VREF/lock
+    remote: 'doc/d2.odt' locked by 'bob'
+    remote: error: hook declined to update refs/heads/master
+    To u2:testing
+     ! [remote rejected] master -> master (hook declined)
+    error: failed to push some refs to 'carol:foo'
+
+Carol backs out her changes, but saves them away for a "manual merge" later.
+
+    git reset HEAD^
+    git stash save 'klingon changes to d2.odt saved for possible manual merge later'
+
+Note that this still represents wasted work in some sense, because Carol would
+have to somehow re-apply the same changes to the new version of d2.odt after
+pulling it down.  **This is because she did not lock the file before making
+changes on her local repo.  Educating users in doing this is important if this
+scheme is to help you.**
+
+She now decides to work on "d1.odt".  However, she has learned her lesson and
+decides to follow the protocol described above:
+
+    $ git pull
+    $ ssh git@host lock -l foo doc/d1.odt
+    FATAL: 'doc/d1.odt' locked by 'alice' since Sun May 27 17:59:59 2012
+
+Oh damn; can't work on that either.
+
+Carol now decides to see what else there may be.  Instead of checking each
+file to see if she can lock it, she starts with a list of what is already
+locked:
+
+    $ ssh git@host lock -ls foo
+
+    # locks held:
+
+    alice   doc/d1.odt      (Sun May 27 17:59:59 2012)
+    bob     doc/d2.odt      (Sun May 27 18:00:06 2012)
+
+    # locks broken:
+
+Aha, looks like only d1 and d2 are locked.  She picks d3.odt to work on.  This
+time, she starts by locking it:
+
+    $ ssh git@host lock -l foo doc/d3.odt
+    $ ooffice doc/d3.odt
+    <...etc...>
+
+Meanwhile, in a parallel universe where d3.odt doesn't exist, and Alice has
+gone on vacation while keeping d1.odt locked, Carol breaks the lock.  Carol
+can do this because she has RW+ permissions for the repository itself.
+
+However, protocol in this team requires that she get email approval from the
+team lead before doing this and that Alice be in CC in those emails, so she
+does that first, and *then* she breaks the lock:
+
+    $ git pull
+    $ ssh git@host lock --break foo doc/d1.odt
+
+She then locks d1.odt for herself:
+
+    $ ssh git@host lock -l foo doc/d1.odt
+
+When Alice comes back, she can tell who broke her lock and when:
+
+    $ ssh git@host lock -ls foo
+
+    # locks held:
+
+    carol   doc/d1.odt      (Sun May 27 18:17:29 2012)
+    bob     doc/d2.odt      (Sun May 27 18:00:06 2012)
+
+    # locks broken:
+
+    carol   doc/d1.odt      (Sun May 27 18:17:03 2012)      (locked by alice at Sun May 27 17:59:59 2012)
+

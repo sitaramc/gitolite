@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Common;
+
+# gitolite VREF to lock and unlock (binary) files.  Requires companion command
+# 'lock' to be enabled; see doc/locking.mkd for details.
+
+# ----------------------------------------------------------------------
+
+# see gitolite docs for what the first 7 arguments mean
+
+die "not meant to be run manually" unless $ARGV[6];
+
+my $ff = "$ENV{GL_REPO_BASE}/$ENV{GL_REPO}.git/gl-locks";
+exit 0 unless -f $ff;
+
+our %locks;
+my $t = slurp($ff);
+eval $t;
+_die "do '$ff' failed with '$@', contact your administrator" if $@;
+
+my ( $oldtree, $newtree, $refex ) = @ARGV[ 3, 4, 6 ];
+
+for my $file (`git diff --name-only $oldtree $newtree` ) {
+    chomp($file);
+
+    if ($locks{$file} and $locks{$file}{USER} ne $ENV{GL_USER}) {
+        print "$refex '$file' locked by '$locks{$file}{USER}'";
+        last;
+    }
+}
+
+exit 0

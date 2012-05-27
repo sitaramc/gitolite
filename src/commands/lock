@@ -1,0 +1,124 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use Getopt::Long;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+# gitolite command to lock and unlock (binary) files and deal with locks.
+
+=for usage
+Usage:  ssh git@host lock -l      <repo> <file>     # lock a file
+        ssh git@host lock -u      <repo> <file>     # unlock a file
+        ssh git@host lock --break <repo> <file>     # break someone else's lock
+        ssh git@host lock -ls     <repo>            # list locked files for repo
+
+See doc/locking.mkd for other details.
+=cut
+
+usage() if not @ARGV or $ARGV[0] eq '-h';
+$ENV{GL_USER} or _die "GL_USER not set";
+
+my $op = '';
+$op = 'lock'   if $ARGV[0] eq '-l';
+$op = 'unlock' if $ARGV[0] eq '-u';
+$op = 'break'  if $ARGV[0] eq '--break';
+$op = 'list'   if $ARGV[0] eq '-ls';
+usage() if not $op;
+shift;
+
+my $repo = shift;
+_die "You are not authorised" if access( $repo, $ENV{GL_USER}, 'W', 'any' ) =~ /DENIED/;
+_die "You are not authorised" if $op eq 'break' and access( $repo, $ENV{GL_USER}, '+', 'any' ) =~ /DENIED/;
+
+my $file = shift || '';
+usage() if $op ne 'list' and not $file;
+
+_chdir( $ENV{GL_REPO_BASE} );
+_chdir("$repo.git");
+
+my $ff = "gl-locks";
+
+if ( $op eq 'lock' ) {
+    f_lock( $repo, $file );
+} elsif ( $op eq 'unlock' ) {
+    f_unlock( $repo, $file );
+} elsif ( $op eq 'break' ) {
+    f_break( $repo, $file );
+} elsif ( $op eq 'list' ) {
+    f_list($repo);
+}
+
+# ----------------------------------------------------------------------
+# everything below assumes we have already chdir'd to "$repo.git".  Also, $ff
+# is used as a global.
+
+sub f_lock {
+    my ( $repo, $file ) = @_;
+
+    my %locks = get_locks();
+    _die "'$file' locked by '$locks{$file}{USER}' since " . localtime( $locks{$file}{TIME} ) if $locks{$file}{USER};
+    $locks{$file}{USER} = $ENV{GL_USER};
+    $locks{$file}{TIME} = time;
+    put_locks(%locks);
+}
+
+sub f_unlock {
+    my ( $repo, $file ) = @_;
+
+    my %locks = get_locks();
+    _die "'$file' not locked by '$ENV{GL_USER}'" if ( $locks{$file} || '' ) ne $ENV{GL_USER};
+    delete $locks{$file};
+    put_locks(%locks);
+}
+
+sub f_break {
+    my ( $repo, $file ) = @_;
+
+    my %locks = get_locks();
+    _die "'$file' was not locked" unless $locks{$file};
+    push @{ $locks{BREAKS} }, time . " $ENV{GL_USER} $locks{$file}{USER} $locks{$file}{TIME} $file";
+    delete $locks{$file};
+    put_locks(%locks);
+}
+
+sub f_list {
+    my $repo = shift;
+
+    my %locks = get_locks();
+    print "\n# locks held:\n\n";
+    map { print "$locks{$_}{USER}\t$_\t(" . scalar(localtime($locks{$_}{TIME})) . ")\n" } grep { $_ ne 'BREAKS' } sort keys %locks;
+    print "\n# locks broken:\n\n";
+    for my $b ( @{ $locks{BREAKS} } ) {
+        my ( $when, $who, $whose, $how_old, $what ) = split ' ', $b;
+        print "$who\t$what\t(" . scalar( localtime($when) ) . ")\t(locked by $whose at " . scalar( localtime($how_old) ) . ")\n";
+    }
+}
+
+sub get_locks {
+    if ( -f $ff ) {
+        our %locks;
+
+        my $t = slurp($ff);
+        eval $t;
+        _die "do '$ff' failed with '$@', contact your administrator" if $@;
+
+        return %locks;
+    }
+    return ();
+}
+
+sub put_locks {
+    my %locks = @_;
+
+    use Data::Dumper;
+    $Data::Dumper::Indent   = 1;
+    $Data::Dumper::Sortkeys = 1;
+
+    my $dumped_data = Data::Dumper->Dump( [ \%locks ], [qw(*locks)] );
+    _print( $ff, $dumped_data );
+}
