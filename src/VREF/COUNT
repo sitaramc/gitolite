@@ -32,7 +32,7 @@ nf=
 # count files against all the other commits in the system not just $oldsha
 # (why?  consider what is $oldtree when you create a new branch, or what is
 # $oldsha when you update an old feature branch from master and then push it
-count=`git log --name-only $nf --format=%n $newtree --not --all | grep . | sort -u | wc -l`
+count=`git log --name-only $nf --format=%n $newtree --not --all | grep . | sort -u | perl -ne '}{print "$."'`
 
 [[ $count -gt $max ]] && {
     # count has been exceeded.  If $9 was NO_SIGNOFF there's still a chance
