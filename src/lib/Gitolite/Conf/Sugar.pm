@@ -131,17 +131,17 @@ sub owner_desc {
     #   ->  config gitweb.description = some long description
 
     for my $line (@$lines) {
-        if ( $line =~ /^(\S+)(?: "(.*?)")? = "(.*)"$/ ) {
-            my ( $repo, $owner, $desc ) = ( $1, $2, $3 );
-            push @ret, "repo $repo";
-            push @ret, "config gitweb.description = $desc";
-            push @ret, "config gitweb.owner = $owner" if $owner;
-        } elsif ( $line =~ /^desc = (\S.*)/ ) {
+        if ( $line =~ /^desc = (\S.*)/ ) {
             push @ret, "config gitweb.description = $1";
         } elsif ( $line =~ /^owner = (\S.*)/ ) {
             push @ret, "config gitweb.owner = $1";
         } elsif ( $line =~ /^category = (\S.*)/ ) {
             push @ret, "config gitweb.category = $1";
+        } elsif ( $line =~ /^(\S+)(?: "(.*?)")? = "(.*)"$/ ) {
+            my ( $repo, $owner, $desc ) = ( $1, $2, $3 );
+            push @ret, "repo $repo";
+            push @ret, "config gitweb.description = $desc";
+            push @ret, "config gitweb.owner = $owner" if $owner;
         } else {
             push @ret, $line;
         }
