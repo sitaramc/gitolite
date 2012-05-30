@@ -61,6 +61,14 @@ Triggers receive the following arguments:
 Here are the **rest of** the arguments for each trigger, plus a brief
 description of when the trigger runs:
 
+  * `INPUT` runs before pretty much anything else.  INPUT trigger scripts
+    *must* be in perl, since they manipulate the arguments to and the
+    environment of the 'gitolite-shell' program itself.  Most commonly they
+    will read/change `@ARGV`, and/or `$ENV{SSH_ORIGINAL_COMMAND}`.
+
+    There are certain conventions to adhere to; please see some of the shipped
+    samples or ask me if you need help writing your own.
+
   * `ACCESS_1` runs after the first access check.  Extra arguments:
       * repo
       * user
