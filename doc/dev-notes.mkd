@@ -115,3 +115,51 @@ contents modified as you like and return a ref to it.
 
 There are a couple of examples in src/syntactic-sugar.
 
+## appendix 1: notes on the INPUT trigger
+
+Note: some of this won't make sense if you haven't read about [triggers][].
+
+The INPUT trigger sequence is designed to set or change environment variables
+or the argument list.  (Side note: this means INPUT triggers have to be
+written as perl modules; they cannot be standalone scripts).  This is a very
+powerful idea so an extended description may be useful.
+
+Sshd invokes gitolite-shell with the SSH\_ORIGINAL\_COMMAND env var containing
+the git/gitolite command and one argument: the gitolite username.
+
+  * see [this][glssh] for details on the latter
+  * the *first* thing gitolite does in smart http mode is to use the
+    REMOTE\_USER and the CGI variables that apache provides to *construct*
+    a fake argument list and a fake SSH\_ORIGINAL\_COMMAND env var, so the
+    rest of the code can stay the same
+
+The INPUT trigger is then run.  The purpose of the input trigger is to ensure
+that the first argument *is* the gitolite username, and that the
+SSH\_ORIGINAL\_COMMAND env var contains the actual command to execute.  It can
+also be used to set up any other environment variables that you may decide you
+need.
+
+Wait... didn't we say that's what gitolite-shell gets anyway, just now?
+
+Well, we lied a bit there; it's not always true!
+
+For example, if [this][giving-shell] feature is used, the first argument *may*
+be "-s", with the username in the *second* argument.  Shell.pm deals with
+that.  <font color="gray">(Order matters.  If you use this feature, put the
+`'Shell::input',` line ahead of the others, since it is the only one prepared
+to deal with username not being the first argument).</font>
+
+If you look at CpuTime.pm, you'll see that it's `input()` function doesn't set
+or change anything, but does set a package variable to record the start time.
+Later, when the same module's `post_git()` function is invoked, it uses this
+variable to determine elapsed time.
+
+*(This is a very nice and simple example of how you can implement features by
+latching onto multiple events and sharing data to do something)*.
+
+You can even change the reponame the user sees, behind his back.  Alias.pm
+handles that.
+
+Finally, as an exercise for the reader, consider how you would create a brand
+new env var that contains the *comment* field of the ssh pubkey that was used
+to gain access, using the information [here][kfn].

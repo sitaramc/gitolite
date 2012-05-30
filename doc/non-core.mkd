@@ -45,16 +45,28 @@ The following "sugar" programs are available:
 
 ## triggers
 
+Note that some features need to be enabled in more than one trigger.
+Mirroring is probably the best example -- it needs to hook into the `INPUT`,
+`PRE_GIT`, and the `POST_GIT` triggers to work.
+
+The `INPUT` triggers are:
+
+  * CpuTime -- see the `POST_GIT` section below
+  * Shell -- see "giving shell access to gitolite users" in [this][sts] page.
+  * Alias -- documentation is within the source file Alias.pm
+  * Mirroring -- see [doc/mirroring.mkd][mirroring]
+
 The `PRE_GIT` triggers are:
 
-  * partial-copy -- this has its own section later in this page.
-
   * renice -- this renices the entire job to whatever value you specify.
+  * Mirroring -- see [doc/mirroring.mkd][mirroring]
+  * partial-copy -- this has its own section later in this page.
 
 The `POST_GIT` triggers are:
 
-  * CpuTime, which is only a sample because it only prints the CPU times data.
-    In reality you will want to do something else with it.
+  * Mirroring -- see [doc/mirroring.mkd][mirroring]
+  * CpuTime -- this is only a sample because it only prints the CPU times
+    data.  In reality you will want to do something else with it.
 
 The `POST_COMPILE` triggers are:
 

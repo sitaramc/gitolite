@@ -12,7 +12,12 @@ this situation it should be possible to at least prevent commits from being
 pushed that contains changes to files locked by someone else.
 
 The two "lock" programs (one a command that a user uses, and one a VREF that
-the admin adds to a repo's access rules) together achieve this.
+the admin adds to a repo's access rules) together attempt to achieve this.
+
+Of course, locking by itself is not quite enough.  You may still get into
+merge situations if you make changes in branches.  For best results you should
+actually keep all the binary files in their own branch, separate from the ones
+containing source code.
 
 ----
 
@@ -50,6 +55,8 @@ Here's a summary:
 
 For best results, everyone on the team should:
 
+  * Switch to the branch containing the binary files when wanting to make a
+    change.
   * Run 'git pull' or eqvt, then lock the binary file(s) before editing them.
   * Finish the editing task as quickly as possible, then commit, push, and
     unlock the file(s) so others are not needlessly blocked.

@@ -153,7 +153,7 @@ Done?  OK, now the general outline for ssh troubleshooting is this:
 
 ## random tips, tricks, and notes
 
-### giving shell access to gitolite users
+### #giving-shell giving shell access to gitolite users
 
 Thanks to an idea from Jesse Keating, a single key can allow both gitolite
 access *and* shell access.
@@ -168,7 +168,9 @@ To do this:
 
         SHELL_USERS_LIST        =>  "$ENV{HOME}/.gitolite.shell-users",
 
-  * add the line `'Shell::input',` to the `INPUT` list in the rc file.
+  * add the line `'Shell::input',` to the `INPUT` list in the rc file.  This
+    must be the first item on the list (possibly preceded by CpuTime, if
+    you're using that).
 
   * add the line `'post-compile/ssh-authkeys-shell-users',` to the
     `POST_COMPILE` list, *after* the `'post-compile/ssh-authkeys',` line.
@@ -176,7 +178,7 @@ To do this:
 Then run `gitolite compile; gitolite trigger POST_COMPILE` or push a dummy
 change to the admin repo.
 
-### distinguishing one key from another
+### #kfn distinguishing one key from another
 
 Since a user can have [more than one key][multi-key], it is sometimes useful
 to distinguish one key from another.  Sshd does not tell you even the

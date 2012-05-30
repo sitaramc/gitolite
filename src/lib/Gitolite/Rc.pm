@@ -291,6 +291,14 @@ __DATA__
 
 # (Tip: perl allows a comma after the last item in a list also!)
 
+# HELP for commands (see COMMANDS list below) can be had by running the
+# command with "-h" as the sole argument.
+
+# HELP for all the other external programs (the syntactic sugar helpers and
+# the various programs/functions in the 8 trigger lists), can be found in
+# doc/non-core.mkd (http://sitaramc.github.com/gitolite/non-core.html) or in
+# the corresponding source file itself.
+
 %RC = (
     # if you're using mirroring, you need a hostname.  This is *one* simple
     # word, not a full domain name.  See documentation if in doubt
@@ -344,15 +352,16 @@ __DATA__
     SYNTACTIC_SUGAR             =>
         [
             # 'continuation-lines',
+            # 'keysubdirs-as-groups',
         ],
 
     # comment out or uncomment as needed
     # these will run in sequence to modify the input (arguments and environment)
     INPUT                       =>
         [
-            # if you use this, make this the first item in the list
             # 'CpuTime::input',
-
+            # 'Shell::input',
+            # 'Alias::input',
             # 'Mirroring::input',
         ],
 
@@ -366,12 +375,8 @@ __DATA__
     # these will run in sequence just before the actual git command is invoked
     PRE_GIT                     =>
         [
-            # if you use this, make this the first item in the list
             # 'renice 10',
-
             # 'Mirroring::pre_git',
-
-            # see docs ("list of non-core programs shipped") for details
             # 'partial-copy',
         ],
 
@@ -386,8 +391,6 @@ __DATA__
     POST_GIT                    =>
         [
             # 'Mirroring::post_git',
-
-            # if you use this, make this the last item in the list
             # 'CpuTime::post_git',
         ],
 
