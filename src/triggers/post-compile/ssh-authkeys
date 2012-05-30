@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use File::Temp qw(tempfile);
+use Getopt::Long;
 
 use lib $ENV{GL_LIBDIR};
 use Gitolite::Rc;
@@ -10,8 +11,18 @@ use Gitolite::Common;
 
 $|++;
 
-# can be called directly, or as a post-update hook.  Since it ignores
-# arguments anyway, it hardly matters.
+# best called via 'gitolite trigger POST_COMPILE'; other modes at your own
+# risk, especially if the rc file specifies arguments for it.  (That is also
+# why it doesn't respond to "-h" like most gitolite commands do).
+
+# option procesing
+# ----------------------------------------------------------------------
+
+# currently has one option:
+#   -kfn, --key-file-name        adds the keyfilename as a second argument
+
+my $kfn = '';
+GetOptions( 'key-file-name|kfn' => \$kfn, );
 
 tsh_try("sestatus");
 my $selinux = ( tsh_text() =~ /enabled/ );
@@ -130,6 +141,6 @@ sub optionise {
         return '';
     }
     chomp(@line);
-    return "command=\"$glshell $user\",$auth_options $line[0]";
+    return "command=\"$glshell $user" . ( $kfn ? " $f" : "" ) . "\",$auth_options $line[0]";
 }
 

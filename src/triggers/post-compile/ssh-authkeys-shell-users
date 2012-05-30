@@ -19,7 +19,7 @@ my $sufile = $rc{SHELL_USERS_LIST} or exit 0;
 my $aktext = slurp($akfile);
 
 for my $su ( shell_users() ) {
-    $aktext =~ s(/gitolite-shell $su",(.*?),no-pty )(/gitolite-shell -s $su",$1 );
+    $aktext =~ s(/gitolite-shell $su([" ].*?),no-pty )(/gitolite-shell -s $su$1 );
 }
 
 _print( $akfile, $aktext );

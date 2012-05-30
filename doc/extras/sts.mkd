@@ -176,6 +176,34 @@ To do this:
 Then run `gitolite compile; gitolite trigger POST_COMPILE` or push a dummy
 change to the admin repo.
 
+### distinguishing one key from another
+
+Since a user can have [more than one key][multi-key], it is sometimes useful
+to distinguish one key from another.  Sshd does not tell you even the
+fingerprint of the key that finally matched, so normally all you have is the
+`GL_USER` env var.
+
+However, if you replace
+
+    'post-compile/ssh-authkeys',
+
+in the `POST_COMPILE` trigger list in the rc file with
+
+    'post-compile/ssh-authkeys --key-file-name',
+
+then an extra argument is added after the username in the "command" variable
+of the authkeys file.  That is, instead of this:
+
+    command="/home/g3/gitolite/src/gitolite-shell u3",no-port-forwarding,...
+
+you get this:
+
+    command="/home/g3/gitolite/src/gitolite-shell u3 keydir/u3.pub",no-port-forwarding,...
+
+You can then write an INPUT trigger to do whatever you need with the file
+name, which is in `$ARGV[1]` (the second argument).  The actual file is
+available at `$ENV{GL_ADMIN_BASE}/$ARGV[1]` if you need its contents.
+
 ### simulating ssh-copy-id
 
 don't have `ssh-copy-id`?  This is broadly what that command does, if you want
