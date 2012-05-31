@@ -119,8 +119,11 @@ sub git_config {
     my ( $repo, $key, $empty_values_OK ) = @_;
     $key ||= '.';
 
-    return {} if repo_missing($repo);
-    load($repo);
+    if (repo_missing($repo)) {
+        load_common();
+    } else {
+        load($repo);
+    }
 
     # read comments bottom up
     my %ret =
