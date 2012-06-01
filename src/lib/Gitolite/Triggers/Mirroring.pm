@@ -10,10 +10,29 @@ use warnings;
 my $git_commands = "git-upload-pack|git-receive-pack|git-upload-archive";
 my $hn           = $rc{HOSTNAME};
 
+my ( $mode, $master, %slaves, %trusted_slaves );
+
 # ----------------------------------------------------------------------
 
 sub input {
     return unless $ARGV[0] =~ /^server-(\S+)$/;
+
+    # custom peer-to-peer commands.  At present the only one is 'perms -c',
+    # sent from a mirror command
+    if ($ENV{SSH_ORIGINAL_COMMAND} =~ /^CREATOR=(\S+) perms -c '(\S+)'$/) {
+        $ENV{GL_USER} = $1;
+
+        my $repo = $2;
+        details($repo);
+        _die "$hn: '$repo' is local"  if $mode eq 'local';
+        _die "$hn: '$repo' is native" if $mode eq 'master';
+
+        # this expects valid perms content on STDIN
+        _system("gitolite perms -c $repo");
+
+        # we're done.  Yes, really...
+        exit 0;
+    }
 
     # note: we treat %rc as our own internal "poor man's %ENV"
     $rc{FROM_SERVER} = $1;
@@ -32,8 +51,6 @@ sub input {
 }
 
 # ----------------------------------------------------------------------
-
-my ( $mode, $master, %slaves, %trusted_slaves );
 
 sub pre_git {
     return unless $hn;
