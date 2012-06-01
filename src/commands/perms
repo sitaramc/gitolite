@@ -21,17 +21,43 @@ Examples:
     ssh git@host perms foo + READERS user2
     ssh git@host perms foo + READERS user3
 
-(Note: a legacy mode of piping in the entire permissions text directly is also
-supported.  If you want to use it, don't mix it with the new "+/-" modes).
+----
+There is also a batch mode useful for scripting and bulk loading.  Do not
+combine this with the +/- mode above.  This mode also accepts an optional "-c"
+flag to create the repo if it does not already exist (assuming $GL_USER has
+permissions to create it).
+
+Examples:
+    cat copy-of-backed-up-gl-perms | ssh git@host perms <repo>
+    cat copy-of-backed-up-gl-perms | ssh git@host perms -c <repo>
 =cut
 
 usage() if not @ARGV or $ARGV[0] eq '-h';
+
+$ENV{GL_USER} or _die "GL_USER not set";
 
 my $list = 0;
 if ( $ARGV[0] eq '-l' ) {
     $list++;
     shift;
     getperms(@ARGV);    # doesn't return
+}
+
+# auto-create the repo if -c passed and repo doesn't exist
+if ( $ARGV[0] eq '-c' ) {
+    shift;
+    my $repo = $ARGV[0];
+    _die "invalid repo '$repo'" unless $repo =~ $REPONAME_PATT;
+
+    if (not -d "$rc{GL_REPO_BASE}/$repo.git") {
+        my $ret = access( $repo, $ENV{GL_USER}, '^C', 'any' );
+        _die $ret if $ret =~ /DENIED/;
+
+        require Gitolite::Conf::Store;
+        Gitolite::Conf::Store->import;
+        new_wild_repo( $repo, $ENV{GL_USER} );
+        gl_log( 'create', $repo, $ENV{GL_USER} );
+    }
 }
 
 my $repo = shift;

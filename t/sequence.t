@@ -9,7 +9,7 @@ use Gitolite::Test;
 # uhh, seems to be another rule sequence test
 # ----------------------------------------------------------------------
 
-try "plan 40";
+try "plan 48";
 
 confreset;confadd '
     @staff = u1 u2 u3
@@ -61,6 +61,7 @@ confreset;confadd '
           RW+     = CREATOR
           -       = @staff
           RW      = WRITERS
+          R       = READERS
 ';
 
 try "ADMIN_PUSH set1; !/FATAL/" or die text();
@@ -81,6 +82,7 @@ try "
         /WRITERS u2/
     # expand
     glt info u2
+        !/R W *\tfoo/u1/baz/
         /R W *\tfoo/u1/bar/
         /R W *\ttesting/
 
@@ -94,4 +96,21 @@ try "
         !ok
         reject
         /W refs/heads/master foo/u1/bar u2 DENIED by refs/\\.\\*/
+
+    # auto-create using perms fail
+    echo READERS u5 | glt perms u4 -c foo/u4/baz
+        !/Initialized empty Git repository in .*/foo/u4/baz.git/
+        /FATAL: .C any foo/u4/baz u4 DENIED by fallthru/
+
+    # auto-create using perms
+    echo READERS u2 | glt perms u1 -c foo/u1/baz
+        /Initialized empty Git repository in .*/foo/u1/baz.git/
+
+    glt perms u1 -l foo/u1/baz
+        /READERS u2/
+    # expand
+    glt info u2
+        /R   *\tfoo/u1/baz/
+        /R W *\tfoo/u1/bar/
+        /R W *\ttesting/
 ";
