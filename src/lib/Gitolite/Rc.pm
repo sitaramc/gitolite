@@ -156,11 +156,36 @@ sub query_rc {
         exit 0;
     }
 
-    my @res = map { $rc{$_} } grep { $rc{$_} } @vars;
-    print join( "\t", @res ) . ( $nonl ? '' : "\n" ) if not $quiet and @res;
-    # shell truth
-    exit 0 if @res;
-    exit 1;
+    my $cv = \%rc;  # current "value"
+    while (@vars) {
+        my $v = shift @vars;
+
+        # dig into the rc hash, using each var as a component
+        if (not ref($cv)) {
+            _warn "unused arguments...";
+            last;
+        } elsif (ref($cv) eq 'HASH') {
+            $cv = $cv->{$v} || '';
+        } elsif (ref($cv) eq 'ARRAY') {
+            $cv = $cv->[$v] || '';
+        } else {
+            _die "dont know what to do with " . ref($cv) . " item in the rc file";
+        }
+    }
+
+    # we've run out of arguments so $cv is what we have.  If we're supposed to
+    # be quiet, we don't have to print anything so let's get that done first:
+    exit ( $cv ? 0 : 1 ) if $quiet;     # shell truth
+
+    # print values (notice we ignore the '-n' option if it's a ref)
+    if (ref($cv) eq 'HASH') {
+        print join("\n", sort keys %$cv), "\n" if %$cv;
+    } elsif (ref($cv) eq 'ARRAY') {
+        print join("\n", @$cv), "\n" if @$cv;
+    } else {
+        print $cv . ( $nonl ? '' : "\n" ) if $cv;
+    }
+    exit ( $cv ? 0 : 1 );   # shell truth
 }
 
 sub version {
@@ -207,21 +232,35 @@ sub trigger {
 
 =for args
 Usage:  gitolite query-rc -a
-        gitolite query-rc [-n] <list of rc variables>
+        gitolite query-rc [-n] [-q] rc-variable
 
-    -a          print all variables and values
-    -n          do not append a newline
+    -a          print all variables and values (first level only)
+    -n          do not append a newline if variable is scalar
     -q          exit code only (shell truth; 0 is success)
 
-Example:
+Query the rc hash.  Second and subsequent arguments dig deeper into the hash.
+The examples are for the default configuration; yours may be different.
 
-    gitolite query-rc GL_ADMIN_BASE UMASK
-    # prints "/home/git/.gitolite<tab>0077" or similar
+Single values:
+    gitolite query-rc GL_ADMIN_BASE     # prints "/home/git/.gitolite" or similar
+    gitolite query-rc UMASK             # prints "63" (that's 0077 in decimal!)
 
+Hashes:
+    gitolite query-rc COMMANDS
+        # prints "desc", "help", "info", "perms", "writable", one per line
+    gitolite query-rc COMMANDS help     # prints 1
+    gitolite query-rc -q COMMANDS help  # prints nothing; exit code is 0
+    gitolite query-rc COMMANDS fork     # prints nothing; exit code is 1
+
+Arrays (somewhat less useful):
+    gitolite query-rc POST_GIT          # prints nothing; exit code is 0
+    gitolite query-rc POST_COMPILE      # prints 4 lines
+    gitolite query-rc POST_COMPILE 0    # prints the first of those 4 lines
+
+Explore:
     gitolite query-rc -a
-    # prints all known variables and values, one per line
-
-Note: '-q' is best used with only one variable.
+    # prints all first level variables and values, one per line.  Any that are
+    # listed as HASH or ARRAY can be explored further in subsequent commands.
 =cut
 
 sub args {
