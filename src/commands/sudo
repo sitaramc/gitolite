@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Usage:    ssh git@host sudo <user> <command> <arguments>
+#
+# Let super-user run commands as any other user.  "Super-user" is defined as
+# "have write access to the gitolite-admin repo".
+
+die() { echo "$@" >&2; exit 1; }
+usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
+[ -z "$1" ] && usage
+[ "$1" = "-h" ] && usage
+[ -z "$GL_USER" ] && die GL_USER not set
+
+gitolite access -q gitolite-admin $GL_USER W any || die "You are not authorised"
+
+user="$1"; shift
+cmd="$1"; shift
+
+# switch user
+GL_USER="$user"
+
+# figure out if the command is allowed from a remote user
+gitolite query-rc -q COMMANDS $cmd || die "Command '$cmd' not allowed"
+gitolite $cmd "$@"
