@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Demo script: manage local, gitolite-controlled, copies of upstream repos.
+
+# Every time a client fetches such a repo, an upstream fetch happens, then the
+# client fetch is completed.  Optionally, you can be "nice" and impose a
+# minimum delay between 2 fetches.
+
+# See bottom of file for instructions and notes.
+
+# ----------------------------------------------------------------------
+
+repo=$2                     # see doc/triggers.mkd for arguments
+
+url=$(gitolite git-config $repo gitolite-options.upstream.url)
+[ -z "$url" ] && exit 0     # exit if no url was specified
+
+cd $GL_REPO_BASE/$repo.git
+
+nice=$(gitolite git-config $repo gitolite-options.upstream.nice)
+[ -n "$nice" ] && {
+    # exit if lastfetch was less than $nice minutes ago
+    find  .gl.upstream.lastfetch -mmin -$nice | grep . >/dev/null && exit 0
+    touch .gl.upstream.lastfetch
+}
+
+git fetch -q "$url" '+refs/*:refs/*'
+
+# ----------------------------------------------------------------------
+
+# To install, add 'upstream' to the PRE_GIT trigger list in the rc file.
+#
+# Example setup to manage your own copy of the git repository:
+#   repo git
+#       R                       =   @all
+#       RW+ my-company/         =   @developers
+#       option  upstream.url    =   git://git.kernel.org/pub/scm/git/git.git
+#       option  upstream.nice   =   120     # (optional) minimum 2 hours between fetches
+
+# Notes:
+#   1.  we don't use a remote; due to refspec being +refs/*:refs/* we don't need one
+#   2.  please restrict local pushes, if any, to a namespace that the upstream won't use
+#   3.  if the upstream URL changes, change the conf file accordingly and push the admin repo
