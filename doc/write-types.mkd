@@ -17,7 +17,7 @@ rewind, but not *delete* a ref.  The `C` and `D` qualifiers help here.
     <font color="gray">Please do not confuse this with the standalone `C`
     permission that allows someone to [create][] a **repo**</font>
 
-  * When a rule specifies `RWD` or `RW+D`, then *rules that do NOT have the C
+  * When a rule specifies `RWD` or `RW+D`, then *rules that do NOT have the D
     qualifier will no longer permit **deleting** a ref*.
 
 Note: These two can be combined, so you can have `RWCD` and `RW+CD` as well.
