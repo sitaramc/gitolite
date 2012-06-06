@@ -29,7 +29,7 @@ sub update {
     trace( 1, 'update', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV );
 
     my $ret = access( $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref );
-    trigger( 'ACCESS_2', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref, $ret );
+    trigger( 'ACCESS_2', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref, $ret, $oldsha, $newsha );
     _die $ret if $ret =~ /DENIED/;
 
     check_vrefs( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa );
@@ -88,6 +88,7 @@ sub check_vref {
 
     my $ret = access( $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref );
     trace( 2, "access($ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref)", "-> $ret" );
+    trigger( 'ACCESS_2', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, $ref, $ret );
     _die "$ret" . ( $deny_message ? "\n$deny_message" : '' )
       if $ret =~ /DENIED/ and $ret !~ /by fallthru/;
     trace( 2, "remember, fallthru is success here!" ) if $ret =~ /by fallthru/;

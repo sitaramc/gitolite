@@ -118,7 +118,7 @@ exit.
       * Print the refex itself (plus an optional message), so that it matches
         the line which invoked it.
 
-### arguments passed to the vref code
+### #vref-args arguments passed to the vref code
 
   * Arguments **1, 2, 3**: the 'ref', 'oldsha', and 'newsha' that git passed
     to the update hook (see 'man githooks').

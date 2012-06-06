@@ -1,5 +1,7 @@
 # gitolite triggers
 
+[[TOC]]
+
 ## intro and sample rc excerpt
 
 Gitolite fires off external commands at 7 different times.  The [rc][] file
@@ -95,17 +97,33 @@ description of when the trigger runs:
       * user
       * 'R' or 'W'
       * 'any'
-      * result: this is the result of the access() function.  If it contains
-        the uppercase word "DENIED", the access was rejected.  Otherwise
-        result contains the refex that caused the access to succeed.
+      * result (see notes below)
 
-  * `ACCESS_2` runs after the second access check, in the update hook.
-    Extra arguments:
+    'result' is the return value of the access() function.  If it contains the
+    uppercase word "DENIED", the access was rejected.  Otherwise it is the
+    refex that caused the access to succeed.
+
+    *Please note that if access is rejected, gitolite-shell will die as soon
+    as it returns from the trigger*.
+
+  * `ACCESS_2` runs after the second access check, which is invoked by the
+    update hook to check the ref.  Extra arguments:
       * repo
       * user
       * any of W, +, C, D, WM, +M, CM, DM
       * the ref being updated (e.g., 'refs/heads/master')
-      * result (see above)
+      * result
+      * old SHA
+      * new SHA
+
+    `ACCESS_2` also runs on each [VREF][vref] that gets checked.  In this case
+    the "ref" argument will start with "VREF/", and the last two arguments
+    won't be passed.
+
+    'result' is similar to `ACCESS_1`, except that it is the *update hook*
+    which dies as soon as access is rejected for the ref or any of the VREFs.
+    Control then returns to git, and then to gitolite-shell, so the `POST_GIT`
+    trigger *will* run.
 
   * `PRE_GIT` and `POST_GIT` run just before and after the git command.
     Extra arguments:
@@ -130,3 +148,10 @@ description of when the trigger runs:
     file, then all the 'git-config's, gitweb access, and daemon access.
 
     No extra arguments.
+
+## tips
+
+If you have code that latches onto more than one trigger, collecting data
+(such as for logging), then the outputs may be intermixed.  You can record the
+value of the environment variable `GL_TID` to tie together related entries.
+
