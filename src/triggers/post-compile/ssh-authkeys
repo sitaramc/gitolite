@@ -47,7 +47,7 @@ chomp(@non_gl);
 my %seen = map { $_ => 'a non-gitolite key' } ( fp(@non_gl) );
 
 # pubkey files
-chomp( my @pubkeys = `find keydir -type f -name "*.pub" | sort` );
+chomp( my @pubkeys = `find keydir/ -type f -name "*.pub" | sort` );
 my @gl_keys = ();
 for my $f (@pubkeys) {
     my $fp = fp($f);
