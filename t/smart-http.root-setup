@@ -68,13 +68,14 @@ SetEnv GIT_HTTP_EXPORT_ALL
     AuthType Basic
     AuthName "Private Git Access"
     Require valid-user
-    AuthUserFile /tmp/gitolite-http-authuserfile
+    AuthUserFile $GITOLITE_HTTP_HOME/gitolite-http-authuserfile
 </Location>
 EOF1
 
 # NOTE: this is for testing only
-htpasswd -bc /tmp/gitolite-http-authuserfile admin admin
-map "htpasswd -b /tmp/gitolite-http-authuserfile % %" u{1..6}
+htpasswd -bc $GITOLITE_HTTP_HOME/gitolite-http-authuserfile admin admin
+map "htpasswd -b $GITOLITE_HTTP_HOME/gitolite-http-authuserfile % %" u{1..6}
+chown apache.apache $GITOLITE_HTTP_HOME/gitolite-http-authuserfile
 
 # restart httpd to make it pick up all the new stuff
 service httpd restart

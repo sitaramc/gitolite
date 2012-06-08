@@ -34,7 +34,7 @@ try "
 try "
     cd foo;             ok
     ls -Al;             ok;     /\.git/
-    test-commit aa;     ok;     /1 files changed, 1 insertions/
+    test-commit aa;     ok;     /1 file changed, 1 insertion/
     tag start;          ok
     glt push u1 origin master
                         ok;     /new branch.*master.-..master/
