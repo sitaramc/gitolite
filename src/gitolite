@@ -73,9 +73,10 @@ if ( $command eq 'setup' ) {
 } elsif ( $command eq 'trigger' ) {
     trigger(@args);
 
-} elsif ( -x "$rc{GL_BINDIR}/commands/$command" ) {
-    trace( 2, "attempting gitolite command $command" );
-    run_command( $command, @args );
+} elsif ( my $c = _which("commands/$command", 'x' ) ) {
+    trace( 2, "attempting gitolite command $c" );
+    _system( $c, @args );
+    exit 0;
 
 } elsif ( $command eq 'list-phy-repos' ) {
     _chdir( $rc{GL_REPO_BASE} );
@@ -99,11 +100,3 @@ sub args {
 }
 
 # ----------------------------------------------------------------------
-
-sub run_command {
-    my $pgm      = shift;
-    my $fullpath = "$ENV{GL_BINDIR}/commands/$pgm";
-    _die "'$pgm' not found or not executable" if not -x $fullpath;
-    _system( $fullpath, @_ );
-    exit 0;
-}

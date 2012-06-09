@@ -9,6 +9,7 @@ package Gitolite::Rc;
   query_rc
   version
   trigger
+  _which
 
   $REMOTE_COMMAND_PATT
   $REF_OR_FILENAME_PATT
@@ -83,8 +84,10 @@ unshift @{ $rc{ACCESS_1} }, 'Writable::access_1';
 # use an env var that is highly unlikely to appear in real life :)
 do $ENV{G3T_RC} if exists $ENV{G3T_RC} and -r $ENV{G3T_RC};
 
-# fix some env vars, setup gitolite internal "env" vars (aka rc vars)
+# setup some perl/rc/env vars
 # ----------------------------------------------------------------------
+
+unshift @INC, "$rc{GL_BINDIR2}/lib" if $rc{GL_BINDIR2};
 
 $ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}";
 
@@ -215,9 +218,9 @@ sub trigger {
                     Gitolite::Triggers::run( $module, $sub, @args, $rc_section, @_ );
 
                 } else {
-                    $pgm = "$ENV{GL_BINDIR}/triggers/$pgm";
+                    $pgm = _which("triggers/$pgm", 'x');
 
-                    _warn("skipped command '$s'"), next if not -x $pgm;
+                    _warn("skipped command '$s'"), next if not $pgm;
                     trace( 2, "command: $s" );
                     _system( $pgm, @args, $rc_section, @_ );    # they better all return with 0 exit codes!
                 }
@@ -226,6 +229,23 @@ sub trigger {
         return;
     }
     trace( 2, "'$rc_section' not found in rc" );
+}
+
+sub _which {
+    # looks for a file in GL_BINDIR2 or GL_BINDIR.  Returns whichever exists
+    # (GL_BINDIR2 preferred if defined) or 0 if not found.
+    my $file = shift;
+    my $mode = shift;   # could be 'x' or 'r'
+
+    my @files = ("$rc{GL_BINDIR}/$file");
+    unshift @files, ("$rc{GL_BINDIR2}/$file") if $rc{GL_BINDIR2};
+
+    for my $f ( @files ) {
+        return $f if -x $f;
+        return $f if -r $f and $mode eq 'r';
+    }
+
+    return 0;
 }
 
 # ----------------------------------------------------------------------

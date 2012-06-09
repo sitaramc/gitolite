@@ -61,8 +61,8 @@ sub check_vrefs {
             }
         } else {
             my ( $dummy, $pgm, @args ) = split '/', $vref;
-            $pgm = "$ENV{GL_BINDIR}/VREF/$pgm";
-            -x $pgm or _die "'$vref': helper program missing or unexecutable";
+            $pgm = _which("VREF/$pgm", 'x');
+            $pgm or _die "'$vref': helper program missing or unexecutable";
 
             open( my $fh, "-|", $pgm, @_, $vref, @args ) or _die "'$vref': can't spawn helper program: $!";
             while (<$fh>) {
