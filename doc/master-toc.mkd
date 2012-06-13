@@ -21,7 +21,8 @@
 ## [WARNINGS][]
 
 
-## [trying][] out gitolite
+## [testing][] gitolite
+  * [trying][] out gitolite
 
 
 ## [quick][qi] install, setup, and clone
@@ -93,6 +94,7 @@
 
 ## [special][] features/setups
 
+  * putting 'repositories' and '.gitolite' [somewhere else][elsewhere]
   * [disabling pushes][writable] to take backups
   * [personal][pers] branches
   * ([link][votes]: voting on commits)
@@ -119,14 +121,15 @@
 
 ## [customisation][cust]
 
+  * where do you put custom code?
   * types of non-core programs
-      * ([link][non-core]: non-core programs shipped with gitolite)
-  * [commands][]
-  * [hooks][]
-  * syntactic [sugar][]
-  * ([link][triggers]: triggers)
-  * ([link][vref]: VREFs)
-  * [developer notes][dev-notes]
+      * [commands][]
+      * [hooks][]
+      * syntactic [sugar][]
+      * ([link][triggers]: triggers)
+      * ([link][vref]: VREFs)
+  * ([link][non-core]: non-core programs shipped with gitolite)
+  * [developer notes][dev-notes] -- writing custom code
       * environment variables and other inputs
       * APIs
           * the shell API

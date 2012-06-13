@@ -94,7 +94,7 @@ On **each** server:
 
   * Run ssh-keygen if needed and get an ssh key pair for the server.  Copy the
     public key to a common area and name it after the host, but with 'server-'
-    prefixed.  So the pubkey for server 'mars' would be stored as
+    prefixed.  For example, the pubkey for server 'mars' must be stored as
     'server-mars.pub'.
 
   * Copy all keys to all the admin repo clones on your workstation and and add

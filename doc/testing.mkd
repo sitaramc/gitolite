@@ -9,8 +9,10 @@ so be sure to use a throwaway userid**.</font>
     cd gitolite
     prove
 
-(Make sure sshd allows incoming ssh to this userid at least from localhost.
-Out of scope for this document: sshd config, 'AllowUsers', etc...)
+Make sure:
+
+  * `$HOME/bin` is in `$PATH`
+  * sshd allows incoming ssh to this userid, at least from localhost
 
 Gitolite's test suite is mostly written using [tsh][] -- the "testing shell".
 Take a look at some of the scripts and you will see what it looks like.  It
