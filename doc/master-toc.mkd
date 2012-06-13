@@ -101,7 +101,7 @@
       * the [subconf][] command
   * ([link][partial-copy]: faking selective READ control)
   * using pubkeys obtained [from elsewhere][keysonly]
-  * [updating hooks][pushhook] via the admin repo
+  * ([link][pushcode]: updating code via the admin repo)
 
 ## interfacing with [external][] tools
 

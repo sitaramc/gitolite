@@ -87,7 +87,7 @@ do $ENV{G3T_RC} if exists $ENV{G3T_RC} and -r $ENV{G3T_RC};
 # setup some perl/rc/env vars
 # ----------------------------------------------------------------------
 
-unshift @INC, "$rc{GL_BINDIR2}/lib" if $rc{GL_BINDIR2};
+unshift @INC, "$rc{LOCAL_CODE}/lib" if $rc{LOCAL_CODE};
 
 $ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}";
 
@@ -232,13 +232,13 @@ sub trigger {
 }
 
 sub _which {
-    # looks for a file in GL_BINDIR2 or GL_BINDIR.  Returns whichever exists
-    # (GL_BINDIR2 preferred if defined) or 0 if not found.
+    # looks for a file in LOCAL_CODE or GL_BINDIR.  Returns whichever exists
+    # (LOCAL_CODE preferred if defined) or 0 if not found.
     my $file = shift;
     my $mode = shift;   # could be 'x' or 'r'
 
     my @files = ("$rc{GL_BINDIR}/$file");
-    unshift @files, ("$rc{GL_BINDIR2}/$file") if $rc{GL_BINDIR2};
+    unshift @files, ("$rc{LOCAL_CODE}/$file") if $rc{LOCAL_CODE};
 
     for my $f ( @files ) {
         return $f if -x $f;

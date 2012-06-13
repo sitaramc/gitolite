@@ -98,24 +98,7 @@ information.
 
         DEFAULT_ROLE_PERMS  =>  "READERS \@all\nWRITERS \@senior_devs",
 
-  * `GL_BINDIR2`, string
+  * `LOCAL_CODE`, string
 
-    This is useful when you install gitolite system-wide, but want to add or
-    override commands, VREFs, triggers, etc., by putting them somewhere in the
-    hosting user's home directory (i.e., without requiring root privileges).
-
-    Add a new variable `GL_BINDIR2` to the the rc file.  Example:
-
-        GL_BINDIR2 => "$ENV{HOME}/gitolite/src2",
-
-    In that directory, create as much of the following directory structure as
-    you need to add your programs:
-
-        .
-        |-- commands
-        |-- lib
-        |   `-- Gitolite
-        |       `-- Triggers
-        |-- syntactic-sugar
-        |-- triggers
-        `-- VREF
+    This is described in more detail [here][localcode].  Please be aware
+    **this must be a FULL path**, not a relative path.

@@ -7,8 +7,9 @@
 Gitolite has a huge bunch of existing features that gradually need to moved
 over.  Plus you may want to write your own programs to interact with it.
 
-Here are some random notes on developing hooks, commands, triggers, and sugar
-scripts.
+**This document is about *writing* hooks, commands, triggers, VREFS, and sugar
+scripts.  *Installing* them, including "where and how", is described
+[here][localcode]**.
 
 ## environment variables and other inputs
 
@@ -56,14 +57,19 @@ serve as documentation.
 
 ## writing your own...
 
+### ...commands
+
+Commands are standalone programs, in any language you like.  They simply
+receive the arguments you append.  In addition, the env var `GL_USER` is
+available if it is being run remotely.  src/commands/desc is the best example
+at present.
+
 ### ...hooks
 
 #### anything but the update hook
 
-If you want to add your own hook, it's easy as long as it's not the 'update'
-hook.  Just add it to `$HOME/.gitolite/hooks/common` and run `gitolite setup`.
-
-The rest is between you and 'man githooks' :-)
+If you want to add any hook other than the update hook, 'man githooks' is all
+you need.
 
 #### update hook
 
@@ -71,7 +77,8 @@ If you want to add additional `update` hook functionality, do this:
 
   * Write and test your update hook separately from gitolite.
 
-  * Now add the code to src/VREF.  Let's say it is called "foo".
+  * Now add the code as a VREF (see [here][localcode] for details).  Let's say
+    you called it "foo".
 
   * To call your new update hook to all accesses for all repos, add this to
     the end of your conf file:
@@ -79,23 +86,12 @@ If you want to add additional `update` hook functionality, do this:
         repo @all
             -       VREF/foo        =   @all
 
-As you probably guessed, you can now make your additional update hooks more
+As you probably guessed, you can make your additional update hooks more
 selective, applying them only to some repos / users / combinations.
 
 Note: a normal update hook expects 3 arguments (ref, old SHA, new SHA).  A
 VREF will get those three, followed by at least 4 more.  Your VREF should just
 ignore the extra args.
-
-### ...commands
-
-You can add your own commands.  You can run them on the server (example,
-`gitolite access`).  Then you can enable certain commands to be allowed to run
-by a remote user by adding them to the "COMMANDS" hash of the [rc][] file.
-
-Commands are standalone programs, in any language you like.  They simply
-receive the arguments you append.  In addition, the env var `GL_USER` is
-available if it is being run remotely.  src/commands/desc is the best example
-at present.
 
 ### ...trigger programs
 
