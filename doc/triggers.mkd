@@ -138,6 +138,10 @@ description of when the trigger runs:
     repo is created by user action.  Extra arguments:
       * repo
       * user
+      * invoking operation
+          * 'R' for fetch/clone/ls-remote, 'W' for push
+          * can also be anything set by the external command running the
+            trigger (e.g., see the perms and fork commands).
 
     They are also run when a *normal* repo is created (say by adding a "repo
     foo" line to the conf file).  This case has only one extra argument:

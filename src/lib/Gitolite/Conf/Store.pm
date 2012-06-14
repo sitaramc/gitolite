@@ -184,14 +184,14 @@ sub new_repo {
 }
 
 sub new_wild_repo {
-    my ( $repo, $user ) = @_;
+    my ( $repo, $user, $aa ) = @_;
     _chdir( $rc{GL_REPO_BASE} );
 
-    trigger( 'PRE_CREATE', $repo, $user );
+    trigger( 'PRE_CREATE', $repo, $user, $aa );
     new_repo($repo);
     _print( "$repo.git/gl-creator", $user );
     _print( "$repo.git/gl-perms", "$rc{DEFAULT_ROLE_PERMS}\n" ) if $rc{DEFAULT_ROLE_PERMS};
-    trigger( 'POST_CREATE', $repo, $user );
+    trigger( 'POST_CREATE', $repo, $user, $aa );
 
     _chdir( $rc{GL_ADMIN_BASE} );
 }

@@ -107,8 +107,8 @@ sub main {
     if ( repo_missing($repo) and access( $repo, $user, '^C', 'any' ) !~ /DENIED/ ) {
         require Gitolite::Conf::Store;
         Gitolite::Conf::Store->import;
-        new_wild_repo( $repo, $user );
-        gl_log( 'create', $repo, $user );
+        new_wild_repo( $repo, $user, $aa );
+        gl_log( 'create', $repo, $user, $aa );
     }
 
     # a ref of 'any' signifies that this is a pre-git check, where we don't

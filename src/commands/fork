@@ -59,4 +59,4 @@ ln -sf `gitolite query-rc GL_ADMIN_BASE`/hooks/common/* hooks
 echo "$from" > gl-forked-from
 
 # trigger post_create
-gitolite trigger POST_CREATE $to $GL_USER
+gitolite trigger POST_CREATE $to $GL_USER fork

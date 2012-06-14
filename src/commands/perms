@@ -55,14 +55,14 @@ if ( $ARGV[0] eq '-c' ) {
 
         require Gitolite::Conf::Store;
         Gitolite::Conf::Store->import;
-        new_wild_repo( $repo, $ENV{GL_USER} );
-        gl_log( 'create', $repo, $ENV{GL_USER} );
+        new_wild_repo( $repo, $ENV{GL_USER}, 'perms-c' );
+        gl_log( 'create', $repo, $ENV{GL_USER}, 'perms-c' );
     }
 }
 
 my $repo = shift;
 setperms(@ARGV);
-_system( "gitolite", "trigger", "POST_CREATE", $repo, $ENV{GL_USER} );
+_system( "gitolite", "trigger", "POST_CREATE", $repo, $ENV{GL_USER}, 'perms' );
 
 # ----------------------------------------------------------------------
 
