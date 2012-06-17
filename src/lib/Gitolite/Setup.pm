@@ -104,7 +104,7 @@ sub setup_glrc {
 
 sub setup_gladmin {
     my ( $admin, $pubkey, $argv ) = @_;
-    _die "no existing conf file found, '-pk' or '-a' required"
+    _die "'-pk' or '-a' required; see 'gitolite setup -h' for more"
       if not $admin and not -f "$rc{GL_ADMIN_BASE}/conf/gitolite.conf";
 
     # reminder: 'admin files' are in ~/.gitolite, 'admin repo' is
