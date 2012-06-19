@@ -15,7 +15,10 @@ my ( $mode, $master, %slaves, %trusted_slaves );
 # ----------------------------------------------------------------------
 
 sub input {
-    return unless $ARGV[0] =~ /^server-(\S+)$/;
+    unless ($ARGV[0] =~ /^server-(\S+)$/) {
+        _die "'$ARGV[0]' is not a valid server name" if $ENV{SSH_ORIGINAL_COMMAND} =~ /^USER=(\S+) SOC=(git-receive-pack '(\S+)')$/;
+        return;
+    }
 
     # note: we treat %rc as our own internal "poor man's %ENV"
     $rc{FROM_SERVER} = $1;
