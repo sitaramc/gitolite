@@ -20,20 +20,22 @@ usage() if @ARGV;
 my $user = $ENV{GL_USER} || '';
 print "hello" . ( $user ? " $user" : "" ) . ", this is gitolite3 " . version() . " on git " . substr( `git --version`, 12 ) . "\n";
 
-_chdir("$ENV{GL_BINDIR}/commands");
-
 print "list of " . ( $user ? "remote" : "gitolite" ) . " commands available:\n\n";
 
-for my $c (`find . -type f|sort`) {
-    chomp($c);
-    $c =~ s(^./)();
-    next unless -x $c;
-
-    # if it's from a remote client, show only what he is allowed
-    next if $user and not $rc{COMMANDS}{$c};
-
-    print "\t$c\n";
+my %list = (list_x( $ENV{GL_BINDIR}), list_x($rc{LOCAL_CODE} || ''));
+for (sort keys %list) {
+    print "\t$list{$_}" if $ENV{D};
+    print "\t$_\n" if not $user or $rc{COMMANDS}{$_};
 }
+
 print "\n";
 
 exit 0;
+
+# ------------------------------------------------------------------------------
+sub list_x {
+    my $d = shift;
+    return unless $d;
+    _chdir "$d/commands";
+    return map { $_ => $d } grep { -x $_ } map { chomp; s(^./)(); $_ } `find . -type f|sort`;
+}
