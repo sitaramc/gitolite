@@ -321,6 +321,13 @@ This is a quick checklist:
   * Some OSs/distributions require that the "git" user should have a password
     and/or not be a locked account.  You may want to check that as well.
 
+  * If your server is running SELinux, and you install gitolite to
+    `/var/gitolite` or another location unsupported by default SELinux
+    policies, then SELinux will prevent sshd from reading
+    `.ssh/authorized_keys`. Consider installing gitolite to
+    `/var/lib/gitolite`, which is a supported location by default SELinux
+    policies.
+
   * If all that fails, log onto the server as root, `cd /var/log`, and look
     for a file called `auth.log` or `secure` or some such name.  Look inside
     this file for messages matching the approximate time of your last attempt
