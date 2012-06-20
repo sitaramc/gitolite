@@ -212,6 +212,7 @@ sub http_simulate_ssh_connection {
         my ($verb) = ( $ENV{PATH_INFO} =~ m(^/(\S+)) );
         my $args = $ENV{QUERY_STRING};
         $args =~ s/\+/ /g;
+        $args =~ s/%([0-9A-Fa-f]{2})/chr(hex($1))/eg;
         $ENV{SSH_ORIGINAL_COMMAND} = $verb;
         $ENV{SSH_ORIGINAL_COMMAND} .= " $args" if $args;
         http_print_headers();    # in preparation for the eventual output!
