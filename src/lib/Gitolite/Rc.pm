@@ -61,7 +61,9 @@ $UNSAFE_PATT          = qr([`~#\$\&()|;<>]);
 my $current_data_version = "3.0";
 
 my $rc = glrc('filename');
-do $rc if -r $rc;
+if (-r $rc) {
+    do $rc or die $@;
+}
 if ( defined($GL_ADMINDIR) ) {
     say2 "";
     say2 "FATAL: '$rc' seems to be for older gitolite; please see doc/g2migr.mkd\n" . "(online at http://sitaramc.github.com/gitolite/g2migr.html)";
