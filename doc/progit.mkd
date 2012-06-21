@@ -1,8 +1,6 @@
-# (master copy of progit chapter on gitolite)
+# (expanded version of the gitolite chapter in the progit book)
 
 ## Gitolite ##
-
-Note: the latest copy of this section of the ProGit book is always available within the [gitolite documentation][progit].  The author would also like to humbly state that, while this section is accurate, and *can* (and often *has*) been used to install gitolite without reading any other documentation, it is of necessity not complete, and cannot completely replace the enormous amount of documentation that gitolite comes with.
 
 [Update 2012-04-10]: This page has been completely rewritten for gitolite version 3, informally called "g3".  G3 is a *total* rewrite of gitolite to push a lot more features away from "core", give the core a bunch of extension mechanisms, and finally have much better shell and perl APIs to bring all this together.
 

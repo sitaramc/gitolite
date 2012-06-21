@@ -1,0 +1,104 @@
+## idiot-proof setup for gitolite
+
+WARNING 1: this document uses my new, Linus-inspired, motto: people who get
+offended, *should* be offended.
+
+WARNING 2: contains more words in ALL CAPS than all my other documents put
+together.
+
+WARNING 3: this document will work for any Linux on which git has already been
+installed.  BSDs, or legacy systems like Solaris, also should work but I can't
+guarantee it or test it.
+
+----
+
+Some people seem to get terribly, **terribly** confused by ssh.  If you've
+read through all the [documentation on ssh][ssh] that came with gitolite, yet
+you *still* cannot get things to work, you have two choices:
+
+1.  exchange your "developer" badge for a "manager" badge and then hire
+    someone to do this.
+
+2.  start over with the instructions below.  They include some DRASTIC
+    measures, requirements, and restrictions, almost NONE of which are
+    normally necessary, but it's either that or a suit and tie from tomorrow
+    so play along.
+
+**IMPORTANT**: Do NOT ask for help on these instructions unless you have kept
+a detailed log of every command you typed, and the complete response you got.
+I do not ask for this information to help you -- that's only a front.  I
+*know* these instructions work (at least on any Linux that already has git
+installed), so the real reason is to find where you mistyped something and
+mock you for that,
+
+### Assumptions
+
+  * your name is Ron.  Substitute accordingly in the instructions below.
+
+  * you have a workstation.
+
+  * you have a server called `server`.
+
+  * you have root access on this server.
+
+### Tasks
+
+1.  Create a new userid on the server, say `git`.  This will be the **hosting
+    user**.  ("hosting user" means when you're done installing, your users
+    will use URLs like `git@server:reponame` or `ssh://git@server/reponame`).
+
+    **Make sure this is a NEW userid**.
+
+    If the name you want already exists, then:
+
+      * log in as root
+      * if you have any data on that user's HOME directory save it somewhere
+        else
+      * delete the userid
+      * obliterate the home directory of the user (since on most systems
+        merely deleting the user does not remove the home directory).
+      * re-create the userid again
+
+2.  If you don't already have one, make yourself an ssh keypair **on your
+    workstation**.
+
+    Do NOT, in a fit of inspiration and energy, add this public key to the
+    authorised keys file on the newly created hosting user!
+
+    Your ONLY access to the new (`git`) userid should be by logging onto the
+    server as root, then running `su - git`.
+
+3.  Now copy the pubkey from your workstation (`~/.ssh/id_rsa.pub`) to the
+    server as `/tmp/ron.pub`.  (Your name is Ron, remember?)
+
+4.  Log on to the server as root.
+
+5.  Switch to the `git` user:
+
+        su - git
+
+6.  Clone the gitolite source code
+
+        git clone git://github.com/sitaramc/gitolite
+
+7.  Install it
+
+        cd $HOME
+        mkdir -p bin
+        gitolite/install -to $HOME/bin
+
+8.  Set it up
+
+        cd $HOME
+        $HOME/bin/gitolite setup -pk /tmp/ron.pub
+
+9.  Now go to your workstation and type in
+
+        git ls-remote git@server:gitolite-admin
+
+    This should return something like
+
+        9dd8aab60bac5e54ccf887a87b4f3d35c96b05e4    HEAD
+        9dd8aab60bac5e54ccf887a87b4f3d35c96b05e4    refs/heads/master
+
+    (do I have to mention that your SHAs will be different?)

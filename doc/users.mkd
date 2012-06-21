@@ -6,10 +6,10 @@ authentication, so here's some info on adding and removing users.
 
 >   ----
 
->   *WARNING: Do NOT add users directly on the server.  Clone the
->   'gitolite-admin' repo to your workstation, make changes to it, then add,
->   commit, and push.  When the push hits the server, the server "acts" upon
->   your changes.*
+>   *WARNING: Do NOT add new repos or users manually on the server.  Gitolite
+>   users, repos, and access rules are maintained by making changes to a
+>   special repo called 'gitolite-admin' and pushing those changes to the
+>   server.*
 
 >   ----
 

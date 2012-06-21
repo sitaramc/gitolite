@@ -15,16 +15,17 @@ remote user running `ssh git@host help`.
 All the commands that ship with gitolite will respond to `-h`; please report a
 bug to me if they don't.
 
-Here's a list of remote commands that are shipped:
+A particularly interesting command is the 'sudo' command, which allows an
+admin to run any remote command as some other user (though not the other way
+round!)
 
-  * 'desc' -- get/set the 'description' file for a repo
-  * 'fork' -- fork a repo
-  * 'info' -- already documented [here][info]
+Here's a list of some commands where additional information is available
+elsewhere:
+
+  * 'info' -- documented [here][info]
   * 'mirror' -- documented [here][sync]
   * 'perms' -- get/set the gl-perms file; see [perms][] for more
   * 'sskm' -- self-service key management, see [sskm][] for more
-  * 'writable' -- disabling pushes to take backups etc
-  * 'D' -- deleting user-created repos
 
 ## syntactic sugar
 
@@ -45,55 +46,30 @@ The following "sugar" programs are available:
 
 ## triggers
 
-Note that some features need to be enabled in more than one trigger.
-Mirroring is probably the best example -- it needs to hook into the `INPUT`,
-`PRE_GIT`, and the `POST_GIT` triggers to work.
+Most triggers need to be enabled by adding or uncommenting an appropriate line
+in the [rc][] file.  There are enough examples in there for the syntax to not
+need explanation.
 
-The `INPUT` triggers are:
+Some features need to be enabled in more than one trigger.  Mirroring is
+probably the best example -- it needs to hook into the `INPUT`, `PRE_GIT`, and
+the `POST_GIT` triggers to work.
 
-  * CpuTime -- see the `POST_GIT` section below
+In general, the source code for each trigger will tell you what it is doing
+and which trigger list you should add it to.  Please note that there are two
+types of [triggers][]; the perl triggers usually have subroutine names that
+reflect what trigger sections they should go into.  (Using mirroring as an
+example again, the Mirroring.pm perl module has sub's named 'input',
+'pre\_git', and 'post\_git').
+
+Please report a bug to me if you could not find the information you wanted on
+any specific trigger.
+
+Here's a list of some triggers where additional information is available
+elsewhere:
+
   * Shell -- see "giving shell access to gitolite users" in [this][sts] page.
-  * Alias -- documentation is within the source file Alias.pm
-  * Mirroring -- see [doc/mirroring.mkd][mirroring]
-
-The `PRE_GIT` triggers are:
-
-  * renice -- this renices the entire job to whatever value you specify.
   * Mirroring -- see [doc/mirroring.mkd][mirroring]
   * partial-copy -- this has its own section later in this page.
-
-The `POST_GIT` triggers are:
-
-  * Mirroring -- see [doc/mirroring.mkd][mirroring]
-  * CpuTime -- this is only a sample because it only prints the CPU times
-    data.  In reality you will want to do something else with it.
-
-The `POST_COMPILE` triggers are:
-
-  * post-compile/ssh-authkeys -- takes the pubkeys in keydir and populates
-    `~/.ssh/authorized_keys`.
-
-  * post-compile/update-git-configs -- updates individual 'repo.git/config'
-    files (using the 'git config ...' command) from settings supplied in the
-    conf file.  All sections except 'gitolite-options' are processed.  (The
-    'gitolite-options' section is considered internal to gitolite).
-
-  * post-compile/update-git-daemon-access-list -- create/delete
-    'git-daemon-export-ok' files in each repo based on whether the conf says
-    'daemon' can read the repo or not.
-
-  * post-compile/update-gitweb-access-list -- populates the file named in
-    `GITWEB_PROJECTS_LIST` in the rc file (default: `$HOME/projects.list`)
-    with the list of repos that gitweb is allowed to access.  This could be
-    more than just "R = gitweb"; any repo that has any config setting with the
-    section name 'gitweb' (like 'gitweb.owner', 'gitweb.description', etc) is
-    considered readable by gitweb, so the final list is a union of these two
-    methods.
-
-The `POST_CREATE` triggers are:
-
-  * The last 3 in the `POST_COMPILE` list also run from `POST_CREATE`, for
-    obvious reasons.
 
 ## VREFs
 

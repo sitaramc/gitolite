@@ -181,7 +181,8 @@ first rule, it might pass back (to gitolite) a virtual ref saying
 ### #NAME restricting pushes by dir/file name
 
 The "NAME" VREF allows you to restrict pushes by the names of dirs and files
-changed.
+changed.  (Side note: the NAME VREF is the only one directly implemented
+within the update hook, so you won't find it in the VREF directory).
 
 Here's an example.  Say you don't want junior developers pushing changes to
 the Makefile, because it's quite complex:

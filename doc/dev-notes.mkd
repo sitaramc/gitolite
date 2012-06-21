@@ -55,6 +55,10 @@ In addition, you can also look at the comments in src/lib/Gitolite/Easy.pm
 ...is implemented by Gitolite::Easy; the comments in src/lib/Gitolite/Easy.pm
 serve as documentation.
 
+Note that some of the perl functions called by Easy.pm will change the current
+directory to something else, without saving and restoring the directory.
+Patches (to Easy.pm *only*) welcome.
+
 ## writing your own...
 
 ### ...commands

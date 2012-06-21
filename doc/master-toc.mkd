@@ -2,7 +2,7 @@
 
 ## [Introduction][index]
 
-  * (for [current][g2] gitolite (v2) users)
+  * (for [older][g2] gitolite (v1 or v2) users)
   * [quick links][ql]
   * [what][] is gitolite
   * [why][] might you need it
