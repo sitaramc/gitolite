@@ -43,12 +43,14 @@ for my $pr (@$lpr) {
 
 sub fixup_config {
     my $pr = shift;
+    my $creator = creator($pr);
 
     my $gc = git_config( $pr, '.', 1 );
     while ( my ( $key, $value ) = each( %{$gc} ) ) {
         next if $key =~ /^gitolite-options\./;
         if ( $value ne "" ) {
             $value =~ s/%GL_REPO/$pr/g;
+            $value =~ s/%GL_CREATOR/$creator/g if $creator;
             system( "git", "config", "--file", "$RB/$pr.git/config", $key, $value );
         } else {
             system( "git", "config", "--file", "$RB/$pr.git/config", "--unset-all", $key );
