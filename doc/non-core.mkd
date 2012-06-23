@@ -127,22 +127,28 @@ Here's how:
 
         repo foo-partialcopy-1
             -   secret-branch               =   @temp-emp
-            # other rules should ensure ONLY @temp-emp has ANY ACCESS
-            # NO other user should have access
+
+            # other rules; see notes below
 
             -   VREF/partial-copy           =   @all
             config gitolite.partialCopyOf   =   foo
 
-    **IMPORTANT**: if you're using other VREFs, please make sure this one is
-    placed at the end, after all the others.
+    **IMPORTANT NOTES**:
+
+      * if you're using other VREFs, **make sure** this one is placed at the
+        end, after all the others.
+
+      * remember that any change allowed to be made to the partial-copy repo
+        will propagate to the main repo so make sure you use other rules to
+        restrict pushes to other branches and tags as needed.
 
 And that should be it.  **Please test it and let me know if it doesn't work!**
 
 WARNINGS:
 
   * If you change the config to disallow something that used to be allowed,
-    you should delete the partial repo on the server and then run 'gitolite
-    compile' to let it build again.  See t/partial-copy.t for details.
+    you should delete the partial repo on the server and then run `gitolite
+    compile; gitolite trigger POST_COMPILE` to let it build again.
 
   * Not tested with smart http; probably won't work.
 

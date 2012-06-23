@@ -23,6 +23,15 @@ main=`git config --file $GL_REPO_BASE/$repo.git/config --get gitolite.partialCop
 rand=$$
 export GL_BYPASS_ACCESS_CHECKS=1
 
+if [ "$new" = "0000000000000000000000000000000000000000" ]
+then
+    # special case for deleting a ref (this is why it is important to put this
+    # VREF as the last one; if we got this far he is allowed to delete it)
+    git push -f $GL_REPO_BASE/$main.git :$ref || die "FATAL: failed to delete $ref"
+
+    exit 0
+fi
+
 git push -f $GL_REPO_BASE/$main.git $new:refs/partial/br-$rand || die "FATAL: failed to send $new"
 
 cd $GL_REPO_BASE/$main.git
