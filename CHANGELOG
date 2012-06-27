@@ -1,3 +1,25 @@
+2012-06-27  v3.04   documentation graduated and moved out of parents house :)
+
+                    new trigger for 'repo specific umask'
+
+                    new 'list-dangling-repos' command
+
+                    new LOCAL_CODE rc var; allow admin specified programs to
+                    override system-installed ones
+
+                    new 'upstream' trigger-cum-command to maintain local
+                    copies of external repos
+
+                    new 'sudo' command
+
+                    minor backward compat breakage in 'gitolite query-rc'
+
+                    'perms' command can now create repo if needed
+
+                    migrated 'symbolic-ref' command
+
+                    'gitolite setup --hooks-only'
+
 2012-05-23  v3.03   fix major bug that allowed an admin to get a shell
 
 2012-05-20  v3.02   packaging instructions fixed up and smoke tested
