@@ -1,0 +1,73 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+my $rule = $ARGV[7];
+my $res = $ENV{"GL_REFEX_EXPR_" . $rule} || 0;
+print "$ARGV[6] ($res)\n" if $res;
+
+exit 0;
+
+__END__
+
+Documentation for the refex-expression evaluation feature
+
+First, make sure you have both the VREF and the trigger scripts
+(src/VREF/refex-expr and src/lib/Gitolite/Triggers/RefexExpr.pm)
+
+Next, add this to the ACCESS_2 list in the rc file:
+
+    'RefexExpr::access_2',
+
+For the rest, we'll use this example:
+
+  * user u1 can push foo to some other branch, and anything else to the master
+    branch, but not foo to the master branch
+
+  * user u2 is allowed to push either 'doc/' or 'src/' but not both
+
+Here's the conf file extract:
+
+    repo    testing
+        RW+     master              =   u1          # line 1
+        RW+                         =   @all        # line 2
+
+        RW+     VREF/NAME/foo       =   u1
+        RW+     VREF/NAME/doc/      =   u2
+        RW+     VREF/NAME/src/      =   u2
+
+        # set up 2 refex expressions, named e1, e2
+        option  refex-expr.e1       =   master and VREF/NAME/foo
+        option  refex-expr.e2       =   VREF/NAME/doc/ and VREF/NAME/src/
+
+        # now deny users if the corresponding expression is true
+        -       VREF/refex-expr/e1  =   u1
+        -       VREF/refex-expr/e2  =   u2
+
+Here are some IMPORTANT notes:
+
+  * You MUST place VREF/refex-expr rules at the end.  (Only 'partial-copy', if
+    you use it, must come later).
+
+  * You MUST explicitly permit the refexes used in your refex expressions.  If
+    you have more generic rules, the specific ones must come first.
+
+    For example, without line 1, the refex recorded for user u1 will come from
+    line 2, (so it will be 'refs/.*'), and 'master' in the refex expressions
+    will never have a true value.
+
+  * (corollary) make sure you use the exact same refex in the expression as
+    you did on the original rule line.  E.g., a missing slash at the end will
+    mess things up.
+
+  * You can use any logical expression using refexes as operands and using
+    these operators:
+
+        and not xor or
+
+    Parens are not allowed.
+
+    If a refex has passed, it will have a 'true' value, else it will be false.
+
+    The result of the evaluation, after these substitutions, will be the
+    result of the refex-expr VREF.
