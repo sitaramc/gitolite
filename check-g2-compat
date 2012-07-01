@@ -38,8 +38,9 @@ sub intro {
     msg( ''   => "or that might end up giving *more* access to someone if migrated as-is." );
     msg( ''   => "It does NOT attempt to catch all the differences described in the docs." );
     msg( '', '' );
-    msg( INFO => "'see docs' usually means doc/g2migr.mkd" );
-    msg( '',  => "(online at http://sitaramc.github.com/gitolite/g2migr.html)" );
+    msg( INFO => "'see docs' usually means the pre-migration checklist in" );
+    msg( '',  => "'g2migr.html'; to get there, start from the main migration" );
+    msg( '',  => "page at http://sitaramc.github.com/gitolite/install.html#migr" );
     msg( '', '' );
 }
 

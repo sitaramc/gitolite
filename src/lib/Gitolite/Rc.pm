@@ -326,6 +326,8 @@ __DATA__
     # word, not a full domain name.  See documentation if in doubt
     # HOSTNAME                  =>  'darkstar',
     UMASK                       =>  0077,
+
+    # look in the "GIT-CONFIG" section in the README for what to do
     GIT_CONFIG_KEYS             =>  '',
 
     # comment out if you don't need all the extra detail in the logfile
