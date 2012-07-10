@@ -91,7 +91,7 @@ do $ENV{G3T_RC} if exists $ENV{G3T_RC} and -r $ENV{G3T_RC};
 
 unshift @INC, "$rc{LOCAL_CODE}/lib" if $rc{LOCAL_CODE};
 
-$ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}";
+$ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}" unless $ENV{PATH} =~ /^$ENV{GL_BINDIR}:/;
 
 {
     $rc{GL_TID} = $ENV{GL_TID} ||= $$;
