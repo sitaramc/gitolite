@@ -20,20 +20,20 @@ here, please check the gitolite online documentation at:
 
 This file contains the following sections:
 
-    INSTALLATION AND SETUP
-    ADDING USERS AND REPOS
-    HELP FOR YOUR USERS
-    BASIC SYNTAX
-    ACCESS RULES
-    GROUPS
-    COMMANDS
-    THE 'rc' FILE
-    GIT-CONFIG
-    GIT-DAEMON
-    GITWEB
+* [INSTALLATION AND SETUP](#installation-and-setup)
+* [ADDING USERS AND REPOS](#adding-users-and-repos)
+* [HELP FOR YOUR USERS](#help-for-your-users)
+* [BASIC SYNTAX](#basic-syntax)
+* [ACCESS RULES](#access-rules)
+* [GROUPS](#groups)
+* [COMMANDS](#commands)
+* [THE 'rc' FILE](#the-rc-file)
+* [GIT-CONFIG](#git-config)
+* [GIT-DAEMON](#git-daemon)
+* [GITWEB](#gitweb)
 
-    CONTACT
-    LICENSE
+* [CONTACT](#contact)
+* [LICENSE](#license)
 
 ------------------------------------------------------------------------
 
