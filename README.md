@@ -279,27 +279,26 @@ having to log on to the server and run 'git config' commands:
 
 **WARNING**
 
-    The last syntax shown above is the *only* way to *delete* a config
-    variable once you have added it.  Merely removing it from the conf
-    file will *not* delete it from the repo.git/config file.
+> The last syntax shown above is the *only* way to *delete* a config
+> variable once you have added it.  Merely removing it from the conf
+> file will *not* delete it from the repo.git/config file.
 
 **SECURITY NOTE**
 
-    Some git-config keys allow arbitrary code to be run on the server.
-
-    If all of your gitolite admins already have shell access to the server
-    account hosting it, you can edit the rc file (~/.gitolite.rc) on the
-    server, and change the GIT_CONFIG_KEYS line to look like this:
-
-        GIT_CONFIG_KEYS     =>  '.*',
-
-    Otherwise, give it a space-separated list of regular expressions that
-    define what git-config keys are allowed.  For example, this one allows
-    only variables whose names start with 'gitweb' or with 'gc' to be
-    defined:
-
-        GIT_CONFIG_KEYS     =>  'gitweb\..* gc\..*',
-
+> Some git-config keys allow arbitrary code to be run on the server.
+> 
+> If all of your gitolite admins already have shell access to the server
+> account hosting it, you can edit the rc file (~/.gitolite.rc) on the
+> server, and change the GIT_CONFIG_KEYS line to look like this:
+> 
+>     GIT_CONFIG_KEYS     =>  '.*',
+> 
+> Otherwise, give it a space-separated list of regular expressions that
+> define what git-config keys are allowed.  For example, this one allows
+> only variables whose names start with 'gitweb' or with 'gc' to be
+> defined:
+> 
+>     GIT_CONFIG_KEYS     =>  'gitweb\..* gc\..*',
 
 GIT-DAEMON
 ----------
@@ -329,10 +328,10 @@ Or you can set one or more of the following config variables instead:
 
 **NOTE**
 
-    You will probably need to change the UMASK in the rc file from the
-    default (0077) to 0027 and add whatever user your gitweb is running as
-    to the 'git' group.  After that, you need to run a one-time 'chmod -R'
-    on the already created files and directories.
+> You will probably need to change the UMASK in the rc file from the
+> default (0077) to 0027 and add whatever user your gitweb is running as
+> to the 'git' group.  After that, you need to run a one-time 'chmod -R'
+> on the already created files and directories.
 
 
 ------------------------------------------------------------------------
