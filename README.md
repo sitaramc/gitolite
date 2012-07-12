@@ -1,4 +1,6 @@
-Github-users: click the 'wiki' link before sending me anything via github.
+Github-users: Read
+[the wiki](https://github.com/sitaramc/gitolite/wiki) before sending
+me anything via github.
 
 Existing users: this is gitolite v3.x.  If you are upgrading from v2.x this
 file will not suffice; you *must* check the online docs (see below for URL).
