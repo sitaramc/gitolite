@@ -184,7 +184,7 @@ ACCESS RULES
 
       * a permission of RW matches only a fast-forward push or create
       * a permission of RW+ matches any type of push
-      * a permission or '-' matches any type of push
+      * a permission of '-' matches any type of push
 
     Note 2: refex matching:
     (refex = optional regex to match the ref being pushed)
