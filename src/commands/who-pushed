@@ -1,0 +1,57 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Easy;
+
+=for usage
+Usage:    ssh git@host who-pushed <repo> <SHA>
+
+Determine who pushed the given commit.  The first few hex digits of the SHA
+should suffice.
+
+Each line of the output contains the following fields: timestamp, a
+transaction ID, username, refname, and the old and new SHAs for the ref.
+
+We assume the logfile names have been left as default, or if changed, in such
+a way that they come up oldest first when sorted.
+
+The program searches ALL the log files, in reverse sorted order (i.e., newest
+first).  This means it could take a long time if your log directory is large
+and contains lots of old log files.  Patches to limit the search to an
+optional date range are welcome.
+
+Note on the "transaction ID" field: if looking at the log file doesn't help
+you figure out what its purpose is, please just ignore it.
+=cut
+
+usage() if not @ARGV or @ARGV < 2 or $ARGV[0] eq '-h';
+usage() if $ARGV[1] !~ /^[0-9a-f]+$/i;
+
+my $repo = shift;
+my $sha = shift; $sha =~ tr/A-F/a-f/;
+
+$ENV{GL_USER} and ( can_read($repo) or die "no read permissions on '$repo'" );
+
+# ----------------------------------------------------------------------
+
+my $repodir = "$ENV{GL_REPO_BASE}/$repo.git";
+chdir $repodir or die "repo '$repo' missing";
+(my $logdir = $ENV{GL_LOGFILE}) =~ s(/[^/]+$)();
+
+for my $logfile ( reverse glob("$logdir/*") ) {
+    @ARGV = ($logfile);
+    for my $line ( reverse grep { m(\tupdate\t($repo|$repodir)\t) } <> ) {
+        chomp($line);
+        my @fields = split /\t/, $line;
+        my ($ts, $pid, $who, $ref, $d_old, $new) = @fields[ 0, 1, 4, 6, 7, 8];
+
+        # d_old is what you display
+        my $old = $d_old;
+        $old = "" if $d_old eq ("0" x 40);
+        $old = "$old.." if $old;
+
+        system("git rev-list $old$new 2>/dev/null | grep ^$sha >/dev/null && echo '$ts $pid $who $ref $d_old $new'");
+    }
+}
