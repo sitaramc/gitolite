@@ -1,0 +1,149 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Easy;
+
+=for admins
+
+BUNDLE SUPPORT
+
+    (1) For each repo in gitolite.conf for which you want bundle support (or
+        '@all', if you wish), add the following line:
+
+            option bundle       =   1
+
+        Or you can say:
+
+            option bundle.ttl   =   <number>
+
+        A bundle file that is more than <number> seconds old (default value
+        86400, i.e., 1 day) is recreated on the next bundle request.  Increase
+        this if your repo is not terribly active.
+
+        Note: a bundle file is also deleted and recreated if it contains a ref
+        that was then either deleted or rewound in the repo.  This is checked
+        on every invocation.
+
+    (2) Add 'rsync' to the COMMANDS list in the rc file
+
+
+GENERIC RSYNC SUPPORT
+
+    TBD
+
+=cut
+
+=for usage
+rsync helper for gitolite
+
+BUNDLE SUPPORT
+
+    Admins: see src/commands/rsync for setup instructions
+
+    Users:
+        rsync -P git@host:repo.bundle .
+            # downloads a file called "<basename of repo>.bundle"; repeat as
+            # needed till the whole thing is downloaded
+        git clone repo.bundle repo
+        cd repo
+        git remote set-url origin git@host:repo
+        git fetch origin    # and maybe git pull, etc. to freshen the clone
+
+GENERIC RSYNC SUPPORT
+
+    TBD
+
+=cut
+
+usage() if not @ARGV or $ARGV[0] eq '-h';
+
+# rsync driver program.  Several things can be done later, but for now it
+# drives just the 'bundle' transfer.
+
+if ( $ENV{SSH_ORIGINAL_COMMAND} =~ /^rsync --server --sender (-[-\w=.]+ )+\. (\S+)\.bundle$/ ) {
+
+    my $repo = $2;
+    $repo =~ s/\.git$//;
+
+    # all errors have the same message to avoid leaking info
+    can_read($repo) or _die "you are not authorised";
+    my %config = config( $repo, "gitolite-options.bundle" ) or _die "you are not authorised";
+
+    my $ttl = $config{'gitolite-options.bundle.ttl'} || 86400;    # in seconds (default 1 day)
+
+    my $bundle = bundle_create( $repo, $ttl );
+
+    $ENV{SSH_ORIGINAL_COMMAND} =~ s( \S+\.bundle)( $bundle);
+    trace( 1, "rsync bundle", $ENV{SSH_ORIGINAL_COMMAND} );
+    Gitolite::Common::_system( split ' ', $ENV{SSH_ORIGINAL_COMMAND} );
+    exit 0;
+}
+
+_warn "invalid rsync command '$ENV{SSH_ORIGINAL_COMMAND}'";
+usage();
+
+# ----------------------------------------------------------------------
+# helpers
+# ----------------------------------------------------------------------
+
+sub bundle_create {
+    my ( $repo, $ttl ) = @_;
+    my $bundle   = "$repo.bundle";
+    $bundle =~ s(.*/)();
+    my $recreate = 0;
+
+    my ( %b, %r );
+    if ( -f $bundle ) {
+        %b = map { chomp; reverse split; } `git ls-remote --heads --tags $bundle`;
+        %r = map { chomp; reverse split; } `git ls-remote --heads --tags .`;
+
+        for my $ref ( sort keys %b ) {
+
+            my $mtime = ( stat $bundle )[9];
+            if ( time() - $mtime > $ttl ) {
+                trace( 1, "bundle too old" );
+                $recreate++;
+                last;
+            }
+
+            if ( not $r{$ref} ) {
+                trace( 1, "ref '$ref' deleted in repo" );
+                $recreate++;
+                last;
+            }
+
+            if ( $r{$ref} eq $b{$ref} ) {
+                # same on both sides; ignore
+                delete $r{$ref};
+                delete $b{$ref};
+                next;
+            }
+
+            `git rev-list --count --left-right $b{$ref}...$r{$ref}` =~ /^(\d+)\s+(\d+)$/ or _die "git too old";
+            if ($1) {
+                trace( 1, "ref '$ref' rewound in repo" );
+                $recreate++;
+                last;
+            }
+
+        }
+
+    } else {
+        trace( 1, "no bundle found" );
+        $recreate++;
+    }
+
+    return $bundle if not $recreate;
+
+    trace( 1, "creating bundle for '$repo'" );
+    -f $bundle and ( unlink $bundle or die "a horrible death" );
+    system("git bundle create $bundle --branches --tags >&2");
+
+    return $bundle;
+}
+
+sub trace {
+    Gitolite::Common::trace(@_);
+}
