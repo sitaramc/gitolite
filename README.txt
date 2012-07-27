@@ -341,14 +341,19 @@ GITWEB
 CONTACT
 -------
 
+    NOTE: Unless you have very good reasons, please use the mailing list below
+    instead of mailing me personally.  If you have to mail me, use the gmail
+    address instead of my work address.
+
     Author: sitaramc@gmail.com, sitaram@atc.tcs.com
 
-    Mailing lists:
-        gitolite@googlegroups.com -- general discussion
-        gitolite-announce@googlegroups.com -- announcements and notices only
-    List subscribe addresses:
-        gitolite+subscribe@googlegroups.com
-        gitolite-announce+subscribe@googlegroups.com
+    Mailing list for questions and general discussion:
+        gitolite@googlegroups.com
+        subscribe address: gitolite+subscribe@googlegroups.com
+
+    Mailing list for announcements and notices:
+        gitolite-announce@googlegroups.com
+        subscribe address: gitolite-announce+subscribe@googlegroups.com
 
     IRC: #git and #gitolite on freenode.  Note that I live in India (UTC+0530
     time zone).
