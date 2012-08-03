@@ -37,5 +37,5 @@ sub list_x {
     my $d = shift;
     return unless $d;
     _chdir "$d/commands";
-    return map { $_ => $d } grep { -x $_ } map { chomp; s(^./)(); $_ } `find . -type f|sort`;
+    return map { $_ => $d } grep { -x $_ } map { chomp; s(^./)(); $_ } `find . -type f -o -type l|sort`;
 }
