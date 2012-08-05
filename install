@@ -61,7 +61,7 @@ for my $d ($ln, $to) {
 }
 
 chdir($ENV{GL_BINDIR});
-my $version = `[[ -x git ]] && git describe --tags --long --dirty=-dt || 'not-git-repo'`;
+my $version = `([ -x git ] && git describe --tags --long --dirty=-dt) || 'not-git-repo'`;
 
 if ($to) {
     _mkdir($to);
