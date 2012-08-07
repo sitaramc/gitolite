@@ -152,10 +152,11 @@ sub parse_soc {
     # after this we should not return; caller expects us to handle it all here
     # and exit out
 
-    _die "suspicious characters loitering about '$soc'" if $soc !~ $REMOTE_COMMAND_PATT;
 
     my @words = split ' ', $soc;
     if ( $rc{COMMANDS}{ $words[0] } ) {
+        _die "suspicious characters loitering about '$soc'"
+          if $rc{COMMANDS}{ $words[0] } ne 'ua' and $soc !~ $REMOTE_COMMAND_PATT;
         trace( 2, "gitolite command", $soc );
         _system( "gitolite", @words );
         exit 0;
