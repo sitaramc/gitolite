@@ -28,7 +28,7 @@ die "bad git-annex-shell command: $cmd"
 my $start = $1;
 my $repo  = $2;
 my $end   = $3;
-die "I dont like some of the characters in $repo\n" unless $repo =~ $REPONAME_PATT;
+die "I dont like some of the characters in $repo\n" unless $repo =~ $Gitolite::Rc::REPONAME_PATT;
 die "I dont like absolute paths in $cmd\n" if $repo =~ /^\//;
 die "I dont like '..' paths in $cmd\n"     if $repo =~ /\.\./;
 
@@ -52,7 +52,7 @@ $ENV{GIT_ANNEX_SHELL_LIMITED} = 1;
 # Instead it is passed as a single parameter to git-annex-shell for
 # it to parse and handle the command. This is why we do not need to
 # fully validate $cmd above.
-gl_log( $ENV{SSH_ORIGINAL_COMMAND} );
+Gitolite::Common::gl_log( $ENV{SSH_ORIGINAL_COMMAND} );
 exec "git-annex-shell", "-c", $newcmd;
 
 __END__
