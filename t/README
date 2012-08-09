@@ -1,8 +1,13 @@
+
+============================================
 WARNING: THE TEST SUITE DELETES STUFF FIRST!
+============================================
 
-Testing gitolite3 is now one command after the clone:
+Please run the tests ONLY on a userid where it's ok to LOSE DATA.
 
-    prove
+On such a userid, clone gitolite then run this command in the clone:
 
-But because it starts by cleaning the slate, it's best to do it on a spare
-userid that you are ok to lose data on.
+    GITOLITE_TEST=y prove
+
+http://sitaramc.github.com/gitolite/testing.html has more details.  It will
+also help you try out gitolite if you want to go beyond just the test suite.

@@ -37,6 +37,12 @@ use warnings;
 
 # ----------------------------------------------------------------------
 
+# make sure the user is ready for it
+if (not $ENV{GITOLITE_TEST} or $ENV{GITOLITE_TEST} ne 'y') {
+    print "Bail out! See t/README for information on how to run the tests.\n";
+    exit 255;
+}
+
 # required preamble for all tests
 try "
     DEF gsh = /TRACE: gsh.SOC=/
