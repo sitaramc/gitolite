@@ -12,6 +12,8 @@ package Gitolite::Common;
           usage                             tsh_run
           gen_lfn
           gl_log
+
+          dd
 );
 #>>>
 use Exporter 'import';
@@ -61,6 +63,11 @@ sub dbg {
     for my $i (@_) {
         print STDERR "DBG: " . Dumper($i);
     }
+}
+
+sub dd {
+    local $ENV{D} = 1;
+    dbg(@_);
 }
 
 sub _warn {
