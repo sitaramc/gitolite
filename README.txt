@@ -6,17 +6,25 @@ file will not suffice; you *must* check the online docs (see below for URL).
 ------------------------------------------------------------------------
 
 
-DOCUMENTATION FOR GITOLITE
-==========================
+This file contains BASIC DOCUMENTATION ONLY.
 
-This file contains basic documentation for a fresh, ssh-based, installation of
-gitolite and basic usage of its most important features.
+  * It is suitable for a fresh, ssh-based, installation of gitolite and basic
+    usage of its most important features.
 
-If you need more details on any of the topics covered here, or help with some
-troubleshooting, or just wish to read about the advanced features not covered
-here, please check the gitolite online documentation at:
+  * It is NOT meant to be exhaustive or detailed.
+
+The COMPLETE DOCUMENTATION is at:
 
     http://sitaramc.github.com/gitolite/master-toc.html
+
+Please go there for what/why/how, concepts, background, troubleshooting, more
+details on what is covered here, or advanced features not covered here.
+
+------------------------------------------------------------------------
+
+
+BASIC DOCUMENTATION FOR GITOLITE
+================================
 
 This file contains the following sections:
 
