@@ -5,6 +5,25 @@ package Gitolite::Easy;
 # most/all functions in this module test $ENV{GL_USER}'s rights and
 # permissions so it needs to be set.
 
+# "use"-ing this module
+# ----------------------------------------------------------------------
+# Using this module from within a gitolite trigger or command is easy; you
+# just need 'use lib $ENV{GL_LIBDIR};' before the 'use Gitolite::Easy;'.
+#
+# Using it from something completely outside gitolite requires a bit more
+# work.  First, run 'gitolite query-rc -a' to find the correct values for
+# GL_BINDIR and GL_LIBDIR in your installation.  Then use this code in your
+# external program, using the paths you just found:
+#
+#   BEGIN {
+#       $ENV{GL_BINDIR} = "/full/path/to/gitolite/src";
+#       $ENV{GL_LIBDIR} = "/full/path/to/gitolite/src/lib";
+#   }
+#   use lib $ENV{GL_LIBDIR};
+#   use Gitolite::Easy;
+
+# API documentation
+# ----------------------------------------------------------------------
 # documentation for each function is at the top of the function.
 # Documentation is NOT in pod format; just read the source with a nice syntax
 # coloring text editor and you'll be happy enough.  (I do not like POD; please
