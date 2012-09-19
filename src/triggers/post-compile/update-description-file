@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# For normal (not "wild") repos, gitolite v3 sets 'gitweb.description' instead
+# of putting the text in the "description" file.  This is easier because it
+# just goes with the flow of setting config variables; nothing special needs
+# to be done for the description.
+
+# But this only works for gitweb, not for cgit.  Cgit users must therefore add
+# this line to the POST_COMPILE list in the rc file:
+#   'post-compile/update-description-file',
+
+cd $GL_REPO_BASE
+gitolite list-phy-repos | gitolite git-config % gitweb.description |
+    while read a b c
+    do
+        echo "$c" > $GL_REPO_BASE/$a.git/description
+    done
