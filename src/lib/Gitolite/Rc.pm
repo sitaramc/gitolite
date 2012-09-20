@@ -61,7 +61,7 @@ $UNSAFE_PATT          = qr([`~#\$\&()|;<>]);
 my $current_data_version = "3.0";
 
 my $rc = glrc('filename');
-if (-r $rc) {
+if (-r $rc and -s $rc) {
     do $rc or die $@;
 }
 if ( defined($GL_ADMINDIR) ) {
