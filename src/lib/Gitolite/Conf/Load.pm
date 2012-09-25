@@ -211,7 +211,7 @@ sub load_1 {
     trace( 3, $repo );
 
     if ( repo_missing($repo) ) {
-        trace( 1, "repo '$repo' missing" );
+        trace( 1, "repo '$repo' missing" ) if $repo =~ $REPONAME_PATT;
         return;
     }
     _chdir("$rc{GL_REPO_BASE}/$repo.git");
