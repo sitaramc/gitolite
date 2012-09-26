@@ -63,12 +63,20 @@ sub add_to_group {
 }
 
 sub set_repolist {
-    @repolist = @_;
 
+    @repolist = ();
     # ...sanity checks
-    for (@repolist) {
+    for (@_) {
+        if ( check_subconf_repo_disallowed( $subconf, $_ ) ) {
+            (my $repo = $_) =~ s/^\@$subconf\./locally modified \@/;
+            $ignored{$subconf}{$repo} = 1;
+            next;
+        }
+
         _warn "explicit '.git' extension ignored for $_.git" if s/\.git$//;
         _die "bad reponame '$_'" if $_ !~ $REPOPATT_PATT;
+
+        push @repolist, $_;
     }
 }
 
@@ -103,13 +111,6 @@ sub add_rule {
 
     $nextseq++;
     for my $repo (@repolist) {
-        if ( check_subconf_repo_disallowed( $subconf, $repo ) ) {
-            my $repo = $repo;
-            $repo =~ s/^\@$subconf\./locally modified \@/;
-            $ignored{$subconf}{$repo} = 1;
-            next;
-        }
-
         push @{ $repos{$repo}{$user} }, [ $nextseq, $perm, $ref ];
     }
 }
