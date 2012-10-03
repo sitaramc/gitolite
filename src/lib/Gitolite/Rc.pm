@@ -425,7 +425,7 @@ __DATA__
         ],
 
     # comment out or uncomment as needed
-    # these will run in sequence after a new wild repo is created
+    # these will run in sequence after a new repo is created
     POST_CREATE                 =>
         [
             'post-compile/update-git-configs',

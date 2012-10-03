@@ -40,7 +40,7 @@ This file contains the following sections:
     GIT-DAEMON
     GITWEB
 
-    CONTACT
+    CONTACT AND SUPPORT
     LICENSE
 
 ------------------------------------------------------------------------
@@ -346,25 +346,21 @@ GITWEB
 ------------------------------------------------------------------------
 
 
-CONTACT
--------
+CONTACT AND SUPPORT
+-------------------
 
-    NOTE: Unless you have very good reasons, please use the mailing list below
-    instead of mailing me personally.  If you have to mail me, use the gmail
-    address instead of my work address.
-
-    Author: sitaramc@gmail.com, sitaram@atc.tcs.com
-
-    Mailing list for questions and general discussion:
+    Mailing list for support and general discussion:
         gitolite@googlegroups.com
         subscribe address: gitolite+subscribe@googlegroups.com
 
     Mailing list for announcements and notices:
-        gitolite-announce@googlegroups.com
         subscribe address: gitolite-announce+subscribe@googlegroups.com
 
     IRC: #git and #gitolite on freenode.  Note that I live in India (UTC+0530
     time zone).
+
+    Author: sitaramc@gmail.com, but please DO NOT use this for general support
+    questions.  Subscribe to the list and ask there instead.
 
 
 LICENSE
