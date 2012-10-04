@@ -308,14 +308,14 @@ sub memberships {
         }
     }
 
+    push @ret, @{ ext_grouplist($base) } if $type eq 'user' and $rc{GROUPLIST_PGM};
+
     if ( $type eq 'user' and $repo and not repo_missing($repo) ) {
         # find the roles this user has when accessing this repo and add those
         # in as groupnames he is a member of.  You need the already existing
         # memberships for this; see below this function for an example
         push @ret, user_roles( $base, $repo, @ret );
     }
-
-    push @ret, @{ ext_grouplist($base) } if $type eq 'user' and $rc{GROUPLIST_PGM};
 
     @ret = @{ sort_u( \@ret ) };
     trace( 3, sort @ret );
