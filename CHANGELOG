@@ -1,3 +1,13 @@
+2012-10-05  v3.1    (security) fix path traversal on wild repos
+
+                    new %GL_CREATOR variable for git-config lines
+
+                    rsync command to create and send bundles automagically
+
+                    migrated 'who-pushed'
+
+                    logical expressions on refexes!!!
+
 2012-06-27  v3.04   documentation graduated and moved out of parents house :)
 
                     new trigger for 'repo specific umask'
