@@ -168,7 +168,7 @@ sub sanity {
     my $repo = shift;
     _die "'$repo' contains bad characters" if $repo !~ $REPONAME_PATT;
     _die "'$repo' ends with a '/'"         if $repo =~ m(/$);
-    _die "'$repo' contains '..'"           if $repo =~ m(\.\.$);
+    _die "'$repo' contains '..'"           if $repo =~ m(\.\.);
 }
 
 # ----------------------------------------------------------------------

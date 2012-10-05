@@ -67,8 +67,9 @@ my $last_repo = '';
 
 sub access {
     my ( $repo, $user, $aa, $ref ) = @_;
-    _die "invalid repo '$repo'" if not( $repo and $repo =~ $REPOPATT_PATT );
     _die "invalid user '$user'" if not( $user and $user =~ $USERNAME_PATT );
+    sanity($repo);
+
     my $deny_rules = option( $repo, 'deny-rules' );
     load($repo);
 
@@ -175,8 +176,18 @@ sub option {
     return $ret->{$option};
 }
 
+sub sanity {
+    my $repo = shift;
+
+    _die "invalid repo '$repo'" if not( $repo and $repo =~ $REPOPATT_PATT );
+    _die "'$repo' ends with a '/'" if $repo =~ m(/$);
+    _die "'$repo' contains '..'" if $repo =~ $REPONAME_PATT and $repo =~ m(\.\.);
+}
+
 sub repo_missing {
     my $repo = shift;
+    sanity($repo);
+
     return not -d "$rc{GL_REPO_BASE}/$repo.git";
 }
 
@@ -400,6 +411,8 @@ sub generic_name {
 
 sub creator {
     my $repo = shift;
+    sanity($repo);
+
     return ( $ENV{GL_USER} || '' ) if repo_missing($repo);
     my $f       = "$rc{GL_REPO_BASE}/$repo.git/gl-creator";
     my $creator = '';

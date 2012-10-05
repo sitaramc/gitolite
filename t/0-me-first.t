@@ -6,10 +6,12 @@ use warnings;
 use lib "src/lib";
 use Gitolite::Test;
 
+my $rb = `gitolite query-rc -n GL_REPO_BASE`;
+
 # initial smoke tests
 # ----------------------------------------------------------------------
 
-try "plan 65";
+try "plan 73";
 
 # basic push admin repo
 confreset;confadd '
@@ -75,4 +77,19 @@ try "
     glt ls-remote u5 file:///cc/1;  ok;     perl s/TRACE.*//g; !/\\S/
     glt ls-remote u5 file:///cc/2;  !ok;    /DENIED by fallthru/
     glt ls-remote u6 file:///cc/2;  !ok;    /DENIED by fallthru/
+
+    # command
+    glt perms u4 -c cc/bar/baz/frob + READERS u2;
+                                    ok;     /Initialized empty .*cc/bar/baz/frob.git/
+
+    # path traversal
+    glt ls-remote u4 file:///cc/dd/../ee
+                                    !ok;    /FATAL: 'cc/dd/\\.\\./ee' contains '\\.\\.'/
+    glt ls-remote u5 file:///cc/../../../../../..$rb/gitolite-admin
+                                    !ok;    /FATAL: 'cc/../../../../../..$rb/gitolite-admin' contains '\\.\\.'/
+
+    glt perms u4 -c cc/bar/baz/../frob + READERS u2
+                                    !ok;    /FATAL: 'cc/bar/baz/\\.\\./frob' contains '\\.\\.'/
+
+
 ";
