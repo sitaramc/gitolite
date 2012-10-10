@@ -18,7 +18,8 @@
 # Usage:    ssh git@host D <subcommand> <argument>
 #
 # The whimsically named "D" command deletes repos ("D" is a counterpart to the
-# "C" permission which lets you create repos!)
+# "C" permission which lets you create repos.  Which also means that, just
+# like "C", it only works for wild repos).
 #
 # There are two kinds of deletions: 'rm' removes a repo completely, while
 # 'trash' moves it to a trashcan which can be recovered later (upto a time
