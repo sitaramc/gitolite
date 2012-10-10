@@ -11,7 +11,7 @@ cd $GL_REPO_BASE/$repo.git || exit 1
 
 [ "$1" != "fetch" ] && {
     nice=$(gitolite git-config $repo gitolite-options.upstream.nice)
-    [ -n "$nice" ] && find FETCH_HEAD -mmin -$nice | grep . >/dev/null && exit 0
+    [ -n "$nice" ] && find FETCH_HEAD -mmin -$nice 2>/dev/null | grep . >/dev/null && exit 0
 }
 
 git fetch -q "$url" '+refs/*:refs/*'
