@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use 5.10.0;
 
 # Tsh -- non interactive Testing SHell in perl
@@ -39,7 +39,7 @@ use File::Temp qw(tempdir);
 END { chdir( $ENV{HOME} ); }
 # we need this END handler *after* the 'use File::Temp' above.  Without
 # this, if $PWD at exit was $tempdir, you get errors like "cannot remove
-# path when cwd is [...] at /usr/share/perl5/File/Temp.pm line 902".
+# path when cwd is [...] at /usr/share/env perl5/File/Temp.pm line 902".
 
 use Data::Dumper;
 

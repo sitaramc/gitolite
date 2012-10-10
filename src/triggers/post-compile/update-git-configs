@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 # update git-config entries in each repo
 # ----------------------------------------------------------------------

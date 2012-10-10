@@ -154,7 +154,7 @@ sub args {
 1;
 
 __DATA__
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use strict;
 use warnings;

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # gitolite VREF to count votes before allowing pushes to certain branches.
 
