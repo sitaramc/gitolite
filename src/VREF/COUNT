@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # TODO: convert to perl!
 
 # gitolite VREF to count number of changed/new files in a push

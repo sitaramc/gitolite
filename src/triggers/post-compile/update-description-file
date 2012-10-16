@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # For normal (not "wild") repos, gitolite v3 sets 'gitweb.description' instead
 # of putting the text in the "description" file.  This is easier because it
