@@ -156,6 +156,10 @@ sub args {
 __DATA__
 #!/usr/bin/perl
 
+BEGIN {
+    exit 0 if exists $ENV{GL_BYPASS_UPDATE_HOOK};
+}
+
 use strict;
 use warnings;
 
