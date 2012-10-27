@@ -9,7 +9,7 @@ use Gitolite::Test;
 # VREFs - part 1
 # ----------------------------------------------------------------------
 
-try "plan 90";
+try "plan 88";
 
 put "conf/gitolite.conf", "
     repo gitolite-admin
@@ -32,11 +32,11 @@ put "conf/gitolite.conf", "
 try "
     ADMIN_PUSH vr1a
     cd ..
-    ls -al foo;                 !ok;    /cannot access foo: No such file or directory/
+    [ -d foo ];                 !ok
     CLONE u1 foo;               ok;     /Cloning into/
                                         /You appear to have cloned an empty/
     cd foo;                     ok
-    ls -Al;                     ok;     /\.git/
+    [ -d .git ];                ok
 
     # VREF not called for u1
     tc a1 a2 a3 a4 a5;          ok;     /aaf9e8e/

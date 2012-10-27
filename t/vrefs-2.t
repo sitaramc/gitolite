@@ -9,7 +9,7 @@ use Gitolite::Test;
 # VREFs - part 2
 # ----------------------------------------------------------------------
 
-try "plan 74";
+try "plan 72";
 
 put "../gitolite-admin/conf/gitolite.conf", "
     \@gfoo = foo
@@ -32,11 +32,11 @@ try "
     ADMIN_PUSH vr2a
     cd ..
     # setup
-    ls -al foo;                 !ok;    /cannot access foo: No such file or directory/
+    [ -d foo ];                 !ok
     CLONE u1 foo;               ok;     /Cloning into/
                                         /You appear to have cloned an empty/
     cd foo;                     ok
-    ls -Al;                     ok;     /\.git/
+    [ -d .git ];                ok
 
     # u1 push 15 new files
     tc a b c d e f g h i j k l m n o

@@ -11,7 +11,7 @@ my $rb = `gitolite query-rc -n GL_REPO_BASE`;
 # initial smoke tests
 # ----------------------------------------------------------------------
 
-try "plan 73";
+try "plan 71";
 
 # basic push admin repo
 confreset;confadd '
@@ -33,12 +33,11 @@ try "
     cd ..
     glt clone u1 file://aa u1aa;    ok;     /Cloning into 'u1aa'.../
                                             /warning: You appear to have cloned an empty repository/
-    ls -ald --time-style=long-iso u1aa;
-                                    ok;     /drwxr-xr-x 3 $ENV{USER} $ENV{USER} \\d+ 201.-..-.. ..:.. u1aa/
+    [ -d u1aa ];                    ok
 
     # basic clone deny
     glt clone u4 file://aa u4aa;    !ok;    /R any aa u4 DENIED by fallthru/
-    ls -ald u4aa;                   !ok;    /ls: cannot access u4aa: No such file or directory/
+    [ -d u4aa ];                    !ok
 
     # basic push
     cd u1aa;                        ok

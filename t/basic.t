@@ -10,7 +10,7 @@ use Gitolite::Test;
 # ----------------------------------------------------------------------
 
 try "
-    plan 218
+    plan 217
     CHECK_SETUP
 
     # subtest 1
@@ -77,7 +77,7 @@ try "
                                         /fatal: The remote end hung up unexpectedly/
     CLONE u2 t1;                ok;     gsh
                                         /warning: You appear to have cloned an empty repository./
-    ls -al t1;                  ok;     /$ENV{USER}.*$ENV{USER}.*\.git/
+    [ -d t1/.git ];             ok
     cd t1;                      ok;
 
     # push
