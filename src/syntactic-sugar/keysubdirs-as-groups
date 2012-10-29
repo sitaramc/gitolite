@@ -20,7 +20,7 @@ sub groupnames {
     my @out     = ();
     my %members = ();
     for my $pk (`find ../keydir/ -name "*.pub"`) {
-        next unless $pk =~ m(.*/([^/]+)/([^/]+)\.pub$);
+        next unless $pk =~ m(.*/([^/]+)/([^/]+?)(?:@[^./]+)?\.pub$);
         next if $1 eq 'keydir';
         $members{$1} .= " $2";
     }
