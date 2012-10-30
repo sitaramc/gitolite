@@ -18,6 +18,7 @@ package Gitolite::Conf::Store;
   new_wild_repo
   hook_repos
   store
+  parse_init
   parse_done
 );
 
@@ -26,6 +27,7 @@ use Data::Dumper;
 $Data::Dumper::Indent   = 1;
 $Data::Dumper::Sortkeys = 1;
 
+use Gitolite::Redis;
 use Gitolite::Common;
 use Gitolite::Rc;
 use Gitolite::Hooks::Update;
@@ -36,10 +38,7 @@ use warnings;
 
 # ----------------------------------------------------------------------
 
-my %repos;
 my %groups;
-my %configs;
-my %split_conf;
 
 my @repolist;    # current repo list; reset on each 'repo ...' line
 my $subconf = 'master';
@@ -53,10 +52,14 @@ sub add_to_group {
     _die "bad group '$lhs'" unless $lhs =~ $REPONAME_PATT;
     map { _die "bad expansion '$_'" unless $_ =~ $REPOPATT_PATT } @rhs;
 
-    # store the group association, but overload it to keep track of when
-    # the group was *first* created by using $subconf as the *value*
-    do { $groups{$lhs}{$_} ||= $subconf }
-      for ( expand_list(@rhs) );
+    for ( expand_list(@rhs) ) {
+        _die "bad reponame '$_'" if $_ !~ $REPOPATT_PATT;
+
+        # store the group association, but overload it to keep track of when
+        # the group was *first* created by using $subconf as the *value*
+        db_add_group_member($lhs, $_, $subconf);
+        $groups{$lhs}{$_} ||= $subconf;
+    }
 
     # create the group hash even if empty
     $groups{$lhs} = {} unless $groups{$lhs};
@@ -75,6 +78,7 @@ sub set_repolist {
 
         _warn "explicit '.git' extension ignored for $_.git" if s/\.git$//;
         _die "bad reponame '$_'" if $_ !~ $REPOPATT_PATT;
+        db_add_repo($_);
 
         push @repolist, $_;
     }
@@ -111,7 +115,8 @@ sub add_rule {
 
     $nextseq++;
     for my $repo (@repolist) {
-        push @{ $repos{$repo}{$user} }, [ $nextseq, $perm, $ref ];
+        db_add_rule($nextseq, $perm, $ref);
+        db_add_ruleset($repo, $user, $nextseq);
     }
 }
 
@@ -120,7 +125,8 @@ sub add_config {
 
     $nextseq++;
     for my $repo (@repolist) {
-        push @{ $configs{$repo} }, [ $nextseq, $key, $value ];
+        db_add_config($nextseq, $key, $value);
+        db_add_configset($repo, $nextseq);
     }
 }
 
@@ -154,9 +160,9 @@ sub new_repos {
     _chdir( $rc{GL_REPO_BASE} );
 
     # normal repos
-    my @repos = grep { $_ =~ $REPONAME_PATT and not /^@/ } sort keys %repos;
+    my @repos = db_get_repolist('reponames');
     # add in members of repo groups
-    map { push @repos, keys %{ $groups{$_} } } grep { /^@/ } keys %repos;
+    map { push @repos, keys %{ $groups{$_} } } db_get_repolist('repogroups');
 
     for my $repo ( @{ sort_u( \@repos ) } ) {
         next unless $repo =~ $REPONAME_PATT;    # skip repo patterns
@@ -210,22 +216,12 @@ sub hook_repos {
     }
 }
 
-sub store {
-    trace(3);
-
-    # first write out the ones for the physical repos
-    _chdir( $rc{GL_REPO_BASE} );
-    my $phy_repos = list_phy_repos(1);
-
-    for my $repo ( @{$phy_repos} ) {
-        store_1($repo);
-    }
-
-    _chdir( $rc{GL_ADMIN_BASE} );
-    store_common();
+sub parse_init {
+    db_init();
 }
 
 sub parse_done {
+    db_done();
     for my $ig ( sort keys %ignored ) {
         _warn "subconf '$ig' attempting to set access for " . join( ", ", sort keys %{ $ignored{$ig} } );
     }
@@ -252,57 +248,6 @@ sub check_subconf_repo_disallowed {
 
     trace( 2, "-> disallowed" );
     return 1;
-}
-
-sub store_1 {
-    # warning: writes and *deletes* it from %repos and %configs
-    my ($repo) = shift;
-    trace( 3, $repo );
-    return unless $repos{$repo} and -d "$repo.git";
-
-    my ( %one_repo, %one_config );
-
-    open( my $compiled_fh, ">", "$repo.git/gl-conf" ) or return;
-
-    $one_repo{$repo} = $repos{$repo};
-    delete $repos{$repo};
-    my $dumped_data = Data::Dumper->Dump( [ \%one_repo ], [qw(*one_repo)] );
-
-    if ( $configs{$repo} ) {
-        $one_config{$repo} = $configs{$repo};
-        delete $configs{$repo};
-        $dumped_data .= Data::Dumper->Dump( [ \%one_config ], [qw(*one_config)] );
-    }
-
-    print $compiled_fh $dumped_data;
-    close $compiled_fh;
-
-    $split_conf{$repo} = 1;
-}
-
-sub store_common {
-    trace(3);
-    my $cc = "conf/gitolite.conf-compiled.pm";
-    my $compiled_fh = _open( ">", "$cc.new" );
-
-    my $data_version = glrc('current-data-version');
-    trace( 3, "data_version = $data_version" );
-    print $compiled_fh Data::Dumper->Dump( [$data_version], [qw(*data_version)] );
-
-    my $dumped_data = Data::Dumper->Dump( [ \%repos ], [qw(*repos)] );
-    $dumped_data .= Data::Dumper->Dump( [ \%configs ], [qw(*configs)] ) if %configs;
-
-    print $compiled_fh $dumped_data;
-
-    if (%groups) {
-        my %groups = %{ inside_out( \%groups ) };
-        $dumped_data = Data::Dumper->Dump( [ \%groups ], [qw(*groups)] );
-        print $compiled_fh $dumped_data;
-    }
-    print $compiled_fh Data::Dumper->Dump( [ \%split_conf ], [qw(*split_conf)] ) if %split_conf;
-
-    close $compiled_fh or _die "close compiled-conf failed: $!\n";
-    rename "$cc.new", $cc;
 }
 
 {

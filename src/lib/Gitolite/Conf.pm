@@ -12,6 +12,7 @@ package Gitolite::Conf;
 use Exporter 'import';
 use Getopt::Long;
 
+use Gitolite::Redis;
 use Gitolite::Common;
 use Gitolite::Rc;
 use Gitolite::Conf::Sugar;
@@ -33,7 +34,6 @@ sub compile {
     # the order matters; new repos should be created first, to give store a
     # place to put the individual gl-conf files
     new_repos();
-    store();
 
     for my $repo ( @{ $rc{NEW_REPOS_CREATED} } ) {
         trigger( 'POST_CREATE', $repo );
@@ -44,6 +44,7 @@ sub parse {
     my $lines = shift;
     trace( 2, scalar(@$lines) . " lines incoming" );
 
+    parse_init();
     for my $line (@$lines) {
         # user or repo groups
         if ( $line =~ /^(@\S+) = (.*)/ ) {
