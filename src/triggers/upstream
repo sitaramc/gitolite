@@ -44,3 +44,29 @@ git fetch -q "$url" '+refs/*:refs/*'
 # * if the upstream URL changes, just change the conf and push admin repo
 # * the 'nice' setting is in minutes and is optional; it is the minimum
 #   elapsed time between 2 upstream fetches.
+
+# USAGE EXAMPLE:
+#
+# Let's say you want to keep a read-only local mirror of all your github repos
+# on your local gitolite installation.  Assuming your github usernames are the
+# same as your local usernames, and you have updated GIT_CONFIG_KEYS in the rc
+# file to allow 'config' lines, you can do this:
+#
+#   repo github/CREATOR/..*
+#       C   = @all
+#       R   = @all
+#       option upstream.url                     =   git://github.com/%GL_REPO.git
+#       option upstream.nice                    =   120
+#       config url.git://github.com/.insteadOf  =   git://github.com/github/
+#
+# Now you can make local, read-only, clones of all your github repos with
+#
+#   git ls-remote gitolite:github/sitaramc/gitolite
+#   git ls-remote gitolite:github/sitaramc/hap
+#   (etc)
+#
+# and if milki were also a user on this gitolite instance, then
+#
+#   git ls-remote gitolite:github/milki/xclip
+#   git ls-remote gitolite:github/milki/ircblogger
+#   (etc)

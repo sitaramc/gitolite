@@ -164,6 +164,14 @@ sub git_config {
         }
     }
 
+    my($k, $v);
+    my $creator = creator($repo);
+    while (($k, $v) = each %ret) {
+        $v =~ s/%GL_REPO/$repo/g;
+        $v =~ s/%GL_CREATOR/$creator/g if $creator;
+        $ret{$k} = $v;
+    }
+
     trace( 3, map { ( "$_" => "-> $ret{$_}" ) } ( sort keys %ret ) );
     return \%ret;
 }
