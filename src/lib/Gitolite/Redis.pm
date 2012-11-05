@@ -115,6 +115,12 @@ sub db_done {
     $redis->save();
 }
 
+sub _vk_del {
+    my $glob = shift;
+    my @keys = $redis->keys($glob);
+    $redis->del( @keys ) if @keys;
+}
+
 # ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -131,10 +137,28 @@ sub _start_redis_server {
     select(undef,undef,undef,0.1);
 }
 
+sub _flush {
+    my $repo = shift;
+    _vk_del("vk_rules:$repo:*");
+    _vk_del("vk_configs:$repo:*");
+}
+
+sub _flush_check {
+    my $repo = shift;
+
+    my $db_TS = $redis->hget("vk_glpTS", $repo);
+    my $glpTS = ( stat "$ENV{GL_REPO_BASE}/$repo.git/gl-perms" )[9] || -1;
+
+    _flush($repo) if $db_TS != $glpTS;
+
+    $redis->hset("vk_glpTS", $repo, $glpTS);
+}
+
 sub db_configs {
     my ($repo, $g_repo) = @_;
     my $vk_configs = "vk_configs:$repo:$g_repo";
     my @configs;
+    _flush_check($repo);
 
     my $ttl = $redis->ttl($vk_configs);
     if ($ttl >= 1) {
@@ -163,6 +187,7 @@ sub db_rules {
     my ($repo, $g_repo, $user) = @_;
     my $vk_rules = "vk_rules:$repo:$g_repo:$user";
     my @rules;
+    _flush_check($repo);
 
     my $ttl = $redis->ttl($vk_rules);
     if ($ttl >= 1) {
