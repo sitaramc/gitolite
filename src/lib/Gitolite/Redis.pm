@@ -312,9 +312,7 @@ sub ext_grouplist {
 
 sub dd {
     use Data::Dumper;
-    for my $i (@_) {
-        print STDERR "DBG: " . Dumper($i);
-    }
+    print STDERR "DBG: " . Dumper(\@_);
 }
 
 1;
