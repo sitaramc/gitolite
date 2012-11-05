@@ -254,22 +254,24 @@ user_roles(), otherwise it has to redo that logic.
 =cut
 
 sub user_roles {
-    # if it's not a wild repo, we don't care
-    return () unless -f "$rc{GL_REPO_BASE}/$repo.git/gl-creator";
-
     my ( $repo, @eg ) = @_;
+
+    my $f = "$rc{GL_REPO_BASE}/$repo.git/gl-creator";
+    # if it's not a wild repo, we don't care
+    return () unless -f $f;
+    chomp( my $creator = slurp($f) );
 
     # eg == existing groups (that user is already known to be a member of)
     my %eg = map { $_ => 1 } @eg;
 
     my %ret   = ();
-    my $f     = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
+    $f        = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
     my @roles = ();
     if ( -f $f ) {
         my $fh = _open( "<", $f );
         chomp( @roles = <$fh> );
     }
-    push @roles, "CREATOR = " . creator($repo);
+    push @roles, "CREATOR = $creator";
     for (@roles) {
         # READERS u3 u4 @g1
         s/^\s+//; s/ +$//; s/=/ /; s/\s+/ /g; s/^\@//;
