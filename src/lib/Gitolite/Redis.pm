@@ -39,7 +39,7 @@ sub db_add_group_member {
     $redis->hsetnx("g:$member", $group, $subconf);
 
     # collect patterns hiding inside groups; best to do this right here
-    $redis->sadd('patterns', $member) if $member =~ $REPONAME_PATT;
+    $redis->sadd('patterns', $member) if $member !~ $REPONAME_PATT;
 }
 
 sub db_get_memberships {
