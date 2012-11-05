@@ -44,7 +44,7 @@ sub db_add_group_member {
 
 sub db_get_memberships {
     my $member = shift;
-    return $redis->hkeys("g:$member");
+    return '@all', $member, $redis->hkeys("g:$member");
 }
 
 sub db_get_members {
