@@ -55,7 +55,7 @@ try "
 
 confreset;confadd '
     @staff = u1 u2 u3
-    @gfoo = foo/CREATOR/.+
+    @gfoo = foo/CREATOR/..*
     repo  @gfoo
           C       = u1
           RW+     = CREATOR
