@@ -62,7 +62,7 @@ try "
     mkdir -p $ENV{HOME}/bin
     ln -sf $ENV{PWD}/t/glt ~/bin
     ./install -ln
-    cd; rm -vrf .gito* repositories
+    cd; rm -vrf .gitolite .gitolite.rc repositories
     git config --global user.name \"gitolite tester\"
     git config --global user.email \"tester\@example.com\"
 
