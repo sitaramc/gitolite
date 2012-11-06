@@ -61,7 +61,8 @@ try "
 
 my $t;
 try "cd $rb; find . -name gl-perms"; $t = md5sum(sort (lines())); cmp $t,
-'59b3a74b4d33c7631f08e75e7b60c7ce  ./foo/u1/u1a2.git/gl-perms
+'d41d8cd98f00b204e9800998ecf8427e  ./foo/u1/u1a.git/gl-perms
+59b3a74b4d33c7631f08e75e7b60c7ce  ./foo/u1/u1a2.git/gl-perms
 59b3a74b4d33c7631f08e75e7b60c7ce  ./foo/u1/u1e.git/gl-perms
 ';
 
