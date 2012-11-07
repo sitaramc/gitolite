@@ -143,22 +143,38 @@ sub _flush {
     _vk_del("vk_configs:$repo:*");
 }
 
-sub _flush_check {
+sub _volatile_check {
     my $repo = shift;
+    my $user = shift;
+    my ($repo_v, $user_v);
 
-    my $db_TS = $redis->hget("vk_glpTS", $repo);
-    my $glpTS = ( stat "$ENV{GL_REPO_BASE}/$repo.git/gl-perms" )[9] || -1;
+    # timestamp of gl-perms file, on disk versus cached
+    my $od_glpTS = ( stat "$ENV{GL_REPO_BASE}/$repo.git/gl-perms" )[9] || 0;
+    my $vk_glpTS = $redis->hget("vk_gl-perms_TS", $repo) || 0;
+    if ( $repo_v = ( $vk_glpTS != $od_glpTS ) ) {
+        $od_glpTS
+          ? $redis->hset( "vk_gl-perms_TS", $repo, $od_glpTS )
+          : $redis->hdel( "vk_gl-perms_TS", $repo );
+    }
 
-    _flush($repo) if $db_TS != $glpTS;
+    # users grouplist, short term versus long term cache
+    my $user_v = 0;
+    if ( $rc{GROUPLIST_PGM} ) {
+        my $st_egl = join ":", ext_grouplist($user);
+        my $lt_egl = $redis->hget( "vk_ext_grouplist", $user ) || '';
 
-    $redis->hset("vk_glpTS", $repo, $glpTS);
+        if ( $user_v = ( $st_egl ne $lt_egl ) ) {
+            $redis->hset( "vk_ext_grouplist", $user, $st_egl );
+        }
+    }
+
+    _flush($repo) if $repo_v or $user_v;
 }
 
 sub db_configs {
     my ($repo, $g_repo) = @_;
     my $vk_configs = "vk_configs:$repo:$g_repo";
     my @configs;
-    _flush_check($repo);
 
     my $ttl = $redis->ttl($vk_configs);
     if ($ttl >= 1) {
@@ -175,7 +191,7 @@ sub db_configs {
             # if there were any configs
             $redis->sort(( $t, "get", "c:*", "store", $vk_configs));
             @configs = $redis->lrange($vk_configs, 0, -1);
-            $redis->expire($vk_configs, 5);
+            $redis->expire($vk_configs, 9999);
             $redis->del($t);
         }
     }
@@ -187,7 +203,7 @@ sub db_rules {
     my ($repo, $g_repo, $user) = @_;
     my $vk_rules = "vk_rules:$repo:$g_repo:$user";
     my @rules;
-    _flush_check($repo);
+    _volatile_check($repo, $user);
 
     my $ttl = $redis->ttl($vk_rules);
     if ($ttl >= 1) {
@@ -207,7 +223,7 @@ sub db_rules {
             # if there were any rules
             $redis->sort(( $t, "get", "r:*", "store", $vk_rules));
             @rules = $redis->lrange($vk_rules, 0, -1);
-            $redis->expire($vk_rules, 5);
+            $redis->expire($vk_rules, 9999);
             $redis->del($t);
         }
     }
