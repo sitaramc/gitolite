@@ -70,8 +70,12 @@ sub access {
     _die "invalid user '$user'" if not( $user and $user =~ $USERNAME_PATT );
     sanity($repo);
 
-    my $deny_rules = option( $repo, 'deny-rules' );
+    my @rules;
+    my $deny_rules;
+
     load($repo);
+    @rules = rules( $repo, $user );
+    $deny_rules = option( $repo, 'deny-rules' );
 
     # sanity check the only piece the user can control
     _die "invalid characters in ref or filename: '$ref'\n" unless $ref =~ $REF_OR_FILENAME_PATT;
@@ -89,7 +93,6 @@ sub access {
         return "$aa $ref $repo $user DENIED by existence";
     }
 
-    my @rules = rules( $repo, $user );
     trace( 2, scalar(@rules) . " rules found" );
     for my $r (@rules) {
         my $perm = $r->[1];
@@ -304,9 +307,11 @@ sub load_1 {
 sub memberships {
     trace( 3, @_ );
     my ( $type, $base, $repo ) = @_;
+    $repo ||= '';
+    my @ret;
     my $base2 = '';
 
-    my @ret = ( $base, '@all' );
+    @ret = ( $base, '@all' );
 
     if ( $type eq 'repo' ) {
         # first, if a repo, say, pub/sitaram/project, has a gl-creator file
