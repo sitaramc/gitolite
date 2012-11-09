@@ -14,6 +14,8 @@ package Gitolite::Common;
           gl_log
 
           dd
+          t_start
+          t_lap
 );
 #>>>
 use Exporter 'import';
@@ -68,6 +70,21 @@ sub dbg {
 sub dd {
     local $ENV{D} = 1;
     dbg(@_);
+}
+
+{
+    use Time::HiRes;
+    my %start_times;
+
+    sub t_start {
+        my $name = shift || 'default';
+        $start_times{$name} = [ Time::HiRes::gettimeofday() ];
+    }
+
+    sub t_lap {
+        my $name = shift || 'default';
+        return Time::HiRes::tv_interval( $start_times{$name} );
+    }
 }
 
 sub _warn {
