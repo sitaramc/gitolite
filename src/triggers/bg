@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# quick and dirty program to background any of the triggers programs that are
+# taking too long.  To use, just replace a line like
+#       'post-compile/update-gitweb-access-list',
+# with
+#       'bg post-compile/update-gitweb-access-list',
+
+# We dump output to a file in the log directory but please keep in mind this
+# is not a "log" so much as a redirection of the entire output.
+
+echo `date` $GL_TID "$0: $@" >> $GL_LOGFILE.bg
+
+path=${0%/*}
+script=$path/$1; shift
+
+( ( $script "$@" < /dev/null >> $GL_LOGFILE.bg 2>&1 & ) )
