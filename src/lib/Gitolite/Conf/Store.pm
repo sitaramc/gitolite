@@ -258,15 +258,18 @@ sub store_1 {
     # warning: writes and *deletes* it from %repos and %configs
     my ($repo) = shift;
     trace( 3, $repo );
-    return unless $repos{$repo} and -d "$repo.git";
+    return unless ( $repos{$repo} or $configs{$repo} ) and -d "$repo.git";
 
     my ( %one_repo, %one_config );
 
     open( my $compiled_fh, ">", "$repo.git/gl-conf" ) or return;
 
-    $one_repo{$repo} = $repos{$repo};
-    delete $repos{$repo};
-    my $dumped_data = Data::Dumper->Dump( [ \%one_repo ], [qw(*one_repo)] );
+    my $dumped_data = '';
+    if ($repos{$repo}) {
+        $one_repo{$repo} = $repos{$repo};
+        delete $repos{$repo};
+        $dumped_data = Data::Dumper->Dump( [ \%one_repo ], [qw(*one_repo)] );
+    }
 
     if ( $configs{$repo} ) {
         $one_config{$repo} = $configs{$repo};
