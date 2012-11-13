@@ -1,0 +1,59 @@
+#!/bin/bash
+
+#   split multi-key files into separate keys like ssh-authkeys likes
+
+# WHY
+# ---
+#
+# Yeah I wonder that too, when it's so much more maintainable to keep the damn
+# keys as sitaram@home.pub and sitaram@work.pub or such.  But there's no
+# accounting for tastes, and some old fogies apparently want to put all of a
+# user's keys into a single ".pub" file.
+
+# WARNINGS AND CAVEATS
+# --------------------
+#
+# - assumes no "@" sign in basenames of any multi-key files (single line file
+#   may still have them)
+# - assumes you don't have a subdir in keydir called "__split_keys__"
+# - God help you if you try to throw in a putty key in there.
+
+# SUPPORT
+# -------
+#
+# NONE.  Mainly because I **know** someone will throw in a putty key.  I just
+# know it.
+
+# USAGE
+# -----
+#
+# add it to the POST_COMPILE trigger list in the rc file, but *before* the
+# ssh-authkeys program entry.
+
+cd $GL_ADMIN_BASE/keydir
+
+rm -rf __split_keys__
+mkdir __split_keys__
+export SKD=$PWD/__split_keys__
+
+find . -type f -name "*.pub" | while read k
+do
+    # do we need to split?
+    lines=`wc -l < $k`
+    [ "$lines" = "1" ] && continue
+
+    # is it sane to split?
+    base=`basename $k .pub`
+    echo $base | grep '@' >/dev/null && continue
+
+    # ok do it
+    seq=1
+    while read line
+    do
+        echo "$line" > $SKD/$base@$seq.pub
+        (( seq++ ))
+    done < $k
+
+    # now delete the original file
+    rm $k
+done
