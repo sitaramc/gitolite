@@ -288,6 +288,8 @@ sub store_common {
     my $cc = "conf/gitolite.conf-compiled.pm";
     my $compiled_fh = _open( ">", "$cc.new" );
 
+    my %patterns = ();
+
     my $data_version = glrc('current-data-version');
     trace( 3, "data_version = $data_version" );
     print $compiled_fh Data::Dumper->Dump( [$data_version], [qw(*data_version)] );
@@ -301,7 +303,17 @@ sub store_common {
         my %groups = %{ inside_out( \%groups ) };
         $dumped_data = Data::Dumper->Dump( [ \%groups ], [qw(*groups)] );
         print $compiled_fh $dumped_data;
+
+        # save patterns in %groups for faster handling of multiple repos, such
+        # as happens in the various POST_COMPILE scripts
+        for my $k (keys %groups) {
+            $patterns{groups}{$k} = 1 unless $k =~ $REPONAME_PATT;
+        }
     }
+
+    $dumped_data = Data::Dumper->Dump( [ \%patterns ], [qw(*patterns)] ) if %patterns;
+    print $compiled_fh $dumped_data;
+
     print $compiled_fh Data::Dumper->Dump( [ \%split_conf ], [qw(*split_conf)] ) if %split_conf;
 
     close $compiled_fh or _die "close compiled-conf failed: $!\n";

@@ -58,7 +58,7 @@ $UNSAFE_PATT          = qr([`~#\$\&()|;<>]);
 
 # find the rc file and 'do' it
 # ----------------------------------------------------------------------
-my $current_data_version = "3.0";
+my $current_data_version = "3.2";
 
 my $rc = glrc('filename');
 if (-r $rc and -s $rc) {

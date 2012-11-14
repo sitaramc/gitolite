@@ -32,6 +32,7 @@ our $data_version = '';
 our %repos;
 our %one_repo;
 our %groups;
+our %patterns;
 our %configs;
 our %one_config;
 our %split_conf;
@@ -326,8 +327,10 @@ sub memberships {
         }
     }
 
-    for my $i ( keys %groups ) {
-        if ( $base eq $i or $base =~ /^$i$/ or $base2 and ( $base2 eq $i or $base2 =~ /^$i$/ ) ) {
+    push @ret, @{ $groups{$base} } if exists $groups{$base};
+    push @ret, @{ $groups{$base2} } if $base2 and exists $groups{$base2};
+    for my $i ( keys %{ $patterns{groups} } ) {
+        if ( $base =~ /^$i$/ or $base2 and ( $base2 =~ /^$i$/ ) ) {
             push @ret, @{ $groups{$i} };
         }
     }
