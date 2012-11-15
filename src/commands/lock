@@ -71,7 +71,7 @@ sub f_unlock {
     my ( $repo, $file ) = @_;
 
     my %locks = get_locks();
-    _die "'$file' not locked by '$ENV{GL_USER}'" if ( $locks{$file} || '' ) ne $ENV{GL_USER};
+    _die "'$file' not locked by '$ENV{GL_USER}'" if ( $locks{$file}{USER} || '' ) ne $ENV{GL_USER};
     delete $locks{$file};
     put_locks(%locks);
 }
