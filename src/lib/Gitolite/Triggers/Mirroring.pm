@@ -150,6 +150,7 @@ sub post_git {
         # slave was eliminated earlier anyway, so that leaves 'master'
 
         # find all slaves and push to each of them
+        push_to_slaves( $rc{REALREPO} ) if $rc{REALREPO};
         push_to_slaves($repo);
 
         return;
@@ -169,6 +170,7 @@ sub post_git {
         trace( 3, "case 2, slave redirect" );
 
         # find all slaves and push to each of them
+        push_to_slaves( $rc{REALREPO} ) if $rc{REALREPO};
         push_to_slaves($repo);
 
         return;

@@ -438,6 +438,8 @@ BEGIN {
 
     Mirroring               INPUT           ::
     Mirroring               PRE_GIT         ::
+    Namespaces              PRE_GIT         ::
+    Namespaces              POST_GIT        ::
     Mirroring               POST_GIT        ::
 
     refex-expr              ACCESS_2        RefexExpr::access_2

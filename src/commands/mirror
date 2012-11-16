@@ -66,6 +66,9 @@ if ( $cmd eq 'push' ) {
         trace( 1, `cat gl-perms 2>/dev/null | ssh $host CREATOR=$creator perms -c \\'$repo\\' 2>/dev/null` );
     }
 
+    my ($ns, $rr) = repo_namespace($repo);
+    trace(1, "'$repo' is a namespace in '$rr', skipping push"), exit 0 if $rr;
+
     my $errors = 0;
     my $glss = '';
     for (`git push --mirror $host:$repo 2>&1`) {

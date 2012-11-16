@@ -140,7 +140,7 @@ sub main {
     if ( $ENV{REQUEST_URI} ) {
         _system( "git", "http-backend" );
     } else {
-        my $repodir = "'$rc{GL_REPO_BASE}/$repo.git'";
+        my $repodir = "'$rc{GL_REPO_BASE}/" . ( $rc{REALREPO} || $repo ) . ".git'";
         _system( "git", "shell", "-c", "$verb $repodir" );
     }
     trigger( 'POST_GIT', $repo, $user, $aa, 'any', $verb );

@@ -12,6 +12,7 @@ package Gitolite::Conf::Load;
 
   option
   repo_missing
+  repo_namespace
   creator
 
   vrefs
@@ -260,6 +261,37 @@ sub repo_missing {
     sanity($repo);
 
     return not -d "$rc{GL_REPO_BASE}/$repo.git";
+}
+
+sub repo_namespace {
+    my $repo = shift;
+    sanity($repo);
+
+    my $ref = git_config( $repo, "^gitolite-options\\.namespace\\.pattern.*" );
+    return () if not %$ref;    # no namespace options provided
+
+    for my $k (sort keys %$ref) {
+        my $v = $ref->{$k} || '';
+        _die "bad namespace option value '$v'" if not $v =~ /^(\S+) is (\S+) in (\S+)$/;
+        my ($p, $ns, $rr) = ($1, $2, $3);
+
+        # interpret $p and match $repo against it
+        $p =~ s(\*)((.*))g;
+        $p =~ s(%)(([^/]*))g;
+        $p = "^$p\$";
+
+        my @matches;
+        next unless @matches = ($repo =~ qr($p));
+        $ns =~ s(@(\d+))($matches[$1-1] or _die "bad namespace option-value '$v'")ge;
+        $rr =~ s(@(\d+))($matches[$1-1] or _die "bad namespace option-value '$v'")ge;
+
+        # check if namespace processing was explicitly disabled
+        return () if $rr eq $repo;
+
+        return ($ns, $rr);
+    }
+
+    _die "no namespace options matched for '$repo'";
 }
 
 # ----------------------------------------------------------------------
