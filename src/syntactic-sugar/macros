@@ -1,0 +1,74 @@
+# vim: syn=perl:
+
+# "sugar script" (syntactic sugar helper) for gitolite3
+
+# simple line-wise macro processor
+# ----------------------------------------------------------------------
+# see documentation at the end of this script
+
+my %macro;
+sub sugar_script {
+    my $lines = shift;
+    my @out  = ();
+
+    my $l = join("\n", @$lines);
+    while ($l =~ s/^macro (\w+) (.*?)\nend//ms) {
+        $macro{$1} = $2;
+    }
+
+    $l =~ s/^((\w+) .*)/$macro{$2} ? expand($1) : $1/gem;
+
+    $lines = [split "\n", $l];
+    return $lines;
+}
+
+sub expand {
+    my $l = shift;
+    my ($word, @arg) = split ' ', $l;
+    my $v = $macro{$word};
+    $v =~ s/%(\d+)/$arg[$1-1] or die "macro '$word' needs $1 arguments at '$l'\n"/gem;
+    return $v;
+}
+
+__END__
+
+Documentation is mostly by example.
+
+Setup:
+
+  * the line
+        'macros',
+    should be added to the SYNTACTIC_SUGAR list in ~/.gitolite.rc
+
+Notes on macro definition:
+
+  * the keywords 'macro' and 'end' should start on a new line
+  * the first word after 'macro' is the name of the macro, and the rest, until
+    the 'end', is the body
+
+Notes on macro use:
+
+  * the macro name should be the first word on a line
+  * the rest of the line is used as arguments to the macro
+
+Example:
+
+    if your conf contains:
+
+        macro foo repo aa-%1
+            RW  =   u1 %2
+            R   =   u2
+        end
+
+        foo 1 alice
+        foo 2 bob
+
+    this will effectively turn into
+
+        repo aa-1
+            RW  =   u1 alice
+            R   =   u2
+
+        repo aa-2
+            RW  =   u1 bob
+            R   =   u2
