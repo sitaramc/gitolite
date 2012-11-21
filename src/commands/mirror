@@ -53,10 +53,11 @@ if ( $cmd eq 'push' ) {
 
     my $errors = 0;
     for (`git push --mirror $host:$repo 2>&1`) {
+        $errors = 1 if $?;
         print STDERR "$_" if -t STDERR or exists $ENV{GL_USER};
         chomp;
         if (/FATAL/) {
-            $errors++;
+            $errors = 1;
             gl_log( 'mirror', $_ );
         } else {
             trace( 1, "mirror: $_" );
