@@ -46,18 +46,20 @@ if ( $ARGV[0] eq '-l' ) {
 # auto-create the repo if -c passed and repo doesn't exist
 if ( $ARGV[0] eq '-c' ) {
     shift;
-    my $repo = $ARGV[0];
+    my $repo = $ARGV[0] or usage();
     _die "invalid repo '$repo'" unless $repo =~ $REPONAME_PATT;
 
-    if (not -d "$rc{GL_REPO_BASE}/$repo.git") {
-        my $ret = access( $repo, $ENV{GL_USER}, '^C', 'any' );
-        _die $ret if $ret =~ /DENIED/;
+    my $d = "$rc{GL_REPO_BASE}/$repo.git";
+    my $errmsg = "repo already exists or you are not authorised to create it";
+    # use the same message in both places to prevent leaking repo existence info
+    _die $errmsg if -d $d;
+    my $ret = access( $repo, $ENV{GL_USER}, '^C', 'any' );
+    _die $errmsg if $ret =~ /DENIED/;
 
-        require Gitolite::Conf::Store;
-        Gitolite::Conf::Store->import;
-        new_wild_repo( $repo, $ENV{GL_USER}, 'perms-c' );
-        gl_log( 'create', $repo, $ENV{GL_USER}, 'perms-c' );
-    }
+    require Gitolite::Conf::Store;
+    Gitolite::Conf::Store->import;
+    new_wild_repo( $repo, $ENV{GL_USER}, 'perms-c' );
+    gl_log( 'create', $repo, $ENV{GL_USER}, 'perms-c' );
 }
 
 my $repo = shift;

@@ -100,7 +100,7 @@ try "
     # auto-create using perms fail
     echo READERS u5 | glt perms u4 -c foo/u4/baz
         !/Initialized empty Git repository in .*/foo/u4/baz.git/
-        /FATAL: .C any foo/u4/baz u4 DENIED by fallthru/
+        /FATAL: repo already exists or you are not authorised to create it/
 
     # auto-create using perms
     echo READERS u2 | glt perms u1 -c foo/u1/baz
