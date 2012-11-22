@@ -7,7 +7,7 @@
 
 die() { echo "$@" >&2; exit 1; }
 usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
-[ -z "$1" ] && usage
+[ -z "$2" ] && usage
 [ "$1" = "-h" ] && usage
 [ -z "$GL_USER" ] && die GL_USER not set
 
