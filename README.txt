@@ -219,7 +219,7 @@ ACCESS RULES
 GROUPS
 ------
 
-    Gitolite allows you to groups users or repos for convenience.  Here's an
+    Gitolite allows you to group users or repos for convenience.  Here's an
     example that creates two groups of users:
 
         @staff      =   alice bob carol

@@ -261,7 +261,12 @@ sub rc_lines {
             $cmd = shift @cmds;
 
             # is the current command a "testing" command?
-            my $testing_cmd = ( $cmd =~ m(^ok(?:\s+or\s+(.*))?$) or $cmd =~ m(^!ok(?:\s+or\s+(.*))?$) or $cmd =~ m(^/(.*?)/(?:\s+or\s+(.*))?$) or $cmd =~ m(^!/(.*?)/(?:\s+or\s+(.*))?$) );
+            my $testing_cmd = (
+                   $cmd =~ m(^ok(?:\s+or\s+(.*))?$)
+                or $cmd =~ m(^!ok(?:\s+or\s+(.*))?$)
+                or $cmd =~ m(^/(.*?)/(?:\s+or\s+(.*))?$)
+                or $cmd =~ m(^!/(.*?)/(?:\s+or\s+(.*))?$)
+            );
 
             # warn if the previous command failed but rc is not being checked
             if ( $rc and not $testing_cmd ) {
@@ -474,7 +479,7 @@ sub fail {
 
 sub cmp {
     # compare input string with second input string or text()
-    my $in   = shift;
+    my $in = shift;
     my $text = ( @_ ? +shift : text() );
 
     if ( $text eq $in ) {
@@ -583,7 +588,7 @@ sub dummy_commits {
             test_tick();
             next;
         }
-        my $ts = ( $tick ? gmtime($tick+19800) : gmtime() );
+        my $ts = ( $tick ? gmtime( $tick + 19800 ) : gmtime() );
         _sh("echo $f at $ts >> $f && git add $f && git commit -m '$f at $ts'");
     }
 }

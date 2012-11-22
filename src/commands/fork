@@ -10,10 +10,6 @@
 # traffic but because it uses git clone's "-l" option to share the object
 # store also, so it is likely to be almost instantaneous, regardless of how
 # big the repo actually is.
-#
-# The only caveat is that the repo you cloned *from* must not later become
-# unavailable in any way.  If you cannot be sure of this, take the scenic
-# route (clone repo1, push to repo2).
 
 die() { echo "$@" >&2; exit 1; }
 usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
