@@ -3,6 +3,9 @@ package Gitolite::Triggers::Shell;
 # usage notes: this module must be loaded first in the INPUT trigger list.  Or
 # at least before Mirroring::input anyway.
 
+# documentation is in the ssh troubleshooting and tips document, under the
+# section "giving shell access to gitolite users"
+
 use Gitolite::Rc;
 use Gitolite::Common;
 

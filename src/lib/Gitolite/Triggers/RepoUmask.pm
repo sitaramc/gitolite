@@ -9,6 +9,8 @@ use warnings;
 
 # setting a repo specific umask
 # ----------------------------------------------------------------------
+# this is for people who are too paranoid to trust e.g., gitweb's repo
+# exclusion logic, but not paranoid enough to put it on a different server
 
 =for usage
 

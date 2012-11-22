@@ -10,6 +10,7 @@ use warnings;
 
 # cpu and elapsed times for gitolite+git operations
 # ----------------------------------------------------------------------
+# uncomment the appropriate lines in the rc file to enable this
 
 # Ideally, you will (a) write your own code with a different filename so later
 # gitolite upgrades won't overwrite your copy, (b) add appropriate variables
@@ -18,8 +19,6 @@ use warnings;
 # ----------------------------------------------------------------------
 my $start_time;
 
-# this trigger is not yet documented; it gets called at the start and does not
-# receive any arguments.
 sub input {
     _warn "something wrong with the invocation of CpuTime::input" if $ENV{GL_TID} ne $$;
     $start_time = [ Time::HiRes::gettimeofday() ];
