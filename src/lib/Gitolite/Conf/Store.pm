@@ -311,8 +311,7 @@ sub store_common {
         }
     }
 
-    $dumped_data = Data::Dumper->Dump( [ \%patterns ], [qw(*patterns)] ) if %patterns;
-    print $compiled_fh $dumped_data;
+    print $compiled_fh Data::Dumper->Dump( [ \%patterns ], [qw(*patterns)] ) if %patterns;
 
     print $compiled_fh Data::Dumper->Dump( [ \%split_conf ], [qw(*split_conf)] ) if %split_conf;
 
