@@ -156,7 +156,7 @@ sub new_repos {
     # normal repos
     my @repos = grep { $_ =~ $REPONAME_PATT and not /^@/ } sort keys %repos;
     # add in members of repo groups
-    map { push @repos, keys %{ $groups{$_} } } grep { /^@/ } keys %repos;
+    map { push @repos, keys %{ $groups{$_} } } grep { /^@/ and $_ ne '@all' } keys %repos;
 
     for my $repo ( @{ sort_u( \@repos ) } ) {
         next unless $repo =~ $REPONAME_PATT;    # skip repo patterns
