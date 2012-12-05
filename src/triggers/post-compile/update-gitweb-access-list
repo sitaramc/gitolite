@@ -6,8 +6,10 @@
 
 # ----------------------------------------------------------------------
 # delete the 'description' file that 'git init' created if this is run from
-# the post-create trigger
-[ "$1" = "POST_CREATE" ] && rm -f $GL_REPO_BASE/$2.git/description 2>/dev/null
+# the post-create trigger.  However, note that POST_CREATE is also called from
+# perms (since POST_CREATE doubles as eqvt of POST_COMPILE to propagate ad hoc
+# permissions changes for wild repos) and then you should not delete it.
+[ "$1" = "POST_CREATE" ] && [ "$4" != "perms" ] && rm -f $GL_REPO_BASE/$2.git/description 2>/dev/null
 
 # ----------------------------------------------------------------------
 # skip if arg-1 is POST_CREATE and no arg-3 (user name) exists; this means
