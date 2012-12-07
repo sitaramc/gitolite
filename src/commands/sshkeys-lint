@@ -177,9 +177,9 @@ Look for potential problems in ssh keys.
 
 sshkeys-lint expects:
   - the contents of an authorized_keys file via STDIN, otherwise it uses
-    $HOME/.ssh/authorized_keys
+    \$HOME/.ssh/authorized_keys
   - one or more pubkey filenames as arguments, otherwise it uses all the keys
-    found (recursively) in $HOME/.gitolite/keydir
+    found (recursively) in \$HOME/.gitolite/keydir
 
 The '-q' option will print only warnings instead of all mappings.
 
