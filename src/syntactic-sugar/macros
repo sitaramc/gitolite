@@ -12,11 +12,11 @@ sub sugar_script {
     my @out  = ();
 
     my $l = join("\n", @$lines);
-    while ($l =~ s/^macro (\w+) (.*?)\nend//ms) {
+    while ($l =~ s/^macro (\w+)\b(.*?)\nend//ms) {
         $macro{$1} = $2;
     }
 
-    $l =~ s/^((\w+) .*)/$macro{$2} ? expand($1) : $1/gem;
+    $l =~ s/^((\w+)\b.*)/$macro{$2} ? expand($1) : $1/gem;
 
     $lines = [split "\n", $l];
     return $lines;
