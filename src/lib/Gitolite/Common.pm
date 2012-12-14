@@ -277,7 +277,7 @@ sub gl_log {
     my $fh;
     logger_plus_stderr( "errors found before logging could be setup", "$msg" ) if not $ENV{GL_LOGFILE};
     open my $lfh, ">>", $ENV{GL_LOGFILE}
-      or logger_plus_stderr( "errors found before logfile could be created", "$msg" );
+      or logger_plus_stderr( "errors found but logfile could not be created", "$ENV{GL_LOGFILE}: $!", "$msg" );
     print $lfh "$ts\t$tid\t$msg\n";
     close $lfh;
 }
