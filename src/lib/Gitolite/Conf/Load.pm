@@ -418,8 +418,7 @@ sub generic_name {
     $creator = creator($base);
 
     $base2 = $base;
-    $base2 =~ s(/$creator/)(/CREATOR/) if $creator;
-    $base2 =~ s(^$creator/)(CREATOR/)  if $creator;
+    $base2 =~ s(\b$creator\b)(CREATOR) if $creator;
     $base2 = '' if $base2 eq $base;    # if there was no change
 
     return $base2;
