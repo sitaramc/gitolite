@@ -12,6 +12,9 @@ List all existing repos that no one can access remotely any more.  They could
 be normal repos that were taken out of "repo" statements in the conf file, or
 wildcard repos whose matching "wild" pattern was taken out or changed so it no
 longer matches.
+
+I would advise caution if you use this as a basis for deleting repos from the
+file system.  A bug in this program could cause you to lose important data!
 =cut
 
 usage() if @ARGV and $ARGV[0] eq '-h';
@@ -21,6 +24,9 @@ usage() if @ARGV and $ARGV[0] eq '-h';
 # is to cull %phy_repos of all keys that have a matching key in %repos, where
 # "matching" means "string equal" or "regex match".
 my %repos = map { chomp; $_ => 1 } `gitolite list-repos`;
+for my $r ( grep /^@/, keys %repos ) {
+    map { chomp; $repos{$_} = 1; } `gitolite list-members $r`;
+}
 my %phy_repos = map { chomp; $_ => 1 } `gitolite list-phy-repos`;
 
 # Remove exact matches.  But for repo names like "gtk+", you could have
