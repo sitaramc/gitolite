@@ -12,6 +12,9 @@
 
 # - run a cron job to delete old repos based on age (the TRASH_SUFFIX has a
 #   timestamp); your choice how/how often you do that
+
+# - you can completely disable the 'rm' command by setting an rc variable
+#   called D_DISABLE_RM to "1".
 # ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
@@ -67,6 +70,8 @@ owner_or_die() {
 if [ "$cmd" = "rm" ]
 then
 
+    gitolite query-rc -q D_DISABLE_RM && die "sorry, 'unlock' and 'rm' are disabled"
+
     owner_or_die
     [ -f $repo.git/gl-rm-ok ] || die "'$repo' is locked!"
     rm -rf $repo.git
@@ -81,6 +86,8 @@ then
 
 elif [ "$cmd" = "unlock" ]
 then
+
+    gitolite query-rc -q D_DISABLE_RM && die "sorry, 'unlock' and 'rm' are disabled"
 
     owner_or_die
     touch $repo.git/gl-rm-ok
