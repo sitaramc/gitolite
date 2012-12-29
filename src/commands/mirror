@@ -48,7 +48,7 @@ if ( $cmd eq 'push' ) {
     if (-f "gl-creator") {
         # try to propagate the wild repo, including creator name and gl-perms
         my $creator = `cat gl-creator`; chomp($creator);
-        trace(1, `cat gl-perms 2>/dev/null | ssh $host CREATOR=$creator perms -c \\'$repo\\'`);
+        trace(1, `cat gl-perms 2>/dev/null | ssh $host CREATOR=$creator perms -c \\'$repo\\' 2>/dev/null`);
     }
 
     my $errors = 0;

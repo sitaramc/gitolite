@@ -84,12 +84,15 @@ sub setperms {
 
     if ( not @_ ) {
         # legacy mode; pipe data in
+        print STDERR "'batch' mode started, waiting for input (run with '-h' for details).\n";
+        print STDERR "Please hit Ctrl-C if you did not intend to do this.\n";
         @ARGV = ();
         my @a;
         for (<>) {
             _die "Invalid role '$1'; check the rc file" if /(\S+)/ and not $rc{ROLES}{$1};
             push @a, $_;
         }
+        print STDERR "\n";  # make sure Ctrl-C gets caught
         _print( $pf, @a );
         return;
     }
