@@ -386,6 +386,8 @@ sub user_roles {
     for (@roles) {
         # READERS u3 u4 @g1
         s/^\s+//; s/ +$//; s/=/ /; s/\s+/ /g; s/^\@//;
+        next if /^#/;
+        next unless /\S/;
         my ( $role, @members ) = split;
         # role = READERS, members = u3, u4, @g1
         if ( $role ne 'CREATOR' and not $rc{ROLES}{$role} ) {
