@@ -4,6 +4,7 @@ use warnings;
 
 use lib $ENV{GL_LIBDIR};
 use Gitolite::Common;
+use Gitolite::Conf::Load;
 
 =for usage
 Usage:  gitolite list-dangling-repos
@@ -40,8 +41,9 @@ for my $pr (keys %phy_repos) {
 # Remove regex matches.
 for my $pr (keys %phy_repos) {
     my $matched = 0;
+    my $pr2 = Gitolite::Conf::Load::generic_name($pr);
     for my $r (keys %repos) {
-        if ($pr =~ /^$r$/) {
+        if ($pr =~ /^$r$/ or $pr2 =~ /^$r$/) {
             $matched = 1;
             next;
         }
