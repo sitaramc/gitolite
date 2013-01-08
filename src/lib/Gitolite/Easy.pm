@@ -16,6 +16,7 @@ package Gitolite::Easy;
 # external program, using the paths you just found:
 #
 #   BEGIN {
+#       $ENV{HOME} = "/home/git";   # or whatever is the hosting user's $HOME
 #       $ENV{GL_BINDIR} = "/full/path/to/gitolite/src";
 #       $ENV{GL_LIBDIR} = "/full/path/to/gitolite/src/lib";
 #   }
