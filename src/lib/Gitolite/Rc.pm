@@ -27,6 +27,7 @@ use Gitolite::Common;
 # ----------------------------------------------------------------------
 
 our %rc;
+our $non_core;
 
 # ----------------------------------------------------------------------
 
@@ -75,6 +76,9 @@ if ( defined($GL_ADMINDIR) ) {
 # ----------------------------------------------------------------------
 @rc{ keys %RC } = values %RC;
 
+# expand the non_core list into INPUT, PRE_GIT, etc using 'ENABLE' settings
+non_core_expand() if $rc{ENABLE};
+
 # add internal triggers
 # ----------------------------------------------------------------------
 
@@ -120,6 +124,70 @@ my $glrc_default_text = '';
     $glrc_default_text = <DATA>;
 }
 
+# ----------------------------------------------------------------------
+
+sub non_core_expand {
+    my %enable;
+
+    for my $e ( @{ $rc{ENABLE} } ) {
+        my ($name, $arg) = split ' ', $e, 2;
+        # store args as the hash value for the name
+        $enable{$name} = $arg || '';
+
+        # for now, we pretend everything is a command, because commands
+        # are the only thing that the non_core list does not contain
+        $rc{COMMANDS}{$name} = $arg || 1;
+    }
+
+    # bring in additional non-core specs from the rc file, if given
+    if (my $nc2 = $rc{NON_CORE}) {
+        for ($non_core, $nc2) {
+            # beat 'em into shape :)
+            s/#.*//g;
+            s/[ \t]+/ /g; s/^ //mg; s/ $//mg;
+            s/\n+/\n/g;
+        }
+
+        for ( split "\n", $nc2 ) {
+            next unless /\S/;
+            my ($name, $where, $module, $before, $name2) = split ' ', $_;
+            if (not $before) {
+                $non_core .= "$name $where $module\n";
+                next;
+            }
+            die if $before ne 'before';
+            $non_core =~ s(^(?=$name2 $where( |$)))($name $where $module\n)m;
+        }
+    }
+
+    my @data = split "\n", $non_core || '';
+    for (@data) {
+        next if /^\s*(#|$)/;
+        my ($name, $where, $module) = split ' ', $_;
+
+        # if it appears here, it's not a command, so delete it.  At the end of
+        # this loop, what's left in $rc{COMMANDS} will be those names in the
+        # enable list that do not appear in the non_core list.
+        delete $rc{COMMANDS}{$name};
+
+        next unless exists $enable{$name};
+
+        # module to call is name if specified as "."
+        $module = $name if $module eq ".";
+
+        # module to call is "name::pre_git" or such if specified as "::"
+        ( $module = $name ) .= "::" . lc($where) if $module eq '::';
+
+        # append arguments, if supplied
+        $module .= " $enable{$name}" if $enable{$name};
+
+        push @{ $rc{$where} }, $module;
+    }
+}
+
+# exported functions
+# ----------------------------------------------------------------------
+
 sub glrc {
     my $cmd = shift;
     if ( $cmd eq 'default-filename' ) {
@@ -140,9 +208,6 @@ sub glrc {
         _die "unknown argument to glrc: '$cmd'";
     }
 }
-
-# exported functions
-# ----------------------------------------------------------------------
 
 my $all   = 0;
 my $nonl  = 0;
@@ -300,6 +365,58 @@ sub args {
     return @ARGV;
 }
 
+# ----------------------------------------------------------------------
+
+BEGIN { $non_core = "
+    # No user-servicable parts inside.  Warranty void if seal broken.  Refer
+    # servicing to authorised service center only.
+
+    continuation-lines      SYNTACTIC_SUGAR .
+    keysubdirs-as-groups    SYNTACTIC_SUGAR .
+    macros                  SYNTACTIC_SUGAR .
+
+    renice                  PRE_GIT         .
+
+    CpuTime                 INPUT           ::
+    CpuTime                 POST_GIT        ::
+
+    Shell                   INPUT           ::
+
+    Alias                   INPUT           ::
+
+    Mirroring               INPUT           ::
+    Mirroring               PRE_GIT         ::
+    Mirroring               POST_GIT        ::
+
+    RefexExpr               ACCESS_2        ::
+
+    RepoUmask               PRE_GIT         ::
+    RepoUmask               POST_CREATE     ::
+
+    partial-copy            PRE_GIT         .
+
+    upstream                PRE_GIT         .
+
+    no-create-on-read       PRE_CREATE      AutoCreate::deny_R
+    no-auto-create          PRE_CREATE      AutoCreate::deny_RW
+
+    ssh-authkeys-split      POST_COMPILE    post-compile/ssh-authkeys-split
+    ssh-authkeys            POST_COMPILE    post-compile/ssh-authkeys
+    Shell                   POST_COMPILE    post-compile/ssh-authkeys-shell-users
+
+    git-config              POST_COMPILE    post-compile/update-git-configs
+    git-config              POST_CREATE     post-compile/update-git-configs
+
+    gitweb                  POST_CREATE     post-compile/update-gitweb-access-list
+    gitweb                  POST_COMPILE    post-compile/update-gitweb-access-list
+
+    cgit                    POST_COMPILE    post-compile/update-description-file
+
+    daemon                  POST_CREATE     post-compile/update-git-daemon-access-list
+    daemon                  POST_COMPILE    post-compile/update-git-daemon-access-list
+";
+}
+
 1;
 
 # ----------------------------------------------------------------------
@@ -313,135 +430,148 @@ __DATA__
 
 # (Tip: perl allows a comma after the last item in a list also!)
 
-# HELP for commands (see COMMANDS list below) can be had by running the
-# command with "-h" as the sole argument.
+# HELP for commands can be had by running the command with "-h".
 
-# HELP for all the other external programs (the syntactic sugar helpers and
-# the various programs/functions in the 8 trigger lists), can be found in
-# doc/non-core.mkd (http://sitaramc.github.com/gitolite/non-core.html) or in
-# the corresponding source file itself.
+# HELP for all the other FEATURES can be found in the documentation (look for
+# "list of non-core programs shipped with gitolite" in the master index) or
+# directly in the corresponding source file.
 
 %RC = (
-    # if you're using mirroring, you need a hostname.  This is *one* simple
-    # word, not a full domain name.  See documentation if in doubt
-    # HOSTNAME                  =>  'darkstar',
-    UMASK                       =>  0077,
 
-    # look in the "GIT-CONFIG" section in the README for what to do
-    GIT_CONFIG_KEYS             =>  '',
+    # ------------------------------------------------------------------
+
+    # default umask gives you perms of '0700'; see the rc file docs for
+    # how/why you might change this
+    UMASK                           =>  0077,
+
+    # look for "git-config" in the documentation
+    GIT_CONFIG_KEYS                 =>  '',
 
     # comment out if you don't need all the extra detail in the logfile
-    LOG_EXTRA                   =>  1,
+    LOG_EXTRA                       =>  1,
 
-    # settings used by external programs; uncomment and change as needed.  You
-    # can add your own variables for use in your own external programs; take a
-    # look at the info and desc commands for perl and shell samples.
-
-    # used by the CpuTime trigger
-    # DISPLAY_CPU_TIME          =>  1,
-    # CPU_TIME_WARN_LIMIT       =>  0.1,
-    # used by the desc command
-    # WRITER_CAN_UPDATE_DESC    =>  1,
-    # used by the info command
-    # SITE_INFO                 =>  'Please see http://blahblah/gitolite for more help',
-
-    # add more roles (like MANAGER, TESTER, ...) here.
+    # roles.  add more roles (like MANAGER, TESTER, ...) here.
     #   WARNING: if you make changes to this hash, you MUST run 'gitolite
     #   compile' afterward, and possibly also 'gitolite trigger POST_COMPILE'
-    ROLES                       =>
-        {
-            READERS             =>  1,
-            WRITERS             =>  1,
-        },
+    ROLES => {
+        READERS                     =>  1,
+        WRITERS                     =>  1,
+    },
     # uncomment (and change) this if you wish
-    # DEFAULT_ROLE_PERMS          =>  'READERS @all',
+    # DEFAULT_ROLE_PERMS            =>  'READERS @all',
 
-    # comment out or uncomment as needed
-    # these are available to remote users
-    COMMANDS                    =>
-        {
-            'help'              =>  1,
-            'desc'              =>  1,
-            # 'fork'            =>  1,
-            'info'              =>  1,
-            # 'mirror'          =>  1,
-            'perms'             =>  1,
-            # 'sskm'            =>  1,
-            'writable'          =>  1,
-            # 'D'               =>  1,
-        },
+    # ------------------------------------------------------------------
 
-    # comment out or uncomment as needed
-    # these will run in sequence during the conf file parse
-    SYNTACTIC_SUGAR             =>
-        [
-            # 'continuation-lines',
-            # 'keysubdirs-as-groups',
-        ],
+    # rc variables used by various features
 
-    # comment out or uncomment as needed
-    # these will run in sequence to modify the input (arguments and environment)
-    INPUT                       =>
-        [
-            # 'CpuTime::input',
-            # 'Shell::input',
-            # 'Alias::input',
-            # 'Mirroring::input',
-        ],
+    # the 'info' command prints this as additional info, if it is set
+        # SITE_INFO                 =>  'Please see http://blahblah/gitolite for more help',
 
-    # comment out or uncomment as needed
-    # these will run in sequence just after the first access check is done
-    ACCESS_1                    =>
-        [
-        ],
+    # the 'desc' command uses this
+        # WRITER_CAN_UPDATE_DESC    =>  1,
 
-    # comment out or uncomment as needed
-    # these will run in sequence just before the actual git command is invoked
-    PRE_GIT                     =>
-        [
-            # 'renice 10',
-            # 'Mirroring::pre_git',
+    # the CpuTime feature uses these
+        # display user, system, and elapsed times to user after each git operation
+        # DISPLAY_CPU_TIME          =>  1,
+        # display a warning if total CPU times (u, s, cu, cs) crosses this limit
+        # CPU_TIME_WARN_LIMIT       =>  0.1,
+
+    # the Mirroring feature needs this
+        # HOSTNAME                  =>  "foo",
+
+    # if you enabled 'Shell', you need this
+        # SHELL_USERS_LIST          =>  "$ENV{HOME}/.gitolite.shell-users",
+
+    # ------------------------------------------------------------------
+
+    # List of commands and features to enable
+
+    ENABLE => [
+
+        # COMMANDS
+
+            # These are the commands enabled by default
+            'help',
+            'desc',
+            'info',
+            'perms',
+            'writable',
+
+            # Uncomment or add new commands here.
+            # 'create',
+            # 'fork',
+            # 'mirror',
+            # 'sskm',
+            # 'D',
+
+        # These FEATURES are enabled by default.
+
+            # essential (unless you're using smart-http mode)
+            'ssh-authkeys',
+
+            # creates git-config enties from gitolite.conf file entries like 'config foo.bar = baz'
+            'git-config',
+
+            # creates git-daemon-export-ok files; if you don't use git-daemon, comment this out
+            'daemon',
+
+            # creates projects.list file; if you don't use gitweb, comment this out
+            'gitweb',
+
+        # These FEATURES are disabled by default; uncomment to enable.  If you
+        # need to add new ones, ask on the mailing list :-)
+
+        # user-visible behaviour
+
+            # prevent wild repos auto-create on fetch/clone
+            # 'no-create-on-read',
+            # no auto-create at all (don't forget to enable the 'create' command!)
+            # 'no-auto-create',
+
+            # access a repo by another (possibly legacy) name
+            # 'Alias',
+
+            # give some users direct shell access
+            # 'Shell',
+
+        # system admin stuff
+
+            # enable mirroring (don't forget to set the HOSTNAME too!)
+            # 'Mirroring',
+
+            # allow people to submit pub files with more than one key in them
+            # 'ssh-authkeys-split',
+
+            # selective read control hack
             # 'partial-copy',
-        ],
 
-    # comment out or uncomment as needed
-    # these will run in sequence just after the second access check is done
-    ACCESS_2                    =>
-        [
-        ],
+            # manage local, gitolite-controlled, copies of read-only upstream repos
+            # 'upstream',
 
-    # comment out or uncomment as needed
-    # these will run in sequence after the git command returns
-    POST_GIT                    =>
-        [
-            # 'Mirroring::post_git',
-            # 'CpuTime::post_git',
-        ],
+            # updates 'description' file instead of 'gitweb.description' config item
+            # 'cgit',
 
-    # comment out or uncomment as needed
-    # these will run in sequence before a new wild repo is created
-    PRE_CREATE                  =>
-        [
-        ],
+        # performance, logging, monitoring...
 
-    # comment out or uncomment as needed
-    # these will run in sequence after a new repo is created
-    POST_CREATE                 =>
-        [
-            'post-compile/update-git-configs',
-            'post-compile/update-gitweb-access-list',
-            'post-compile/update-git-daemon-access-list',
-        ],
+            # be nice
+            # 'renice 10',
 
-    # comment out or uncomment as needed
-    # these will run in sequence after post-update
-    POST_COMPILE                =>
-        [
-            'post-compile/ssh-authkeys',
-            'post-compile/update-git-configs',
-            'post-compile/update-gitweb-access-list',
-            'post-compile/update-git-daemon-access-list',
-        ],
+            # log CPU times (user, system, cumulative user, cumulative system)
+            # 'CpuTime',
+
+        # syntactic_sugar for gitolite.conf and included files
+
+            # allow backslash-escaped continuation lines in gitolite.conf
+            # 'continuation-lines',
+
+            # create implicit user groups from directory names in keydir/
+            # 'keysubdirs-as-groups',
+
+            # allow simple line-oriented macros
+            # 'macros',
+
+    ],
+
 );
 
 # ------------------------------------------------------------------------------

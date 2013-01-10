@@ -1,129 +1,153 @@
-# configuration variables for gitolite
-
 # This file is in perl syntax.  But you do NOT need to know perl to edit it --
 # just mind the commas, use single quotes unless you know what you're doing,
 # and make sure the brackets and braces stay matched up!
 
 # (Tip: perl allows a comma after the last item in a list also!)
 
+# HELP for commands (see COMMANDS list below) can be had by running the
+# command with "-h" as the sole argument.
+
+# HELP for all the other FEATURES can be found in the documentation (look for
+# "list of non-core programs shipped with gitolite" in the master index) or
+# directly in the corresponding source file.
+
 %RC = (
-    # if you're using mirroring, you need a hostname.  This is *one* simple
-    # word, not a full domain name.  See documentation if in doubt
-    HOSTNAME                    =>  '%HOSTNAME',
-    UMASK                       =>  0077,
-    GIT_CONFIG_KEYS             =>  '',
+
+    # ------------------------------------------------------------------
+
+    HOSTNAME                        =>  '%HOSTNAME',
+
+    # default umask gives you perms of '0700'; see the rc file docs for
+    # how/why you might change this
+    UMASK                           =>  0077,
+
+    # look in the "GIT-CONFIG" section in the README for what to do
+    GIT_CONFIG_KEYS                 =>  '',
 
     # comment out if you don't need all the extra detail in the logfile
-    LOG_EXTRA                   =>  1,
+    LOG_EXTRA                       =>  1,
 
-    # settings used by external programs; uncomment and change as needed.  You
-    # can add your own variables for use in your own external programs; take a
-    # look at the info and desc commands for perl and shell samples.
-
-    # used by the CpuTime trigger
-    # DISPLAY_CPU_TIME          =>  1,
-    # CPU_TIME_WARN_LIMIT       =>  0.1,
-    # used by the desc command
-    # WRITER_CAN_UPDATE_DESC    =>  1,
-    # used by the info command
-    # SITE_INFO                 =>  'Please see http://blahblah/gitolite for more help',
-
-    # add more roles (like MANAGER, TESTER, ...) here.
+    # roles.  add more roles (like MANAGER, TESTER, ...) here.
     #   WARNING: if you make changes to this hash, you MUST run 'gitolite
     #   compile' afterward, and possibly also 'gitolite trigger POST_COMPILE'
-    ROLES                       =>
-        {
-            READERS             =>  1,
-            WRITERS             =>  1,
-        },
+    ROLES => {
+        READERS                     =>  1,
+        WRITERS                     =>  1,
+    },
     # uncomment (and change) this if you wish
-    # DEFAULT_ROLE_PERMS          =>  'READERS @all',
+    # DEFAULT_ROLE_PERMS            =>  'READERS @all',
 
-    # comment out or uncomment as needed
-    # these are available to remote users
-    COMMANDS                    =>
-        {
-            'help'              =>  1,
-            'info'              =>  1,
-            'desc'              =>  1,
-            'perms'             =>  1,
-            'mirror'            =>  1,
-            'writable'          =>  1,
-        },
+    # ------------------------------------------------------------------
 
-    # comment out or uncomment as needed
-    # these will run in sequence during the conf file parse
-    SYNTACTIC_SUGAR             =>
-        [
-            # 'continuation-lines',
-        ],
+    # rc variables used by various features
 
-    # comment out or uncomment as needed
-    # these will run in sequence to modify the input (arguments and environment)
-    INPUT                       =>
-        [
-            'Mirroring::input',
-        ],
+    # the 'info' command prints this as additional info, if it is set
+        # SITE_INFO                 =>  'Please see http://blahblah/gitolite for more help',
 
-    # comment out or uncomment as needed
-    # these will run in sequence just after the first access check is done
-    ACCESS_1                    =>
-        [
-        ],
+    # the 'desc' command uses this
+        # WRITER_CAN_UPDATE_DESC    =>  1,
 
-    # comment out or uncomment as needed
-    # these will run in sequence just before the actual git command is invoked
-    PRE_GIT                     =>
-        [
-            # if you use this, make this the first item in the list
+    # the CpuTime feature uses these
+        # display user, system, and elapsed times to user after each git operation
+        # DISPLAY_CPU_TIME          =>  1,
+        # display a warning if total CPU times (u, s, cu, cs) crosses this limit
+        # CPU_TIME_WARN_LIMIT       =>  0.1,
+
+    # the Mirroring feature needs this
+        # HOSTNAME                  =>  "foo",
+
+    # if you enabled 'Shell', you need this
+        # SHELL_USERS_LIST          =>  "$ENV{HOME}/.gitolite.shell-users",
+
+    # ------------------------------------------------------------------
+
+    # List of commands and features to enable
+
+    ENABLE => [
+
+        # COMMANDS
+
+            # These are the commands enabled by default
+            'help',
+            'desc',
+            'info',
+            'perms',
+            'writable',
+
+            'mirror',
+
+            # Uncomment or add new commands here.
+            # 'create',
+            # 'fork',
+            # 'mirror',
+            # 'sskm',
+            # 'D',
+
+        # These FEATURES are enabled by default.
+
+            # essential (unless you're using smart-http mode)
+            'ssh-authkeys',
+
+            # creates git-config enties from gitolite.conf file entries like 'config foo.bar = baz'
+            'git-config',
+
+            # creates git-daemon-export-ok files; if you don't use git-daemon, comment this out
+            'daemon',
+
+            # creates projects.list file; if you don't use gitweb, comment this out
+            'gitweb',
+
+        # These FEATURES are disabled by default; uncomment to enable.  If you
+        # need to add new ones, ask on the mailing list :-)
+
+        # user-visible behaviour
+
+            # prevent wild repos auto-create on fetch/clone
+            # 'no-create-on-read',
+            # no auto-create at all (don't forget to enable the 'create' command!)
+            # 'no-auto-create',
+
+            # access a repo by another (possibly legacy) name
+            # 'Alias',
+
+            # give some users direct shell access
+            # 'Shell',
+
+        # system admin stuff
+
+            # enable mirroring (don't forget to set the HOSTNAME too!)
+            'Mirroring',
+
+            # allow people to submit pub files with more than one key in them
+            # 'ssh-authkeys-split',
+
+            # selective read control hack
+            # 'partial-copy',
+
+            # manage local, gitolite-controlled, copies of read-only upstream repos
+            # 'upstream',
+
+            # updates 'description' file instead of 'gitweb.description' config item
+            # 'cgit',
+
+        # performance, logging, monitoring...
+
+            # be nice
             # 'renice 10',
 
-            'Mirroring::pre_git',
+            # log CPU times (user, system, cumulative user, cumulative system)
+            # 'CpuTime',
 
-            # see docs ("list of non-core programs shipped") for details
-            # 'partial-copy',
-        ],
+        # syntactic_sugar for gitolite.conf and included files
 
-    # comment out or uncomment as needed
-    # these will run in sequence just after the second access check is done
-    ACCESS_2                    =>
-        [
-        ],
+            # allow backslash-escaped continuation lines in gitolite.conf
+            # 'continuation-lines',
 
-    # comment out or uncomment as needed
-    # these will run in sequence after the git command returns
-    POST_GIT                    =>
-        [
-            'Mirroring::post_git',
+            # create implicit user groups from directory names in keydir/
+            # 'keysubdirs-as-groups',
 
-            # if you use this, make this the last item in the list
-            # 'CpuTime::post_git',
-        ],
+    ],
 
-    # comment out or uncomment as needed
-    # these will run in sequence before a new wild repo is created
-    PRE_CREATE                  =>
-        [
-        ],
-
-    # comment out or uncomment as needed
-    # these will run in sequence after a new wild repo is created
-    POST_CREATE                 =>
-        [
-            'post-compile/update-git-configs',
-            'post-compile/update-gitweb-access-list',
-            'post-compile/update-git-daemon-access-list',
-        ],
-
-    # comment out or uncomment as needed
-    # these will run in sequence after post-update
-    POST_COMPILE                =>
-        [
-            'post-compile/ssh-authkeys',
-            'post-compile/update-git-configs',
-            'post-compile/update-gitweb-access-list',
-            'post-compile/update-git-daemon-access-list',
-        ],
 );
 
 # ------------------------------------------------------------------------------
