@@ -9,7 +9,7 @@ use Gitolite::Test;
 # invalid refnames
 # ----------------------------------------------------------------------
 
-try "plan 57";
+try "plan 56";
 try "DEF POK = !/DENIED/; !/failed to push/";
 
 confreset; confadd '
@@ -84,8 +84,7 @@ glt push u1 origin HEAD
 tc  aa=bb
 glt push u1 origin HEAD
         /To file:///aa/
-        /invalid characters in ref or filename: \\'VREF/NAME/aa=bb/
-        reject
+        POK; /HEAD -> master/
 
 # push to branch dd,ee ok
 git reset --hard HEAD^
