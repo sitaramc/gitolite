@@ -1,29 +1,56 @@
-#!/bin/sh
+#!/usr/bin/perl
 
 # this is literally the simplest gitweb update possible.  You are free to add
 # whatever you want and contribute it back, as long as it is upward
 # compatible.
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+use strict;
+use warnings;
+
+my $RB = $rc{GL_REPO_BASE};
+_chdir($RB);
 
 # ----------------------------------------------------------------------
 # delete the 'description' file that 'git init' created if this is run from
 # the post-create trigger.  However, note that POST_CREATE is also called from
 # perms (since POST_CREATE doubles as eqvt of POST_COMPILE to propagate ad hoc
 # permissions changes for wild repos) and then you should not delete it.
-[ "$1" = "POST_CREATE" ] && [ "$4" != "perms" ] && rm -f $GL_REPO_BASE/$2.git/description 2>/dev/null
+if (@ARGV and $ARGV[0] eq 'POST_CREATE' and (!defined $ARGV[3] or $ARGV[3] ne 'perms')) {
+	my $repo = $ARGV[1];
+	unlink '$RB/$repo.git/description';
+}
 
 # ----------------------------------------------------------------------
-# skip if arg-1 is POST_CREATE and no arg-3 (user name) exists; this means
+# skip if arg-0 is POST_CREATE and no arg-2 (user name) exists; this means
 # it's been triggered by a *normal* (not "wild") repo creation, which in turn
 # means a POST_COMPILE should be following so there's no need to waste time
 # running this once for each new repo
-[ "$1" = "POST_CREATE" ] && [ -z "$3" ] && exit 0;
+if (@ARGV and $ARGV[0] eq 'POST_CREATE' and (!defined $ARGV[2] or $ARGV[2] eq '')) {
+	exit 0;
+}
 
-plf=`gitolite query-rc GITWEB_PROJECTS_LIST`
-[ -z "$plf" ] && plf=$HOME/projects.list
+my $plf = "$ENV{HOME}/projects.list";
+if ($rc{GITWEB_PROJECTS_LIST}) {
+	$plf = $rc{GITWEB_PROJECTS_LIST};
+}
 
-(
-    gitolite list-phy-repos | gitolite access % gitweb R any | grep -v DENIED
-    gitolite list-phy-repos | gitolite git-config -r % gitweb\\.
-) |
-    cut -f1 | sort -u | sed -e 's/$/.git/' > $plf
+my $allrepos = list_phy_repos();
+my @webrepos = ();
 
+for my $repo (@$allrepos) {
+	my $access = access($repo, 'gitweb', 'R', 'any');
+	my $prop = git_config($repo, 'gitweb\\.');
+	push @webrepos, $repo if not $access =~ /DENIED/ or %$prop;
+}
+
+my $plf_content = join(".git\n", @webrepos);
+if ($plf_content) {
+	# Add missing last .git if there's some content
+	$plf_content = $plf_content . ".git\n";
+}
+_print($plf, $plf_content);
