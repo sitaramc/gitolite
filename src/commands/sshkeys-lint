@@ -142,10 +142,10 @@ sub ak_comment {
 sub fprint {
     local $_ = shift;
     my ( $fh, $tempfn, $in );
-    if (/ssh-(dss|rsa) /) {
+    if ( /ssh-(dss|rsa) / || /ecdsa-/ ) {
         # an actual key was passed.  Since ssh-keygen requires an actual file,
         # make a temp file to take the data and pass on to ssh-keygen
-        s/^.* (ssh-dss|ssh-rsa)/$1/;
+        s/^.* (ssh-dss|ssh-rsa|ecdsa-\S+)/$1/;
         use File::Temp qw(tempfile);
         ( $fh, $tempfn ) = tempfile();
         $in = $tempfn;
