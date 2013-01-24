@@ -36,14 +36,14 @@ usage() if not @ARGV or $ARGV[0] eq '-h';
 
 $ENV{GL_USER} or _die "GL_USER not set";
 
+my $generic_error = "repo does not exist, or you are not authorised";
+
 my $list = 0;
 if ( $ARGV[0] eq '-l' ) {
     $list++;
     shift;
     getperms(@ARGV);    # doesn't return
 }
-
-my $generic_error = "repo does not exist, or you are not authorised";
 
 # auto-create the repo if -c passed and repo doesn't exist
 if ( $ARGV[0] eq '-c' ) {
