@@ -78,7 +78,7 @@ sub sanity {
     _warn "$akdir missing; creating a new one"  if not -d $akdir;
     _warn "$akfile missing; creating a new one" if not -f $akfile;
 
-    _mkdir( $akdir, 0700 ) if not -d $akfile;
+    _mkdir( $akdir, 0700 ) if not -d $akdir;
     if ( not -f $akfile ) {
         _print( $akfile, "" );
         chmod 0700, $akfile;
