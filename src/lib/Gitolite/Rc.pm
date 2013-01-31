@@ -333,6 +333,9 @@ __DATA__
     # look in the "GIT-CONFIG" section in the README for what to do
     GIT_CONFIG_KEYS             =>  '',
 
+    # config keys allowed to be used multiple times
+    GIT_MULTI_CONFIG_KEYS       =>  '',
+
     # comment out if you don't need all the extra detail in the logfile
     LOG_EXTRA                   =>  1,
 

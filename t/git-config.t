@@ -9,7 +9,7 @@ use Gitolite::Test;
 # git config settings
 # ----------------------------------------------------------------------
 
-try "plan 57";
+try "plan 68";
 
 try "pwd";
 my $od = text();
@@ -137,7 +137,6 @@ try "
 $t = join("\n", sort (lines()));
 
 cmp $t, 'bar.git/config:	bare = true
-bar.git/config:[foo]
 foo.git/config:	bar = f1
 foo.git/config:	bare = true
 foo.git/config:[foo]
@@ -190,3 +189,74 @@ cmp $t, './bar/u2/one.git/config:	bar = one
 ./testing.git/config:	bar = dft
 ./testing.git/config:	bare = true
 ./testing.git/config:[foo]';
+
+put "$ENV{G3T_RC}", "\$rc{GIT_CONFIG_KEYS} = 'foo\.bar foo\.qux foo\.foo';
+\$rc{GIT_MULTI_CONFIG_KEYS} = 'foo\.qux foo\.foo';\n";
+
+try "cd $od; ok";
+
+confreset;confadd '
+
+    repo @all
+        config foo.bar  =   dft
+        config foo.qux  =   dft
+        config foo.foo  =
+
+    repo gitolite-admin
+        RW+     =   admin
+        config foo.bar  =
+        config foo.qux  =
+
+    repo testing
+        RW+     =   @all
+        config foo.foo  =
+
+    repo foo
+        RW      =   u1
+        config foo.bar  =   f1
+        config foo.qux  =   f1
+        config foo.qux  =   f2
+
+    repo frob
+        RW      =   u3
+        config foo.foo  =   f1
+
+    repo bar
+        RW      =   u2
+        config foo.bar  =   zero
+        config foo.bar  =   one
+        config foo.qux  =   one
+
+';
+
+try "ADMIN_PUSH set1; !/FATAL/" or die text();
+
+try "
+    cd $rb;                             ok
+    egrep foo\\|bar\\|qux *.git/config
+";
+$t = join("\n", sort (lines()));
+
+cmp $t, 'bar.git/config:	bar = one
+bar.git/config:	bare = true
+bar.git/config:	qux = dft
+bar.git/config:	qux = one
+bar.git/config:[foo]
+foo.git/config:	bar = f1
+foo.git/config:	bare = true
+foo.git/config:	qux = dft
+foo.git/config:	qux = f1
+foo.git/config:	qux = f2
+foo.git/config:[foo]
+frob.git/config:	bar = dft
+frob.git/config:	bare = true
+frob.git/config:	foo = f1
+frob.git/config:	qux = dft
+frob.git/config:[foo]
+gitolite-admin.git/config:	bare = true
+gitolite-admin.git/config:	qux = dft
+gitolite-admin.git/config:[foo]
+testing.git/config:	bar = dft
+testing.git/config:	bare = true
+testing.git/config:	qux = dft
+testing.git/config:[foo]';
