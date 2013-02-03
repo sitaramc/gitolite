@@ -24,15 +24,10 @@ Notes:
     The 'any' ref is special -- it ignores deny rules (see docs for what this
     means and exceptions).
 
-For each case where access is not denied, one line is printed like this:
-
-    reponame<tab>username<tab>access rights
-
-This is orders of magnitude faster than running the command multiple times;
-you'll notice if you have more than a hundred or so repos.
-
-Advanced uses: see src/triggers/post-compile/update-git-daemon-access-list for
-a good example.
+Batch mode: see src/triggers/post-compile/update-git-daemon-access-list for a
+good example that shows how to test several repos in one invocation.  This is
+orders of magnitude faster than running the command multiple times; you'll
+notice if you have more than a hundred or so repos.
 =cut
 
 usage() if not @ARGV or $ARGV[0] eq '-h';
