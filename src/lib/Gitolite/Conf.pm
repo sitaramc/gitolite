@@ -73,7 +73,7 @@ sub parse {
             trace( 2, $line );
             set_subconf($1);
         } else {
-            _warn "?? $line";
+            _warn "syntax error, ignoring: '$line'";
         }
     }
     parse_done();
