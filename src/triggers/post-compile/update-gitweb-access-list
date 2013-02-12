@@ -22,7 +22,7 @@ _chdir($RB);
 # permissions changes for wild repos) and then you should not delete it.
 if (@ARGV and $ARGV[0] eq 'POST_CREATE' and (!defined $ARGV[3] or $ARGV[3] ne 'perms')) {
 	my $repo = $ARGV[1];
-	unlink '$RB/$repo.git/description';
+	unlink "$RB/$repo.git/description";
 }
 
 # ----------------------------------------------------------------------
