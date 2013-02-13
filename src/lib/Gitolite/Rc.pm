@@ -107,6 +107,9 @@ $ENV{PATH} = "$ENV{GL_BINDIR}:$ENV{PATH}" unless $ENV{PATH} =~ /^$ENV{GL_BINDIR}
 $ENV{GL_REPO_BASE}  = $rc{GL_REPO_BASE};
 $ENV{GL_ADMIN_BASE} = $rc{GL_ADMIN_BASE};
 
+# add potential Git custom binaries path
+$ENV{PATH} = "$rc{GIT_BINDIR}:$ENV{PATH}" if $rc{GIT_BINDIR};
+
 # ----------------------------------------------------------------------
 
 use strict;
@@ -330,6 +333,9 @@ __DATA__
     # look in the "GIT-CONFIG" section in the README for what to do
     GIT_CONFIG_KEYS             =>  '',
 
+    # config keys allowed to be used multiple times
+    GIT_MULTI_CONFIG_KEYS       =>  '',
+
     # comment out if you don't need all the extra detail in the logfile
     LOG_EXTRA                   =>  1,
 
@@ -344,6 +350,9 @@ __DATA__
     # WRITER_CAN_UPDATE_DESC    =>  1,
     # used by the info command
     # SITE_INFO                 =>  'Please see http://blahblah/gitolite for more help',
+
+    # comment out if your Git binaries are located outside your standard path
+    # GIT_BINDIR => '/opt/bin',
 
     # add more roles (like MANAGER, TESTER, ...) here.
     #   WARNING: if you make changes to this hash, you MUST run 'gitolite

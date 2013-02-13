@@ -128,6 +128,8 @@ sub git_config {
     my ( $repo, $key, $empty_values_OK ) = @_;
     $key ||= '.';
 
+    my @validmultikeys = split( ' ', ( $rc{GIT_MULTI_CONFIG_KEYS} || '' ) );
+
     if (repo_missing($repo)) {
         load_common();
     } else {
@@ -135,9 +137,7 @@ sub git_config {
     }
 
     # read comments bottom up
-    my %ret =
-      # and take the second and third elements to make up your new hash
-      map { $_->[1] => $_->[2] }
+    my @ret_array =
       # keep only the ones where the second element matches your key
       grep { $_->[1] =~ qr($key) }
       # sort this list of listrefs by the first element in each list ref'd to
@@ -158,26 +158,38 @@ sub git_config {
     # the deref gets you
     #            [ 6, 'foo.bar', 'repo' ], [ 7, 'foodbar', 'repoD' ], [ 8, 'foo.czar', 'jule' ]
     # the sort rearranges it (in this case it's already sorted but anyway...)
-    # the grep gets you this, assuming the key is foo.bar (and "." is regex ".')
+    # the grep gets you this, assuming the key is foo.bar (and "." is regex ".")
     #            [ 6, 'foo.bar', 'repo' ], [ 7, 'foodbar', 'repoD' ]
-    # and the final map does this:
-    #                 'foo.bar'=>'repo'  ,      'foodbar'=>'repoD'
 
-    # now some of these will have an empty key; we need to delete them unless
-    # we're told empty values are OK
-    unless ($empty_values_OK) {
-        my($k, $v);
-        while (($k, $v) = each %ret) {
-            delete $ret{$k} if not $v;
+    my %ret = ();
+    foreach (@ret_array) {
+        my ( $key, $value ) = ( $_->[1], $_->[2] );
+        my @multikey = grep { $key =~ /^$_$/ } @validmultikeys;
+
+        if ( @multikey >= 1 and exists $ret{$key} ) {
+            # already have a multivalued key; empty values are not added to multi keys
+            push @{$ret{$key}}, $value if $value;
+
+        } elsif ( @multikey >= 1 ) {
+            # multivalued key; we don't have an array yet
+            my @value_array = ();
+            push @value_array, $value if $value;
+            $ret{$key} = \@value_array if @value_array or $empty_values_OK;
+
+        } else {
+            # single value key; we only add them if there not empty or we're told empty values are OK
+            $ret{$key} = $value if $value or $empty_values_OK;
         }
     }
 
     my($k, $v);
     my $creator = creator($repo);
     while (($k, $v) = each %ret) {
-        $v =~ s/%GL_REPO/$repo/g;
-        $v =~ s/%GL_CREATOR/$creator/g if $creator;
-        $ret{$k} = $v;
+        if ( ref( $v ) ne "ARRAY" ) {
+            $v =~ s/%GL_REPO/$repo/g;
+            $v =~ s/%GL_CREATOR/$creator/g if $creator;
+            $ret{$k} = $v;
+        }
     }
 
     trace( 3, map { ( "$_" => "-> $ret{$_}" ) } ( sort keys %ret ) );

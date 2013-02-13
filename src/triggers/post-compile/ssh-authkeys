@@ -121,7 +121,12 @@ sub fp_file {
 
 sub fp_line {
     my ( $fh, $fn ) = tempfile();
-    print $fh shift;
+
+    my $authkey = shift;
+    # Remove potential command prefix and options from authkeys file
+    $authkey =~ s/^.* ((?:ssh-rsa|ssh-dss|ecdsa-\S+) .*$)/$1/gm;
+
+    print $fh $authkey;
     close $fh;
     my $fp = fp_file($fn);
     unlink $fn;

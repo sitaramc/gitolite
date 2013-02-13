@@ -63,9 +63,9 @@ if ( $repo ne '%' and $key ne '%' ) {
     exit 1 unless %$ret;
 
     if ($regex) {
-        map { print "$repo\t$_\t" . $ret->{$_} . "\n" } sort keys %$ret unless $quiet;
+        map { print_config_multiple ( $repo, $_, $$ret{$_} ) } sort keys %$ret unless $quiet;
     } else {
-        map { print $ret->{$_} . ( $nonl ? "" : "\n" ) } sort keys %$ret unless $quiet;
+        map { print_config_simple ( $ret->{$_}, $nonl ) } sort keys %$ret unless $quiet;
     }
     exit 0;
 }
@@ -82,5 +82,28 @@ while (<>) {
     $k = "^\Q$k\E\$" unless $regex;
     $ret = git_config( $r, $k );
     next unless %$ret;
-    map { print "$r\t$_\t" . $ret->{$_} . "\n" } sort keys %$ret;
+    map { print_config_multiple ( $r, $_, $$ret{$_} ) } sort keys %$ret;
+}
+
+sub print_config_simple {
+    my ( $value, $nonl ) = @_;
+
+    if ( ref( $value ) eq "ARRAY" ) {
+        print join("\n", @$value);
+        print ( $nonl ? "" : "\n" );
+    } else {
+        print $value . ( $nonl ? "" : "\n" ) ;
+    }
+}
+
+sub print_config_multiple {
+    my ( $repo, $key, $value ) = @_;
+
+    if ( ref( $value ) eq "ARRAY" ) {
+        for my $individual_value ( @$value ) {
+            print "$repo\t$key\t$individual_value\n";
+        }
+    } else {
+        print "$repo\t$key\t$value\n";
+    }
 }

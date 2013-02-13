@@ -48,13 +48,52 @@ sub fixup_config {
     my $gc = git_config( $pr, '.', 1 );
     while ( my ( $key, $value ) = each( %{$gc} ) ) {
         next if $key =~ /^gitolite-options\./;
-        if ( $value ne "" ) {
-            while ( my ($mk, $mv) = each %{ $rc{SAFE_CONFIG} } ) {
-                $value =~ s/%$mk/$mv/g;
+        if ( ref( $value ) eq "ARRAY" ) {
+            # multivalued config array; clear all then add the content of the array
+            clear_value ( $key, $pr );
+            for my $individual_value ( @$value ) {
+                add_value ( $key, $individual_value, $pr, 1 );
             }
-            system( "git", "config", "--file", "$RB/$pr.git/config", $key, $value );
+
+        } elsif ( $value ne "" ) {
+            # single-valued config string; just add it
+            add_value ( $key, $value, $pr );
+
         } else {
-            system( "git", "config", "--file", "$RB/$pr.git/config", "--unset-all", $key );
+            # empty value; clear it
+            clear_value ( $key, $pr );
         }
+    }
+}
+
+sub add_value {
+    my ($key, $value, $pr, $use_add) = @_;
+
+    while ( my ($mk, $mv) = each %{ $rc{SAFE_CONFIG} } ) {
+        $value =~ s/%$mk/$mv/g;
+    }
+
+    if ( $use_add ) {
+        system( "git", "config", "--file", "$RB/$pr.git/config", "--add", $key, $value );
+    } else {
+        system( "git", "config", "--file", "$RB/$pr.git/config", $key, $value );
+    }
+}
+
+sub clear_value {
+    my ($key, $pr) = @_;
+
+    # clear the key from the config file
+    system( "git", "config", "--file", "$RB/$pr.git/config", "--unset-all", $key );
+
+    # extract the section name from the key
+    $key =~ s/([^.]*)((?:\.[^.]*)*)\.[^.]*$/lc ( $1 ) . $2/e;
+    # escape dots in the section name
+    $key =~ s/\./\\\\./g;
+
+    # clear the section if it's empty
+    my $values = `git config --file $RB/$pr.git/config --get-regexp "^$key.*"`;
+    if ( not chomp $values ) {
+        system( "git config --file $RB/$pr.git/config --remove-section $key >/dev/null 2>&1" );
     }
 }
