@@ -63,7 +63,7 @@ if ( $repo ne '%' and $key ne '%' ) {
     exit 1 unless %$ret;
 
     if ($regex) {
-        map { print_config_multiple ( $repo, $_, %{$ret}->{$_} ) } sort keys %$ret unless $quiet;
+        map { print_config_multiple ( $repo, $_, $$ret{$_} ) } sort keys %$ret unless $quiet;
     } else {
         map { print_config_simple ( $ret->{$_}, $nonl ) } sort keys %$ret unless $quiet;
     }
@@ -82,7 +82,7 @@ while (<>) {
     $k = "^\Q$k\E\$" unless $regex;
     $ret = git_config( $r, $k );
     next unless %$ret;
-    map { print_config_multiple ( $r, $_, %{$ret}->{$_} ) } sort keys %$ret;
+    map { print_config_multiple ( $r, $_, $$ret{$_} ) } sort keys %$ret;
 }
 
 sub print_config_simple {
