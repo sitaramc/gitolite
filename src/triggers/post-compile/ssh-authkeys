@@ -121,7 +121,7 @@ sub fp_file {
 
 sub fp_line {
     my ( $fh, $fn ) = tempfile();
-    print $fh shift . "\n";
+    print $fh shift() . "\n";
     close $fh;
     my $fp = fp_file($fn);
     unlink $fn;
