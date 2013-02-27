@@ -15,7 +15,7 @@ This file contains BASIC DOCUMENTATION ONLY.
 
 The COMPLETE DOCUMENTATION is at:
 
-    http://sitaramc.github.com/gitolite/master-toc.html
+    http://gitolite.com/gitolite/master-toc.html
 
 Please go there for what/why/how, concepts, background, troubleshooting, more
 details on what is covered here, or advanced features not covered here.

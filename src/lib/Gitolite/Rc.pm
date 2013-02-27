@@ -66,7 +66,7 @@ if (-r $rc and -s $rc) {
 }
 if ( defined($GL_ADMINDIR) ) {
     say2 "";
-    say2 "FATAL: '$rc' seems to be for older gitolite; please see doc/g2migr.mkd\n" . "(online at http://sitaramc.github.com/gitolite/g2migr.html)";
+    say2 "FATAL: '$rc' seems to be for older gitolite; please see doc/g2migr.mkd\n" . "(online at http://gitolite.com/gitolite/g2migr.html)";
 
     exit 1;
 }

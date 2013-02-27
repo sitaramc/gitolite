@@ -8,7 +8,7 @@ use Gitolite::Common;
 
 =for usage
 Usage for this command is not that simple.  Please read the full documentation
-in doc/sskm.mkd or online at http://sitaramc.github.com/gitolite/sskm.html.
+in doc/sskm.mkd or online at http://gitolite.com/gitolite/sskm.html.
 =cut
 
 usage() if @ARGV and $ARGV[0] eq '-h';

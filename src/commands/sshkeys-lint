@@ -60,7 +60,7 @@ if ($admin) {
     die "\t\t*** FATAL ***\n" .
         "$admin.pub maps to $fpu, not $admin.\n" .
         "You will not be able to access gitolite with this key.\n" .
-        "Look for the 'ssh troubleshooting' link in http://sitaramc.github.com/gitolite/.\n"
+        "Look for the 'ssh troubleshooting' link in http://gitolite.com/gitolite/ssh.html.\n"
     if $fpu ne "user $admin";
     #>>>
 }

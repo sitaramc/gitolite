@@ -9,5 +9,5 @@ On such a userid, clone gitolite then run this command in the clone:
 
     GITOLITE_TEST=y prove
 
-http://sitaramc.github.com/gitolite/testing.html has more details.  It will
+http://gitolite.com/gitolite/testing.html has more details.  It will
 also help you try out gitolite if you want to go beyond just the test suite.
