@@ -287,9 +287,9 @@ GIT-CONFIG
 
     **WARNING**
 
-        The last syntax shown above is the *only* way to *delete* a config
-        variable once you have added it.  Merely removing it from the conf
-        file will *not* delete it from the repo.git/config file.
+        The last two syntaxes shown above are the *only* way to *delete*
+        a config variable once you have added it.  Merely removing it from
+        the conf file will *not* delete it from the repo.git/config file.
 
     **SECURITY NOTE**
 
