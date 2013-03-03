@@ -374,6 +374,7 @@ BEGIN { $non_core = "
     continuation-lines      SYNTACTIC_SUGAR .
     keysubdirs-as-groups    SYNTACTIC_SUGAR .
     macros                  SYNTACTIC_SUGAR .
+    refex-expr              SYNTACTIC_SUGAR .
 
     renice                  PRE_GIT         .
 
@@ -388,7 +389,7 @@ BEGIN { $non_core = "
     Mirroring               PRE_GIT         ::
     Mirroring               POST_GIT        ::
 
-    RefexExpr               ACCESS_2        ::
+    refex-expr              ACCESS_2        RefexExpr::access_2
 
     RepoUmask               PRE_GIT         ::
     RepoUmask               POST_CREATE     ::

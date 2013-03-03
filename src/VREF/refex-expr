@@ -2,6 +2,9 @@
 use strict;
 use warnings;
 
+# see bottom of this file for instructons and IMPORTANT WARNINGS!
+# ----------------------------------------------------------------------
+
 my $rule = $ARGV[7];
 die "\n\nFATAL: GL_REFEX_EXPR_ doesn't exist\n(your admin probably forgot the rc file change needed for this to work)\n\n"
   unless exists $ENV{"GL_REFEX_EXPR_" . $rule};
@@ -12,64 +15,85 @@ exit 0;
 
 __END__
 
-Documentation for the refex-expression evaluation feature
+------------------------------------------------------------------------
+IMPORTANT WARNINGS:
+  * has not been tested heavily
+      * SO PLEASE TEST YOUR SPECIFIC USE CASE THOROUGHLY!
+      * read the NOTES section below
+  * syntax and semantics are to be considered beta and may change as I find
+    better use cases
+------------------------------------------------------------------------
 
-First, make sure you have both the VREF and the trigger scripts
-(src/VREF/refex-expr and src/lib/Gitolite/Triggers/RefexExpr.pm)
+Refex expressions, like VREFs, are best used as additional "deny" rules, to
+deny combinations that the normal ruleset cannot detect.
 
-Next, add this to the ACCESS_2 list in the rc file:
+To enable this, uncomment 'refex-expr' in the ENABLE list in the rc file.
 
-    'RefexExpr::access_2',
+It allows you to say things like "don't allow users u3 and u4 to change the
+Makefile in the master branch" (i.e., they can change any other file in
+master, or the Makefile in any other branch, but not that specific combo).
 
-For the rest, we'll use this example:
+    repo foo
+        RW+                                 =   u1 u2   # line 1
 
-  * user u1 can push foo to some other branch, and anything else to the master
-    branch, but not foo to the master branch
+        RW+ master                          =   u3 u4   # line 2
+        RW+                                 =   u3 u4   # line 3
+        RW+ VREF/NAME/Makefile              =   u3 u4   # line 4
+        -   master and VREF/NAME/Makefile   =   u3 u4   # line 5
+
+Line 5 is a "refex expression".  Here are the rules:
+
+  * for each refex in the expression ("master" and "VREF/NAME/Makefile" in
+    this example), a count is kept of the number of times the EXACT refex was
+    matched and allowed in the *normal* rules (here, lines 2 and 4) during
+    this push.
+
+  * the expression is evaluated based on these counts.  0 is false, and
+    any non-zero is true (see more examples later).  The truth value of the
+    expression determines whether the refex expression matched.
+
+    You can use any logical or arithmetic expression using refexes as operands
+    and using these operators:
+
+        not and or xor + - == -lt -gt -eq -le -ge -ne
+
+    Parens are not allowed.  Precedence is as you might expect for those
+    operators.  It's actually perl that is evaluating it (you can guess what
+    the '-lt' etc., get translated to) so if in doubt, check 'man perlop'.
+
+  * the refexes that form the terms of the expression (in this case, lines 2
+    and 4) MUST come before the expression itself (i.e., line 5).
+
+  * note the words "EXACT refex was matched" above.
+
+    Let's say you add "u3" to line 1.  Then the refex expression in line 5
+    would never match for u3.  This is because line 1 prevents line 2 from
+    matching (being more general *and* appearing earlier), so the count for
+    the "master" refex would be 0.  If "master" is 0 (false), then "master and
+    <anything>" is also false.
+
+    (Same thing is you swap lines 2 and 3; i.e., put the "RW+ = ..." before
+    the "RW+ master = ...").
+
+    Put another way, the terms in the refex expression are refexes, not refs.
+    Merely pushing the master branch does not mean the count for "master"
+    increases; it has to *match* on a line that has "master" as the refex.
+
+Here are some more examples:
 
   * user u2 is allowed to push either 'doc/' or 'src/' but not both
 
-Here's the conf file extract:
+        repo    foo
+            RW+                         =   u1 u2 u3
 
-    repo    testing
-        RW+     master              =   u1          # line 1
-        RW+                         =   @all        # line 2
+            RW+ VREF/NAME/doc/                      =   u2
+            RW+ VREF/NAME/src/                      =   u2
+            -   VREF/NAME/doc/ and VREF/NAME/src/   =   u2
 
-        RW+     VREF/NAME/foo       =   u1
-        RW+     VREF/NAME/doc/      =   u2
-        RW+     VREF/NAME/src/      =   u2
+  * user u3 is allowed to push at most 2 files to conf/
 
-        # set up 2 refex expressions, named e1, e2
-        option  refex-expr.e1       =   master and VREF/NAME/foo
-        option  refex-expr.e2       =   VREF/NAME/doc/ and VREF/NAME/src/
+        repo    foo
+            RW+                         =   u1 u2 u3
 
-        # now deny users if the corresponding expression is true
-        -       VREF/refex-expr/e1  =   u1
-        -       VREF/refex-expr/e2  =   u2
-
-Here are some IMPORTANT notes:
-
-  * You MUST place VREF/refex-expr rules at the end.  (Only 'partial-copy', if
-    you use it, must come later).
-
-  * You MUST explicitly permit the refexes used in your refex expressions.  If
-    you have more generic rules, the specific ones must come first.
-
-    For example, without line 1, the refex recorded for user u1 will come from
-    line 2, (so it will be 'refs/.*'), and 'master' in the refex expressions
-    will never have a true value.
-
-  * (corollary) make sure you use the exact same refex in the expression as
-    you did on the original rule line.  E.g., a missing slash at the end will
-    mess things up.
-
-  * You can use any logical expression using refexes as operands and using
-    these operators:
-
-        and not xor or
-
-    Parens are not allowed.
-
-    If a refex has passed, it will have a 'true' value, else it will be false.
-
-    The result of the evaluation, after these substitutions, will be the
-    result of the refex-expr VREF.
+            RW+ VREF/NAME/conf/         =   u3
+            -   VREF/NAME/conf/ -gt 2   =   u3

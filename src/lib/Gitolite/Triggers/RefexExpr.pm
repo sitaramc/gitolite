@@ -4,7 +4,7 @@ use warnings;
 
 # track refexes passed and evaluate expressions on them
 # ----------------------------------------------------------------------
-# see instructions for use at the bottom of src/VREF/refex-expr
+# see src/VREF/refex-expr for instructions and WARNINGS!
 
 use Gitolite::Easy;
 

@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# not part of the official test suite (yet); just some q&d testing
+
+# to be run from ~/gitolite as ./$0
+
+set -e
+exec 3>&2
+exec > /dev/null
+exec 2> /dev/null
+print2() { echo -n "$@" >&3; }
+say2() { echo "$@" >&3; }
+die() { echo FATAL: "$@" >&3; exit 1; }
+
+export od=$PWD
+export tmp=$(mktemp -d)
+echo $tmp >&3
+trap "rm -rf $tmp" 0
+cd $tmp
+
+print2 setting up...
+( cd $od; t/reset )
+echo "push @{ \$RC{ENABLE} }, 'refex-expr';" >> ~/.gitolite.rc
+cat <<EOF >> ~/.gitolite/conf/gitolite.conf
+
+repo r1
+    RW+                                 =   u1 u2   # line 1
+
+    RW+ master                          =   u3 u4   # line 2
+    RW+                                 =   u3 u4   # line 3
+    RW+ VREF/NAME/Makefile              =   u3 u4   # line 4
+    -   master and VREF/NAME/Makefile   =   u3 u4   # line 5
+
+EOF
+gitolite setup
+say2 done
+
+# ----------------------------------------------------------------------
+
+rm -rf u1
+git clone u1:r1 u1
+cd u1
+tsh 'tc f1'
+git push u1:r1 master
+tsh 'tc f2'
+git push u2:r1 master
+tsh 'tc f3'
+git push u3:r1 master
+tsh 'tc f4'
+git push u4:r1 master
+say2 everyone master no Makefile
+
+tsh 'tc f5 Makefile'
+git push u1:r1 master
+tsh 'tc f5 Makefile'
+git push u1:r1 master:m1
+say2 u1 Makefile master
+
+tsh 'tc f5 Makefile'
+git push u3:r1 master && die u3 r1 master should have failed
+git push u3:r1 master:m2
+say2 u3 Makefile master fail m2 pass

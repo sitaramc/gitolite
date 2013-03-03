@@ -1,0 +1,39 @@
+# vim: syn=perl:
+
+# "sugar script" (syntactic sugar helper) for gitolite3
+# ----------------------------------------------------------------------
+# see src/VREF/refex-expr for instructions and WARNINGS!
+
+my $perm = qr(-|R|RW\+?C?D?M?);
+
+my $seq = 1;
+sub sugar_script {
+    my $lines = shift;
+
+    Gitolite::Common::dd ['lines', $lines];
+
+    # my @out  = ();
+    for my $l (@$lines) {
+        push @out, $l;
+
+        # quick check
+        next unless $l =~ /^($perm) /;
+        # more detailed check
+        next unless $l =~ /^($perm) (\S.*) = (\S.*)$/;
+        my ($perm, $refexes, $users) = ($1, $2, $3);
+        next unless $refexes =~ / (and|not|or|xor|\+|-|==|-lt|-gt|-eq|-le|-ge|-ne) /;
+
+        print STDERR ">>>> $l\n";
+        pop @out;   # we need to replace that last line
+
+        my @words = grep { $_ !~ /^(and|not|or|xor|\+|-|==|-lt|-gt|-eq|-le|-ge|-ne)$/ } split ' ', $refexes;
+        push @out, map { "RW+ $_ = $users" } @words;
+        push @out, "option refex-expr.sugar$seq = $refexes";
+        push @out, "$perm VREF/refex-expr/sugar$seq = $users";
+
+        $seq++;
+    }
+
+    Gitolite::Common::dd ['out', \@out];
+    return \@out;
+}

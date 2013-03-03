@@ -1,0 +1,107 @@
+#!/bin/bash
+
+# not part of the official test suite (yet); just some q&d testing
+
+# to be run from ~/gitolite as ./$0
+
+set -e
+exec 3>&2
+exec > /dev/null
+exec 2> /dev/null
+print2() { echo -n "$@" >&3; }
+say2() { echo "$@" >&3; }
+die() { echo FATAL: "$@" >&3; exit 1; }
+
+export od=$PWD
+export tmp=$(mktemp -d)
+echo $tmp >&3
+trap "rm -rf $tmp" 0
+cd $tmp
+
+print2 setting up...
+( cd $od; t/reset )
+echo "push @{ \$RC{ENABLE} }, 'refex-expr';" >> ~/.gitolite.rc
+cat <<EOF >> ~/.gitolite/conf/gitolite.conf
+
+repo r9
+
+    RW+                         =   u3 u4
+
+    # u1 and u2 have some restrictions
+
+    # cant push master
+    -   master                  =   u1 u2
+    # cant push versioned tags, but other tags are fine
+    -   refs/tags/v[0-9]        =   u1 u2
+    # everything else is fine, but we need to recognise when they're pushing
+    # tags, so that the refex expr will have the correct info
+    RW+ refs/tags/              =   u1 u2
+    RW+                         =   u1 u2
+
+    # can push files in "foo/" only to a tag
+    RW+ VREF/NAME/foo/          =   u1 u2
+
+    RW+ VREF/NAME/foo/ and refs/tags/  =   u1 u2
+    -   VREF/NAME/foo/ and not refs/tags/ = u1 u2
+
+EOF
+gitolite setup
+say2 done
+
+# ----------------------------------------------------------------------
+
+# make sure u3 is not constrained in any way
+
+git clone u3:r9 refex-test.repo
+cd refex-test.repo
+
+tsh 'tc u3-f1'
+git pom
+
+mkdir bar foo
+tsh 'tc bar/thr'
+git pom
+git tag v3
+git push origin v3
+tsh 'tc foo/rht'
+git pom
+git tag 3v
+git push origin 3v
+
+say2 u3 no limits
+
+# now test u1's constraints
+
+cd ..
+rm -rf refex-test.repo
+
+rm -rf ~/repositories/r9.git
+gitolite setup
+
+git clone u1:r9 refex-test.repo
+cd refex-test.repo
+
+tsh 'tc u1-f1'
+# cant push master
+git pom && die 1
+# can push other branches
+git push origin master:m1
+say2 master fail m1 pass
+
+mkdir bar foo
+tsh 'tc bar/one'
+git push origin master:m1
+git tag v1
+# cant push v-tag
+git push origin v1 && die 2
+say2 v-tag fail
+
+# cant push foo/ to a branch
+tsh 'tc foo/eno'
+git push origin master:m1 && die 3
+say2 foo/ m1 fail
+
+# but can push to a non-v-tag
+git tag 1v
+git push origin 1v
+say2 foo/ non-v-tag pass

@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# not part of the official test suite (yet); just some q&d testing
+
+# to be run from ~/gitolite as ./$0
+
+set -e
+exec 3>&2
+exec > /dev/null
+exec 2> /dev/null
+print2() { echo -n "$@" >&3; }
+say2() { echo "$@" >&3; }
+die() { echo FATAL: "$@" >&3; exit 1; }
+
+export od=$PWD
+export tmp=$(mktemp -d)
+echo $tmp >&3
+trap "rm -rf $tmp" 0
+cd $tmp
+
+print2 setting up...
+( cd $od; t/reset )
+echo "push @{ \$RC{ENABLE} }, 'refex-expr';" >> ~/.gitolite.rc
+cat <<EOF >> ~/.gitolite/conf/gitolite.conf
+
+    repo    r3
+        RW+                         =   u1 u2 u3
+
+        RW+ VREF/NAME/conf/         =   u3
+        -   VREF/NAME/conf/ -gt 2   =   u3
+
+EOF
+gitolite setup
+say2 done
+
+# ----------------------------------------------------------------------
+
+git clone u3:r3
+cd r3
+
+tsh 'tc aa'
+git push origin master
+say2 aa pass
+
+mkdir doc conf
+
+tsh 'tc doc/d1 doc/d2 doc/d3 doc/d4 conf/c1'
+git push origin master
+say2 4 doc 1 conf pass
+
+tsh 'tc conf/c2 conf/c3 conf/c4'
+git push origin master && die 1
+
+git push u2:r3 master
+say2 3 conf u3 fail u2 pass
