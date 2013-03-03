@@ -26,7 +26,7 @@ BUNDLE SUPPORT
         that was then either deleted or rewound in the repo.  This is checked
         on every invocation.
 
-    (2) Add 'rsync' to the COMMANDS list in the rc file
+    (2) Add 'rsync' to the ENABLE list in the rc file
 
 
 GENERIC RSYNC SUPPORT

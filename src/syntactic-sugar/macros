@@ -36,9 +36,9 @@ Documentation is mostly by example.
 
 Setup:
 
-  * the line
+  * uncomment the line
         'macros',
-    should be added to the SYNTACTIC_SUGAR list in ~/.gitolite.rc
+    in the ENABLE list in ~/.gitolite.rc
 
 Notes on macro definition:
 

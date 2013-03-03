@@ -5,9 +5,9 @@
 # just goes with the flow of setting config variables; nothing special needs
 # to be done for the description.
 
-# But this only works for gitweb, not for cgit.  Cgit users must therefore add
-# this line to the POST_COMPILE list in the rc file:
-#   'post-compile/update-description-file',
+# But this only works for gitweb, not for cgit.  Cgit users must uncomment the
+# 'cgit' line in the ENABLE list in the rc file (which has the effect of
+# adding this program to the POST_COMPILE trigger list).
 
 cd $GL_REPO_BASE
 gitolite list-phy-repos | gitolite git-config % gitweb.description |

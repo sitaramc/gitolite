@@ -27,8 +27,8 @@
 # USAGE
 # -----
 #
-# add it to the POST_COMPILE trigger list in the rc file, but *before* the
-# ssh-authkeys program entry.
+# to enable, uncomment the 'ssh-authkeys-split' line in the ENABLE list in the
+# rc file.
 
 cd $GL_ADMIN_BASE/keydir
 
