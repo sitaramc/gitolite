@@ -1,3 +1,6 @@
+2013-03-05  v3.4    new rc file format makes it much easier to enable specific
+                    features
+
 2012-12-29  v3.3    bug fix: gl-perms propagation to slaves broke sometime
                     after v3.2 (so if you're only picking up tagged releases
                     you're OK)
