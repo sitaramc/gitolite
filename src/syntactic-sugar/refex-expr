@@ -10,8 +10,6 @@ my $seq = 1;
 sub sugar_script {
     my $lines = shift;
 
-    Gitolite::Common::dd ['lines', $lines];
-
     # my @out  = ();
     for my $l (@$lines) {
         push @out, $l;
@@ -26,14 +24,11 @@ sub sugar_script {
         print STDERR ">>>> $l\n";
         pop @out;   # we need to replace that last line
 
-        my @words = grep { $_ !~ /^(and|not|or|xor|\+|-|==|-lt|-gt|-eq|-le|-ge|-ne)$/ } split ' ', $refexes;
-        push @out, map { "RW+ $_ = $users" } @words;
         push @out, "option refex-expr.sugar$seq = $refexes";
         push @out, "$perm VREF/refex-expr/sugar$seq = $users";
 
         $seq++;
     }
 
-    Gitolite::Common::dd ['out', \@out];
     return \@out;
 }
