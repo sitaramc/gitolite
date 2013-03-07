@@ -1,0 +1,732 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Easy;
+
+=for usage
+Usage for this command is not that simple. Please read the full
+documentation in
+https://github.com/sitaramc/gitolite-doc/blob/master/contrib/ukm.mkd
+or online at http://gitolite.com/gitolite/ukm.html.
+=cut
+
+usage() if @ARGV and $ARGV[0] eq '-h';
+
+# Terms used in this file.
+# pubkeypath: the (relative) filename of a public key starting from
+#   gitolite-admin/keydir. Examples: alice.pub, foo/bar/alice.pub,
+#   alice@home.pub, foo/alice@laptop.pub. You get more examples, if you
+#   replace "alice" by "bob@example.com".
+# userid: computed from a pubkeypath by removing any directory
+#   part, the '.pub' extension and the "old-style" @NAME classifier.
+#   The userid identifies a user in the gitolite.conf file.
+# keyid: an identifier for a key given on the command line.
+#   If the script is called by one of the super_key_managers, then the
+#   keyid is the pubkeypath without the '.pub' extension. Otherwise it
+#   is the userid for a guest.
+#   The keyid is normalized to lowercase letters.
+
+my $rb = $rc{GL_REPO_BASE};
+my $ab = $rc{GL_ADMIN_BASE};
+
+# This will be the subdirectory under "keydir" in which the guest
+# keys will be stored. To prevent denial of service, this directory
+# should better start with 'zzz'.
+# The actual value can be set through the GUEST_DIRECTORY resource.
+# WARNING: If this value is changed you must understand the consequences.
+#          There will be no support if guestkeys_dir is anything else than
+#          'zzz/guests'.
+my $guestkeys_dir = 'zzz/guests';
+
+# A guest key cannot have arbitrary names (keyid). Only keys that do *not*
+# match $forbidden_guest_pattern are allowed. Super-key-managers can add
+# any keyid.
+
+# This is the directory for additional keys of a self key manager.
+my $selfkeys_dir = 'zzz/self';
+# There is no flexibility for selfkeys. One must specify a keyid that
+# matches the regular expression '^@[a-z0-9]+$'. Note that all keyids
+# are transformed to lowercase before checking.
+my $required_self_pattern = qr([a-z0-9]+);
+my $selfkey_management = 0; # disable selfkey managment
+
+# For guest key managers the keyid must pass two tests.
+#   1) It must match the $required_guest_pattern regular expression.
+#   2) It must not match the $forbidden_guest_pattern regular expression.
+# Default for $forbidden_guest_pattern is qr(.), i.e., every keyid is
+# forbidden, or in other words, only the gitolite-admin can manage keys.
+# Default for $required_guest_pattern is such that the keyid must look
+# like an email address, i.e. must have exactly one @ and at least one
+# dot after the @.
+# Just setting 'ukm' => 1 in .gitolite.rc only allows the super-key-managers
+# (i.e., only the gitolite admin(s)) to manage keys.
+my $required_guest_pattern =
+    qr(^[0-9a-z][-0-9a-z._+]*@[-0-9a-z._+]+[.][-0-9a-z._+]+$);
+my $forbidden_guest_pattern = qr(.);
+
+die "The command 'ukm' is not enabled.\n" if ! $rc{'COMMANDS'}{'ukm'};
+
+my $km = $rc{'UKM_CONFIG'};
+if(ref($km) eq 'HASH') {
+    # If not set we only allow keyids that look like emails
+    my $rgp = $rc{'UKM_CONFIG'}{'REQUIRED_GUEST_PATTERN'} || '';
+    $required_guest_pattern = qr(^($rgp)$) if $rgp;
+    $forbidden_guest_pattern = $rc{'UKM_CONFIG'}{'FORBIDDEN_GUEST_PATTERN'}
+                            || $forbidden_guest_pattern;
+    $selfkey_management = $rc{'UKM_CONFIG'}{'SELFKEY_MANAGEMENT'} || 0;
+}
+
+# get the actual userid
+my $gl_user = $ENV{GL_USER};
+my $super_key_manager = is_admin(); # or maybe is_super_admin() ?
+
+# save arguments for later
+my $operation = shift || 'list';
+my $keyid     = shift || '';
+$keyid = lc $keyid; # normalize to lowercase ids
+
+my ($zop, $zfp, $zselector, $zuser) = get_pending($gl_user);
+# The following will only be true if a selfkey manager logs in to
+# perform a pending operation.
+my $pending_self = ($zop ne '');
+
+die "You are not a key manager.\n"
+    unless $super_key_manager || $pending_self
+           || in_group('guest-key-managers')
+           || in_group('self-key-managers');
+
+# Let's deal with the pending user first. The only allowed operations
+# that are to confirm the add operation with the random code
+# that must be provided via stdin or to undo a pending del operation.
+if ($pending_self) {
+    pending_user($gl_user, $zop, $zfp, $zselector, $zuser);
+    exit;
+}
+
+my @available_operations = ('list','add','del');
+die "unknown ukm subcommand: $operation\n"
+    unless grep {$operation eq $_} @available_operations;
+
+# get to the keydir
+_chdir("$ab/keydir");
+
+# Note that the program warns if it finds a fingerprint that maps to
+# different userids.
+my %userids = (); # mapping from fingerprint to userid
+my %fingerprints = (); # mapping from pubkeypath to fingerprint
+my %pubkeypaths = (); # mapping from userid to pubkeypaths
+                      # note that the result is a list of pubkeypaths
+
+# Guest keys are managed by people in the @guest-key-managers group.
+# They can only add/del keys in the $guestkeys_dir directory. In fact,
+# the guest key manager $gl_user has only access to keys inside
+# %guest_pubkeypaths.
+my %guest_pubkeypaths = (); # mapping from userid to pubkeypath for $gl_user
+
+# Self keys are managed by people in the @self-key-managers group.
+# They can only add/del keys in the $selfkeys_dir directory. In fact,
+# the self key manager $gl_user has only access to keys inside
+# %self_pubkeypaths.
+my %self_pubkeypaths = ();
+
+# These are the keys that are managed by a super key manager.
+my @all_pubkeypaths = `find . -type f -name "*.pub" 2>/dev/null | sort`;
+
+for my $pubkeypath (@all_pubkeypaths) {
+    chomp($pubkeypath);
+    my $fp = fingerprint($pubkeypath);
+    $fingerprints{$pubkeypath} = $fp;
+    my $userid = get_userid($pubkeypath);
+    my ($zop, $zfp, $zselector, $zuser) = get_pending($userid);
+    $userid = $zuser if $zop;
+    if (! defined $userids{$fp}) {
+        $userids{$fp} = $userid;
+    } else {
+        warn "key $fp is used for different user ids\n"
+            unless $userids{$fp} eq $userid;
+    }
+    push @{$pubkeypaths{$userid}}, $pubkeypath;
+    if ($pubkeypath =~ m|^./$guestkeys_dir/([^/]+)/[^/]+\.pub$|) {
+        push @{$guest_pubkeypaths{$userid}}, $pubkeypath if $gl_user eq $1;
+    }
+    if ($pubkeypath =~ m|^./$selfkeys_dir/([^/]+)/[^/]+\.pub$|) {
+        push @{$self_pubkeypaths{$userid}}, $pubkeypath if $gl_user eq $1;
+    }
+}
+
+###################################################################
+# do stuff according to the operation
+###################################################################
+
+if ( $operation eq 'list' ) {
+    list_pubkeys();
+    print "\n\n";
+    exit;
+}
+
+die "keyid required\n" unless $keyid;
+die "Not allowed to use '..' in keyid.\n" if $keyid =~ /\.\./;
+
+if ( $operation eq 'add' ) {
+    if ($super_key_manager) {
+        add_pubkey($gl_user, "$keyid.pub", safe_stdin());
+    } elsif (selfselector($keyid)) {
+        add_self($gl_user, $keyid, safe_stdin());
+    } else {
+        # assert ingroup('guest-key-managers');
+        add_guest($gl_user, $keyid, safe_stdin());
+    }
+} elsif ( $operation eq 'del' ) {
+    if ($super_key_manager) {
+        del_super($gl_user, "$keyid.pub");
+    } elsif (selfselector($keyid)) {
+        del_self($gl_user, $keyid);
+    } else {
+        # assert ingroup('guest-key-managers');
+        del_guest($gl_user, $keyid);
+    }
+}
+
+exit;
+
+
+###################################################################
+# only function definitions are following
+###################################################################
+
+# make a temp clone and switch to it
+our $TEMPDIR;
+BEGIN { $TEMPDIR = `mktemp -d -t tmp.XXXXXXXXXX`; chomp($TEMPDIR) }
+END { my $err = $?; `/bin/rm -rf $TEMPDIR`; $? = $err; }
+
+sub cd_temp_clone {
+    chomp($TEMPDIR);
+    hushed_git( "clone", "$rb/gitolite-admin.git", "$TEMPDIR/gitolite-admin" );
+    chdir("$TEMPDIR/gitolite-admin");
+    my $ip = $ENV{SSH_CONNECTION};
+    $ip =~ s/ .*//;
+    my ($zop, $zfp, $zselector, $zuser) = get_pending($ENV{GL_USER});
+    my $email = $zuser;
+    $email .= '@' . $ip  unless $email =~ m(@);
+    my $name = $zop ? "\@$zselector" : $zuser;
+    # Record the keymanager in the gitolite-admin repo as author of the change.
+    hushed_git( "config", "user.email", "$email" );
+    hushed_git( "config", "user.name",  "'$name from $ip'" );
+}
+
+# compute the fingerprint from the full path of a pubkey file
+sub fingerprint {
+    my $fp = `ssh-keygen -l -f $_[0]`;
+    die "does not seem to be a valid pubkey\n"
+        unless $fp =~ /(([0-9a-f]+:)+[0-9a-f]+) /i;
+    return $1;
+}
+
+
+# Read one line from STDIN and return it.
+#  If no data is available on STDIN after one second, the empty string
+# is returned.
+# If there is more than one line or there was an error in reading, the
+# function dies.
+sub safe_stdin {
+    use IO::Select;
+    my $s=IO::Select->new(); $s->add(\*STDIN);
+    return '' unless $s->can_read(1);
+    my $data;
+    my $ret = read STDIN, $data, 4096;
+    # current pubkeys are approx 400 bytes so we go a little overboard
+    die "could not read pubkey data" . ( defined($ret) ? "" : ": $!" ) . "\n"
+        unless $ret;
+    die "pubkey data seems to have more than one line\n" if $data =~ /\n./;
+    return $data;
+}
+
+# call git, be quiet
+sub hushed_git {
+    system("git " . join(" ", @_) . ">/dev/null 2>/dev/null");
+}
+
+# Extract the userid from the full path of the pubkey file (relative
+# to keydir/ and including the '.pub' extension.
+sub get_userid {
+    my ($u) = @_; # filename of pubkey relative to keydir/.
+    $u =~ s(.*/)();                # foo/bar/baz.pub -> baz.pub
+    $u =~ s/(\@[^.]+)?\.pub$//;    # baz.pub, baz@home.pub -> baz
+    return $u;
+}
+
+# Extract the @selector part from the full path of the pubkey file
+# (relative to keydir/ and including the '.pub' extension).
+# If there is no @selector part, the empty string is returned.
+# We also correctly extract the selector part from pending keys.
+sub get_selector {
+    my ($u) = @_; # filename of pubkey relative to keydir/.
+    $u =~ s(.*/)();                # foo/bar/baz.pub -> baz.pub
+    $u =~ s(\.pub$)();             # baz@home.pub -> baz@home
+    return $1 if $u =~ m/.\@($required_self_pattern)$/; # baz@home -> home
+    my ($zop, $zfp, $zselector, $zuser) = get_pending($u);
+    # If $u was not a pending key, then $zselector is the empty string.
+    return $zselector;
+}
+
+# Extract fingerprint, operation, selector, and true userid from a
+# pending userid.
+sub get_pending {
+    my ($gl_user) = @_;
+    return ($1, $2, $3, $4)
+       if ($gl_user=~/^zzz-(...)-([0-9a-f]{32})-($required_self_pattern)-(.*)/);
+    return ('', '', '', $gl_user)
+}
+
+# multiple / and are simplified to one / and the path is made relative
+sub sanitize_pubkeypath {
+    my ($pubkeypath) = @_;
+    $pubkeypath =~ s|//|/|g; # normalize path
+    $pubkeypath =~ s,\./,,g; # remove './' from path
+    return './'.$pubkeypath; # Don't allow absolute paths.
+}
+
+# This function is only relavant for guest key managers.
+# It returns true if the pattern is OK and false otherwise.
+sub required_guest_keyid {
+    my ($_) = @_;
+    /$required_guest_pattern/ and ! /$forbidden_guest_pattern/;
+}
+
+# The function takes a $keyid as input and returns the keyid with the
+# initial @ stripped if everything is fine. It aborts with an error if
+# selfkey management is not enabled or the function is called for a
+# non-self-key-manager.
+# If the required selfkey pattern is not matched, it returns an empty string.
+# Thus the function can be used to check whether a given keyid is a
+# proper selfkeyid.
+sub selfselector {
+    my ($keyid) = @_;
+    return '' unless $keyid =~ m(^\@($required_self_pattern)$);
+    $keyid = $1;
+    die "selfkey management is not enabled\n" unless $selfkey_management;
+    die "You are not a selfkey manager.\n" if ! in_group('self-key-managers');
+    return $keyid;
+}
+
+# Return the number of characters reserved for the userid field.
+sub userid_width {
+    my ($paths) = @_;
+    my (%pkpaths) = %{$paths};
+    my (@userid_lengths) = sort {$a <=> $b} (map {length($_)} keys %pkpaths);
+    @userid_lengths ? $userid_lengths[-1] : 0;
+}
+
+# List the keys given by a reference to a hash.
+# The regular expression $re is used to remove the initial part of the
+# keyid and replace it by what is matched inside the parentheses.
+# $format and $width are used for pretty printing
+sub list_keys {
+    my ($paths, $tokeyid, $format, $width) = @_;
+    my (%pkpaths) = %{$paths};
+    for my $userid (sort keys %pkpaths) {
+        for my $pubkeypath (sort @{$pkpaths{$userid}}) {
+            my $fp = $fingerprints{$pubkeypath};
+            my $userid = $userids{$fp};
+            my $keyid = &{$tokeyid}($pubkeypath);
+            printf $format,$fp,$userid,$width+1-length($userid),"",$keyid
+                if ($super_key_manager
+                    || required_guest_keyid($keyid)
+                    || $keyid=~m(^\@));
+        }
+    }
+}
+
+# Turn a pubkeypath into a keyid for super-key-managers, guest-keys,
+# and self-keys.
+sub superkeyid {
+    my ($keyid) = @_;
+    $keyid =~ s(\.pub$)();
+    $keyid =~ s(^\./)();
+    return $keyid;
+}
+
+sub guestkeyid {
+    my ($keyid) = @_;
+    $keyid =~ s(\.pub$)();
+    $keyid =~ s(^.*/)();
+    return $keyid;
+}
+
+sub selfkeyid {
+    my ($keyid) = @_;
+    $keyid =~ s(\.pub$)();
+    $keyid =~ s(^.*/)();
+    my ($zop, $zfp, $zselector, $zuser) = get_pending($keyid);
+    return "\@$zselector (pending $zop)" if $zop;
+    $keyid =~ s(.*@)(@);
+    return $keyid;
+}
+
+###################################################################
+
+# List public keys managed by the respective user.
+# The fingerprints, userids and keyids are printed.
+# keyids are shown in a form that can be used for add and del
+# subcommands. 
+sub list_pubkeys {
+    print "Hello $gl_user, you manage the following keys:\n";
+    my $format = "%-47s %s%*s%s\n";
+    my $width = 0;
+    if ($super_key_manager) {
+        $width = userid_width(\%pubkeypaths);
+        $width = 6 if $width < 6; # length("userid")==6
+        printf $format, "fingerprint", "userid", ($width-5), "", "keyid";
+        list_keys(\%pubkeypaths, , \&superkeyid, $format, $width);
+    } else {
+        my $widths = $selfkey_management?userid_width(\%self_pubkeypaths):0;
+        my $widthg = userid_width(\%guest_pubkeypaths);
+        $width = $widths > $widthg ? $widths : $widthg; # maximum width
+        return unless $width; # there are no keys
+        $width = 6 if $width < 6; # length("userid")==6
+        printf $format, "fingerprint", "userid", ($width-5), "", "keyid";
+        list_keys(\%self_pubkeypaths, \&selfkeyid, $format, $width)
+            if $selfkey_management;
+        list_keys(\%guest_pubkeypaths, \&guestkeyid,  $format, $width);
+    }
+}
+
+
+###################################################################
+
+# Add a public key for the user $gl_user.
+# $pubkeypath is the place where the new key will be stored.
+# If the file or its fingerprint already exists, the operation is
+# rejected.
+sub add_pubkey {
+    my ( $gl_user, $pubkeypath, $keymaterial ) = @_;
+    if(! $keymaterial) {
+        print STDERR "Please supply the new key on STDIN.\n";
+        print STDERR "Try something like this:\n";
+        print STDERR "cat FOO.pub | ssh GIT\@GITOLITESERVER ukm add KEYID\n";
+        die "missing public key data\n";
+    }
+    # clean pubkeypath a bit
+    $pubkeypath = sanitize_pubkeypath($pubkeypath);
+    # Check that there is not yet something there already.
+    die "cannot override existing key\n" if $fingerprints{$pubkeypath};
+
+    my $userid = get_userid($pubkeypath);
+    # Super key managers shouldn't be able to add a that leads to
+    # either an empty userid or to a userid that starts with @.
+    #
+    # To avoid confusion, all keyids for super key managers must be in
+    # a full path format. Having a public key of the form
+    # gitolite-admin/keydir/@foo.pub might be confusing and might lead
+    # to other problems elsewhere.
+    die "cannot add key that starts with \@\n" if (!$userid) || $userid=~/^@/;
+
+    cd_temp_clone();
+    _chdir("keydir");
+    $pubkeypath =~ m((.*)/); # get the directory part
+    _mkdir($1);
+    _print($pubkeypath, $keymaterial);
+    my $fp = fingerprint($pubkeypath);
+
+    # Maybe we are adding a selfkey.
+    my ($zop, $zfp, $zselector, $zuser) = get_pending($userid);
+    my $user = $zop ? "$zuser\@$zselector" : $userid;
+    $userid = $zuser;
+    # Check that there isn't a key with the same fingerprint under a
+    # different userid.
+    if (defined $userids{$fp}) {
+        if ($userid ne $userids{$fp}) {
+            print STDERR "Found  $fp $userids{$fp}\n" if $super_key_manager;
+            print STDERR "Same key is already available under another userid.\n";
+            die "cannot add key\n";
+        } elsif ($zop) {
+            # Because of the way a key is confirmed with ukm, it is
+            # impossible to confirm the initial key of the user as a
+            # new selfkey. (It will lead to the function list_pubkeys
+            # instead of pending_user_add, because the gl_user will
+            # not be that of a pending user.) To avoid confusion, we,
+            # therefore, forbid to add the user's initial key
+            # altogether.
+            # In fact, we here also forbid to add any key for that
+            # user that is already in the system.
+            die "You cannot add a key that already belongs to you.\n";
+        }
+    } else {# this fingerprint does not yet exist
+        my @paths = @{$pubkeypaths{$userid}} if defined $pubkeypaths{$userid};
+        if (@paths) {# there are already keys for $userid
+            if (grep {$pubkeypath eq $_} @paths) {
+                print STDERR "The keyid is already present. Nothing changed.\n";
+            } elsif ($super_key_manager) {
+                # It's OK to add new selfkeys, but here we are in the case
+                # of adding multiple keys for guests. That is forbidden.
+                print STDERR "Adding new public key for $userid.\n";
+            } elsif ($pubkeypath =~ m(^\./$guestkeys_dir/)) {
+                # Arriving here means we are about to add a *new*
+                # guest key, because the fingerprint is not yet
+                # existing. This would be for an already existing
+                # userid (added by another guest key manager). Since
+                # that effectively means to (silently) add an
+                # additional key for an existing user, it must be
+                # forbidden.
+                die "cannot add another public key for an existing user\n";
+            }
+        }
+    }
+    exit if (`git status -s` eq ''); # OK to add identical keys twice
+    hushed_git( "add", "." ) and die "git add failed\n";
+    hushed_git( "commit", "-m", "'ukm add $gl_user $userid\n\n$fp'" )
+        and die "git commit failed\n";
+    system("gitolite push >/dev/null 2>/dev/null") and die "git push failed\n";
+}
+
+# Guest key managers should not be allowed to add directories or
+# multiple keys via the @domain mechanism, since this might allow
+# another guest key manager to give an attacker access to another
+# user's repositories.
+#
+# Example: Alice adds bob.pub for bob@example.org. David adds eve.pub
+# (where only Eve but not Bob has the private key) under the keyid
+# bob@example.org@foo. This basically gives Eve the same rights as
+# Bob.
+sub add_guest {
+    my ( $gl_user, $keyid, $keymaterial ) = @_;
+    die "keyid not allowed: '$keyid'\n"
+        if $keyid =~ m(@.*@) or $keyid =~ m(/) or !required_guest_keyid($keyid);
+    add_pubkey($gl_user, "$guestkeys_dir/$gl_user/$keyid.pub", $keymaterial);
+}
+
+# Add a new selfkey for user $gl_user.
+sub add_self {
+    my ( $gl_user, $keyid, $keymaterial ) = @_;
+    my $selector = "";
+    $selector = selfselector($keyid); # might return empty string
+    die "keyid not allowed: $keyid\n" unless $selector;
+
+    # Check that the new selector is not already in use even not in a
+    # pending state.
+    die "keyid already in use: $keyid\n"
+        if grep {selfkeyid($_)=~/^\@$selector( .*)?$/} @{$self_pubkeypaths{$gl_user}};
+    # generate new pubkey create fingerprint
+    system("ssh-keygen -N '' -q -f \"$TEMPDIR/session\" -C $gl_user");
+    my $sessionfp = fingerprint("$TEMPDIR/session.pub");
+    $sessionfp =~ s/://g;
+    my $user = "zzz-add-$sessionfp-$selector-$gl_user";
+    add_pubkey($gl_user, "$selfkeys_dir/$gl_user/$user.pub", $keymaterial);
+    print `cat "$TEMPDIR/session.pub"`;
+}
+
+###################################################################
+
+
+# Delete a key of user $gl_user.
+sub del_pubkey {
+    my ($gl_user, $pubkeypath) = @_;
+    $pubkeypath = sanitize_pubkeypath($pubkeypath);
+    my $fp = $fingerprints{$pubkeypath};
+    die "key not found\n" unless $fp;
+    cd_temp_clone();
+    chdir("keydir");
+    hushed_git( "rm", "$pubkeypath" ) and die "git rm failed\n";
+    my $userid = get_userid($pubkeypath);
+    hushed_git( "commit", "-m", "'ukm del $gl_user $userid\n\n$fp'" )
+        and die "git commit failed\n";
+    system("gitolite push >/dev/null 2>/dev/null") and die "git push failed\n";
+}
+
+# $gl_user is a super key manager. This function aborts if the
+# superkey manager tries to remove his last key.
+sub del_super {
+    my ($gl_user, $pubkeypath) = @_;
+    $pubkeypath = sanitize_pubkeypath($pubkeypath);
+    die "You are not managing the key $keyid.\n"
+        unless grep {$_ eq $pubkeypath} @all_pubkeypaths;
+    my $userid = get_userid($pubkeypath);
+    if ($gl_user eq $userid) {
+        my @paths = @{$pubkeypaths{$userid}};
+        die "You cannot delete your last key.\n"
+            if scalar(grep {$userid eq get_userid($_)} @paths)<2;
+    }
+    del_pubkey($gl_user, $pubkeypath);
+}
+
+sub del_guest {
+    my ($gl_user, $keyid) = @_;
+    my $pubkeypath = sanitize_pubkeypath("$guestkeys_dir/$gl_user/$keyid.pub");
+    my $userid = get_userid($pubkeypath);
+    # Check whether $gl_user actually manages $keyid.
+    my @paths = ();
+    @paths = @{$guest_pubkeypaths{$userid}}
+        if defined $guest_pubkeypaths{$userid};
+    die "You are not managing the key $keyid.\n"
+        unless grep {$_ eq $pubkeypath} @paths;
+    del_pubkey($gl_user, $pubkeypath);
+}
+
+# Delete a selfkey of $gl_user. The first delete is a preparation of
+# the deletion and only a second call will actually delete the key. If
+# the second call is done with the key that is scheduled for deletion,
+# it is basically undoing the previous del call. This last case is
+# handled in function pending_user_del.
+sub del_self {
+    my ($gl_user, $keyid) = @_;
+    my $selector = selfselector($keyid); # might return empty string
+    die "keyid not allowed: '$keyid'\n" unless $selector;
+
+    # Does $gl_user actually manage that keyid?
+    # All (non-pending) selfkeys have an @selector part in their pubkeypath.
+    my @paths = @{$self_pubkeypaths{$gl_user}};
+    die "You are not managing the key $keyid.\n"
+        unless grep {$selector eq get_selector($_)} @paths;
+
+    cd_temp_clone();
+    _chdir("keydir");
+    my $fp = '';
+    # Is it the first or the second del call? It's the second call, if
+    # there is a scheduled-for-deletion or scheduled-for-addition
+    # selfkey which has the given keyid as a selector part.
+    @paths = grep {
+        my ($zop, $zfp, $zselector, $zuser) = get_pending(get_userid($_));
+        $zselector eq $selector
+    } @paths;
+    if (@paths) {# start actual deletion of the key (second call)
+        my $pubkeypath = $paths[0];
+        $fp = fingerprint($pubkeypath);
+        my ($zop, $zf, $zs, $zu) = get_pending(get_userid($pubkeypath));
+        $zop = $zop eq 'add' ? 'undo-add' : 'confirm-del';
+        hushed_git("rm", "$pubkeypath") and die "git rm failed\n";
+        hushed_git("commit", "-m", "'ukm $zop $gl_user\@$selector\n\n$fp'")
+            and die "git commit failed\n";
+        system("gitolite push >/dev/null 2>/dev/null")
+            and die "git push failed\n";
+        print STDERR "pending keyid deleted: \@$selector\n";
+        return;
+    }
+    my $oldpubkeypath = "$selfkeys_dir/$gl_user/$gl_user\@$selector.pub";
+    # generate new pubkey and create fingerprint to get a random number
+    system("ssh-keygen -N '' -q -f \"$TEMPDIR/session\" -C $gl_user");
+    my $sessionfp = fingerprint("$TEMPDIR/session.pub");
+    $sessionfp =~ s/://g;
+    my $user = "zzz-del-$sessionfp-$selector-$gl_user";
+    my $newpubkeypath = "$selfkeys_dir/$gl_user/$user.pub";
+
+    # A key for gitolite access that is in authorized_keys and not
+    # existing in the expected place under keydir/ should actually not
+    # happen, but one never knows.
+    die "key not available\n" unless -r $oldpubkeypath;
+
+    # For some strange reason the target key already exists.
+    die "cannot override existing key\n" if -e $newpubkeypath;
+
+    $fp = fingerprint($oldpubkeypath);
+    print STDERR "prepare deletion of key \@$selector\n";
+    hushed_git("mv", "$oldpubkeypath", "$newpubkeypath")
+        and die "git mv failed\n";
+    hushed_git("commit", "-m", "'ukm prepare-del $gl_user\@$selector\n\n$fp'")
+        and die "git commit failed\n";
+    system("gitolite push >/dev/null 2>/dev/null")
+        and die "git push failed\n";
+}
+
+###################################################################
+# Adding a selfkey should be done as follows.
+#
+#   cat newkey.pub | ssh git@host ukm add @selector > session
+#   cat session | ssh -i newkey git@host ukm
+#
+# The provided random data will come from a newly generated ssh key
+# whose fingerprint will be stored in $gl_user. So we compute the
+# fingerprint of the data that is given to us. If it doesn't match the
+# fingerprint, then something went wrong and the confirm operation is
+# forbidden, in fact, the pending key will be removed from the system.
+sub pending_user_add {
+    my ($gl_user, $zfp, $zselector, $zuser) = @_;
+    my $oldpubkeypath = "$selfkeys_dir/$zuser/$gl_user.pub";
+    my $newpubkeypath = "$selfkeys_dir/$zuser/$zuser\@$zselector.pub";
+
+    # A key for gitolite access that is in authorized_keys and not
+    # existing in the expected place under keydir/ should actually not
+    # happen, but one never knows.
+    die "key not available\n" unless -r $oldpubkeypath;
+
+    my $keymaterial = safe_stdin();
+    # If there is no keymaterial (which corresponds to a session key
+    # for the confirm-add operation), logging in to this key, removes
+    # it from the system.
+    my $session_key_not_provided = '';
+    if (!$keymaterial) {
+        $session_key_not_provided = "missing session key";
+    } else {
+        _print("$TEMPDIR/session.pub", $keymaterial);
+        my $sessionfp = fingerprint("$TEMPDIR/session.pub");
+        $sessionfp =~ s/://g;
+        $session_key_not_provided = "session key not accepted"
+            unless ($zfp eq $sessionfp)
+    }
+    my $fp = fingerprint($oldpubkeypath);
+    if ($session_key_not_provided) {
+        print STDERR "$session_key_not_provided\n";
+        print STDERR "pending keyid deleted: \@$zselector\n";
+        hushed_git("rm", "$oldpubkeypath") and die "git rm failed\n";
+        hushed_git("commit", "-m", "'ukm del $zuser\@$zselector\n\n$fp'")
+            and die "git commit failed\n";
+        system("gitolite push >/dev/null 2>/dev/null")
+            and die "git push failed\n";
+        return;
+    }
+
+    # For some strange reason the target key already exists.
+    die "cannot override existing key\n" if -e $newpubkeypath;
+
+    print STDERR "pending keyid added: \@$zselector\n";
+    hushed_git("mv", "$oldpubkeypath", "$newpubkeypath")
+        and die "git mv failed\n";
+    hushed_git("commit", "-m", "'ukm confirm-add $zuser\@$zselector\n\n$fp'")
+        and die "git commit failed\n";
+    system("gitolite push >/dev/null 2>/dev/null")
+        and die "git push failed\n";
+}
+
+# To delete a key, one must first bring the key into a pending state
+# and then truely delete it with another key. In case, the login
+# happens with the pending key (implemented below), it means that the
+# delete operation has to be undone.
+sub pending_user_del {
+    my ($gl_user, $zfp, $zselector, $zuser) = @_;
+    my $oldpubkeypath = "$selfkeys_dir/$zuser/$gl_user.pub";
+    my $newpubkeypath = "$selfkeys_dir/$zuser/$zuser\@$zselector.pub";
+    print STDERR "undo pending deletion of keyid \@$zselector\n";
+    # A key for gitolite access that is in authorized_keys and not
+    # existing in the expected place under keydir/ should actually not
+    # happen, but one never knows.
+    die "key not available\n" unless -r $oldpubkeypath;
+    # For some strange reason the target key already exists.
+    die "cannot override existing key\n" if -e $newpubkeypath;
+    my $fp = fingerprint($oldpubkeypath);
+    hushed_git("mv", "$oldpubkeypath", "$newpubkeypath")
+        and die "git mv failed\n";
+    hushed_git("commit", "-m", "'ukm undo-del $zuser\@$zselector\n\n$fp'")
+        and die "git commit failed\n";
+}
+
+# A user whose key is in pending state cannot do much. In fact,
+# logging in as such a user simply takes back the "bringing into
+# pending state", i.e. a key scheduled for adding is remove and a key
+# scheduled for deletion is brought back into its properly added state.
+sub pending_user {
+    my ($gl_user, $zop, $zfp, $zselector, $zuser) = @_;
+    cd_temp_clone();
+    _chdir("keydir");
+    if ($zop eq 'add') {
+        pending_user_add($gl_user, $zfp, $zselector, $zuser);
+    } elsif ($zop eq 'del') {
+        pending_user_del($gl_user, $zfp, $zselector, $zuser);
+    } else {
+        die "unknown operation\n";
+    }
+    system("gitolite push >/dev/null 2>/dev/null")
+        and die "git push failed\n";
+}
