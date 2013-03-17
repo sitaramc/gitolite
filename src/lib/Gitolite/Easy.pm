@@ -35,6 +35,7 @@ package Gitolite::Easy;
   is_admin
   is_super_admin
   in_group
+  in_role
 
   owns
   can_read
@@ -101,12 +102,27 @@ sub in_group {
     my $g = shift;
     $g =~ s/^\@?/@/;
 
-    return grep { $_ eq $g } @{ Gitolite::Conf::Load::list_memberships($user) };
+    return grep { $_ eq $g } @{ Gitolite::Conf::Load::list_memberships('-u', $user) };
+}
+
+# in_role()
+
+# return true if $ENV{GL_USER} is set and has the given role for the given repo
+
+# shell equivalent
+#   if gitolite list-memberships -u $GL_USER -r $GL_REPO | grep -x $ROLENAME >/dev/null; then ...
+sub in_role {
+    valid_user();
+    my $r = shift;
+    $r =~ s/^\@?/@/;
+    my $repo = shift;
+
+    return grep { $_ eq $r } @{ Gitolite::Conf::Load::list_memberships("-u", $user, "-r", $repo) };
 }
 
 # owns()
 
-# return true if $ENV{GL_USER} is set and is the creator of the given repo
+# return true if $ENV{GL_USER} is set and is an OWNER of the given repo.
 
 # shell equivalent
 #   if gitolite creator $REPONAME $GL_USER; then ...
@@ -117,7 +133,7 @@ sub owns {
     # prevent unnecessary disclosure of repo existence info
     return 0 if repo_missing($r);
 
-    return ( creator($r) eq $user );
+    return ( creator($r) eq $user or $rc{OWNER_ROLENAME} and in_role( $rc{OWNER_ROLENAME}, $r ) );
 }
 
 # can_read()

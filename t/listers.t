@@ -76,53 +76,37 @@ t3
 testing
 ';
 
-try "gitolite list-memberships alice"; cmp
-'@all
-@crypto
+try "gitolite list-memberships -u alice"; cmp
+'@crypto
 @dilbert
-alice
 ';
 
-try "gitolite list-memberships ashok"; cmp
-'@all
-@dilbert
-ashok
+try "gitolite list-memberships -u ashok"; cmp
+'@dilbert
 ';
 
-try "gitolite list-memberships carol"; cmp
-'@all
-@crypto
-carol
+try "gitolite list-memberships -u carol"; cmp
+'@crypto
 ';
 
-try "gitolite list-memberships git"; cmp
-'@all
-@oss
-git
+try "gitolite list-memberships -r git"; cmp
+'@oss
 ';
 
-try "gitolite list-memberships gitolite"; cmp
-'@all
-@oss
-gitolite
+try "gitolite list-memberships -r gitolite"; cmp
+'@oss
 ';
 
-try "gitolite list-memberships gitolite3"; cmp
-'@all
-@oss
-gitolite3
+try "gitolite list-memberships -r gitolite3"; cmp
+'@oss
 ';
 
-try "gitolite list-memberships cc"; cmp
-'@all
-@prop
-cc
+try "gitolite list-memberships -r cc"; cmp
+'@prop
 ';
 
-try "gitolite list-memberships p4"; cmp
-'@all
-@prop
-p4
+try "gitolite list-memberships -r p4"; cmp
+'@prop
 ';
 
 try "gitolite list-members \@crypto"; cmp

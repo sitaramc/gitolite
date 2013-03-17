@@ -5,7 +5,7 @@ use warnings;
 use lib $ENV{GL_LIBDIR};
 use Gitolite::Rc;
 use Gitolite::Common;
-use Gitolite::Conf::Load;
+use Gitolite::Easy;
 
 =for usage
 Usage:  ssh git@host perms -l <repo>
@@ -52,7 +52,7 @@ if ( $ARGV[0] eq '-c' ) {
     _die "invalid repo '$repo'" unless $repo =~ $REPONAME_PATT;
 
     if (not -d "$rc{GL_REPO_BASE}/$repo.git") {
-        my $ret = access( $repo, $ENV{GL_USER}, '^C', 'any' );
+        my $ret = Gitolite::Conf::Load::access( $repo, $ENV{GL_USER}, '^C', 'any' );
         _die $generic_error if $ret =~ /DENIED/;
 
         require Gitolite::Conf::Store;
@@ -70,7 +70,7 @@ _system( "gitolite", "trigger", "POST_CREATE", $repo, $ENV{GL_USER}, 'perms' );
 
 sub getperms {
     my $repo = shift;
-    _die $generic_error if repo_missing($repo) or creator($repo) ne $ENV{GL_USER};
+    _die $generic_error if not owns($repo);
     my $pf = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
 
     print slurp($pf) if -f $pf;
@@ -79,7 +79,7 @@ sub getperms {
 }
 
 sub setperms {
-    _die $generic_error if repo_missing($repo) or creator($repo) ne $ENV{GL_USER};
+    _die $generic_error if not owns($repo);
     my $pf = "$rc{GL_REPO_BASE}/$repo.git/gl-perms";
 
     if ( not @_ ) {

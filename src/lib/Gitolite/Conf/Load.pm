@@ -538,20 +538,43 @@ sub list_repos {
 }
 
 =for list_memberships
-Usage:  gitolite list-memberships <name>
+Usage:  gitolite list-memberships -u|-r <name>
 
-  - list all groups a name is a member of
-  - takes one user/repo name
+List all groups a name is a member of.  One of the flags '-u' or '-r' is
+mandatory, to specify if the name is a user or a repo.
+
+For users, the output includes the result from GROUPLIST_PGM, if it is
+defined.  For repos, the output includes any repo patterns that the repo name
+matches, as well as any groups that contain those patterns.
 =cut
 
 sub list_memberships {
-    usage() if @_ and $_[0] eq '-h' or not @_;
+    require Getopt::Long;
 
-    my $name = shift;
+    my ( $user, $repo, $help );
+
+    Getopt::Long::GetOptionsFromArray(
+        \@_,
+        'user|u=s' => \$user,
+        'repo|r=s' => \$repo,
+        'help|h'   => \$help,
+    );
+    usage() if $help or ( not $user and not $repo );
 
     load_common();
-    my @m = memberships( '', $name );
-    return ( sort_u( \@m ) );
+    my @m;
+
+    if ($user and $repo) {
+        # unsupported/undocumented except via "in_role()" in Easy.pm
+        @m = memberships( 'user', $user, $repo );
+    } elsif ($user) {
+        @m = memberships( 'user', $user );
+    } elsif ($repo) {
+        @m = memberships( 'repo', $repo );
+    }
+
+    @m = grep { $_ ne '@all' and $_ ne ( $user || $repo ) } @m;
+    return ( sort_u(\@m) );
 }
 
 =for list_members
