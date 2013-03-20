@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# POST_CREATE trigger to set up default set of perms for a new wild repo
+
+# ----------------------------------------------------------------------
+# skip if arg-1 is POST_CREATE and no arg-3 (user name) exists (i.e., it's not
+# a wild repo)
+[ "$1" = "POST_CREATE" ] && [ -z "$3" ] && exit 0;
+
+die() { echo "$@" >&2; exit 1; }
+
+cd $GL_REPO_BASE/$2.git || die "could not cd to $GL_REPO_BASE/$2.git"
+gitolite git-config -r $2 gitolite-options.default.roles | sort | cut -f3 |
+    perl -pe 's/(\s)CREATOR(\s|$)/$1$ENV{GL_USER}$2/' > gl-perms

@@ -5,11 +5,12 @@ use warnings;
 # this is hardcoded; change it if needed
 use lib "src/lib";
 use Gitolite::Test;
+my $h = $ENV{HOME};
 
 # fork command
 # ----------------------------------------------------------------------
 
-try "plan 30";
+try "plan 38";
 
 my $rb = `gitolite query-rc -n GL_REPO_BASE`;
 
@@ -34,7 +35,23 @@ try "
 
 # allow fork as a valid command
 $ENV{G3T_RC} = "$ENV{HOME}/g3trc";
-put "$ENV{G3T_RC}", "\$rc{COMMANDS}{fork} = 1;\n\$rc{DEFAULT_ROLE_PERMS} = 'READERS \@all';\n";
+put "$ENV{G3T_RC}", "\$rc{COMMANDS}{fork} = 1;\n";
+
+# enable set-default-roles feature, add options, push
+try "
+    cat $h/.gitolite.rc
+    perl s/# 'set-default-roles'/'set-default-roles'/
+    put $h/.gitolite.rc
+";
+try "cd gitolite-admin";
+confadd '
+    repo foo/CREATOR/..*
+        C   =   u1 u2
+        RW+ =   CREATOR
+    option default.roles-1 = READERS @all
+';
+try "ADMIN_PUSH set1; !/FATAL/" or die text();
+try "cd ..";
 
 try "
     # now the fork succeeds
@@ -61,8 +78,7 @@ try "
 
 my $t;
 try "cd $rb; find . -name gl-perms"; $t = md5sum(sort (lines())); cmp $t,
-'d41d8cd98f00b204e9800998ecf8427e  ./foo/u1/u1a.git/gl-perms
-59b3a74b4d33c7631f08e75e7b60c7ce  ./foo/u1/u1a2.git/gl-perms
+'59b3a74b4d33c7631f08e75e7b60c7ce  ./foo/u1/u1a2.git/gl-perms
 59b3a74b4d33c7631f08e75e7b60c7ce  ./foo/u1/u1e.git/gl-perms
 ';
 

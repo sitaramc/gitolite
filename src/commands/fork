@@ -44,12 +44,6 @@ echo "$from forked to $to" >&2
 cd $GL_REPO_BASE/$to.git
 echo $GL_USER > gl-creator
 
-touch gl-perms
-if gitolite query-rc -q DEFAULT_ROLE_PERMS
-then
-    gitolite query-rc DEFAULT_ROLE_PERMS > gl-perms
-fi
-
 ln -sf `gitolite query-rc GL_ADMIN_BASE`/hooks/common/* hooks
 
 # record where you came from

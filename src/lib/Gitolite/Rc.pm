@@ -405,6 +405,8 @@ BEGIN { $non_core = "
     ssh-authkeys            POST_COMPILE    post-compile/ssh-authkeys
     Shell                   POST_COMPILE    post-compile/ssh-authkeys-shell-users
 
+    set-default-roles       POST_CREATE     .
+
     git-config              POST_COMPILE    post-compile/update-git-configs
     git-config              POST_CREATE     post-compile/update-git-configs
 
@@ -458,8 +460,6 @@ __DATA__
         READERS                     =>  1,
         WRITERS                     =>  1,
     },
-    # uncomment (and change) this if you wish
-    # DEFAULT_ROLE_PERMS            =>  'READERS @all',
 
     # ------------------------------------------------------------------
 
@@ -534,6 +534,9 @@ __DATA__
 
             # give some users direct shell access
             # 'Shell',
+
+            # set default roles from lines like 'option default.roles-1 = ...', etc.
+            # 'set-default-roles',
 
         # system admin stuff
 
