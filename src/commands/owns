@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Easy;
+
+=for usage
+Usage:  gitolite owns <reponame>
+
+Checks if $GL_USER is an owner of the repo and returns an exit code (shell
+truth, 0 for success), which makes it possible to do this in shell:
+
+    if gitolite owns someRepo
+    then
+        ...
+=cut
+
+usage() if not @ARGV or $ARGV[0] eq '-h';
+my $repo = shift;
+
+exit not owns($repo);

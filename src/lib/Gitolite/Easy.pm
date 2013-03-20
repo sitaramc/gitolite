@@ -124,8 +124,8 @@ sub in_role {
 
 # return true if $ENV{GL_USER} is set and is an OWNER of the given repo.
 
-# shell equivalent
-#   if gitolite creator $REPONAME $GL_USER; then ...
+# shell equivalent (assuming GL_USER is set)
+#   if gitolite owns $REPONAME; then ...
 sub owns {
     valid_user();
     my $r = shift;
