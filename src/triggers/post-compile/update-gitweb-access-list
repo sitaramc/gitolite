@@ -20,10 +20,10 @@
 
 plf=`gitolite query-rc GITWEB_PROJECTS_LIST`
 [ -z "$plf" ] && plf=$HOME/projects.list
-
+tmpfile=$(mktemp ${plf}.tmp_XXXXX)
 (
     gitolite list-phy-repos | gitolite access % gitweb R any | grep -v DENIED
     gitolite list-phy-repos | gitolite git-config -r % gitweb\\.
 ) |
-    cut -f1 | sort -u | sed -e 's/$/.git/' > $plf
-
+    cut -f1 | sort -u | sed -e 's/$/.git/' > $tmpfile
+mv $tmpfile $plf
