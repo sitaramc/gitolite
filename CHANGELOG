@@ -1,3 +1,11 @@
+2013-03-24  v3.5    (2 minor backward compat breakages)
+                    1.  'DEFAULT_ROLE_PERMS' replaced by per repo
+                        'default.roles' option
+                    2.  'gitolite list-memberships' now requires a '-r' or a
+                        '-u' flag
+
+                    new 'gitolite owns' command (thanks to Kevin Pulo)
+
 2013-03-05  v3.4    new rc file format makes it much easier to enable specific
                     features
 
