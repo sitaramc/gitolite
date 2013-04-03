@@ -60,8 +60,10 @@ sub print_version {
 sub print_patterns {
     my ( $repos, @aa );
 
+    my $lm = \&Gitolite::Conf::Load::list_members;
+
     # find repo patterns only, call them with ^C flag included
-    @$repos = grep { !/$REPONAME_PATT/ } @{ lister_dispatch('list-repos')->() };
+    @$repos = grep { !/$REPONAME_PATT/ } map { /^@/ ? @{ $lm->($_) } : $_ } @{ lister_dispatch('list-repos')->() };
     @aa = qw(R W ^C);
     listem( $repos, '', '', @aa );
     # but squelch the 'lc' and 'ld' flags for these
