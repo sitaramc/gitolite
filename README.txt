@@ -76,7 +76,7 @@ INSTALLATION AND SETUP
             gitolite/install -to $HOME/bin
             gitolite setup -pk YourName.pub
 
-        If the last command doesn't run perhaps 'bin' in not in your 'PATH'.
+        If the last command doesn't run, perhaps 'bin' is not in your 'PATH'.
         You can either add it, or just run:
 
             $HOME/bin/gitolite setup -pk YourName.pub
