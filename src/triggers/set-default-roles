@@ -6,7 +6,7 @@
 # skip if arg-1 is POST_CREATE and no arg-3 (user name) exists (i.e., it's not
 # a wild repo)
 [ "$1" = "POST_CREATE" ] && [ -z "$3" ] && exit 0;
-[ "$4" = "R" ] || [ "$4" = "W" ] || [ "$4" = "perms-c" ] || [ "$4" = "fork" ] exit 0
+[ "$4" = "R" ] || [ "$4" = "W" ] || [ "$4" = "perms-c" ] || [ "$4" = "fork" ] || exit 0
 
 die() { echo "$@" >&2; exit 1; }
 
