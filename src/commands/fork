@@ -44,6 +44,7 @@ echo "$from forked to $to" >&2
 cd $GL_REPO_BASE/$to.git
 echo $GL_USER > gl-creator
 
+gitolite query-rc -q LOCAL_CODE && ln -sf `gitolite query-rc LOCAL_CODE`/hooks/common/* hooks
 ln -sf `gitolite query-rc GL_ADMIN_BASE`/hooks/common/* hooks
 
 # record where you came from
