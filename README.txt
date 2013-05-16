@@ -40,6 +40,8 @@ This file contains the following sections:
     GIT-DAEMON
     GITWEB
 
+    MIGRATING FROM v2
+
     CONTACT AND SUPPORT
     LICENSE
 
@@ -341,6 +343,70 @@ GITWEB
         default (0077) to 0027 and add whatever user your gitweb is running as
         to the 'git' group.  After that, you need to run a one-time 'chmod -R'
         on the already created files and directories.
+
+
+------------------------------------------------------------------------
+
+
+MIGRATING FROM v2
+-----------------
+
+    This section describes how to migrate a basic install of v2 to v3.
+
+    However, if you have used any of the following features:
+
+      * any non-default settings in the rc file
+      * NAME/ rules
+      * subconf and delegation
+      * mirroring
+      * wild repos (user-created repos)
+      * any custom hooks of your own
+
+    you should go through the full set of migration instructions at
+    http://gitolite.com/gitolite/migr.html
+
+    The steps to follow to migrate a simple v2 setup to v3 are as follows:
+
+    0.  take a backup :-)
+
+    1.  remove old gitolite
+
+        1.1 Remove (or rename)
+
+          * the directories named in the rc variables GL_PACKAGE_CONF and
+            GL_PACKAGE_HOOKS (look in ~/.gitolite.rc)
+
+          * ~/.gitolite.rc
+
+          * the gitolite v2 code, whose location you can find in the
+            "command=" parameter in any of the gitolite keys in
+            ~/.ssh/authorized_keys
+
+          * ~/.gitolite (preserve ~/.gitolite/logs if you wish)
+
+        1.2 Edit ~/.ssh/authorized_keys and delete all lines pertaining to
+            gitolite (they will have a "command=" option pointing to
+            gl-auth-command)
+
+        1.3 Clone ~/repositories/gitolite-admin.git to some safe location on
+            the same server.
+
+            NOTE: please clone using the file system directly, not via ssh.
+
+        1.4 Delete ~/repositories/gitolite-admin.git (the repo you just
+            cloned).
+
+            NOTE: DO NOT delete any other repo in ~/repositories.  Leave them
+            all as they are.
+
+    2.  install gitolite as normal.  It doesn't matter what pubkey you use in
+        the "gitolite setup" step; in fact you may even choose to just run
+        "gitolite setup -a admin".  The admin repo created in this step will
+        get wiped out in the next step anyway.
+
+    3.  go to the clone you made in step 1.3 and run 'gitolite push -f'.
+
+        NOTE: that is 'gitolite push -f', not 'git push -f' :-)
 
 
 ------------------------------------------------------------------------
