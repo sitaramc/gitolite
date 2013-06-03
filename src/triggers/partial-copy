@@ -32,4 +32,38 @@ do
     git fetch -f $GL_REPO_BASE/$main.git $ref:$ref
 done
 
+export GL_BYPASS_ACCESS_CHECKS=1
+
+# remove all refs not in main or accessible
+cd $GL_REPO_BASE/$repo.git
+
+for ref in `git for-each-ref refs/heads refs/tags '--format=%(refname)'`
+do
+    cd $GL_REPO_BASE/$main.git
+
+    if git show-ref --verify --quiet $ref &&
+       gitolite access -q $repo $user R $ref ; then
+        # ref is present in main and accessible in repo
+        continue
+    fi
+
+    git push -f $GL_REPO_BASE/$repo.git :$ref || die "FATAL: failed to delete $ref"
+done
+
+# remove all tags no longer reachable
+cd $GL_REPO_BASE/$repo.git
+
+for ref in `git for-each-ref refs/tags '--format=%(refname)'`
+do
+    SHA=`git rev-list -1 $ref`
+    for branch in `git for-each-ref refs/heads '--format=%(refname)'`
+    do
+       if [ "`git merge-base $SHA $branch`" = "$SHA" ]; then
+           # tag is reachable in current branch, continue higher loop
+           continue 2
+       fi
+    done
+    git push -f $GL_REPO_BASE/$repo.git :$ref || die "FATAL: failed to delete $ref"
+done
+
 exit 0
