@@ -12,4 +12,5 @@ usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
 [ -z "$GL_USER" ] && die GL_USER not set
 
 # ----------------------------------------------------------------------
-exec $GL_BINDIR/commands/perms -c "$@" < /dev/null
+gitolite git-config -r $1 gitolite-options.default.roles | sort | cut -f3 |
+    perl -pe 's/(\s)CREATOR(\s|$)/$1$ENV{GL_USER}$1/' | $GL_BINDIR/commands/perms -c "$@"
