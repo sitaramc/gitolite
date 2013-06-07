@@ -41,6 +41,8 @@ usage() if $op ne 'list' and not $file;
 _chdir( $ENV{GL_REPO_BASE} );
 _chdir("$repo.git");
 
+_die "aborting, file '$file' not found in any branch" if $file and not object_exists($file);
+
 my $ff = "gl-locks";
 
 if ( $op eq 'lock' ) {
@@ -52,6 +54,24 @@ if ( $op eq 'lock' ) {
 } elsif ( $op eq 'list' ) {
     f_list($repo);
 }
+
+# ----------------------------------------------------------------------
+# For a given path, return 1 if object exists in any branch, 0 if not.
+# This is to prevent locking invalid objects.
+
+sub object_exists {
+    my $file = shift;
+
+    my @branches = `git for-each-ref refs/heads '--format=%(refname)'`;
+    foreach my $b (@branches) {
+        chomp($b);
+	system("git cat-file -e $b:$file 2>/dev/null") or return 1;
+            # note that with system(), the return value is "shell truth", so
+            # you check for success with "or", not "and"
+    }
+    return 0;   # report object not found
+}
+
 
 # ----------------------------------------------------------------------
 # everything below assumes we have already chdir'd to "$repo.git".  Also, $ff
