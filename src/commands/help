@@ -29,6 +29,7 @@ for (sort keys %list) {
 }
 
 print "\n";
+print "$rc{SITE_INFO}\n" if $rc{SITE_INFO};
 
 exit 0;
 
