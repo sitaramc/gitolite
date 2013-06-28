@@ -103,6 +103,9 @@ sub main {
     $ENV{GL_REPO} = $repo;
     my $aa = ( $verb =~ 'upload' ? 'R' : 'W' );
 
+    # set up env vars from options set for this repo
+    env_options($repo);
+
     # auto-create?
     if ( repo_missing($repo) and access( $repo, $user, '^C', 'any' ) !~ /DENIED/ ) {
         require Gitolite::Conf::Store;

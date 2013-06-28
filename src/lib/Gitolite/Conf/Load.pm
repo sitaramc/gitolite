@@ -8,6 +8,7 @@ package Gitolite::Conf::Load;
 
   access
   git_config
+  env_options
 
   option
   repo_missing
@@ -18,6 +19,7 @@ package Gitolite::Conf::Load;
 );
 
 use Exporter 'import';
+use Cwd;
 
 use Gitolite::Common;
 use Gitolite::Rc;
@@ -182,6 +184,23 @@ sub git_config {
 
     trace( 3, map { ( "$_" => "-> $ret{$_}" ) } ( sort keys %ret ) );
     return \%ret;
+}
+
+sub env_options {
+    return unless -f "$rc{GL_ADMIN_BASE}/conf/gitolite.conf-compiled.pm";
+        # prevent catch-22 during initial install
+
+    my $cwd = getcwd();
+
+    my $repo = shift;
+    map { delete $ENV{$_} } grep { /^GL_OPTION_/ } keys %ENV;
+    my $h = git_config( $repo, '^gitolite-options.ENV\.' );
+    while (my ($k, $v) = each %$h) {
+        next unless $k =~ /^gitolite-options.ENV\.(\w+)$/;
+        $ENV{"GL_OPTION_" . $1} = $v;
+    }
+
+    chdir($cwd);
 }
 
 sub option {

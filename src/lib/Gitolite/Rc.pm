@@ -271,6 +271,12 @@ sub version {
 sub trigger {
     my $rc_section = shift;
 
+    # if arg-2 (now arg-1, due to the 'shift' above) exists, it is a repo
+    # name, so setup env from options
+    require Gitolite::Conf::Load;
+    Gitolite::Conf::Load->import('env_options');
+    env_options($_[0]) if $_[0];
+
     if ( exists $rc{$rc_section} ) {
         if ( ref( $rc{$rc_section} ) ne 'ARRAY' ) {
             _die "'$rc_section' section in rc file is not a perl list";
