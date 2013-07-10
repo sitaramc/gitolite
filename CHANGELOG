@@ -1,3 +1,9 @@
+2013-07-10  v3.5.2  allow ENV vars to be set from repo options, for use in
+                    triggers and hooks
+
+                    bug-fix: the new set-default-roles feature was being
+                    invoked on every run of "perms" and overriding it!
+
 2013-03-24  v3.5    (2 minor backward compat breakages)
                     1.  'DEFAULT_ROLE_PERMS' replaced by per repo
                         'default.roles' option
