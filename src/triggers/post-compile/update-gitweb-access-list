@@ -27,4 +27,6 @@ tmpfile=`mktemp -u $plf.tmp_XXXXXXXX`
     gitolite list-phy-repos | gitolite git-config -r % gitweb\\.
 ) |
     cut -f1 | sort -u | sed -e 's/$/.git/' > $tmpfile
+
+[ -f $plf ] && perl -e "chmod ( ( (stat('$plf'))[2] & 07777 ), '$tmpfile')"
 mv $tmpfile $plf
