@@ -184,13 +184,14 @@ sub http_setup_die_handler {
         my $message = shift; chomp($message);
         print STDERR "$message\n";
 
+        http_print_headers($service);
+
         # format the service response, then the message.  With initial
         # help from Ilari and then a more detailed email from Shawn...
         $service = "# service=$service\n"; $message = "ERR $message\n";
         $service = sprintf( "%04X", length($service) + 4 ) . "$service";    # no CRLF on this one
         $message = sprintf( "%04X", length($message) + 4 ) . "$message";
 
-        http_print_headers();
         print $service;
         print "0000";                                                       # flush-pkt, apparently
         print $message;
@@ -226,7 +227,7 @@ sub http_simulate_ssh_connection {
 my $http_headers_printed = 0;
 
 sub http_print_headers {
-    my ( $code, $text ) = @_;
+    my ( $service, $code, $text ) = @_;
 
     return if $http_headers_printed++;
     $code ||= 200;
@@ -237,6 +238,10 @@ sub http_print_headers {
     print "Expires: Fri, 01 Jan 1980 00:00:00 GMT\r\n";
     print "Pragma: no-cache\r\n";
     print "Cache-Control: no-cache, max-age=0, must-revalidate\r\n";
-    print "Content-Type: text/plain\r\n";
+    if ($service) {
+        print "Content-Type: application/x-$service-advertisement\r\n";
+    } else {
+        print "Content-Type: text/plain\r\n";
+    }
     print "\r\n";
 }
