@@ -18,7 +18,7 @@ try "
     CLONE dev2 gitolite-admin ga2
                                 !ok;    gsh
                                         /DENIED by fallthru/
-                                        /fatal: The remote end hung up unexpectedly/
+                                        /fatal: Could not read from remote repository/
     glt clone admin --progress file:///gitolite-admin ga2
                                 ok;     gsh
                                         /Counting/; /Compressing/; /Total/
@@ -43,7 +43,7 @@ try "
     git commit -m t01a;         ok;     /master.*t01a/
     PUSH dev2;                  !ok;    gsh
                                         /DENIED by fallthru/
-                                        /fatal: The remote end hung up unexpectedly/
+                                        /fatal: Could not read from remote repository/
     PUSH admin;                 ok;     /master -> master/
     empty;                      ok;
     PUSH admin master:mm
@@ -74,7 +74,7 @@ try "
     cd ..;                      ok;
     CLONE u1 t1;                !ok;    gsh
                                         /DENIED by fallthru/
-                                        /fatal: The remote end hung up unexpectedly/
+                                        /fatal: Could not read from remote repository/
     CLONE u2 t1;                ok;     gsh
                                         /warning: You appear to have cloned an empty repository./
     [ -d t1/.git ];             ok
@@ -84,7 +84,7 @@ try "
     test-commit tc1 tc2 tc2;    ok;     /a530e66/
     PUSH u2;                    !ok;    gsh
                                         /DENIED by fallthru/
-                                        /fatal: The remote end hung up unexpectedly/
+                                        /fatal: Could not read from remote repository/
     PUSH u3 master;             ok;     gsh
                                         /master -> master/
 
