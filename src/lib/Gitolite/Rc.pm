@@ -423,6 +423,9 @@ BEGIN { $non_core = "
 
     daemon                  POST_CREATE     post-compile/update-git-daemon-access-list
     daemon                  POST_COMPILE    post-compile/update-git-daemon-access-list
+
+    repo-specific-hooks     POST_COMPILE    .
+    repo-specific-hooks     POST_CREATE     .
 ";
 }
 
@@ -488,6 +491,18 @@ __DATA__
 
     # if you enabled 'Shell', you need this
         # SHELL_USERS_LIST          =>  "$ENV{HOME}/.gitolite.shell-users",
+
+    # ------------------------------------------------------------------
+
+    # suggested locations for site-local gitolite code (see cust.html)
+
+        # this one is managed directly on the server
+        # LOCAL_CODE                =>  "$ENV{HOME}/local",
+
+        # or you can use this, which lets you put everything in a subdirectory
+        # called "local" in your gitolite-admin repo.  For a SECURITY WARNING
+        # on this, see http://gitolite.com/gitolite/cust.html#pushcode
+        # LOCAL_CODE                =>  "$rc{GL_ADMIN_BASE}/local",
 
     # ------------------------------------------------------------------
 
@@ -560,6 +575,9 @@ __DATA__
 
             # updates 'description' file instead of 'gitweb.description' config item
             # 'cgit',
+
+            # allow repo-specific hooks to be added
+            # 'repo-specific-hooks',
 
         # performance, logging, monitoring...
 
