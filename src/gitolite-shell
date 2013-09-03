@@ -92,8 +92,6 @@ sub in_ssh {
 sub main {
     my $id = shift;
 
-    umask $rc{UMASK};
-
     # set up the user
     my $user = $ENV{GL_USER} = shift @ARGV;
 

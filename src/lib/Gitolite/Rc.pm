@@ -90,8 +90,10 @@ unshift @{ $rc{ACCESS_1} }, 'Writable::access_1';
 # use an env var that is highly unlikely to appear in real life :)
 do $ENV{G3T_RC} if exists $ENV{G3T_RC} and -r $ENV{G3T_RC};
 
-# setup some perl/rc/env vars
+# setup some perl/rc/env vars, plus umask
 # ----------------------------------------------------------------------
+
+umask $rc{UMASK};
 
 unshift @INC, "$rc{LOCAL_CODE}/lib" if $rc{LOCAL_CODE};
 
