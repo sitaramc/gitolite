@@ -63,13 +63,20 @@ sub add_to_group {
 }
 
 sub set_repolist {
-
+    my @in = @_;
     @repolist = ();
     # ...sanity checks
-    for (@_) {
+    while (@in) {
+        $_ = shift @in;
         if ( check_subconf_repo_disallowed( $subconf, $_ ) ) {
-            (my $repo = $_) =~ s/^\@$subconf\./locally modified \@/;
-            $ignored{$subconf}{$repo} = 1;
+            if (exists $groups{$_}) {
+                # groupname disallowed; try individual members now
+                (my $g = $_) =~ s/^\@$subconf\./\@/;
+                _warn "expanding '$g'; this *may* slow down compilation";
+                unshift @in, keys %{ $groups{$_} };
+                next;
+            }
+            $ignored{$subconf}{$_} = 1;
             next;
         }
 

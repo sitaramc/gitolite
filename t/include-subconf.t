@@ -9,7 +9,7 @@ use Gitolite::Test;
 # include and subconf
 # ----------------------------------------------------------------------
 
-try 'plan 55';
+try 'plan 58';
 
 confreset; confadd '
     include "i1.conf"
@@ -39,7 +39,9 @@ try "ADMIN_PUSH set2; !/FATAL/" or die text();
 
 try "
                                         /i1.conf already included/
-	                                /subconf 'i2' attempting to set access for \@i1, b2, bar, i1, locally modified \@g2/
+	                                    /subconf 'i2' attempting to set access for \@i1, b2, bar, i1/
+                                        /WARNING: expanding '\@g2'/
+
                                         !/attempting to set access.*i2/
                                         /Initialized.*empty.*baz.git/
                                         /Initialized.*empty.*foo.git/
@@ -62,8 +64,10 @@ confadd 'g2.conf', '
 
 try "ADMIN_PUSH set3; !/FATAL/" or die text();
 try "
-                                        /subconf 'g2' attempting to set access for locally modified \@g2/
-                                        !/Initialized.*empty/
+                                        /WARNING: expanding '\@g2'/
+                                        /WARNING: subconf 'g2' attempting to set access for h2/
+                                        /Initialized.*empty.*g2.git/
+                                        /Initialized.*empty.*i2.git/
 ";
 
 confreset;confadd '

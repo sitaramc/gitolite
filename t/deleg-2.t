@@ -9,7 +9,7 @@ use Gitolite::Test;
 # delegation tests -- part 2
 # ----------------------------------------------------------------------
 
-try "plan 54";
+try "plan 55";
 
 try "
     DEF SP_1 = git add conf ; ok; git commit -m %1; ok; /master.* %1/
@@ -117,5 +117,6 @@ put   "conf/fragments/u3r.conf", '
 ';
 
 try "SUBCONF_PUSH u3 u3
-        /WARNING: subconf 'u3r' attempting to set access for locally modified \@u3r/
+        /WARNING: expanding '\@u3r'/
+        /WARNING: subconf 'u3r' attempting to set access for r2b/
 ";
