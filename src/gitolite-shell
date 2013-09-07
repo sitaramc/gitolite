@@ -71,6 +71,11 @@ sub in_http {
     $ENV{REMOTE_USER} ||= $rc{HTTP_ANON_USER};
     @ARGV = ( $ENV{REMOTE_USER} );
 
+    my $ip;
+    ( $ip = $ENV{SSH_CONNECTION} || '(no-IP)' ) =~ s/ .*//;
+
+    gl_log( 'http', "ARGV=" . join( ",", @ARGV ), "SOC=" . ( $ENV{SSH_ORIGINAL_COMMAND} || '' ), "FROM=$ip" );
+
     return 'http';
 }
 
@@ -122,7 +127,7 @@ sub main {
         trigger( 'ACCESS_1', $repo, $user, $aa, 'any', $ret );
         _die $ret . "\n(or you mis-spelled the reponame)" if $ret =~ /DENIED/;
 
-        gl_log( "pre_git", $repo, $user, $aa, 'any', "-> $ret" );
+        gl_log( "pre_git", $repo, $user, $aa, 'any', $ret );
     }
 
     trigger( 'PRE_GIT', $repo, $user, $aa, 'any', $verb );

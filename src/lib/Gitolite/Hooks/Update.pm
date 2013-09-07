@@ -34,8 +34,7 @@ sub update {
 
     check_vrefs( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa );
 
-    trace( 1, "-> $ret" );
-    gl_log( 'update', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV );
+    gl_log( 'update', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV, $ret);
     exit 0;
 }
 
