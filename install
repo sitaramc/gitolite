@@ -69,7 +69,7 @@ unless ($version =~ /^v\d/) {
 
 if ($to) {
     _mkdir($to);
-    system("cp -a * $to");
+    system("cp -RpP * $to");
     _print( "$to/VERSION", $version );
 } elsif ($ln) {
     ln_sf( $ENV{GL_BINDIR}, "gitolite", $ln );
