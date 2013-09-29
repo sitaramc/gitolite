@@ -223,7 +223,7 @@ sub push_to_slaves {
     delete $ENV{GL_USER};    # why?  see src/commands/mirror
 
     for my $s ( sort keys %slaves ) {
-        system("gitolite mirror push $s $repo &");
+        system("gitolite mirror push $s $repo </dev/null >/dev/null 2>&1 &");
     }
 
     $ENV{GL_USER} = $u;

@@ -93,6 +93,7 @@ try "
     git push;                           ok
         /To frodo\@localhost:gitolite-admin/
         /master -> master/
+    sleep 5
     git rev-parse HEAD
 ";
 
@@ -119,6 +120,7 @@ try "
     git push;                           ok
         /To sam\@localhost:gitolite-admin/
         /master -> master/
+    sleep 5
     git rev-parse HEAD
 ";
 
@@ -193,6 +195,7 @@ try "
     git push;                           ok
         /To frodo\@localhost:gitolite-admin/
         /master -> master/
+    sleep 5
 
     sudo -u gollum -i gitolite git-config -r gitolite-admin .
         ok
@@ -235,6 +238,7 @@ try "
     empty
     git push origin master
         /new branch/;   /master -> master/
+    sleep 5
     git rev-parse HEAD
 ";
 chomp($t = text());
@@ -261,6 +265,7 @@ try "
     git push sam\@localhost:r2 master
         /new branch/;   /master -> master/
         /master -> master/
+    sleep 5
     git ls-remote frodo\@localhost:r2
         !/$t/
         /$t2/
@@ -292,6 +297,7 @@ try "
     empty
     git push;                               ok
         /master -> master/
+    sleep 5
     git rev-parse HEAD
 ";
 chomp($t = text());
@@ -314,6 +320,7 @@ try "
 
     git push -f
         /\\+ .......\\.\\.\\........ master -> master .forced update/
+    sleep 5
 ";
 
 swk("u2");
@@ -335,6 +342,7 @@ try "
     tc c
     git push
         /master -> master/
+    sleep 5
     git rev-parse HEAD
 ";
 chomp($t = text());
@@ -354,6 +362,7 @@ try "
 
     git push -f
         /\\+ .......\\.\\.\\........ master -> master .forced update/
+    sleep 5
 
     cd ..
     rm -rf fr1 fr2
@@ -367,6 +376,7 @@ try "
     cd fr2
     tc e
     git push;                               ok
+    sleep 5
 
     git rev-parse HEAD
 ";
