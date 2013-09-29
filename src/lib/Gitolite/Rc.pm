@@ -295,7 +295,7 @@ sub trigger {
                 } else {
                     $pgm = _which("triggers/$pgm", 'x');
 
-                    _warn("skipped command '$s'"), next if not $pgm;
+                    _warn("skipped trigger '$s' (not found or not executable)"), next if not $pgm;
                     trace( 2, "command: $s" );
                     _system( $pgm, @args, $rc_section, @_ );    # they better all return with 0 exit codes!
                 }
