@@ -113,6 +113,9 @@ sub parse_users {
 
 sub add_rule {
     my ( $perm, $ref, $user ) = @_;
+    _warn "possible undeclared group '$user'"
+        if $user =~ /^@/ and not $groups{$user} and not $rc{GROUPLIST_PGM}
+            and not special_group($user);
     _die "bad ref '$ref'"   unless $ref  =~ $REPOPATT_PATT;
     _die "bad user '$user'" unless $user =~ $USERNAME_PATT;
 
@@ -120,6 +123,17 @@ sub add_rule {
     for my $repo (@repolist) {
         push @{ $repos{$repo}{$user} }, [ $nextseq, $perm, $ref ];
     }
+
+    sub special_group {
+        # ok perl doesn't really have lexical subs (at least not the older
+        # perls I want to support) but let's pretend...
+        my $g = shift;
+        $g =~ s/^\@//;
+        return 1 if $g eq 'all' or $g eq 'CREATOR';
+        return 1 if $rc{ROLES}{$g};
+        return 0;
+    }
+
 }
 
 sub add_config {
