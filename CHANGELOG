@@ -1,3 +1,21 @@
+2013-10-14  v3.5.3  catch undefined groupnames (when possible)
+
+                    mirroring: async push to slaves
+
+                    (some portability fixes)
+
+                    (a couple of contrib scripts - querying IPA based LDAP
+                    servers for group membership, and user key management)
+
+                    allow groups in subconf files (this *may* slow down
+                    compilation in extreme cases)
+
+                    make adding repo-specific hooks easier (see cust.mkd or
+                    cust.html online for docs)
+
+                    smart http now supports git 1.8.2 and above (which changed
+                    the protocol requirements a wee bit)
+
 2013-07-10  v3.5.2  allow ENV vars to be set from repo options, for use in
                     triggers and hooks
 
