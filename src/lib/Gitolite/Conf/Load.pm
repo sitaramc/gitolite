@@ -21,8 +21,8 @@ package Gitolite::Conf::Load;
 use Exporter 'import';
 use Cwd;
 
-use Gitolite::Common;
 use Gitolite::Rc;
+use Gitolite::Common;
 
 use strict;
 use warnings;

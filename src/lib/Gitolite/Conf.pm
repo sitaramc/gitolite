@@ -12,8 +12,8 @@ package Gitolite::Conf;
 use Exporter 'import';
 use Getopt::Long;
 
-use Gitolite::Common;
 use Gitolite::Rc;
+use Gitolite::Common;
 use Gitolite::Conf::Sugar;
 use Gitolite::Conf::Store;
 

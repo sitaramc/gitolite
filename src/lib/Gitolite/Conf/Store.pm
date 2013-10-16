@@ -26,8 +26,8 @@ use Data::Dumper;
 $Data::Dumper::Indent   = 1;
 $Data::Dumper::Sortkeys = 1;
 
-use Gitolite::Common;
 use Gitolite::Rc;
+use Gitolite::Common;
 use Gitolite::Hooks::Update;
 use Gitolite::Hooks::PostUpdate;
 
