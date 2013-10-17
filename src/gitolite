@@ -76,7 +76,6 @@ if ( $command eq 'setup' ) {
 } elsif ( my $c = _which("commands/$command", 'x' ) ) {
     trace( 2, "attempting gitolite command $c" );
     _system( $c, @args );
-    exit 0;
 
 } elsif ( $command eq 'list-phy-repos' ) {
     _chdir( $rc{GL_REPO_BASE} );
@@ -94,6 +93,8 @@ if ( $command eq 'setup' ) {
 }
 
 gl_log('END') if $$ == $ENV{GL_TID};
+
+exit 0;
 
 sub args {
     usage() if not $command or $command eq '-h';
