@@ -56,7 +56,7 @@ sub incsub {
 
     _die "invalid include/subconf file/glob '$include_glob'"
       unless $include_glob =~ /^"(.+)"$/
-          or $include_glob =~ /^'(.+)'$/;
+      or $include_glob =~ /^'(.+)'$/;
     $include_glob = $1;
 
     trace( 3, $is_subconf, $include_glob );

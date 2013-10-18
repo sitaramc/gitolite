@@ -34,7 +34,7 @@ sub update {
 
     check_vrefs( $ref, $oldsha, $newsha, $oldtree, $newtree, $aa );
 
-    gl_log( 'update', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV, $ret);
+    gl_log( 'update', $ENV{GL_REPO}, $ENV{GL_USER}, $aa, @ARGV, $ret );
     exit 0;
 }
 
@@ -60,7 +60,7 @@ sub check_vrefs {
             }
         } else {
             my ( $dummy, $pgm, @args ) = split '/', $vref;
-            $pgm = _which("VREF/$pgm", 'x');
+            $pgm = _which( "VREF/$pgm", 'x' );
             $pgm or _die "'$vref': helper program missing or unexecutable";
 
             open( my $fh, "-|", $pgm, @_, $vref, @args ) or _die "'$vref': can't spawn helper program: $!";
@@ -120,7 +120,7 @@ sub args {
     # for branch create or delete, merge_base stays at '0'x40
     chomp( $merge_base = `git merge-base $oldsha $newsha` )
       unless $oldsha eq '0' x 40
-          or $newsha eq '0' x 40;
+      or $newsha eq '0' x 40;
 
     $aa = 'W';
     # tag rewrite

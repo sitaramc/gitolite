@@ -71,7 +71,7 @@ if ( $repo ne '%' and $key ne '%' ) {
 }
 
 $repo = '' if $repo eq '%';
-$key  = '' if $key  eq '%';
+$key  = '' if $key eq '%';
 
 _die "'-q' doesn't go with using a pipe" if $quiet;
 @ARGV = ();

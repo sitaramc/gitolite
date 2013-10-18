@@ -52,7 +52,7 @@ sub sugar {
                 # perl-ism; apart from keeping the full path separate from the
                 # simple name, this also protects %rc from change by implicit
                 # aliasing, which would happen if you touched $s itself
-                my $sfp = _which("syntactic-sugar/$s", 'r');
+                my $sfp = _which( "syntactic-sugar/$s", 'r' );
 
                 _warn("skipped sugar script '$s'"), next if not -r $sfp;
                 $lines = SugarBox::run_sugar_script( $sfp, $lines );

@@ -17,7 +17,7 @@ sub access_2 {
     return if $init_done and not %rules;
 
     # but we don't really know that the first time, heh!
-    if (not $init_done) {
+    if ( not $init_done ) {
         my $repo = $_[1];
         init($repo);
         return unless %rules;
@@ -29,8 +29,8 @@ sub access_2 {
     $passed{$refex}++;
 
     # evaluate the rules each time; it's not very expensive
-    for my $k (sort keys %rules) {
-        $ENV{"GL_REFEX_EXPR_" . $k} = eval_rule($rules{$k});
+    for my $k ( sort keys %rules ) {
+        $ENV{ "GL_REFEX_EXPR_" . $k } = eval_rule( $rules{$k} );
     }
 }
 
@@ -42,7 +42,7 @@ sub eval_rule {
 
     my $ret = eval $e;
     _die "eval '$e' -> '$@'" if $@;
-    Gitolite::Common::trace(1, "RefexExpr", "'$rule' -> '$e' -> '$ret'");
+    Gitolite::Common::trace( 1, "RefexExpr", "'$rule' -> '$e' -> '$ret'" );
 
     return "'$rule' -> '$e'" if $ret;
 }
@@ -68,10 +68,10 @@ sub init {
     my $repo = shift;
 
     # find all the rule expressions
-    my %t = config($repo, "^gitolite-options\\.refex-expr\\.");
-    my ($k, $v);
+    my %t = config( $repo, "^gitolite-options\\.refex-expr\\." );
+    my ( $k, $v );
     # get rid of the cruft and store just the rule name as the key
-    while ( ($k, $v) = each %t) {
+    while ( ( $k, $v ) = each %t ) {
         $k =~ s/^gitolite-options\.refex-expr\.//;
         $rules{$k} = $v;
     }

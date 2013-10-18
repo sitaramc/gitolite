@@ -22,8 +22,8 @@ print "hello" . ( $user ? " $user" : "" ) . ", this is gitolite3 " . version() .
 
 print "list of " . ( $user ? "remote" : "gitolite" ) . " commands available:\n\n";
 
-my %list = (list_x( $ENV{GL_BINDIR}), list_x($rc{LOCAL_CODE} || ''));
-for (sort keys %list) {
+my %list = ( list_x( $ENV{GL_BINDIR} ), list_x( $rc{LOCAL_CODE} || '' ) );
+for ( sort keys %list ) {
     print "\t$list{$_}" if $ENV{D};
     print "\t$_\n" if not $user or $rc{COMMANDS}{$_};
 }

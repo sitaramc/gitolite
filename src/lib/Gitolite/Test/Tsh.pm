@@ -315,12 +315,12 @@ sub def {
     my $e;    # the expanded value
     if ( $e = $def{$c} ) {    # starting value
         for my $i ( 1 .. 9 ) {
-            last unless $e =~ /%$i/;    # no more %N's (we assume sanity)
+            last unless $e =~ /%$i/;                              # no more %N's (we assume sanity)
             die "$def{$c} requires more arguments\n" unless @d;
-            my $f = shift @d;           # get the next datum
-            $e =~ s/%$i/$f/g;           # and substitute %N all over
+            my $f = shift @d;                                     # get the next datum
+            $e =~ s/%$i/$f/g;                                     # and substitute %N all over
         }
-        return join( " ", $e, @d );     # join up any remaining data
+        return join( " ", $e, @d );                               # join up any remaining data
     }
     return '';
 }

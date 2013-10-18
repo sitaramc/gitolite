@@ -73,7 +73,7 @@ if ( $command eq 'setup' ) {
 } elsif ( $command eq 'trigger' ) {
     trigger(@args);
 
-} elsif ( my $c = _which("commands/$command", 'x' ) ) {
+} elsif ( my $c = _which( "commands/$command", 'x' ) ) {
     trace( 2, "attempting gitolite command $c" );
     _system( $c, @args );
 

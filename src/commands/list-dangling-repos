@@ -32,18 +32,18 @@ my %phy_repos = map { chomp; $_ => 1 } `gitolite list-phy-repos`;
 
 # Remove exact matches.  But for repo names like "gtk+", you could have
 # collapsed this into the next step (the regex match).
-for my $pr (keys %phy_repos) {
+for my $pr ( keys %phy_repos ) {
     next unless exists $repos{$pr};
     delete $repos{$pr};
     delete $phy_repos{$pr};
 }
 
 # Remove regex matches.
-for my $pr (keys %phy_repos) {
+for my $pr ( keys %phy_repos ) {
     my $matched = 0;
-    my $pr2 = Gitolite::Conf::Load::generic_name($pr);
-    for my $r (keys %repos) {
-        if ($pr =~ /^$r$/ or $pr2 =~ /^$r$/) {
+    my $pr2     = Gitolite::Conf::Load::generic_name($pr);
+    for my $r ( keys %repos ) {
+        if ( $pr =~ /^$r$/ or $pr2 =~ /^$r$/ ) {
             $matched = 1;
             next;
         }
@@ -52,4 +52,4 @@ for my $pr (keys %phy_repos) {
 }
 
 # what's left in %phy_repos are dangling repos.
-print join("\n", sort keys %phy_repos), "\n";
+print join( "\n", sort keys %phy_repos ), "\n";

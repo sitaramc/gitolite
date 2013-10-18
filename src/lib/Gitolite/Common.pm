@@ -54,7 +54,7 @@ sub trace {
         $sub =~ s(.*/(.*))(($1));
     }
     $sub .= ' ' x ( 31 - length($sub) );
-    say2 "$level\t$sub\t", join("\t", @_);
+    say2 "$level\t$sub\t", join( "\t", @_ );
 }
 
 sub dbg {
@@ -282,7 +282,7 @@ sub gl_log {
 
 sub logger_plus_stderr {
     open my $fh, "|-", "logger" or confess "it's really not my day is it...?\n";
-    for ( @_ ) {
+    for (@_) {
         print STDERR "FATAL: $_\n";
         print $fh "FATAL: $_\n";
     }

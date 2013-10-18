@@ -130,7 +130,7 @@ sub main {
     }
 
     trigger( 'PRE_GIT', $repo, $user, $aa, 'any', $verb );
-    if ($ENV{REQUEST_URI}) {
+    if ( $ENV{REQUEST_URI} ) {
         _system( "git", "http-backend" );
     } else {
         my $repodir = "'$rc{GL_REPO_BASE}/$repo.git'";

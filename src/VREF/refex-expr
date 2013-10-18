@@ -7,8 +7,8 @@ use warnings;
 
 my $rule = $ARGV[7];
 die "\n\nFATAL: GL_REFEX_EXPR_ doesn't exist\n(your admin probably forgot the rc file change needed for this to work)\n\n"
-  unless exists $ENV{"GL_REFEX_EXPR_" . $rule};
-my $res = $ENV{"GL_REFEX_EXPR_" . $rule} || 0;
+  unless exists $ENV{ "GL_REFEX_EXPR_" . $rule };
+my $res = $ENV{ "GL_REFEX_EXPR_" . $rule } || 0;
 print "$ARGV[6] ($res)\n" if $res;
 
 exit 0;

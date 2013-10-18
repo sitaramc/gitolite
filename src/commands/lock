@@ -65,13 +65,12 @@ sub object_exists {
     my @branches = `git for-each-ref refs/heads '--format=%(refname)'`;
     foreach my $b (@branches) {
         chomp($b);
-	system("git cat-file -e $b:$file 2>/dev/null") or return 1;
-            # note that with system(), the return value is "shell truth", so
-            # you check for success with "or", not "and"
+        system("git cat-file -e $b:$file 2>/dev/null") or return 1;
+        # note that with system(), the return value is "shell truth", so
+        # you check for success with "or", not "and"
     }
-    return 0;   # report object not found
+    return 0;    # report object not found
 }
-
 
 # ----------------------------------------------------------------------
 # everything below assumes we have already chdir'd to "$repo.git".  Also, $ff
@@ -111,7 +110,7 @@ sub f_list {
 
     my %locks = get_locks();
     print "\n# locks held:\n\n";
-    map { print "$locks{$_}{USER}\t$_\t(" . scalar(localtime($locks{$_}{TIME})) . ")\n" } grep { $_ ne 'BREAKS' } sort keys %locks;
+    map { print "$locks{$_}{USER}\t$_\t(" . scalar( localtime( $locks{$_}{TIME} ) ) . ")\n" } grep { $_ ne 'BREAKS' } sort keys %locks;
     print "\n# locks broken:\n\n";
     for my $b ( @{ $locks{BREAKS} } ) {
         my ( $when, $who, $whose, $how_old, $what ) = split ' ', $b;

@@ -38,18 +38,18 @@ $ENV{GL_USER} and ( can_read($repo) or die "no read permissions on '$repo'" );
 
 my $repodir = "$ENV{GL_REPO_BASE}/$repo.git";
 chdir $repodir or die "repo '$repo' missing";
-(my $logdir = $ENV{GL_LOGFILE}) =~ s(/[^/]+$)();
+( my $logdir = $ENV{GL_LOGFILE} ) =~ s(/[^/]+$)();
 
 for my $logfile ( reverse glob("$logdir/*") ) {
     @ARGV = ($logfile);
     for my $line ( reverse grep { m(\tupdate\t($repo|$repodir)\t) } <> ) {
         chomp($line);
         my @fields = split /\t/, $line;
-        my ($ts, $pid, $who, $ref, $d_old, $new) = @fields[ 0, 1, 4, 6, 7, 8];
+        my ( $ts, $pid, $who, $ref, $d_old, $new ) = @fields[ 0, 1, 4, 6, 7, 8 ];
 
         # d_old is what you display
         my $old = $d_old;
-        $old = "" if $d_old eq ("0" x 40);
+        $old = ""       if $d_old eq ( "0" x 40 );
         $old = "$old.." if $old;
 
         system("git rev-list $old$new 2>/dev/null | grep ^$sha >/dev/null && echo '$ts $pid $who $ref $d_old $new'");

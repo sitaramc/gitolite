@@ -90,7 +90,7 @@ usage();
 
 sub bundle_create {
     my ( $repo, $ttl ) = @_;
-    my $bundle   = "$repo.bundle";
+    my $bundle = "$repo.bundle";
     $bundle =~ s(.*/)();
     my $recreate = 0;
 

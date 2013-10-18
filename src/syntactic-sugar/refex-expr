@@ -7,6 +7,7 @@
 my $perm = qr(-|R|RW\+?C?D?M?);
 
 my $seq = 1;
+
 sub sugar_script {
     my $lines = shift;
 
@@ -18,11 +19,11 @@ sub sugar_script {
         next unless $l =~ /^($perm) /;
         # more detailed check
         next unless $l =~ /^($perm) (\S.*) = (\S.*)$/;
-        my ($perm, $refexes, $users) = ($1, $2, $3);
+        my ( $perm, $refexes, $users ) = ( $1, $2, $3 );
         next unless $refexes =~ / (and|not|or|xor|\+|-|==|-lt|-gt|-eq|-le|-ge|-ne) /;
 
         print STDERR ">>>> $l\n";
-        pop @out;   # we need to replace that last line
+        pop @out;    # we need to replace that last line
 
         push @out, "option refex-expr.sugar$seq = $refexes";
         push @out, "$perm VREF/refex-expr/sugar$seq = $users";

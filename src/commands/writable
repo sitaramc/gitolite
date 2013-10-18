@@ -22,7 +22,7 @@ usage() if not @ARGV or @ARGV < 2 or $ARGV[0] eq '-h';
 usage() if $ARGV[1] ne 'on' and $ARGV[1] ne 'off';
 
 my $repo = shift;
-my $on = ( shift eq 'on' );
+my $on   = ( shift eq 'on' );
 
 if ( $repo eq '@all' ) {
     _die "you are not authorized" if $ENV{GL_USER} and not is_admin();

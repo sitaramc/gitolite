@@ -54,7 +54,7 @@ sub print_version {
     chomp( my $hn = `hostname -s 2>/dev/null || hostname` );
     my $gv = substr( `git --version`, 12 );
     $ENV{GL_USER} or _die "GL_USER not set";
-    print "hello $ENV{GL_USER}, this is " . ($ENV{USER} || "httpd") . "\@$hn running gitolite3 " . version() . " on git $gv\n";
+    print "hello $ENV{GL_USER}, this is " . ( $ENV{USER} || "httpd" ) . "\@$hn running gitolite3 " . version() . " on git $gv\n";
 }
 
 sub print_patterns {
@@ -102,7 +102,7 @@ sub listem {
         next unless $perm =~ /\S/;
         print "$perm\t$repo";
         print "\t$creator" if $lc;
-        print "\t$desc" if $ld;
+        print "\t$desc"    if $ld;
         print "\n";
     }
 }

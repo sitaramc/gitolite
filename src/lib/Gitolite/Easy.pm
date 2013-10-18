@@ -102,7 +102,7 @@ sub in_group {
     my $g = shift;
     $g =~ s/^\@?/@/;
 
-    return grep { $_ eq $g } @{ Gitolite::Conf::Load::list_memberships('-u', $user) };
+    return grep { $_ eq $g } @{ Gitolite::Conf::Load::list_memberships( '-u', $user ) };
 }
 
 # in_role()
@@ -117,7 +117,7 @@ sub in_role {
     $r =~ s/^\@?/@/;
     my $repo = shift;
 
-    return grep { $_ eq $r } @{ Gitolite::Conf::Load::list_memberships("-u", $user, "-r", $repo) };
+    return grep { $_ eq $r } @{ Gitolite::Conf::Load::list_memberships( "-u", $user, "-r", $repo ) };
 }
 
 # owns()
@@ -156,8 +156,8 @@ sub can_read {
 #   if gitolite access -q $REPONAME $GL_USER W; then ...
 sub can_write {
     valid_user();
-    my ($r, $aa, $ref) = @_;
-    $aa ||= 'W';
+    my ( $r, $aa, $ref ) = @_;
+    $aa  ||= 'W';
     $ref ||= 'any';
     return not( access( $r, $user, $aa, $ref ) =~ /DENIED/ );
 }

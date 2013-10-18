@@ -25,11 +25,11 @@ use Gitolite::Common;
 
 BEGIN {
     require Gitolite::Test::Tsh;
-    *{'try'}  = \&Tsh::try;
-    *{'put'}  = \&Tsh::put;
-    *{'text'} = \&Tsh::text;
+    *{'try'}   = \&Tsh::try;
+    *{'put'}   = \&Tsh::put;
+    *{'text'}  = \&Tsh::text;
     *{'lines'} = \&Tsh::lines;
-    *{'cmp'}  = \&Tsh::cmp;
+    *{'cmp'}   = \&Tsh::cmp;
 }
 
 use strict;
@@ -38,7 +38,7 @@ use warnings;
 # ----------------------------------------------------------------------
 
 # make sure the user is ready for it
-if (not $ENV{GITOLITE_TEST} or $ENV{GITOLITE_TEST} ne 'y') {
+if ( not $ENV{GITOLITE_TEST} or $ENV{GITOLITE_TEST} ne 'y' ) {
     print "Bail out! See t/README for information on how to run the tests.\n";
     exit 255;
 }
@@ -113,7 +113,7 @@ sub confadd {
 sub md5sum {
     my $out = '';
     for my $file (@_) {
-        $out .= md5_hex(slurp($file)) . "  $file\n";
+        $out .= md5_hex( slurp($file) ) . "  $file\n";
     }
     return $out;
 }

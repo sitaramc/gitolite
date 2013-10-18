@@ -15,7 +15,7 @@ my ( $mode, $master, %slaves, %trusted_slaves );
 # ----------------------------------------------------------------------
 
 sub input {
-    unless ($ARGV[0] =~ /^server-(\S+)$/) {
+    unless ( $ARGV[0] =~ /^server-(\S+)$/ ) {
         _die "'$ARGV[0]' is not a valid server name" if $ENV{SSH_ORIGINAL_COMMAND} =~ /^USER=(\S+) SOC=(git-receive-pack '(\S+)')$/;
         return;
     }
@@ -27,13 +27,13 @@ sub input {
 
     # custom peer-to-peer commands.  At present the only one is 'perms -c',
     # sent from a mirror command
-    if ($ENV{SSH_ORIGINAL_COMMAND} =~ /^CREATOR=(\S+) perms -c '(\S+)'$/) {
+    if ( $ENV{SSH_ORIGINAL_COMMAND} =~ /^CREATOR=(\S+) perms -c '(\S+)'$/ ) {
         $ENV{GL_USER} = $1;
 
         my $repo = $2;
         details($repo);
-        _die "$hn: '$repo' is local"  if $mode eq 'local';
-        _die "$hn: '$repo' is native" if $mode eq 'master';
+        _die "$hn: '$repo' is local"                        if $mode eq 'local';
+        _die "$hn: '$repo' is native"                       if $mode eq 'master';
         _die "$hn: '$sender' is not the master for '$repo'" if $master ne $sender;
 
         # this expects valid perms content on STDIN
@@ -96,8 +96,8 @@ sub pre_git {
     # case 2: we're slave, master pushing to us
     if ( $sender and not $rc{REDIRECTED_PUSH} ) {
         trace( 3, "case 2, master push" );
-        _die "$hn: '$repo' is local"  if $mode eq 'local';
-        _die "$hn: '$repo' is native" if $mode eq 'master';
+        _die "$hn: '$repo' is local"                        if $mode eq 'local';
+        _die "$hn: '$repo' is native"                       if $mode eq 'master';
         _die "$hn: '$sender' is not the master for '$repo'" if $master ne $sender;
         return;
     }
@@ -106,8 +106,8 @@ sub pre_git {
     # case 3: we're master, slave sending a redirected push to us
     if ( $sender and $rc{REDIRECTED_PUSH} ) {
         trace( 3, "case 2, slave redirect" );
-        _die "$hn: '$repo' is local"      if $mode eq 'local';
-        _die "$hn: '$repo' is not native" if $mode eq 'slave';
+        _die "$hn: '$repo' is local"                           if $mode eq 'local';
+        _die "$hn: '$repo' is not native"                      if $mode eq 'slave';
         _die "$hn: '$sender' is not a valid slave for '$repo'" if not $slaves{$sender};
         _die "$hn: redirection not allowed from '$sender'"     if not $trusted_slaves{$sender};
         return;

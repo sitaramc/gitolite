@@ -7,24 +7,25 @@
 # see documentation at the end of this script
 
 my %macro;
+
 sub sugar_script {
     my $lines = shift;
-    my @out  = ();
+    my @out   = ();
 
-    my $l = join("\n", @$lines);
-    while ($l =~ s/^macro (\w+)\b(.*?)\nend//ms) {
+    my $l = join( "\n", @$lines );
+    while ( $l =~ s/^macro (\w+)\b(.*?)\nend//ms ) {
         $macro{$1} = $2;
     }
 
     $l =~ s/^((\w+)\b.*)/$macro{$2} ? expand($1) : $1/gem;
 
-    $lines = [split "\n", $l];
+    $lines = [ split "\n", $l ];
     return $lines;
 }
 
 sub expand {
     my $l = shift;
-    my ($word, @arg) = split ' ', $l;
+    my ( $word, @arg ) = split ' ', $l;
     my $v = $macro{$word};
     $v =~ s/%(\d+)/$arg[$1-1] or die "macro '$word' needs $1 arguments at '$l'\n"/gem;
     return $v;

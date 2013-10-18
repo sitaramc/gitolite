@@ -24,10 +24,10 @@ _die "do '$ff' failed with '$@', contact your administrator" if $@;
 
 my ( $oldtree, $newtree, $refex ) = @ARGV[ 3, 4, 6 ];
 
-for my $file (`git diff --name-only $oldtree $newtree` ) {
+for my $file (`git diff --name-only $oldtree $newtree`) {
     chomp($file);
 
-    if ($locks{$file} and $locks{$file}{USER} ne $ENV{GL_USER}) {
+    if ( $locks{$file} and $locks{$file}{USER} ne $ENV{GL_USER} ) {
         print "$refex '$file' locked by '$locks{$file}{USER}'";
         last;
     }

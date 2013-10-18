@@ -51,7 +51,7 @@ if ( $ARGV[0] eq '-c' ) {
     my $repo = $ARGV[0] or usage();
     _die "invalid repo '$repo'" unless $repo =~ $REPONAME_PATT;
 
-    if (not -d "$rc{GL_REPO_BASE}/$repo.git") {
+    if ( not -d "$rc{GL_REPO_BASE}/$repo.git" ) {
         my $ret = Gitolite::Conf::Load::access( $repo, $ENV{GL_USER}, '^C', 'any' );
         _die $generic_error if $ret =~ /DENIED/;
 
@@ -92,7 +92,7 @@ sub setperms {
             _die "Invalid role '$1'; check the rc file" if /(\S+)/ and not $rc{ROLES}{$1};
             push @a, $_;
         }
-        print STDERR "\n";  # make sure Ctrl-C gets caught
+        print STDERR "\n";    # make sure Ctrl-C gets caught
         _print( $pf, @a );
         return;
     }
@@ -100,8 +100,8 @@ sub setperms {
     _die "Invalid syntax.  Please re-run with '-h' for detailed usage" if @_ != 3;
     my ( $op, $role, $user ) = @_;
     _die "Invalid syntax.  Please re-run with '-h' for detailed usage" if $op ne '+' and $op ne '-';
-    _die "Invalid role '$role'; check the rc file" if not $rc{ROLES}{$role};
-    _die "Invalid user '$user'" if not $user =~ $USERNAME_PATT;
+    _die "Invalid role '$role'; check the rc file"                     if not $rc{ROLES}{$role};
+    _die "Invalid user '$user'"                                        if not $user =~ $USERNAME_PATT;
 
     my $text = '';
     my @text = slurp($pf) if -f $pf;
