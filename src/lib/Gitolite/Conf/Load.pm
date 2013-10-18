@@ -70,6 +70,7 @@ my $last_repo = '';
 
 sub access {
     my ( $repo, $user, $aa, $ref ) = @_;
+    trace( 2, $repo, $user, $aa, $ref);
     _die "invalid user '$user'" if not( $user and $user =~ $USERNAME_PATT );
     sanity($repo);
 
@@ -85,7 +86,7 @@ sub access {
     # apparently we can't always force sanity; at least what we *return*
     # should be sane/safe.  This pattern is based on REF_OR_FILENAME_PATT.
     (my $safe_ref = $ref) =~ s([^-0-9a-zA-Z._\@/+ :,])(.)g;
-    trace( 2, "safe_ref $safe_ref created from $ref") if $ref ne $safe_ref;
+    trace( 3, "safe_ref", $safe_ref ) if $ref ne $safe_ref;
 
     # when a real repo doesn't exist, ^C is a pre-requisite for any other
     # check to give valid results.
@@ -100,7 +101,7 @@ sub access {
         return "$aa $safe_ref $repo $user DENIED by existence";
     }
 
-    trace( 2, scalar(@rules) . " rules found" );
+    trace( 3, scalar(@rules) . " rules found" );
     for my $r (@rules) {
         my $perm = $r->[1];
         my $refex = $r->[2]; $refex =~ s(/USER/)(/$user/);
@@ -182,7 +183,7 @@ sub git_config {
         $ret{$k} = $v;
     }
 
-    trace( 3, map { ( "$_" => "-> $ret{$_}" ) } ( sort keys %ret ) );
+    map { trace( 3, "$_", "$ret{$_}") } ( sort keys %ret ) if $ENV{D};
     return \%ret;
 }
 
@@ -289,7 +290,7 @@ sub load_1 {
 
     sub rules {
         my ( $repo, $user ) = @_;
-        trace( 3, "repo=$repo, user=$user" );
+        trace( 3, $repo, $user );
 
         return @cached if ( $lastrepo eq $repo and $lastuser eq $user and @cached );
 

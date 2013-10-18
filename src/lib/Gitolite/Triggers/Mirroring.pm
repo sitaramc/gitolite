@@ -60,7 +60,7 @@ sub input {
 sub pre_git {
     return unless $hn;
     # nothing, and I mean NOTHING, happens if HOSTNAME is not set
-    trace( 1, "pre_git() on $hn" );
+    trace( 3, "pre_git() on $hn" );
 
     my ( $repo, $user, $aa ) = @_[ 1, 2, 3 ];
 
@@ -85,7 +85,6 @@ sub pre_git {
         trace( 3, "case 1, user push" );
         return if $mode eq 'local' or $mode eq 'master';
         if ( $trusted_slaves{$hn} ) {
-            trace( 3, "redirecting to $master" );
             trace( 1, "redirect to $master" );
             exec( "ssh", $master, "USER=$user", "SOC=$ENV{SSH_ORIGINAL_COMMAND}" );
         } else {

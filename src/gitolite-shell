@@ -123,7 +123,6 @@ sub main {
     # more information.
     unless ( $ENV{GL_BYPASS_ACCESS_CHECKS} ) {
         my $ret = access( $repo, $user, $aa, 'any' );
-        trace( 1, "access($repo, $user, $aa, 'any')", "-> $ret" );
         trigger( 'ACCESS_1', $repo, $user, $aa, 'any', $ret );
         _die $ret . "\n(or you mis-spelled the reponame)" if $ret =~ /DENIED/;
 

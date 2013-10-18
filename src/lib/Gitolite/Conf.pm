@@ -42,7 +42,7 @@ sub compile {
 
 sub parse {
     my $lines = shift;
-    trace( 2, scalar(@$lines) . " lines incoming" );
+    trace( 3, scalar(@$lines) . " lines incoming" );
 
     for my $line (@$lines) {
         # user or repo groups
@@ -70,7 +70,7 @@ sub parse {
             _die "bad config value '$value'" if $value =~ $UNSAFE_PATT;
             add_config( 1, $key, $value );
         } elsif ( $line =~ /^subconf (\S+)$/ ) {
-            trace( 2, $line );
+            trace( 3, $line );
             set_subconf($1);
         } else {
             _warn "syntax error, ignoring: '$line'";

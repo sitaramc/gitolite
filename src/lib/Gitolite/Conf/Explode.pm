@@ -59,7 +59,7 @@ sub incsub {
           or $include_glob =~ /^'(.+)'$/;
     $include_glob = $1;
 
-    trace( 2, $is_subconf, $include_glob );
+    trace( 3, $is_subconf, $include_glob );
 
     for my $file ( glob($include_glob) ) {
         _warn("included file not found: '$file'"), next unless -f $file;
@@ -103,7 +103,7 @@ sub already_included {
     return 0 unless $included{$file_id}++;
 
     _warn("$file already included");
-    trace( 2, "$file already included" );
+    trace( 3, "$file already included" );
     return 1;
 }
 

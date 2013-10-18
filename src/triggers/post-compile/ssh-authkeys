@@ -28,7 +28,7 @@ tsh_try("sestatus");
 my $selinux = ( tsh_text() =~ /enabled/ );
 
 my $ab = $rc{GL_ADMIN_BASE};
-trace( 2, "'keydir' not found in '$ab'; exiting" ), exit if not -d "$ab/keydir";
+trace( 1, "'keydir' not found in '$ab'; exiting" ), exit if not -d "$ab/keydir";
 my $akdir        = "$ENV{HOME}/.ssh";
 my $akfile       = "$ENV{HOME}/.ssh/authorized_keys";
 my $glshell      = $rc{GL_BINDIR} . "/gitolite-shell";

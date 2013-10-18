@@ -289,21 +289,21 @@ sub trigger {
                 if ( my ( $module, $sub ) = ( $pgm =~ /^(.*)::(\w+)$/ ) ) {
 
                     require Gitolite::Triggers;
-                    trace( 1, 'trigger', $module, $sub, @args, $rc_section, @_ );
+                    trace( 2, 'trigger module', $module, $sub, @args, $rc_section, @_ );
                     Gitolite::Triggers::run( $module, $sub, @args, $rc_section, @_ );
 
                 } else {
                     $pgm = _which("triggers/$pgm", 'x');
 
                     _warn("skipped trigger '$s' (not found or not executable)"), next if not $pgm;
-                    trace( 2, "command: $s" );
+                    trace( 2, 'trigger command', $s );
                     _system( $pgm, @args, $rc_section, @_ );    # they better all return with 0 exit codes!
                 }
             }
         }
         return;
     }
-    trace( 2, "'$rc_section' not found in rc" );
+    trace( 3, "'$rc_section' not found in rc" );
 }
 
 sub _which {
