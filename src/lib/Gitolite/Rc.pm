@@ -93,7 +93,7 @@ do $ENV{G3T_RC} if exists $ENV{G3T_RC} and -r $ENV{G3T_RC};
 # setup some perl/rc/env vars, plus umask
 # ----------------------------------------------------------------------
 
-umask $rc{UMASK};
+umask ( $rc{UMASK} || 0077 );
 
 unshift @INC, "$rc{LOCAL_CODE}/lib" if $rc{LOCAL_CODE};
 
