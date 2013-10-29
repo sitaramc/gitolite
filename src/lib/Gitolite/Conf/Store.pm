@@ -175,7 +175,7 @@ sub new_repos {
     _chdir( $rc{GL_REPO_BASE} );
 
     # normal repos
-    my @repos = grep { $_ =~ $REPONAME_PATT and not /^@/ } sort keys %repos;
+    my @repos = grep { $_ =~ $REPONAME_PATT and not /^@/ } ( sort keys %repos, sort keys %configs );
     # add in members of repo groups
     map { push @repos, keys %{ $groups{$_} } } grep { /^@/ and $_ ne '@all' } keys %repos;
 
