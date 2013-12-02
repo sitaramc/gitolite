@@ -65,7 +65,7 @@ sub parse {
             $value =~ s/^['"](.*)["']$/$1/;
             my @validkeys = split( ' ', ( $rc{GIT_CONFIG_KEYS} || '' ) );
             push @validkeys, "gitolite-options\\..*";
-            my @matched = grep { $key =~ /^$_$/ } @validkeys;
+            my @matched = grep { $key =~ /^$_$/i } @validkeys;
             _die "git config '$key' not allowed\ncheck GIT_CONFIG_KEYS in the rc file" if ( @matched < 1 );
             _die "bad config value '$value'" if $value =~ $UNSAFE_PATT;
             add_config( 1, $key, $value );
