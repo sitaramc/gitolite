@@ -62,7 +62,7 @@ TRASH_SUFFIX=`gitolite query-rc TRASH_SUFFIX`;  tsuf=`date +%Y-%m-%d_%H:%M:%S`; 
 # ----------------------------------------------------------------------
 
 owner_or_die() {
-    gitolite creator "$repo" $GL_USER || die You are not authorised
+    gitolite owns "$repo" || die You are not authorised
 }
 
 # ----------------------------------------------------------------------
