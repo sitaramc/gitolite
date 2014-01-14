@@ -227,7 +227,7 @@ sub tsh_tempdir {
 
 sub print_plan {
     return unless $ENV{HARNESS_ACTIVE};
-    my $_ = shift;
+    local $_ = shift;
     say "1..$_";
 }
 
@@ -235,7 +235,7 @@ sub rc_lines {
     my @lines = @_;
 
     while (@lines) {
-        my $_ = shift @lines;
+        local $_ = shift @lines;
         chomp; $_ = trim_ws($_);
 
         $line++;
@@ -522,13 +522,13 @@ sub sm {
 }
 
 sub trim_ws {
-    my $_ = shift;
+    local $_ = shift;
     s/^\s+//; s/\s+$//;
     return $_;
 }
 
 sub is_comment_or_empty {
-    my $_ = shift;
+    local $_ = shift;
     chomp; $_ = trim_ws($_);
     if (/^##\s(.*)/) {
         $testname = $1;
@@ -538,7 +538,7 @@ sub is_comment_or_empty {
 }
 
 sub cmds {
-    my $_ = shift;
+    local $_ = shift;
     chomp; $_ = trim_ws($_);
 
     # split on unescaped ';'s, then unescape the ';' in the results
