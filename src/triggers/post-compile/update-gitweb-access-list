@@ -23,7 +23,7 @@ plf=`gitolite query-rc GITWEB_PROJECTS_LIST`
 # since mktemp does not honor umask, we just use it to generate a temp
 # filename (note: 'mktemp -u' on some systems, this gets close enough)
 tmpfile=`mktemp $plf.tmp_XXXXXXXX`
-unlink $tmpfile;
+rm -f $tmpfile;
 
 (
     gitolite list-phy-repos | gitolite access % gitweb R any | grep -v DENIED
