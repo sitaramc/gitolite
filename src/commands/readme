@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# README.html files work similar to "description" files. For further
+# information see
+# 	https://www.kernel.org/pub/software/scm/git/docs/gitweb.html
+# under "Per-repository gitweb configuration".
+
+# Usage:    ssh git@host readme <repo>
+#           ssh git@host readme <repo> rm
+#           cat <filename> | ssh git@host readme <repo> set
+#
+# Show, remove or set the README.html file for user-created ("wild") repo.
+
+die() { echo "$@" >&2; exit 1; }
+usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
+[ -z "$1" ] && usage
+[ "$1" = "-h" ] && usage
+[ $# -gt 1 ] && [ "$2" != "set" ] && [ "$2" != "rm" ] && usage
+[ -z "$GL_USER" ] && die GL_USER not set
+
+# ----------------------------------------------------------------------
+repo=$1; shift
+
+if gitolite query-rc -q WRITER_CAN_UPDATE_README
+then
+    gitolite access -q "$repo" $GL_USER W any || die You are not authorised
+else
+    gitolite creator "$repo" $GL_USER || die You are not authorised
+fi
+
+readmefile=`gitolite query-rc GL_REPO_BASE`/"$repo".git/README.html
+
+if [ -z "$1" ]
+then
+    [ -r "$readmefile" ] && cat "$readmefile"
+    exit 0
+fi
+
+if [ "$1" = "rm" ]
+then
+    rm -f "$readmefile"
+    exit 0
+fi
+
+cat >"$readmefile"

@@ -482,6 +482,8 @@ __DATA__
 
     # the 'desc' command uses this
         # WRITER_CAN_UPDATE_DESC    =>  1,
+    # the 'readme' command uses this
+        # WRITER_CAN_UPDATE_README  =>  1,
 
     # the CpuTime feature uses these
         # display user, system, and elapsed times to user after each git operation
@@ -526,6 +528,7 @@ __DATA__
             # 'create',
             # 'fork',
             # 'mirror',
+            # 'readme',
             # 'sskm',
             # 'D',
 
