@@ -2,8 +2,6 @@
 use strict;
 use warnings;
 
-use File::Temp qw(tempfile);
-
 use lib $ENV{GL_LIBDIR};
 use Gitolite::Rc;
 use Gitolite::Common;
