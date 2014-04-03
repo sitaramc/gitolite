@@ -4,10 +4,6 @@ use warnings;
 
 # setup repo-specific hooks
 
-# code is too long, but if you take out all the error/safety/sanity checks,
-# it's basically just creating a symlink in <repo.git>/hooks pointing to some
-# file inside $rc{LOCAL_CODE}/hooks/repo-specific
-
 use lib $ENV{GL_LIBDIR};
 use Gitolite::Rc;
 use Gitolite::Common;
@@ -17,11 +13,19 @@ _die "repo-specific-hooks: '$rc{LOCAL_CODE}' does not exist or is not a director
 
 _chdir( $ENV{GL_REPO_BASE} );
 
-@ARGV = ("gitolite list-phy-repos | gitolite git-config -r % gitolite-options\\.hook\\. |");
+@ARGV = ("gitolite list-phy-repos | gitolite git-config -ev -r % gitolite-options\\.hook\\. |");
+
+# Hook Driver
+my $hook_text = '';
+{
+    local $/ = undef;
+    $hook_text = <DATA>;
+}
 
 while (<>) {
     chomp;
-    my ( $repo, $hook, $code ) = split /\t/, $_;
+    my ( $repo, $hook, $codes ) = split /\t/, $_;
+    $codes ||= '';
 
     # we don't allow fiddling with the admin repo
     if ( $repo eq 'gitolite-admin' ) {
@@ -37,18 +41,51 @@ while (<>) {
         next;
     }
 
-    if ( $code =~ m(^/|\.\.) ) {
-        _warn "repo-specific-hooks: double dot or leading slash not allowed in '$code'";
-        next;
-    }
+    my @codes = split / /, $codes;
+    unlink( glob("$repo.git/hooks/$hook.*") );
 
-    my $src = $rc{LOCAL_CODE} . "/hooks/repo-specific/$code";
-    my $dst = "$repo.git/hooks/$hook";
-    unless ( -x $src ) {
-        _warn "repo-specific-hooks: '$src' doesn't exist or is not executable";
-        next;
+    my $counter = "h00";
+    foreach my $code (@codes) {
+        if ( $code =~ m(^/|\.\.) ) {
+            _warn "repo-specific-hooks: double dot or leading slash not allowed in '$code'";
+            next;
+        }
+
+        my $src = $rc{LOCAL_CODE} . "/hooks/repo-specific/$code";
+        my $dst = "$repo.git/hooks/$hook.$counter-$code";
+        unless ( -x $src ) {
+            _warn "repo-specific-hooks: '$src' doesn't exist or is not executable";
+            next;
+        }
+        unlink $dst;
+        symlink $src, $dst or _warn "could not symlink '$src' to '$dst'";
+        $counter++;
+
+        # no sanity checks for multiple overwrites of the same hook
     }
-    unlink $dst;
-    symlink $src, $dst or _warn "could not symlink '$src' to '$dst'";
-    # no sanity checks for multiple overwrites of the same hook
+    my $dst = "$repo.git/hooks/$hook";
+    _print( $dst, $hook_text ) if not -f $dst;
+    chmod 0755, $dst
 }
+
+__DATA__
+#/bin/sh
+
+# Determine what input the hook needs
+# post-update takes args, pre/post-receive take stdin
+type=args
+stdin=''
+[ $0 != hooks/post-update ] && {
+    type=stdin
+    stdin=`cat`
+}
+
+for h in $0.*; do
+    [ -x $h ] || continue
+    if [ $type = args ]
+    then
+        $h $@
+    else
+        echo "$stdin" | $h
+    fi
+done
