@@ -1,0 +1,133 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# program name: expand-deny-messages
+
+# DOCUMENTATION IS AT THE BOTTOM OF THIS FILE; PLEASE READ
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Rc;
+
+my %attempted_access = (
+    # see triggers.html
+    'ACCESS_1' => {
+        'R' => 'Repo read',
+        'W' => 'Repo write',
+    },
+    'ACCESS_2' => {
+        'W' => "Fast forward push",
+        '+' => "Rewind push branch or overwrite tag",
+        'C' => "Create ref",
+        'D' => "Delete ref",
+    }
+);
+
+# env var to disable is set?
+exit 0 if $ENV{GL_OPTION_EDM_DISABLE};
+
+# argument 1
+my $a12 = shift;    # ACCESS_1 or ACCESS_2
+exit 0 if $a12 !~ /^ACCESS_[12]$/;    # shouldn't happen; error in rc file?
+
+# the rest of the arguments
+my ( $repo, $user, $aa, $ref, $msg, $oldsha, $newsha ) = @ARGV;
+
+# we're only interested in deny messages
+exit 0 if $msg !~ /DENIED/;
+
+print STDERR "\nFATAL -- ACCESS DENIED\n";
+
+_info( "Repo",      $repo );
+_info( "User",      $user );
+_info( "Stage",     ( $a12 eq 'ACCESS_1' ? "Before git was called" : "From git's update hook" ) );
+_info( "Ref",       _ref($ref) ) if $a12 eq 'ACCESS_2';
+_info( "Operation", _op( $a12, $aa, $oldsha, $newsha ) );
+
+print STDERR "\n";
+print STDERR "$ENV{GL_OPTION_EDM_EXTRA_INFO}\n\n" if $ENV{GL_OPTION_EDM_EXTRA_INFO};
+
+# ------------------------------------------------------------------------
+
+sub _ref {
+    my $r = shift;
+    return "VREF '$r'"   if $r =~ s(^VREF/)();
+    return "Branch '$r'" if $r =~ s(^refs/heads/)();
+    return "Tag '$r'"    if $r =~ s(^refs/tags/)();
+    return "Non-standard ref '$r'";
+}
+
+sub _info {
+    printf STDERR "%-14s  %-60s\n", @_;
+}
+
+sub _op {
+    my ( $a12, $aa, $oldsha, $newsha ) = @_;
+
+    # first remove the M part and save the text for later addition if needed
+    my $merge = ( $aa =~ s/M// ? " with merge commit" : "" );
+
+    # next, the attempted access is modified to reflect the actual operation being
+    # attempted.  NOTE: this no longer necessarily reflects what the gitolite log
+    # file stores; it's more granular and truly distinguishes a branch create from
+    # an ff push, etc.  Could help when user typos a branch name I suppose
+    $aa = 'C' if $oldsha and $oldsha eq '0' x 40;
+    $aa = 'D' if $newsha and $newsha eq '0' x 40;
+
+    # then we map it, add merge text if any
+    my $op = $attempted_access{$a12}{$aa} || "Unknown operation '$aa'";
+    $op .= $merge;
+
+    return $op;
+}
+
+__END__
+
+ENABLING THE FEATURE
+--------------------
+
+To enable this feature, uncomment the line in the rc file if your gitolite was
+installed recently enough.  Otherwise you will need to add these lines to the
+end of your rc file, just before the "%RC" block ends:
+
+    ACCESS_1 => [
+        'expand-deny-messages',
+    ],
+
+    ACCESS_2 => [
+        'expand-deny-messages',
+    ],
+
+Please don't miss the trailing commas!
+
+DISABLING IT FOR SPECIFIC REPOS
+-------------------------------
+
+Once it is enabled at the rc file level, if you wish to disable it for
+specific repositories just add a line like this to those repos:
+
+        option ENV.EDM_DISABLE = 1
+
+Or you can also disable it for all repos, then enable it for some:
+
+    repo @all
+        option ENV.EDM_DISABLE = 1
+
+    # ... then later ...
+
+    repo foo bar @baz
+        option ENV.EDM_DISABLE = 0
+
+(options.html[1] and pages linked from it will explain how that works).
+
+[1]: http://gitolite.com/gitolite/options.html
+
+# SUPPLYING EXTRA INFORMATION
+# ---------------------------
+
+You can also supply some extra information to be printed, by adding a line
+like this to each repository in the gitolite.conf file:
+
+        option ENV.EDM_EXTRA_INFO = "please contact alice@example.com"
+
+You could of course add it under a "repo @all" section if you like.

@@ -400,6 +400,9 @@ BEGIN {
 
     refex-expr              ACCESS_2        RefexExpr::access_2
 
+    expand-deny-messages    ACCESS_1        .
+    expand-deny-messages    ACCESS_2        .
+
     RepoUmask               PRE_GIT         ::
     RepoUmask               POST_CREATE     ::
 
@@ -564,6 +567,9 @@ __DATA__
 
             # set default roles from lines like 'option default.roles-1 = ...', etc.
             # 'set-default-roles',
+
+            # show more detailed messages on deny
+            # 'expand-deny-messages',
 
         # system admin stuff
 
