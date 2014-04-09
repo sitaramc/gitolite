@@ -17,32 +17,43 @@ key, or, if '-r' is supplied, a regex that is applied to all available keys.
     -q          exit code only (shell truth; 0 is success)
     -n          suppress trailing newline when used as key (not pattern)
     -r          treat key as regex pattern (unanchored)
+    -ev         print keys with empty values also (see below)
 
 Examples:
     gitolite git-config repo gitweb.owner
     gitolite git-config -q repo gitweb.owner
     gitolite git-config -r repo gitweb
 
-When the key is treated as a pattern, prints:
+Notes:
 
-    reponame<tab>key<tab>value<newline>
+1.  When the key is treated as a pattern, prints:
 
-Otherwise the output is just the value.
+        reponame<tab>key<tab>value<newline>
 
-Finally, see the advanced use section of 'gitolite access -h' -- you can do
-something similar here also:
+    Otherwise the output is just the value.
 
-    gitolite list-phy-repos | gitolite git-config -r % gitweb\\. | cut -f1 > ~/projects.list
+2.  By default, keys with empty values (specified as "" in the conf file) are
+    treated as non-existant.  Using '-ev' will print those keys also.  Note
+    that this only makes sense when the key is treated as a pattern, where
+    such keys are printed as:
+
+        reponame<tab>key<tab><newline>
+
+3.  Finally, see the advanced use section of 'gitolite access -h' -- you can
+    do something similar here also:
+
+        gitolite list-phy-repos | gitolite git-config -r % gitweb\\. | cut -f1 > ~/projects.list
 =cut
 
 usage() if not @ARGV;
 
-my ( $help, $nonl, $quiet, $regex ) = (0) x 4;
+my ( $help, $nonl, $quiet, $regex, $ev ) = (0) x 5;
 GetOptions(
-    'n' => \$nonl,
-    'q' => \$quiet,
-    'r' => \$regex,
-    'h' => \$help,
+    'n'  => \$nonl,
+    'q'  => \$quiet,
+    'r'  => \$regex,
+    'h'  => \$help,
+    'ev' => \$ev,
 ) or usage();
 
 my ( $repo, $key ) = @ARGV;
@@ -54,7 +65,7 @@ if ( $repo ne '%' and $key ne '%' ) {
     # single repo, single key; no STDIN
     $key = "^\Q$key\E\$" unless $regex;
 
-    $ret = git_config( $repo, $key );
+    $ret = git_config( $repo, $key, $ev );
 
     # if the key is not a regex, it should match at most one item
     _die "found more than one entry for '$key'" if not $regex and scalar( keys %$ret ) > 1;
@@ -80,7 +91,7 @@ while (<>) {
     my $r  = $repo || shift @in;
     my $k  = $key || shift @in;
     $k = "^\Q$k\E\$" unless $regex;
-    $ret = git_config( $r, $k );
+    $ret = git_config( $r, $k, $ev );
     next unless %$ret;
     map { print "$r\t$_\t" . $ret->{$_} . "\n" } sort keys %$ret;
 }
