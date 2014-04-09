@@ -17,27 +17,25 @@ repo=$1; shift
 # this shell script takes arguments that are completely under the user's
 # control, so make sure you quote those suckers!
 
+descfile=`gitolite query-rc GL_REPO_BASE`/"$repo".git/description
+
+# Allow users with "R" access to read the repo's description.
+if [ -z "$1" ]
+then
+    gitolite access -q "$repo" $GL_USER R any || die You are not authorised
+    [ -r "$descfile" ] && cat "$descfile"
+    exit 0
+fi
+
 # kernel.org needs 'desc' to be available to people who have "RW" or above,
 # not just the "creator".  In fact they need it for non-wild repos so there
 # *is* no creator.
+
 if gitolite query-rc -q WRITER_CAN_UPDATE_DESC
 then
     gitolite access -q "$repo" $GL_USER W any || die You are not authorised
 else
     gitolite creator "$repo" $GL_USER || die You are not authorised
-fi
-
-# if it passes, $repo is a valid repo name so it is known to contain only sane
-# characters.  This is because 'gitolite creator' return true only if there
-# *is* a repo of that name and it has a gl-creator file that contains the same
-# text as $GL_USER.
-
-descfile=`gitolite query-rc GL_REPO_BASE`/"$repo".git/description
-
-if [ -z "$1" ]
-then
-    [ -r "$descfile" ] && cat "$descfile"
-    exit 0
 fi
 
 echo "$*" > "$descfile"
