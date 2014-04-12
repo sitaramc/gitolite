@@ -52,7 +52,7 @@ try "
     DEF AP_2 = AP_1; git add conf ; ok; git commit -m %1; ok; /master.* %1/
     DEF ADMIN_PUSH = AP_2 %1; glt push admin origin; ok; gsh; /master -> master/
 
-    DEF CS_1 = pwd; //tmp/tsh_tempdir.*gitolite-admin/; git remote -v; ok; /file://gitolite-admin/
+    DEF CS_1 = pwd; //tmp/tsh_tempdir.*gitolite-admin/; git remote -v; ok; /file:///gitolite-admin/
     DEF CHECK_SETUP = CS_1; git log; ok; /fa7564c1b903ea3dce49314753f25b34b9e0cea0/
 
     DEF CLONE = glt clone %1 file:///%2
@@ -71,7 +71,7 @@ try "
 
     # clone admin repo
     cd tsh_tempdir
-    glt clone admin --progress file://gitolite-admin
+    glt clone admin --progress file:///gitolite-admin
     cd gitolite-admin
 " or die "could not setup the test environment; errors:\n\n" . text() . "\n\n";
 
