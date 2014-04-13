@@ -49,9 +49,6 @@ sub fixup_config {
     while ( my ( $key, $value ) = each( %{$gc} ) ) {
         next if $key =~ /^gitolite-options\./;
         if ( $value ne "" ) {
-            while ( my ( $mk, $mv ) = each %{ $rc{SAFE_CONFIG} } ) {
-                $value =~ s/%$mk/$mv/g;
-            }
             system( "git", "config", "--file", "$RB/$pr.git/config", $key, $value );
         } else {
             system( "git", "config", "--file", "$RB/$pr.git/config", "--unset-all", $key );

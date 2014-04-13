@@ -68,6 +68,9 @@ sub parse {
             my @matched = grep { $key =~ /^$_$/i } @validkeys;
             _die "git config '$key' not allowed\ncheck GIT_CONFIG_KEYS in the rc file" if ( @matched < 1 );
             _die "bad config value '$value'" if $value =~ $UNSAFE_PATT;
+            while ( my ( $mk, $mv ) = each %{ $rc{SAFE_CONFIG} } ) {
+                $value =~ s/%$mk/$mv/g;
+            }
             add_config( 1, $key, $value );
         } elsif ( $line =~ /^subconf (\S+)$/ ) {
             trace( 3, $line );
