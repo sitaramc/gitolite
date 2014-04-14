@@ -10,50 +10,72 @@ use Gitolite::Common;
 use Gitolite::Conf::Load;
 
 =for args
-Usage:  gitolite info [-lc] [-ld] [<repo name pattern>]
+Usage:  gitolite info [-lc] [-ld] [-json] [<repo name pattern>]
 
 List all existing repos you can access, as well as repo name patterns you can
 create repos from (if any).
 
     '-lc'       lists creators as an additional field at the end.
     '-ld'       lists description as an additional field at the end.
+    '-json'     produce JSON output instead of normal output
 
 The optional pattern is an unanchored regex that will limit the repos
 searched, in both cases.  It might speed up things a little if you have more
 than a few thousand repos.
 =cut
 
-# these two are globals
-my ( $lc, $ld, $patt ) = args();
+# these are globals
+my ( $lc, $ld, $json, $patt ) = args();
+my %out;    # holds info to be json'd
 
 print_version();
 
 print_patterns();     # repos he can create for himself
 print_phy_repos();    # repos already created
-print "\n$rc{SITE_INFO}\n" if $rc{SITE_INFO};
+
+if ( $rc{SITE_INFO} ) {
+    $json
+      ? $out{SITE_INFO} = $rc{SITE_INFO}
+      : print "\n$rc{SITE_INFO}\n";
+}
+
+print JSON::to_json( \%out, { utf8 => 1, pretty => 1 } ) if $json;
 
 # ----------------------------------------------------------------------
 
 sub args {
-    my ( $lc, $ld, $patt ) = ( '', '', '' );
+    my ( $lc, $ld, $json, $patt ) = ( '', '', '', '' );
     my $help = '';
 
     GetOptions(
-        'lc' => \$lc,
-        'ld' => \$ld,
-        'h'  => \$help,
+        'lc'   => \$lc,
+        'ld'   => \$ld,
+        'json' => \$json,
+        'h'    => \$help,
     ) or usage();
 
     usage() if @ARGV > 1 or $help;
     $patt = shift @ARGV || '.';
 
-    return ( $lc, $ld, $patt );
+    require JSON if $json;
+
+    return ( $lc, $ld, $json, $patt );
 }
 
 sub print_version {
     chomp( my $hn = `hostname -s 2>/dev/null || hostname` );
     my $gv = substr( `git --version`, 12 );
     $ENV{GL_USER} or _die "GL_USER not set";
+
+    if ($json) {
+        $out{GL_USER}          = $ENV{GL_USER};
+        $out{USER}             = ( $ENV{USER} || "httpd" ) . "\@$hn";
+        $out{gitolite_version} = version();
+        chomp( $out{git_version} = $gv );    # this thing has a newline at the end
+        return;
+    }
+
+    # normal output
     print "hello $ENV{GL_USER}, this is " . ( $ENV{USER} || "httpd" ) . "\@$hn running gitolite3 " . version() . " on git $gv\n";
 }
 
@@ -100,6 +122,15 @@ sub listem {
         }
         $perm =~ s/\^//;
         next unless $perm =~ /\S/;
+
+        if ($json) {
+            $out{repos}{$repo}{creator}     = $creator if $lc;
+            $out{repos}{$repo}{description} = $desc    if $ld;
+            $out{repos}{$repo}{perms}       = _hash($perm);
+
+            next;
+        }
+
         print "$perm\t$repo";
         print "\t$creator" if $lc;
         print "\t$desc"    if $ld;
@@ -107,3 +138,8 @@ sub listem {
     }
 }
 
+sub _hash {
+    my $in = shift;
+    my %out = map { $_ => 1 } ( $in =~ /(\S)/g );
+    return \%out;
+}
