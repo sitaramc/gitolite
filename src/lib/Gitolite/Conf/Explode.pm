@@ -43,6 +43,7 @@ sub explode {
             incsub( $1, $2, $3, $subconf, $out );
         } else {
             # normal line, send it to the callback function
+            push @{$out}, "# $file $." if $rc{RULE_INFO};
             push @{$out}, $line;
         }
     }

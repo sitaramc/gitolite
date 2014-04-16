@@ -44,7 +44,9 @@ sub parse {
     my $lines = shift;
     trace( 3, scalar(@$lines) . " lines incoming" );
 
+    my ( $fname, $lnum );
     for my $line (@$lines) {
+        ( $fname, $lnum ) = ( $1, $2 ), next if $line =~ /^# (\S+) (\d+)$/;
         # user or repo groups
         if ( $line =~ /^(@\S+) = (.*)/ ) {
             add_to_group( $1, split( ' ', $2 ) );
@@ -57,7 +59,7 @@ sub parse {
 
             for my $ref (@refs) {
                 for my $user (@users) {
-                    add_rule( $perm, $ref, $user );
+                    add_rule( $perm, $ref, $user, $fname, $lnum );
                 }
             }
         } elsif ( $line =~ /^config (.+) = ?(.*)/ ) {

@@ -202,6 +202,7 @@ sub sort_u {
 
 sub cleanup_conf_line {
     my $line = shift;
+    return $line if $line =~ /^# \S+ \d+$/;
 
     # kill comments, but take care of "#" inside *simple* strings
     $line =~ s/^((".*?"|[^#"])*)#.*/$1/;

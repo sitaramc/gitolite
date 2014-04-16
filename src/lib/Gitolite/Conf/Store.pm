@@ -112,7 +112,7 @@ sub parse_users {
 }
 
 sub add_rule {
-    my ( $perm, $ref, $user ) = @_;
+    my ( $perm, $ref, $user, $fname, $lnum ) = @_;
     _warn "possible undeclared group '$user'"
       if $user =~ /^@/
       and not $groups{$user}
@@ -122,6 +122,7 @@ sub add_rule {
     _die "bad user '$user'" unless $user =~ $USERNAME_PATT;
 
     $nextseq++;
+    store_rule_info( $nextseq, $fname, $lnum ) if $rc{RULE_INFO};
     for my $repo (@repolist) {
         push @{ $repos{$repo}{$user} }, [ $nextseq, $perm, $ref ];
     }
@@ -251,6 +252,8 @@ sub parse_done {
     for my $ig ( sort keys %ignored ) {
         _warn "subconf '$ig' attempting to set access for " . join( ", ", sort keys %{ $ignored{$ig} } );
     }
+
+    close_rule_info() if $rc{RULE_INFO};
 }
 
 # ----------------------------------------------------------------------
@@ -384,6 +387,20 @@ sub inside_out {
     }
     return \%ret;
     # %groups = ( 'bb' => [ '@bb', '@aa' ], 'cc' => [ '@bb', '@aa' ], 'dd' => [ '@bb' ]);
+}
+
+{
+    my $ri_fh = '';
+
+    sub store_rule_info {
+        $ri_fh = _open( ">", $rc{GL_ADMIN_BASE} . "/conf/rule_info" ) unless $ri_fh;
+        # $nextseq, $fname, $lnum
+        print $ri_fh join( "\t", @_ ) . "\n";
+    }
+
+    sub close_rule_info {
+        close $ri_fh or die "close rule_info file failed: $!";
+    }
 }
 
 1;

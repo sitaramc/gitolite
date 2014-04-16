@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -s
 use strict;
 use warnings;
 
@@ -7,12 +7,14 @@ use Gitolite::Rc;
 use Gitolite::Common;
 use Gitolite::Conf::Load;
 
+our ( $q, $s, $h );    # quiet, show, help
+
 =for usage
-Usage:  gitolite access [-q] <repo> <user> <perm> <ref>
+Usage:  gitolite access [-q|-s] <repo> <user> <perm> <ref>
 
 Print access rights for arguments given.  The string printed has the word
 DENIED in it if access was denied.  With '-q', returns only an exit code
-(shell truth, not perl truth -- 0 is success).
+(shell truth, not perl truth -- 0 is success).  For '-s', see below.
 
   - repo: mandatory
   - user: mandatory
@@ -24,15 +26,20 @@ Notes:
     The 'any' ref is special -- it ignores deny rules (see docs for what this
     means and exceptions).
 
-Batch mode: see src/triggers/post-compile/update-git-daemon-access-list for a
-good example that shows how to test several repos in one invocation.  This is
-orders of magnitude faster than running the command multiple times; you'll
-notice if you have more than a hundred or so repos.
+  - batch mode: see src/triggers/post-compile/update-git-daemon-access-list
+    for a good example that shows how to test several repos in one invocation.
+    This is orders of magnitude faster than running the command multiple
+    times; you'll notice if you have more than a hundred or so repos.
+
+  - '-s' shows the rules (conf file name, line number, and rule) that were
+    considered and how they fared.  Admin must add 'RULE_INFO => 1,' to the rc
+    file, then push the gitolite-admin repo (or 'gitolite compile').
+
+    WARNING: may not be compatible with some syntactic sugar helpers (like
+    'continuation-lines').
 =cut
 
-usage() if not @ARGV or $ARGV[0] eq '-h';
-my $quiet = 0;
-if ( $ARGV[0] eq '-q' ) { $quiet = 1; shift @ARGV; }
+usage() if not @ARGV or $h;
 
 my ( $repo, $user, $aa, $ref ) = @ARGV;
 $aa  ||= '+';
@@ -46,19 +53,21 @@ if ( $repo ne '%' and $user ne '%' ) {
     # single repo, single user; no STDIN
     $ret = access( $repo, $user, $aa, $ref );
 
+    show() if $s;
+
     if ( $ret =~ /DENIED/ ) {
-        print "$ret\n" unless $quiet;
+        print "$ret\n" unless $q;
         exit 1;
     }
 
-    print "$ret\n" unless $quiet;
+    print "$ret\n" unless $q;
     exit 0;
 }
 
 $repo = '' if $repo eq '%';
 $user = '' if $user eq '%';
 
-_die "'-q' doesn't go with using a pipe" if $quiet;
+_die "'-q' and '-s' meaningless in pipe mode" if $q or $s;
 @ARGV = ();
 while (<>) {
     my @in = split;
@@ -66,4 +75,81 @@ while (<>) {
     my $u  = $user || shift @in;
     $ret = access( $r, $u, $aa, $ref );
     print "$r\t$u\t$ret\n";
+}
+
+sub show {
+    die "rc variable RULE_INFO not set; see help text\n" unless $rc{RULE_INFO};
+
+    my $in = $rc{RULE_TRACE} or die "this should not happen!";
+
+    print STDERR "legend:";
+    print STDERR "
+    d => skipped deny rule due to ref unknown or 'any',
+    r => skipped due to refex not matching,
+    p => skipped due to perm (W, +, etc) not matching,
+    D => explicitly denied,
+    A => explicitly allowed,
+    F => denied due to fallthru (no rules matched)
+
+";
+
+    my %rule_info = read_ri($in);    # get rule info data for all traced rules
+                                     # this means conf filename, line number, and content of the line
+
+    # the rule-trace info is a set of pairs of a number plus a string.  Only
+    # the last character in a string is valid (and has meanings shown above).
+    # At the end there may be a final 'f'
+    my @in = split ' ', $in;
+    while (@in) {
+        $in = shift @in;
+        if ( $in =~ /^\d+$/ ) {
+            my $res = shift @in or die "this should not happen either!";
+            my $m = chop($res);
+            printf "  %s %20s:%-6s %s\n", $m,
+                                          $rule_info{$in}{fn},
+                                          $rule_info{$in}{ln},
+                                          $rule_info{$in}{cl};
+        } elsif ( $in eq 'F' ) {
+            printf "  %s %20s\n", $in, "(fallthru)";
+        } else {
+            die "and finally, this also should not happen!";
+        }
+    }
+    print "\n";
+}
+
+sub read_ri {
+    my %rules = map { $_ => 1 } $_[0] =~ /(\d+)/g;
+    # contains a series of rule numbers, each of which we must search in
+    # $GL_ADMIN_BASE/.gitolite/conf/rule_info
+
+    my %rule_info;
+    for ( slurp( $ENV{GL_ADMIN_BASE} . "/conf/rule_info" ) ) {
+        my ( $r, $f, $l ) = split ' ', $_;
+        next unless $rules{$r};
+        $rule_info{$r}{fn} = $f;
+        $rule_info{$r}{ln} = $l;
+        $rule_info{$r}{cl} = conf_lines( $f, $l );
+
+        # a wee bit of optimisation, in case the rule_info file is huge and
+        # what we want is up near the beginning
+        delete $rules{$r};
+        last unless %rules;
+    }
+    return %rule_info;
+}
+
+{
+    my %conf_lines;
+
+    sub conf_lines {
+        my ( $file, $line ) = @_;
+        $line--;
+
+        unless ( $conf_lines{$file} ) {
+            $conf_lines{$file} = [ slurp( $ENV{GL_ADMIN_BASE} . "/conf/$file" ) ];
+            chomp( @{ $conf_lines{$file} } );
+        }
+        return $conf_lines{$file}[$line];
+    }
 }

@@ -102,17 +102,24 @@ sub access {
     }
 
     trace( 3, scalar(@rules) . " rules found" );
+
+    $rc{RULE_TRACE} = '';
     for my $r (@rules) {
+        $rc{RULE_TRACE} .= " " . $r->[0] . " ";
+
         my $perm = $r->[1];
         my $refex = $r->[2]; $refex =~ s(/USER/)(/$user/);
         trace( 3, "perm=$perm, refex=$refex" );
 
+        $rc{RULE_TRACE} .= "d";
         # skip 'deny' rules if the ref is not (yet) known
         next if $perm eq '-' and $ref eq 'any' and not $deny_rules;
 
+        $rc{RULE_TRACE} .= "r";
         # rule matches if ref matches or ref is any (see gitolite-shell)
         next unless $ref =~ /^$refex/ or $ref eq 'any';
 
+        $rc{RULE_TRACE} .= "D";
         trace( 2, "DENIED by $refex" ) if $perm eq '-';
         return "$aa $safe_ref $repo $user DENIED by $refex" if $perm eq '-';
 
@@ -120,9 +127,16 @@ sub access {
         # any of these followed by "M".
         ( my $aaq = $aa ) =~ s/\+/\\+/;
         $aaq =~ s/M/.*M/;
+
+        $rc{RULE_TRACE} .= "A";
+
         # as far as *this* ref is concerned we're ok
         return $refex if ( $perm =~ /$aaq/ );
+
+        $rc{RULE_TRACE} .= "p";
     }
+    $rc{RULE_TRACE} .= " F";
+
     trace( 2, "DENIED by fallthru" );
     return "$aa $safe_ref $repo $user DENIED by fallthru";
 }
