@@ -25,7 +25,14 @@ sub sugar_script {
 
 sub expand {
     my $l = shift;
-    my ( $word, @arg ) = split ' ', $l;
+    my ( $word, @arg );
+
+    eval "require Text::ParseWords";
+    if ($@) {
+        ( $word, @arg ) = split ' ', $l;
+    } else {
+        ( $word, @arg ) = Text::ParseWords::shellwords($l);
+    }
     my $v = $macro{$word};
     $v =~ s/%(\d+)/$arg[$1-1] or die "macro '$word' needs $1 arguments at '$l'\n"/gem;
     return $v;
