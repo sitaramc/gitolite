@@ -113,6 +113,8 @@ sub parse_users {
 
 sub add_rule {
     my ( $perm, $ref, $user, $fname, $lnum ) = @_;
+    _warn "doesn't make sense to supply a ref ('$ref') for 'R' rule"
+      if $perm eq 'R' and $ref ne 'refs/.*';
     _warn "possible undeclared group '$user'"
       if $user =~ /^@/
       and not $groups{$user}
