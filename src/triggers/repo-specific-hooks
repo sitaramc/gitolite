@@ -9,17 +9,19 @@ use Gitolite::Rc;
 use Gitolite::Common;
 
 _die "repo-specific-hooks: LOCAL_CODE not defined in rc" unless $rc{LOCAL_CODE};
-_die "repo-specific-hooks: '$rc{LOCAL_CODE}' does not exist or is not a directory" unless -d $rc{LOCAL_CODE};
+_die "repo-specific-hooks: '$rc{LOCAL_CODE}/hooks/repo-specific' does not exist or is not a directory" unless -d "$rc{LOCAL_CODE}/hooks/repo-specific";
 
 _chdir( $ENV{GL_REPO_BASE} );
 
 @ARGV = ("gitolite list-phy-repos | gitolite git-config -ev -r % gitolite-options\\.hook\\. |");
 
+my $driver = "$rc{LOCAL_CODE}/hooks/multi-hook-driver";
 # Hook Driver
-my $hook_text = '';
 {
     local $/ = undef;
-    $hook_text = <DATA>;
+    my $hook_text = <DATA>;
+    _print( $driver, $hook_text );
+    chmod 0755, $driver;
 }
 
 while (<>) {
@@ -41,8 +43,10 @@ while (<>) {
         next;
     }
 
-    my @codes = split / /, $codes;
-    unlink( glob("$repo.git/hooks/$hook.*") );
+    my @codes = split /\s+/, $codes;
+
+    my $dst = "$repo.git/hooks/$hook";
+    unlink( glob("$dst.*") );
 
     my $counter = "h00";
     foreach my $code (@codes) {
@@ -63,9 +67,9 @@ while (<>) {
 
         # no sanity checks for multiple overwrites of the same hook
     }
-    my $dst = "$repo.git/hooks/$hook";
-    _print( $dst, $hook_text ) if not -f $dst;
-    chmod 0755, $dst
+
+    unlink $dst;
+    symlink $driver, $dst or die "could not symlink '$driver' to '$dst'";
 }
 
 __DATA__

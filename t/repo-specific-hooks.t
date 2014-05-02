@@ -9,8 +9,9 @@ use Gitolite::Test;
 # test script for partial copy feature
 # ----------------------------------------------------------------------
 
-try "plan 99";
+try "plan 117";
 my $h = $ENV{HOME};
+my $rb = `gitolite query-rc -n GL_REPO_BASE`;
 
 try 'cd tsh_tempdir; mkdir -p local/hooks/repo-specific';
 
@@ -40,6 +41,40 @@ try "# Enable LOCAL_CODE and repo-specific-hooks
 confreset;confadd '
     repo foo
             RW+                 =   @all
+
+    repo bar
+            RW+                 =   @all
+
+    repo baz
+            RW+                 =   @all
+';
+
+try "ADMIN_PUSH repo-specific-hooks-0; !/FATAL/" or die text();
+
+try "
+    /Init.*empty.*foo\\.git/
+    /Init.*empty.*bar\\.git/
+    /Init.*empty.*baz\\.git/
+";
+
+my $failing_hook = "#!/bin/sh
+exit 1
+";
+
+# Place a existing hooks in repos
+put "$rb/foo.git/hooks/post-recieve", $failing_hook;
+put "$rb/bar.git/hooks/pre-recieve", $failing_hook;
+put "$rb/baz.git/hooks/post-update", $failing_hook;
+
+try "# Verify hooks
+    ls -l $rb/foo.git/hooks/*;  ok;     !/post-receive -. .*local/hooks/multi-hook-driver/
+    ls -l $rb/bar.git/hooks/*;  ok;     !/pre-receive -. .*local/hooks/multi-hook-driver/
+    ls -l $rb/baz.git/hooks/*;  ok;     !/post-update -. .*local/hooks/multi-hook-driver/
+";
+
+confreset;confadd '
+    repo foo
+            RW+                 =   @all
             option hook.post-receive =  first
 
     repo bar
@@ -53,22 +88,19 @@ confreset;confadd '
 ';
 
 
-try "ADMIN_PUSH repo-specific-hooks; !/FATAL/" or die text();
+try "ADMIN_PUSH repo-specific-hooks-1; !/FATAL/" or die text();
 
-try "
-    /Init.*empty.*foo\\.git/
-    /Init.*empty.*bar\\.git/
-";
-
-my $rb = `gitolite query-rc -n GL_REPO_BASE`;
-try "
-    ls $rb/foo.git/hooks/*;  ok;     /post-receive.h00-first/
-                                    !/post-receive.h01/
-    ls $rb/bar.git/hooks/*;  ok;     /pre-receive.h00-first/
-                                     /pre-receive.h01-second/
-    ls $rb/baz.git/hooks/*;  ok;     /post-receive.h00-first/
-                                     /post-update.h00-first/
-                                     /post-update.h01-second/
+try "# Verify hooks
+    ls -l $rb/foo.git/hooks/*;  ok;     /post-receive.h00-first/
+                                       !/post-receive.h01/
+                                        /post-receive -. .*local/hooks/multi-hook-driver/
+    ls -l $rb/bar.git/hooks/*;  ok;     /pre-receive.h00-first/
+                                        /pre-receive.h01-second/
+                                        /pre-receive -. .*local/hooks/multi-hook-driver/
+    ls -l $rb/baz.git/hooks/*;  ok;     /post-receive.h00-first/
+                                        /post-update.h00-first/
+                                        /post-update.h01-second/
+                                        /post-update -. .*local/hooks/multi-hook-driver/
 ";
 
 try "
