@@ -28,6 +28,12 @@ need real-time updates or have bandwidth/connectivity issues.
 Usage 2 can be initiated by *any* user who has *any* gitolite access to the
 master server, but it checks that the slave is in one of the slaves options
 before doing the push.
+
+MIRROR STATUS: To find the status of the last mirror push to any slave, run
+the same command except with 'status' instead of 'push'.  With usage 1, you
+can use the special name "all" to get the status of all slaves for the given
+repo.  (Admins wishing to find the status of all slaves for ALL repos will
+have to script it using the output of "gitolite list-phy-repos".)
 =cut
 
 usage() if not @ARGV or $ARGV[0] eq '-h';
@@ -52,9 +58,11 @@ if ( $cmd eq 'push' ) {
     }
 
     my $errors = 0;
+    my $glss = '';
     for (`git push --mirror $host:$repo 2>&1`) {
         $errors = 1 if $?;
         print STDERR "$_" if -t STDERR or exists $ENV{GL_USER};
+        $glss .= $_;
         chomp;
         if (/FATAL/) {
             $errors = 1;
@@ -63,7 +71,27 @@ if ( $cmd eq 'push' ) {
             trace( 1, "mirror: $_" );
         }
     }
+    # save the mirror push status for this slave if the word 'fatal' is found,
+    # else remove the status file.  We don't store "success" output messages;
+    # you can always get those from the log files if you really need them.
+    if ( $glss =~ /fatal/i ) {
+        my $glss_prefix = Gitolite::Common::gen_ts() . "\t$ENV{GL_TID}\t";
+        $glss =~ s/^/$glss_prefix/gm;
+        _print("gl-slave-$host.status", $glss);
+    } else {
+        unlink "gl-slave-$host.status";
+    }
+
     exit $errors;
+} elsif ($cmd eq 'status') {
+    valid_slave( $host, $repo ) if exists $ENV{GL_USER};
+    # will die if host not in slaves for repo
+
+    _chdir( $rc{GL_REPO_BASE} );
+    _chdir("$repo.git");
+
+    $host = '*' if $host eq 'all';
+    map { print_status($_) } sort glob("gl-slave-$host.status");
 }
 
 sub valid_slave {
@@ -74,4 +102,14 @@ sub valid_slave {
     my %list = map { $_ => 1 } map { split } values %$ref;
 
     _die "'$host' not a valid slave for '$repo'" unless $list{$host};
+}
+
+sub print_status {
+    my $file = shift;
+    return unless -f $file;
+    my $slave = $1 if $file =~ /^gl-slave-(.+)\.status$/;
+    print "----------\n";
+    print "WARNING: previous mirror push to host '$slave' failed, status is:\n";
+    print slurp($file);
+    print "----------\n";
 }

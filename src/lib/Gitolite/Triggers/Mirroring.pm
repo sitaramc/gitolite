@@ -71,6 +71,9 @@ sub pre_git {
     # now you know the repo, get its mirroring details
     details($repo);
 
+    # print mirror status if at least one slave status file is present
+    print_status( $repo ) if $mode ne 'local' and glob("$rc{GL_REPO_BASE}/$repo.git/gl-slave-*.status");
+
     # we don't deal with any reads.  Note that for pre-git this check must
     # happen *after* getting details, to give mode() a chance to die on "known
     # unknown" repos (repos that are in the config, but mirror settings
@@ -237,6 +240,12 @@ sub push_to_slaves {
     }
 
     $ENV{GL_USER} = $u;
+}
+
+sub print_status {
+    my $repo = shift;
+    delete local $ENV{GL_USER};
+    system("gitolite mirror status all $repo >&2");
 }
 
 1;
