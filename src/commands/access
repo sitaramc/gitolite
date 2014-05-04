@@ -22,9 +22,12 @@ DENIED in it if access was denied.  With '-q', returns only an exit code
   - ref:  defauts to 'any'.  See notes below
 
 Notes:
-  - ref: Any fully qualified ref ('refs/heads/master', not 'master') is fine.
-    The 'any' ref is special -- it ignores deny rules (see docs for what this
-    means and exceptions).
+  - ref: something like 'master', or 'refs/tags/v1.0', or even a VREF if you
+    know what they look like.
+
+    The 'any' ref is special -- it ignores deny rules, thus simulating
+    gitolite's behaviour during the pre-git access check (see 'deny-rules'
+    section in rules.html for details).
 
   - batch mode: see src/triggers/post-compile/update-git-daemon-access-list
     for a good example that shows how to test several repos in one invocation.
@@ -32,18 +35,18 @@ Notes:
     times; you'll notice if you have more than a hundred or so repos.
 
   - '-s' shows the rules (conf file name, line number, and rule) that were
-    considered and how they fared.  Admin must add 'RULE_INFO => 1,' to the rc
-    file, then push the gitolite-admin repo (or 'gitolite compile').
-
-    WARNING: may not be compatible with some syntactic sugar helpers (like
-    'continuation-lines').
+    considered and how they fared.
 =cut
 
 usage() if not @ARGV or $h;
 
 my ( $repo, $user, $aa, $ref ) = @ARGV;
+# default access is '+'
 $aa  ||= '+';
+# default ref is 'any'
 $ref ||= 'any';
+# fq the ref if needed
+$ref =~ s(^)(refs/heads/) if $ref and $ref ne 'any' and $ref !~ m(^(refs|VREF)/);
 _die "invalid perm" if not( $aa and $aa =~ /^(R|W|\+|C|D|M|\^C)$/ );
 _die "invalid ref name" if not( $ref and $ref =~ $REPONAME_PATT );
 
@@ -78,8 +81,6 @@ while (<>) {
 }
 
 sub show {
-    die "rc variable RULE_INFO not set; see help text\n" unless $rc{RULE_INFO};
-
     my $in = $rc{RULE_TRACE} or die "this should not happen!";
 
     print STDERR "legend:";

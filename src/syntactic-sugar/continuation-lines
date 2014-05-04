@@ -21,6 +21,8 @@ sub sugar_script {
     my @out  = ();
     my $keep = '';
     for my $l (@$lines) {
+        # skip RULE_INFO lines if in continuation mode
+        next if $keep and $l =~ /^ *#/;
         if ( $l =~ s/\\$// ) {
             $keep .= $l;
         } else {

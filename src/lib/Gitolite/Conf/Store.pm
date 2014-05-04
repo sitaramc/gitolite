@@ -124,7 +124,7 @@ sub add_rule {
     _die "bad user '$user'" unless $user =~ $USERNAME_PATT;
 
     $nextseq++;
-    store_rule_info( $nextseq, $fname, $lnum ) if $rc{RULE_INFO};
+    store_rule_info( $nextseq, $fname, $lnum );
     for my $repo (@repolist) {
         push @{ $repos{$repo}{$user} }, [ $nextseq, $perm, $ref ];
     }
@@ -255,7 +255,7 @@ sub parse_done {
         _warn "subconf '$ig' attempting to set access for " . join( ", ", sort keys %{ $ignored{$ig} } );
     }
 
-    close_rule_info() if $rc{RULE_INFO};
+    close_rule_info();
 }
 
 # ----------------------------------------------------------------------
