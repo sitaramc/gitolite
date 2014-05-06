@@ -57,6 +57,7 @@ INSTALLATION AND SETUP
       * sh
       * git 1.6.6+
       * perl 5.8.8+
+      * perl-Time-HiRes package
       * openssh 5.0+
       * a dedicated userid to host the repos (in this document, we assume it
         is 'git'), with shell access ONLY by 'su - git' from some other userid
