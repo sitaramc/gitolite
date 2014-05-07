@@ -1,3 +1,41 @@
+2014-05-09  v3.6    (cool stuff) the access command can now help you debug
+                    your rules / understand how a specific access decision was
+                    arrived at.
+
+                    mirroring: since mirroring is asynchronous (by default
+                    anyway), when a 'git push --mirror' fails, you may not
+                    know it unless you look in the log file on the server.
+                    Now gitolite captures the info and -- if the word 'fatal'
+                    appears anywhere within it, it saves the entire output and
+                    prints it to STDERR for anyone who reads or writes the
+                    repo on the *master* server, until the error condition
+                    clears up.
+
+                    mirroring: allow 'nosync' slaves -- no attempt to
+                    automatically push to these slaves will be made.  Instead,
+                    you have to manually (or via cron, etc) trigger pushes.
+
+                    (backward compat breakage) the old v2 syntax for
+                    specifying gitweb owner and description is no longer
+                    supported.
+
+                    macros now allow strings as arguments (thanks to Jason
+                    Donenfeld for the idea/problem).
+
+                    the 'info' command can print in JSON format if asked to.
+
+                    repo-specific hooks: now you can specify more than one,
+                    and gitolite runs all of them in sequence.
+
+                    new trigger 'expand-deny-messages' to show more details
+                    when access is denied.
+
+                    git-annex support is finally in master, yaaay!
+
+                    new 'readme' command, modelled after 'desc'.  Apparently
+                    gitweb can use a README.html file in the *bare* repo
+                    directory -- who knew!
+
 2013-10-14  v3.5.3  catch undefined groupnames (when possible)
 
                     mirroring: async push to slaves
