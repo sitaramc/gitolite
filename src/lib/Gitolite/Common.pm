@@ -71,8 +71,11 @@ sub dd {
 }
 
 {
-    use Time::HiRes;
     my %start_times;
+
+    eval "require Time::HiRes";
+    # we just ignore any errors from this; nothing needs to be done as long as
+    # no code *calls* either of the next two functions.
 
     sub t_start {
         my $name = shift || 'default';
