@@ -25,11 +25,7 @@ plf=`gitolite query-rc GITWEB_PROJECTS_LIST`
 tmpfile=`mktemp $plf.tmp_XXXXXXXX`
 rm -f $tmpfile;
 
-(
-    gitolite list-phy-repos | gitolite access % gitweb R any | grep -v DENIED
-    gitolite list-phy-repos | gitolite git-config -r % gitweb\\.
-) |
-    cut -f1 | sort -u | sed -e 's/$/.git/' > $tmpfile
+gitolite list-phy-repos | gitolite access % gitweb R any | grep -v DENIED | cut -f1 | gitolite git-config -r % gitweb\\. | cut -f1 | sort -u | sed -e 's/$/.git/' > $tmpfile
 
 [ -f $plf ] && perl -e "chmod ( ( (stat('$plf'))[2] & 07777 ), '$tmpfile')"
 mv $tmpfile $plf
