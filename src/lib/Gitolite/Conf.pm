@@ -10,7 +10,6 @@ package Gitolite::Conf;
 );
 
 use Exporter 'import';
-use Getopt::Long;
 
 use Gitolite::Rc;
 use Gitolite::Common;

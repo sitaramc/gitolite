@@ -20,7 +20,6 @@ package Gitolite::Rc;
 );
 
 use Exporter 'import';
-use Getopt::Long;
 
 use Gitolite::Common;
 
@@ -361,7 +360,8 @@ Explore:
 sub args {
     my $help = 0;
 
-    GetOptions(
+    require Getopt::Long;
+    Getopt::Long::GetOptions(
         'all|a'   => \$all,
         'nonl|n'  => \$nonl,
         'quiet|q' => \$quiet,

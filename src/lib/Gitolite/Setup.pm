@@ -39,7 +39,6 @@ Subsequent runs:
 );
 
 use Exporter 'import';
-use Getopt::Long;
 
 use Gitolite::Rc;
 use Gitolite::Common;
@@ -73,7 +72,8 @@ sub args {
     my $help   = 0;
     my $argv   = join( " ", @ARGV );
 
-    GetOptions(
+    require Getopt::Long;
+    Getopt::Long::GetOptions(
         'admin|a=s'     => \$admin,
         'pubkey|pk=s'   => \$pubkey,
         'hooks-only|ho' => \$h_only,
