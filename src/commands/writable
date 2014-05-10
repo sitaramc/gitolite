@@ -6,12 +6,14 @@ use lib $ENV{GL_LIBDIR};
 use Gitolite::Easy;
 
 =for usage
-Usage: gitolite writable <reponame>|@all on|off
+Usage: gitolite writable <reponame>|@all on|off|status
 
 Disable/re-enable pushes to all repos or named repo.  Useful to run
 non-git-aware backups and so on.
 
 'on' enables, 'off' disables, writes (pushes) to the named repo or all repos.
+'status' returns the current status as shell truth (i.e., exit code 0 for
+writable, 1 for not writable).
 
 With 'off', any subsequent text is taken to be the message to be shown to
 users when their pushes get rejected.  If it is not supplied, it will take it
@@ -19,20 +21,20 @@ from STDIN; this allows longer messages.
 =cut
 
 usage() if not @ARGV or @ARGV < 2 or $ARGV[0] eq '-h';
-usage() if $ARGV[1] ne 'on' and $ARGV[1] ne 'off';
+usage() if $ARGV[1] ne 'on' and $ARGV[1] ne 'off' and $ARGV[1] ne 'status';
 
 my $repo = shift;
-my $on   = ( shift eq 'on' );
+my $op   = shift;    # on|off|status
 
 if ( $repo eq '@all' ) {
     _die "you are not authorized" if $ENV{GL_USER} and not is_admin();
 } else {
-    _die "you are not authorized" if $ENV{GL_USER} and not owns($repo);
+    _die "you are not authorized" if $ENV{GL_USER} and not( owns($repo) or is_admin() );
 }
 
 my $msg = join( " ", @ARGV );
 # try STDIN only if no msg found in args *and* it's an 'off' command
-if ( not $msg and not $on ) {
+if ( not $msg and $op eq 'off' ) {
     say2 "...please type the message to be shown to users:";
     $msg = join( "", <> );
 }
@@ -48,9 +50,12 @@ if ( $repo eq '@all' ) {
 
 sub target {
     my $repodir = shift;
-    if ($on) {
+    if ( $op eq 'status' ) {
+        exit 1 if -e "$repodir/$sf";
+        exit 0;
+    } elsif ( $op eq 'on' ) {
         unlink "$repodir/$sf";
-    } else {
+    } elsif ( $op eq 'off' ) {
         _print( "$repodir/$sf", $msg );
     }
 }
