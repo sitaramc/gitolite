@@ -476,6 +476,9 @@ __DATA__
         WRITERS                     =>  1,
     },
 
+    # enable caching (currently only Redis).  PLEASE RTFM BEFORE USING!!!
+    # CACHE                         =>  'Redis',
+
     # ------------------------------------------------------------------
 
     # rc variables used by various features
@@ -499,6 +502,9 @@ __DATA__
 
     # if you enabled 'Shell', you need this
         # SHELL_USERS_LIST          =>  "$ENV{HOME}/.gitolite.shell-users",
+
+    # TTL for redis cache; PLEASE SEE DOCUMENTATION BEFORE UNCOMMENTING!
+        # CACHE_TTL                 =>  600,
 
     # ------------------------------------------------------------------
 

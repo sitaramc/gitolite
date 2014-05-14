@@ -37,6 +37,8 @@
     # uncomment (and change) this if you wish
     # DEFAULT_ROLE_PERMS            =>  'READERS @all',
 
+    # CACHE => 'Redis',
+
     # ------------------------------------------------------------------
 
     # rc variables used by various features

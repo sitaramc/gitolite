@@ -50,5 +50,8 @@ ln -sf `gitolite query-rc GL_ADMIN_BASE`/hooks/common/* hooks
 # record where you came from
 echo "$from" > gl-forked-from
 
+# cache control, if rc says caching is on
+gitolite query-rc -q CACHE && perl -I$GL_LIBDIR -MGitolite::Cache -e "cache_control('flush', '$to')";
+
 # trigger post_create
 gitolite trigger POST_CREATE $to $GL_USER fork

@@ -64,6 +64,13 @@ if ( $ARGV[0] eq '-c' ) {
 
 my $repo = shift;
 setperms(@ARGV);
+
+# cache control
+if ($rc{CACHE}) {
+    require Gitolite::Cache;
+    Gitolite::Cache::cache_control('flush', $repo);
+}
+
 _system( "gitolite", "trigger", "POST_CREATE", $repo, $ENV{GL_USER}, 'perms' );
 
 # ----------------------------------------------------------------------

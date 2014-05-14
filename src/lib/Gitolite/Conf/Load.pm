@@ -141,6 +141,12 @@ sub access {
     return "$aa $safe_ref $repo $user DENIED by fallthru";
 }
 
+# cache control
+if ($rc{CACHE}) {
+    require Gitolite::Cache;
+    Gitolite::Cache::cache_wrap('Gitolite::Conf::Load::access');
+}
+
 sub git_config {
     my ( $repo, $key, $empty_values_OK ) = @_;
     $key ||= '.';

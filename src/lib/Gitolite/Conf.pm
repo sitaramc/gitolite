@@ -32,7 +32,20 @@ sub compile {
     # the order matters; new repos should be created first, to give store a
     # place to put the individual gl-conf files
     new_repos();
+
+    # cache control
+    if ($rc{CACHE}) {
+        require Gitolite::Cache;
+        Gitolite::Cache->import(qw(cache_control));
+
+        cache_control('stop');
+    }
+
     store();
+
+    if ($rc{CACHE}) {
+        cache_control('start');
+    }
 
     for my $repo ( @{ $rc{NEW_REPOS_CREATED} } ) {
         trigger( 'POST_CREATE', $repo );
