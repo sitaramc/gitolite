@@ -244,8 +244,10 @@ sub push_to_slaves {
 
 sub print_status {
     my $repo = shift;
-    delete local $ENV{GL_USER};
+    my $u = $ENV{GL_USER};
+    delete $ENV{GL_USER};
     system("gitolite mirror status all $repo >&2");
+    $ENV{GL_USER} = $u;
 }
 
 1;
