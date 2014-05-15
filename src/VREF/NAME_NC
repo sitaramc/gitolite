@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+# VREF/NAME_NC
+#   Like VREF/NAME, but only considers "new commits" -- i.e., commits that
+#   don't already exist in the repo as part of some other ref.
+
+# ----------------------------------------------------------------------
+# WHY
+#   VREF/NAME doesn't deal well with tag creation (or new branch creation),
+#   since then all files in the project look like they are being created (due
+#   to comparison with an empty tree).
+
+#   Use this instead of VREF/NAME when you need to make that distinction.
+
+newsha=$3
+
+[ $newsha = "0000000000000000000000000000000000000000" ] && {
+    echo "we don't currently handle deletions" >&2
+    exit 1
+}
+
+git log --name-only --format=%n $newsha --not --all |
+    sort -u | grep . | sed -e 's.^.VREF/NAME_NC/.'
+
+# ----------------------------------------------------------------------
+# OTHER NOTES
+#   The built-in NAME does have a wee bit of a performance advantage.  I plan
+#   to ignore this until someone notices this enough to be a problem :)
+#
+#   I could explain it here at least, but I fear that any explanation will
+#   only add to the already rampant confusion about how VREFs work.  I'm not
+#   rocking THAT boat again, sorry!
