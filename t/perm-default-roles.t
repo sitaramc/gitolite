@@ -9,7 +9,7 @@ use Gitolite::Test;
 # permissions using role names
 # ----------------------------------------------------------------------
 
-try "plan 27";
+try "plan 33";
 try "DEF POK = !/DENIED/; !/failed to push/";
 
 my $rb = `gitolite query-rc -n GL_REPO_BASE`;
@@ -107,9 +107,19 @@ try "
 
 cd ..
 
+gitolite access foo/u1/u1r3 u4 W
+        !ok
+        !/refs/../
+        /W any foo/u1/u1r3 u4 DENIED by fallthru/
+
 # make foo/u1/u1r3
 glt clone u1 file:///foo/u1/u1r3
         /Initialized empty Git repository in .*/foo/u1/u1r3.git//
+
+gitolite access foo/u1/u1r3 u4 W
+        ok
+        /refs/../
+        !/W any foo/u1/u1r3 u4 DENIED by fallthru/
 
 # make bar/u3/u3r3
 glt clone u3 file:///bar/u3/u3r3
