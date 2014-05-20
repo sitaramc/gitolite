@@ -15,8 +15,17 @@
 #
 # - assumes no "@" sign in basenames of any multi-key files (single line file
 #   may still have them)
+
 # - assumes you don't have a subdir in keydir called "__split_keys__"
+
 # - God help you if you try to throw in a putty key in there.
+
+# - RUNNING "GITOLITE SETUP" WILL LOSE ALL THESE KEYS.  So if you ever do
+#   that, you will then need to make a dummy push to the admin repo to add
+#   them back.  If all your **admin** keys were in split keys, then you lost
+#   remote access.  If that happens, log on to the server using "su - git" or
+#   such, then use the methods described in the "bypassing gitolite" section
+#   in "emergencies.html" instead of a remote push.
 
 # SUPPORT
 # -------
