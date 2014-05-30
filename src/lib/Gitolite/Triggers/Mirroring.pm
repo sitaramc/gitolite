@@ -72,7 +72,7 @@ sub pre_git {
     details($repo);
 
     # print mirror status if at least one slave status file is present
-    print_status( $repo ) if $mode ne 'local' and glob("$rc{GL_REPO_BASE}/$repo.git/gl-slave-*.status");
+    print_status( $repo ) if not $rc{HUSH_MIRROR_STATUS} and $mode ne 'local' and glob("$rc{GL_REPO_BASE}/$repo.git/gl-slave-*.status");
 
     # we don't deal with any reads.  Note that for pre-git this check must
     # happen *after* getting details, to give mode() a chance to die on "known
