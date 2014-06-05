@@ -8,6 +8,7 @@ package Gitolite::Rc;
   glrc
   query_rc
   version
+  greeting
   trigger
   _which
 
@@ -267,6 +268,26 @@ sub version {
     }
     chomp($version);
     return $version;
+}
+
+sub greeting {
+    my $json = shift;
+
+    chomp( my $hn = `hostname -s 2>/dev/null || hostname` );
+    my $gv = substr( `git --version`, 12 );
+    my $gl_user = $ENV{GL_USER} || '';
+    $gl_user = " $gl_user" if $gl_user;
+
+    if ($json) {
+        $json->{GL_USER}          = $ENV{GL_USER};
+        $json->{USER}             = ( $ENV{USER} || "httpd" ) . "\@$hn";
+        $json->{gitolite_version} = version();
+        chomp( $json->{git_version} = $gv );    # this thing has a newline at the end
+        return;
+    }
+
+    # normal output
+    return "hello$gl_user, this is " . ( $ENV{USER} || "httpd" ) . "\@$hn running gitolite3 " . version() . " on git $gv\n";
 }
 
 sub trigger {

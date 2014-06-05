@@ -17,9 +17,9 @@ Each command has its own help, accessed by passing it '-h' again.
 
 usage() if @ARGV;
 
-my $user = $ENV{GL_USER} || '';
-print "hello" . ( $user ? " $user" : "" ) . ", this is gitolite3 " . version() . " on git " . substr( `git --version`, 12 ) . "\n";
+print greeting();
 
+my $user = $ENV{GL_USER} || '';
 print "list of " . ( $user ? "remote" : "gitolite" ) . " commands available:\n\n";
 
 my %list = ( list_x( $ENV{GL_BINDIR} ), list_x( $rc{LOCAL_CODE} || '' ) );

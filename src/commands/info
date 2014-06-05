@@ -28,7 +28,12 @@ than a few thousand repos.
 my ( $lc, $ld, $json, $patt ) = args();
 my %out;    # holds info to be json'd
 
-print_version();
+$ENV{GL_USER} or _die "GL_USER not set";
+if ($json) {
+    greeting(\%out);
+} else {
+    print greeting();
+}
 
 print_patterns();     # repos he can create for himself
 print_phy_repos();    # repos already created
@@ -60,23 +65,6 @@ sub args {
     require JSON if $json;
 
     return ( $lc, $ld, $json, $patt );
-}
-
-sub print_version {
-    chomp( my $hn = `hostname -s 2>/dev/null || hostname` );
-    my $gv = substr( `git --version`, 12 );
-    $ENV{GL_USER} or _die "GL_USER not set";
-
-    if ($json) {
-        $out{GL_USER}          = $ENV{GL_USER};
-        $out{USER}             = ( $ENV{USER} || "httpd" ) . "\@$hn";
-        $out{gitolite_version} = version();
-        chomp( $out{git_version} = $gv );    # this thing has a newline at the end
-        return;
-    }
-
-    # normal output
-    print "hello $ENV{GL_USER}, this is " . ( $ENV{USER} || "httpd" ) . "\@$hn running gitolite3 " . version() . " on git $gv\n";
 }
 
 sub print_patterns {
