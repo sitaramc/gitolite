@@ -223,6 +223,9 @@ sub http_simulate_ssh_connection {
         $ENV{SSH_ORIGINAL_COMMAND} = $verb;
         $ENV{SSH_ORIGINAL_COMMAND} .= " $args" if $args;
         http_print_headers();    # in preparation for the eventual output!
+
+        # we also need to pipe STDERR out via STDOUT, else the user doesn't see those messages!
+        open(STDERR, ">&STDOUT") or _die "Can't dup STDOUT: $!";
     }
     $ENV{SSH_CONNECTION} = "$ENV{REMOTE_ADDR} $ENV{REMOTE_PORT} $ENV{SERVER_ADDR} $ENV{SERVER_PORT}";
 }
