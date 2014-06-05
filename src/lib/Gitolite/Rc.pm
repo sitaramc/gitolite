@@ -387,6 +387,8 @@ BEGIN {
 
     renice                  PRE_GIT         .
 
+    Kindergarten            INPUT           ::
+
     CpuTime                 INPUT           ::
     CpuTime                 POST_GIT        ::
 
@@ -616,6 +618,10 @@ __DATA__
             # allow simple line-oriented macros
             # 'macros',
 
+        # Kindergarten mode
+
+            # disallow various things that sensible people shouldn't be doing anyway
+            # 'Kindergarten',
     ],
 
 );
