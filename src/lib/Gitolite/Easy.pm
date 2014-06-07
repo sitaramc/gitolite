@@ -43,6 +43,8 @@ package Gitolite::Easy;
 
   config
 
+  textfile
+
   %rc
   say
   say2
@@ -50,6 +52,8 @@ package Gitolite::Easy;
   _warn
   _print
   usage
+
+  option
 );
 #>>>
 use Exporter 'import';
@@ -181,6 +185,56 @@ sub config {
 }
 
 # ----------------------------------------------------------------------
+
+# maintain a textfile; see comments in code for details, and calls in various
+# other programs (like 'motd', 'desc', and 'readme') for how to call
+sub textfile {
+    my %h = @_;
+    my $repodir;
+
+    # target file
+    _die "need file" unless $h{file};
+    _die "'$h{file}' contains a '/'" if $h{file} =~ m(/);
+    _sanity($h{file});
+
+    # target file's location.  This can come from one of two places: dir
+    # (which comes from our code, so does not need to be sanitised), or repo,
+    # which may come from the user
+    _die "need exactly one of repo or dir" unless $h{repo} xor $h{dir};
+    _die "'$h{dir}' does not exist" if $h{dir} and not -d $h{dir};
+    if ($h{repo}) {
+        _sanity($h{repo});
+        $h{dir} = "$rc{GL_REPO_BASE}/$h{repo}.git";
+        _die "repo '$h{repo}' does not exist" if not -d $h{dir};
+    }
+
+    # final full file name
+    my $f = "$h{dir}/$h{file}";
+
+    # operation
+    _die "can't have both prompt and text" if defined $h{prompt} and defined $h{text};
+    if (defined $h{prompt}) {
+        print STDERR $h{prompt};
+        my $t = join( "", <> );
+        _print($f, $t);
+    } elsif (defined $h{text}) {
+        _print($f, $h{text});
+    } else {
+        return slurp($f) if -f $f;
+    }
+
+    return '';
+}
+
+# ----------------------------------------------------------------------
+
+sub _sanity {
+    my $name = shift;
+    _die "'$name' contains bad characters" if $name !~ $REPONAME_PATT;
+    _die "'$name' ends with a '/'"         if $name =~ m(/$);
+    _die "'$name' contains '..'"           if $name =~ m(\.\.);
+}
+
 
 sub valid_user {
     _die "GL_USER not set" unless exists $ENV{GL_USER};

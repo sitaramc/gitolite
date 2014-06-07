@@ -509,11 +509,6 @@ __DATA__
     # the 'info' command prints this as additional info, if it is set
         # SITE_INFO                 =>  'Please see http://blahblah/gitolite for more help',
 
-    # the 'desc' command uses this
-        # WRITER_CAN_UPDATE_DESC    =>  1,
-    # the 'readme' command uses this
-        # WRITER_CAN_UPDATE_README  =>  1,
-
     # the CpuTime feature uses these
         # display user, system, and elapsed times to user after each git operation
         # DISPLAY_CPU_TIME          =>  1,
