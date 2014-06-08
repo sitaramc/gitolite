@@ -185,6 +185,9 @@ sub non_core_expand {
 
         push @{ $rc{$where} }, $module;
     }
+
+    # finally, add in commands that were declared in the non-core list
+    map { /^(\S+)/; $rc{COMMANDS}{$1} = 1 } @{ $rc{COMMAND} };
 }
 
 # exported functions
