@@ -420,6 +420,10 @@ BEGIN {
 
     Alias                   INPUT           ::
 
+    Motd                    INPUT           ::
+    Motd                    PRE_GIT         ::
+    Motd                    COMMAND         motd
+
     Mirroring               INPUT           ::
     Mirroring               PRE_GIT         ::
     Mirroring               POST_GIT        ::
@@ -597,6 +601,9 @@ __DATA__
 
             # show more detailed messages on deny
             # 'expand-deny-messages',
+
+            # show a message of the day
+            # 'Motd',
 
         # system admin stuff
 

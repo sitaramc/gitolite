@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Easy;
+
+=for usage
+Usage:    ssh git@host motd <repo> rm
+          cat <filename> | ssh git@host motd <repo> set
+
+Remove or set the motd file for repo or the whole system.
+
+For a repo: you need to have write access to the repo and the
+'writer-is-owner' option must be set for the repo, or it must be a
+user-created ('wild') repo and you must be the owner.
+
+For the whole system: you need to be an admin (have write access to the
+gitolite-admin repo).  Use @all in place of the repo name.
+
+PLEASE NOTE that if you're using http mode, the motd will only appear for
+gitolite commands, not for normal git operations.  This in turn means that
+only the system wide motd can be seen; repo level motd's never show up.
+=cut
+
+usage() if not @ARGV or @ARGV < 1 or $ARGV[0] eq '-h';
+
+my $repo = shift;
+my $op = shift || '';
+usage() if $op ne 'rm' and $op ne 'set';
+my $file = "gl-motd";
+
+#<<<
+_die "you are not authorized" unless
+    ( $repo eq '@all' and is_admin() )      or
+    ( $repo ne '@all' and owns($repo) )     or
+    ( $repo ne '@all' and can_write($repo)  and option( $repo, 'writer-is-owner' ) );
+#>>>
+
+my @out =
+  $repo eq '@all'
+  ? ( dir => $rc{GL_ADMIN_BASE} )
+  : ( repo => $repo );
+
+if ( $op eq 'rm' ) {
+    $repo eq '@all'
+      ? unlink "$rc{GL_ADMIN_BASE}/$file"
+      : unlink "$rc{GL_REPO_BASE}/$repo.git/$file";
+} elsif ( $op eq 'set' ) {
+    textfile( file => $file, @out, prompt => '' );
+} else {
+    print textfile( file => $file, @out, );
+}
