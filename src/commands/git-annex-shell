@@ -27,6 +27,7 @@ die "bad git-annex-shell command: $cmd"
 my $start = $1;
 my $repo  = $2;
 my $end   = $3;
+$repo =~ s/\.git$//;
 die "I dont like some of the characters in $repo\n" unless $repo =~ $Gitolite::Rc::REPONAME_PATT;
 die "I dont like absolute paths in $cmd\n" if $repo =~ /^\//;
 die "I dont like '..' paths in $cmd\n"     if $repo =~ /\.\./;
