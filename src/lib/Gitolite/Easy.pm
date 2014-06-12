@@ -206,6 +206,10 @@ sub textfile {
         _sanity($h{repo});
         $h{dir} = "$rc{GL_REPO_BASE}/$h{repo}.git";
         _die "repo '$h{repo}' does not exist" if not -d $h{dir};
+
+        my $umask = option( $h{repo}, 'umask' );
+        # note: using option() moves us to ADMIN_BASE, but we don't care here
+        umask oct($umask) if $umask;
     }
 
     # final full file name
