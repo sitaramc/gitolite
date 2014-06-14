@@ -34,6 +34,11 @@ the same command except with 'status' instead of 'push'.  With usage 1, you
 can use the special name "all" to get the status of all slaves for the given
 repo.  (Admins wishing to find the status of all slaves for ALL repos will
 have to script it using the output of "gitolite list-phy-repos".)
+
+SERVER LIST: 'gitolite mirror list master <reponame>' and 'gitolite mirror
+list slaves <reponame>' will show you the name of the master server, and list
+the slave servers, for the repo.  They only work on the server command line
+(any server), but not remotely (from a normal user).
 =cut
 
 usage() if not @ARGV or $ARGV[0] eq '-h';
@@ -92,16 +97,42 @@ if ( $cmd eq 'push' ) {
 
     $host = '*' if $host eq 'all';
     map { print_status($_) } sort glob("gl-slave-$host.status");
+} else {
+    # strictly speaking, we could allow some of the possible commands remotely
+    # also, at least for admins.  However, these commands are mainly intended
+    # for server-side scripting so I don't care.
+    usage() if $ENV{GL_USER};
+
+    server_side_commands(@ARGV);
 }
+
+# ----------------------------------------------------------------------
 
 sub valid_slave {
     my ( $host, $repo ) = @_;
     _die "invalid repo '$repo'" unless $repo =~ $REPONAME_PATT;
 
+    my %list = repo_slaves($repo);
+    _die "'$host' not a valid slave for '$repo'" unless $list{$host};
+}
+
+sub repo_slaves {
+    my $repo = shift;
+
     my $ref = git_config( $repo, "^gitolite-options\\.mirror\\.slaves.*" );
     my %list = map { $_ => 1 } map { split } values %$ref;
 
-    _die "'$host' not a valid slave for '$repo'" unless $list{$host};
+    return %list;
+}
+
+sub repo_master {
+    my $repo = shift;
+
+    my $ref = git_config( $repo, "^gitolite-options\\.mirror\\.master\$" );
+    my @list = map { split } values %$ref;
+    _die "'$repo' seems to have more than one master" if @list > 1;
+
+    return $list[0] || '';
 }
 
 sub print_status {
@@ -112,4 +143,24 @@ sub print_status {
     print "WARNING: previous mirror push to host '$slave' failed, status is:\n";
     print slurp($file);
     print "----------\n";
+}
+
+# ----------------------------------------------------------------------
+# server side commands.  Very little error checking.
+#   gitolite mirror list master <repo>
+#   gitolite mirror list slaves <repo>
+
+sub server_side_commands {
+    if ( $cmd eq 'list' ) {
+        if ( $host eq 'master' ) {
+            say repo_master($repo);
+        } elsif ( $host eq 'slaves' ) {
+            my %list = repo_slaves($repo);
+            say join( " ", sort keys %list );
+        } else {
+            _die "gitolite mirror list master|slaves <reponame>";
+        }
+    } else {
+        _die "invalid command";
+    }
 }
