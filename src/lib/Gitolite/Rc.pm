@@ -531,9 +531,6 @@ __DATA__
     # the Mirroring feature needs this
         # HOSTNAME                  =>  "foo",
 
-    # if you enabled 'Shell', you need this
-        # SHELL_USERS_LIST          =>  "$ENV{HOME}/.gitolite.shell-users",
-
     # TTL for redis cache; PLEASE SEE DOCUMENTATION BEFORE UNCOMMENTING!
         # CACHE_TTL                 =>  600,
 
@@ -599,8 +596,10 @@ __DATA__
             # access a repo by another (possibly legacy) name
             # 'Alias',
 
-            # give some users direct shell access
-            # 'Shell',
+            # give some users direct shell access.  See documentation in
+            # sts.html for details on the following two choices.
+            # "Shell $ENV{HOME}/.gitolite.shell-users",
+            # 'Shell alice bob',
 
             # set default roles from lines like 'option default.roles-1 = ...', etc.
             # 'set-default-roles',
