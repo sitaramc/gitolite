@@ -124,8 +124,9 @@ sub usage {
 }
 
 sub _mkdir {
-    # it's not an error if the directory exists, but it is an error if it
-    # doesn't exist and we can't create it
+    # It's not an error if the directory exists, but it is an error if it
+    # doesn't exist and we can't create it. This includes not guaranteeing
+    # dead symlinks or if mkpath traversal is blocked by a file.
     my $dir  = shift;
     my $perm = shift;    # optional
     return if -d $dir;
