@@ -1,0 +1,212 @@
+#!/usr/bin/perl
+
+# help with rc file format change at v3.4 -- help upgrade v3 rc files from
+# v3.3 and below to the new v3.4 and above format
+
+# once you upgrade gitolite past 3.4, you may want to use the new rc file
+# format, because it's really much nicer (just to recap: the old format will
+# still work, in fact internally the new format gets converted to the old
+# format before actually being used.  However, the new format makes it much
+# easier to enable and disable features).
+
+# PLEASE SEE WARNINGS BELOW
+
+# this program helps you upgrade your rc file.
+
+# STEPS
+#   cd gitolite-source-repo-clone
+#   contrib/utils/upgrade-rc33 /path/to/old.gitolite.rc > new.gitolite.rc
+
+# WARNINGS
+#   make sure you also READ ALL ERROR/WARNING MESSAGES GENERATED
+#   make sure you EXAMINE THE FILE AND CHECK THAT EVERYTHING LOOKS GOOD before using it
+#   be especially careful about
+#       variables which contains single/double quotes or other special characters
+#       variables that stretch across multiple lines
+#       features which take arguments (like 'renice')
+#       new features you've enabled which don't exist in the default rc
+
+# ----------------------------------------------------------------------
+
+use strict;
+use warnings;
+use 5.10.0;
+use Cwd;
+use Data::Dumper;
+$Data::Dumper::Terse    = 1;
+$Data::Dumper::Indent   = 1;
+$Data::Dumper::Sortkeys = 1;
+
+BEGIN {
+    $ENV{HOME} = getcwd;
+    $ENV{HOME} .= "/.home.rcupgrade.$$";
+    mkdir $ENV{HOME} or die "mkdir '$ENV{HOME}': $!\n";
+}
+
+END {
+    system("rm -rf ./.home.rcupgrade.$$");
+}
+
+use lib "./src/lib";
+use Gitolite::Rc;
+{
+    no warnings 'redefine';
+    sub Gitolite::Common::gl_log { }
+}
+
+# ----------------------------------------------------------------------
+
+# everything happens inside a fresh v3.6.1+ gitolite clone; no other
+# directories are used.
+
+# the old rc file to be migrated is somewhere *else* and is supplied as a
+# command line argument.
+
+# ----------------------------------------------------------------------
+
+my $oldrc = shift or die "need old rc filename as arg-1\n";
+
+{
+
+    package rcup;
+    do $oldrc;
+}
+
+my %oldrc;
+{
+    no warnings 'once';
+    %oldrc = %rcup::RC;
+}
+
+delete $rcup::{RC};
+{
+    my @extra = sort keys %rcup::;
+    warn "**** WARNING ****\nyou have variables declared outside the %RC hash; you must handle them manually\n" if @extra;
+}
+
+# this is the new rc text being built up
+my $newrc = glrc('default-text');
+
+# ----------------------------------------------------------------------
+
+# default disable all features in newrc
+map { disable( $_, 'sq' ) } (qw(help desc info perms writable ssh-authkeys git-config daemon gitweb));
+# map { disable($_, '') } (qw(GIT_CONFIG_KEYS));
+
+set_s('HOSTNAME');
+set_s( 'UMASK',               'num' );
+set_s( 'GIT_CONFIG_KEYS',     'sq' );
+set_s( 'LOG_EXTRA',           'num' );
+set_s( 'DISPLAY_CPU_TIME',    'num' );
+set_s( 'CPU_TIME_WARN_LIMIT', 'num' );
+set_s('SITE_INFO');
+
+set_s('LOCAL_CODE');
+
+if ( $oldrc{WRITER_CAN_UPDATE_DESC} ) {
+    die "tell Sitaram he changed the default rc too much" unless $newrc =~ /rc variables used by various features$/m;
+    $newrc =~ s/(rc variables used by various features\n)/$1\n    # backward compat\n        WRITER_CAN_UPDATE_DESC      =>  1,\n/;
+
+    delete $oldrc{WRITER_CAN_UPDATE_DESC};
+}
+
+if ( $oldrc{ROLES} ) {
+    my $t = '';
+    for my $r ( sort keys %{ $oldrc{ROLES} } ) {
+        $t .= ( " " x 8 ) . $r . ( " " x ( 28 - length($r) ) ) . "=>  1,\n";
+    }
+    $newrc =~ s/(ROLES *=> *\{\n).*?\n( *\},)/$1$t$2/s;
+
+    delete $oldrc{ROLES};
+}
+
+if ( $oldrc{DEFAULT_ROLE_PERMS} ) {
+    warn "DEFAULT_ROLE_PERMS has been replaced by per repo option\nsee http://gitolite.com/gitolite/wild.html\n";
+    delete $oldrc{DEFAULT_ROLE_PERMS};
+}
+
+# the following is a bit like the reverse of what the new Rc.pm does...
+
+for my $l ( split /\n/, $Gitolite::Rc::non_core ) {
+    next if $l =~ /^ *#/ or $l !~ /\S/;
+
+    my ( $name, $where, $module ) = split ' ', $l;
+    $module = $name if $module eq '.';
+    ( $module = $name ) .= "::" . lc($where) if $module eq '::';
+
+    # if you find $module as an element of $where, enable $name
+    enable($name) if miw( $module, $where );
+}
+
+# now deal with commands
+if ( $oldrc{COMMANDS} ) {
+    for my $c ( sort keys %{ $oldrc{COMMANDS} } ) {
+        if ( $oldrc{COMMANDS}{$c} == 1 ) {
+            enable($c);
+            # we don't handle anything else right (and so far only git-annex
+            # is affected, as far as I remember)
+
+            delete $oldrc{COMMANDS}{$c};
+        }
+    }
+}
+
+print $newrc;
+
+for my $w (qw(INPUT POST_COMPILE PRE_CREATE ACCESS_1 POST_GIT PRE_GIT ACCESS_2 POST_CREATE SYNTACTIC_SUGAR)) {
+    delete $oldrc{$w} unless scalar( @{ $oldrc{$w} } );
+}
+delete $oldrc{COMMANDS} unless scalar keys %{ $oldrc{COMMANDS} };
+
+exit 0 unless %oldrc;
+
+warn "the following parts of the old rc were NOT converted:\n";
+print STDERR Dumper \%oldrc;
+
+# ----------------------------------------------------------------------
+
+# set scalars that the new file defaults to "commented out"
+sub set_s {
+    my ( $key, $type ) = @_;
+    $type ||= '';
+    return unless exists $oldrc{$key};
+
+    # special treatment for UMASK
+    $oldrc{$key} = substr( "00" . sprintf( "%o", $oldrc{$key} ), -4 ) if ( $key eq 'UMASK' );
+
+    $newrc =~ s/# $key /$key   /;    # uncomment if needed
+    if ( $type eq 'num' ) {
+        $newrc =~ s/$key ( *=> *).*/$key $1$oldrc{$key},/;
+    } elsif ( $type eq 'sq' ) {
+        $newrc =~ s/$key ( *=> *).*/$key $1'$oldrc{$key}',/;
+    } else {
+        $newrc =~ s/$key ( *=> *).*/$key $1"$oldrc{$key}",/;
+    }
+
+    delete $oldrc{$key};
+}
+
+sub disable {
+    my ( $key, $type ) = @_;
+    if ( $type eq 'sq' ) {
+        $newrc =~ s/^( *)'$key'/$1# '$key'/m;
+    } else {
+        $newrc =~ s/^( *)$key\b/$1# $key/m;
+    }
+}
+
+sub enable {
+    my $key = shift;
+    $newrc =~ s/^( *)# *'$key'/$1'$key'/m;
+    return if $newrc =~ /^ *'$key'/m;
+    $newrc =~ s/(add new commands here.*\n)/$1            '$key',\n/;
+}
+
+sub miw {
+    my ( $m, $w ) = @_;
+    return 0 unless $oldrc{$w};
+    my @in = @{ $oldrc{$w} };
+    my @out = grep { !/^$m$/ } @{ $oldrc{$w} };
+    $oldrc{$w} = \@out;
+    return not scalar(@in) == scalar(@out);
+}
