@@ -1,3 +1,18 @@
+2014-06-22  v3.6.1  experimental rc format convertor for "<= 3.3" users who
+                    have already upgraded the *code* to ">= v3.4".  Program is
+                    in contrib/utils.
+
+                    giving shell access to a few users got a lot easier (see
+                    comments in the rc file).
+
+                    allow logging to syslog as well (see comments in the rc
+                    file)
+
+                    new 'motd' command
+
+                    redis caching redone and now in core; see
+                    http://gitolite.com/gitolite/cache.html
+
 2014-05-09  v3.6    (cool stuff) the access command can now help you debug
                     your rules / understand how a specific access decision was
                     arrived at.
