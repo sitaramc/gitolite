@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use 5.10.0;
 
 # Tsh -- non interactive Testing SHell in perl

@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 # Call like this:
 # TSH_VERBOSE=1 TSH_ERREXIT=1 HARNESS_ACTIVE=1 GITOLITE_TEST=y prove t/ukm.t
