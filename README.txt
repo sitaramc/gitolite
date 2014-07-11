@@ -60,16 +60,20 @@ INSTALLATION AND SETUP
       * openssh 5.0+
       * a dedicated userid to host the repos (in this document, we assume it
         is 'git'), with shell access ONLY by 'su - git' from some other userid
-        on the same server.
+        on the same server. On Ubuntu server this is 'sudo adduser git'
 
     Steps to install:
 
-      * login as 'git' as described above
+      * login as 'git' on the machine that will host gitolite as described above
 
       * make sure ~/.ssh/authorized_keys is empty or non-existent
 
       * make sure your ssh public key from your workstation is available at
-        $HOME/YourName.pub
+        $HOME/YourName.pub. Usually it's copied with 
+
+	    scp yourid@yourserver:~/.ssh/id_rsa.pub /home/git/YourName.pub
+
+	Notice that the file name is different.
 
       * run the following commands:
 
