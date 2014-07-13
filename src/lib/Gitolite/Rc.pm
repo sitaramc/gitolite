@@ -67,7 +67,7 @@ if ( -r $rc and -s $rc ) {
 }
 if ( defined($GL_ADMINDIR) ) {
     say2 "";
-    say2 "FATAL: '$rc' seems to be for older gitolite; please see doc/g2migr.mkd\n" . "(online at http://gitolite.com/gitolite/g2migr.html)";
+    say2 "FATAL: '$rc' seems to be for older gitolite; please see\nhttp://gitolite.com/gitolite/migr.html";
 
     exit 1;
 }
@@ -543,7 +543,7 @@ __DATA__
 
         # or you can use this, which lets you put everything in a subdirectory
         # called "local" in your gitolite-admin repo.  For a SECURITY WARNING
-        # on this, see http://gitolite.com/gitolite/cust.html#pushcode
+        # on this, see http://gitolite.com/gitolite/non-core.html#pushcode
         # LOCAL_CODE                =>  "$rc{GL_ADMIN_BASE}/local",
 
     # ------------------------------------------------------------------

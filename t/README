@@ -9,5 +9,6 @@ On such a userid, clone gitolite then run this command in the clone:
 
     GITOLITE_TEST=y prove
 
-http://gitolite.com/gitolite/testing.html has more details.  It will
-also help you try out gitolite if you want to go beyond just the test suite.
+http://gitolite.com/gitolite/testing.html has more details.  Alternatively,
+http://gitolite.com/gitolite/req.html#trying will help you try out gitolite if
+you want to play with gitolite safely.
