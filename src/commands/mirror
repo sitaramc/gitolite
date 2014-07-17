@@ -46,6 +46,7 @@ usage() if not @ARGV or $ARGV[0] eq '-h';
 _die "HOSTNAME not set" if not $rc{HOSTNAME};
 
 my ( $cmd, $host, $repo ) = @ARGV;
+$repo =~ s/\.git$//;
 usage() if not $repo;
 
 if ( $cmd eq 'push' ) {
