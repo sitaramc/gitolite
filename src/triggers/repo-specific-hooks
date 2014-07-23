@@ -39,7 +39,8 @@ while (<>) {
     $hook =~ s/^gitolite-options\.hook\.//;
 
     unless ( $hook =~ /^(pre-receive|post-receive|post-update)$/ ) {
-        _warn "repo-specific-hooks: '$hook' is not one of the 3 hooks allowed, ignoring";
+        _warn "repo-specific-hooks: '$hook' is not allowed, ignoring";
+        _warn "    (only pre-receive, post-receive, and post-update are allowed)";
         next;
     }
 
