@@ -8,6 +8,7 @@ use warnings;
 
 use lib $ENV{GL_LIBDIR};
 use Gitolite::Rc;
+use Gitolite::Common;
 
 my %attempted_access = (
     # see triggers.html
@@ -43,6 +44,14 @@ _info( "User",      $user );
 _info( "Stage",     ( $a12 eq 'ACCESS_1' ? "Before git was called" : "From git's update hook" ) );
 _info( "Ref",       _ref($ref) ) if $a12 eq 'ACCESS_2';
 _info( "Operation", _op( $a12, $aa, $oldsha, $newsha ) );
+
+if ( $ref =~ m((^VREF/[^/]+)) ) {
+    my $vref      = $1;
+    my $vref_text = slurp( _which( $vref, 'x' ) );
+    my $etag      = '(?:help|explain|explanation)';
+    $vref_text =~ m(^\s*# $etag.start\n(.*)^\s*# $etag.end\n)sm
+      and print STDERR "Explanation for $vr:\n$1";
+}
 
 print STDERR "\n";
 print STDERR "$ENV{GL_OPTION_EDM_EXTRA_INFO}\n\n" if $ENV{GL_OPTION_EDM_EXTRA_INFO};
@@ -122,8 +131,8 @@ Or you can also disable it for all repos, then enable it for some:
 
 [1]: http://gitolite.com/gitolite/options.html
 
-# SUPPLYING EXTRA INFORMATION
-# ---------------------------
+SUPPLYING EXTRA INFORMATION
+---------------------------
 
 You can also supply some extra information to be printed, by adding a line
 like this to each repository in the gitolite.conf file:
@@ -131,3 +140,46 @@ like this to each repository in the gitolite.conf file:
         option ENV.EDM_EXTRA_INFO = "please contact alice@example.com"
 
 You could of course add it under a "repo @all" section if you like.
+
+SUPPLYING EXTRA INFORMATION FOR VREFs
+-------------------------------------
+
+If you have VREFs that do funky things and you want to **lecture** your users
+when they screw up, add something like the following to your VREF code.
+
+    # help start
+
+    Some help text.
+
+    Some more help text.  This can be
+    multi-line.
+
+    (etc etc etc)
+
+    # help end
+
+Then everything between the "# help start" line and the "# help end" line will
+get printed if a users falls afoul of this VREF.  If any of the lines shown
+are not valid syntax for your language, figure out some way to put the whole
+thing in a comment block.  Here a C example:
+
+    /*
+    # help start
+    line 1
+    line 2
+    ...
+    last line
+    # help end
+    */
+
+Even if your language does not support multi-line comments like C does, there
+may be other ways to specify those lines.  Here's an example in shell:
+
+    cat << EOF > /dev/null
+    # help start
+    line 1
+    line 2
+    ...
+    last line
+    # help end
+    EOF
