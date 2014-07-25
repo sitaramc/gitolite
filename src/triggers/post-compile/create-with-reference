@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+# Set alternates if option reference.repo is set
+# ----------------------------------------------------------------------
+
+use FindBin;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+
+use strict;
+use warnings;
+
+my $RB = $rc{GL_REPO_BASE};
+
+if ( @ARGV and $ARGV[0] eq 'POST_CREATE' ) {
+    my $repo = $ARGV[1];
+    create_alternates($repo);
+
+    exit 0;
+}
+
+# not interested in any other triggers
+exit 0;
+
+sub create_alternates {
+    my $pr      = shift;
+
+    my $refrepos = git_config( $pr, "^gitolite-options\\.reference\\.repo.*" );
+    my %list = map { $_ => 1 } map { split } values %$refrepos;
+    my @alts = keys %list;
+    if ( @alts ) {
+        my $altlist = join "\n", map { "$RB/$_.git/objects" } @alts;
+        _print( "$RB/$pr.git/objects/info/alternates", "$altlist\n" );
+
+    }
+}

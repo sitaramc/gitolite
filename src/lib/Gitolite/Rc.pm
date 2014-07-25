@@ -464,6 +464,8 @@ BEGIN {
     git-config              POST_COMPILE    post-compile/update-git-configs
     git-config              POST_CREATE     post-compile/update-git-configs
 
+    create-with-reference   POST_CREATE     post-compile/create-with-reference
+
     gitweb                  POST_CREATE     post-compile/update-gitweb-access-list
     gitweb                  POST_COMPILE    post-compile/update-gitweb-access-list
 
