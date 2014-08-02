@@ -1,0 +1,172 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# Use an external (non-gitolite) mirror to backup gitolite repos.  They will
+# be automatically kept uptodate as people push to your gitolite server.  If
+# your server should die and you create a new one, you can quickly and easily
+# get everything back from the external mirror with a few simple commands.
+
+#       -------------------------------------------------------------
+#       SEE WARNINGS/CAVEATS AND INSTRUCTIONS AT THE END OF THIS FILE
+#       -------------------------------------------------------------
+
+# ----------------------------------------------------------------------
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Easy;
+
+my ( $trigger, $repo, $dummy, $op ) = @ARGV;
+exit 0 unless $trigger eq 'POST_GIT' or $trigger eq 'POST_CREATE';
+exit 0 if     $trigger eq 'POST_GIT' and $op ne 'W';
+
+chdir("$rc{GL_REPO_BASE}/$repo.git") or _die "chdir failed: $!\n";
+
+my %config = config( $repo, "gitolite-options\\.mirror\\.extslave" );
+for my $slave ( values %config ) {
+    _do($slave);
+
+    # processing one slave is sufficient for restoring!
+    last if $trigger eq 'POST_CREATE';
+}
+
+# in shell, that would be something like:
+#   gitolite git-config -r $repo gitolite-options\\.mirror\\.extslave | cut -f3 | while read slave
+#   do
+#       ...
+
+# ----------------------------------------------------------------------
+
+sub _do {
+    my $url = shift;
+
+    if ( $trigger eq 'POST_CREATE' ) {
+        # brand new repo just created; needs to be populated from mirror
+
+        # For your urls you will need a way to somehow query the server and
+        # ask if the repo is present; it's upto you how you do it.
+        my $path = $url;
+        $path =~ s(^file://)();
+        return unless -d $path;
+
+        # now fetch.  Maybe we can put a "-q" in there?
+        system( "git", "fetch", $url, "+refs/*:refs/*" );
+
+    } elsif ( $trigger eq 'POST_GIT' ) {
+        # someone just pushed; we need to update our mirrors
+
+        # need to create the repo on the mirror.  Again, it's upto you how you
+        # make sure there's a repo on the mirror that can receive the push.
+        make_repo($url);    # in case it doesn't already exist
+
+        # now push
+        system( "git", "push", "--mirror", $url );
+    }
+}
+
+sub make_repo {
+    my $url = shift;
+    # in this example, the URL is 'file:///...'; for other urls, presumably
+    # the url tells you enough about how to *create* a repo.
+
+    my $path = $url;
+    $path =~ s(^file://)();
+    return if -d $path;
+    system( "git", "init", "--bare", $path );
+}
+
+__END__
+
+WARNINGS
+--------
+
+1.  THIS IS SAMPLE CODE.  You will AT LEAST have to customise the _do() and
+    make_repo() functions above based on what your remote URLs are.  For
+    example, I don't even know how to create a repo from the command line if
+    your external store is, say, github!
+
+2.  THIS DOES NOT WORK FOR WILD REPOs.  It can be made to work, with a few
+    extra steps to backup and restore the "gl-perms" and "gl-creator" files.
+
+    "Left as an exercise for the reader!"
+
+DESIGN NOTES
+------------
+
+This is really just a combination of "upstream" (see src/triggers/upstream)
+and mirroring (gitolite mirroring does allow a slave to be non-gitolite, as
+long as the ssh stuff is done the same way).
+
+The main difference is that gitolite mirroring expects peers to all talk ssh,
+whereas this method lets you use other protocols.  Specifically, since this
+whole thing was started off by someone wanting to put his repos on s3
+(apparently jgit can talk to s3 directly), you can modify the two functions to
+deal with whatever remote server you have.
+
+LANGUAGE
+--------
+
+This doesn't have to be in perl.  Shell equivalent for the only gitolite
+specific code is supplied; the rest of the code is fairly straightforward.
+
+SETUP
+-----
+
+1.  Put this code into your LOCAL_CODE directory under "triggers"; see
+    non-core.html for details.
+
+2.  Add these lines to your rc file, just before the ENABLE line.  (I'm
+    assuming a v3.4 or later installation here).
+
+        POST_CREATE => [ 'file_mirror' ],
+        POST_GIT => [ 'file_mirror' ],
+
+3.  Backup your rc file, since you may have other changes in it that you'll
+    want to preserve.
+
+4.  Do something like this in your gitolite.conf file:
+
+        repo @all
+            option mirror.extslave-1    =   file:///tmp/he1/%GL_REPO.git
+            option mirror.extslave-2    =   file:///tmp/he2/%GL_REPO.git
+
+    As you can see, since this is just for demo/test, we're using a couple of
+    temp directories to serve as our "remotes" using the file:// protocol.
+
+5.  Do a one-time manual sync of all the repos (subsequent syncs happen on
+    each push):
+
+        gitolite list-phy-repos | xargs -I xx gitolite trigger POST_GIT xx admin W
+
+    (This is a little trick we're playing on the trigger stuff, but it should
+    work fine.  Just make sure that, if you have other things in your POST_GIT
+    trigger list, they're not affected in some way.  'gitolite query-rc
+    POST_GIT' will tell you what else you have.)
+
+That takes care of the "setup" and "regular backup".
+
+RESTORE
+-------
+
+1.  Install gitolite normally.  You'll get the usual two repos.
+
+2.  Restore the previously backed up rc file to replace the default one that
+    gitolite created.  At the very least, the rc file should have the
+    POST_CREATE and POST_GIT entries.
+
+        ---------------------------------------------------------
+        IF YOU FORGET THIS STEP, NASTY THINGS WILL HAPPEN TO YOU!
+        ---------------------------------------------------------
+
+3.  Clone the admin repo from one of your backup servers to some temp dir.  In
+    our example,
+
+        git clone /tmp/he1/gitolite-admin.git old-ga
+
+4.  'cd' to that clone and force push to your *new* admin repo:
+
+        cd old-ga
+        git push -f admin:gitolite-admin
+
+That's it.  As each repo gets created by the admin push, they'll get populated
+by the backed up stuff due to the POST_CREATE trigger.
