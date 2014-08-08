@@ -50,7 +50,7 @@ if ( $ref =~ m((^VREF/[^/]+)) ) {
     my $vref_text = slurp( _which( $vref, 'x' ) );
     my $etag      = '(?:help|explain|explanation)';
     $vref_text =~ m(^\s*# $etag.start\n(.*)^\s*# $etag.end\n)sm
-      and print STDERR "Explanation for $vr:\n$1";
+      and print STDERR "Explanation for $vref:\n$1";
 }
 
 print STDERR "\n";
