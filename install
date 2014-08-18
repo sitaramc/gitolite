@@ -54,7 +54,12 @@ GetOptions(
 usage() if $to and $ln or $help;
 $ln = "$ENV{HOME}/bin" if defined($ln) and not $ln;
 for my $d ($ln, $to) {
-    if ($d and not -d $d) {
+    next unless $d;    # ignore empty values
+    unless ( $d =~ m(^/) ) {
+        print STDERR "FATAL: please use an absolute path, not a relative path\n";
+        usage();
+    }
+    if ( not -d $d ) {
         print STDERR "FATAL: '$d' does not exist.\n";
         usage();
     }
