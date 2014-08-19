@@ -60,13 +60,13 @@ for my $f (@pubkeys) {
 }
 
 # dump it out
-if (@gl_keys) {
-    my $out = join( "\n", @non_gl, "# gitolite start", @gl_keys, "# gitolite end" ) . "\n";
+my $out = join( "\n", @non_gl, "# gitolite start", @gl_keys, "# gitolite end" ) . "\n";
 
-    my $ak = slurp($akfile);
-    _die "'$akfile' changed between start and end of this program!" if $ak ne $old_ak;
-    _print( $akfile, $out );
-}
+my $ak = slurp($akfile);
+_die "'$akfile' changed between start and end of this program!" if $ak ne $old_ak;
+_print( $akfile, $out );
+
+_warn "you have no keys left; I hope you intended to do that!" unless @gl_keys;
 
 # ----------------------------------------------------------------------
 

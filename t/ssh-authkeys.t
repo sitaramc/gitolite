@@ -28,7 +28,7 @@ try "
     cd $kd;                     ok
     $pgm;                       ok;     /authorized_keys missing/
                                         /creating/
-    wc < $ak;                   ok;     /0 *0 *0/
+    wc < $ak;                   ok;     /2 *6 *32/
     # some gl keys
     ssh-keygen -N '' -q -f alice -C alice
     ssh-keygen -N '' -q -f bob   -C bob
