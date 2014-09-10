@@ -1,0 +1,136 @@
+#!/bin/bash
+
+# ----------------------------------------------------------------------
+# change these lines to suit
+testconf=$HOME/GITOLITE-TESTCONF
+gitolite_url=git://github.com/sitaramc/gitolite
+    # change it to something local for frequent use
+    # gitolite_url=file:///tmp/gitolite.git
+
+# ----------------------------------------------------------------------
+# Usage: gitolite-local <options>
+#
+# Test your gitolite.conf rule lists on your LOCAL machine (without even
+# pushing to the server!)
+#
+# (one-time)
+#
+#   1.  put this code somewhere in your $PATH if you wish
+#   2.  edit the line near the top of the script if you want to use some other
+#       directory than the default, for "testconf".
+#   2.  prepare the "testconf" directory by running:
+#           gitolite-local prep
+#
+# (lather, rinse, repeat)
+#
+#   1.  edit the conf (see notes below for more)
+#           gitolite-local edit
+#   2.  compile the conf
+#           gitolite-local compile
+#   3.  check permissions using "info" command:
+#           gitolite-local info USERNAME
+#   4.  check permissions using "access" command:
+#           gitolite-local access <options for gitolite access command>
+#   5.  clone, fetch, and push if you like!
+#           gitolite-local clone <username> <reponame> <other options for clone>
+#           gitolite-local fetch <username> <options for fetch>
+#           gitolite-local push  <username> <options for push>
+#
+# note on editing the conf: you don't have to use the edit command; you can
+# also directly edit '.gitolite/conf/gitolite.conf' in the 'testconf'
+# directory.  You'll need to do that if your gitolite conf consists of more
+# than just one file (like if you have includes, etc.)
+#
+# note on the clone command: most of the options won't work for clone, unless
+# git is ok with them being placed *after* the repo name.
+
+# ----------------------------------------------------------------------
+die() { echo "$@" >&2; exit 1; }
+usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
+[ -z "$1" ] && usage
+
+# ----------------------------------------------------------------------
+if [ $1 == prep ]
+then
+    set -e
+
+    [ -d $testconf ] && die "directory '$testconf' already exists"
+
+    mkdir $testconf
+    cd $testconf
+
+    export HOME=$PWD
+
+    echo getting gitolite source...
+    git clone $gitolite_url gitolite
+    echo
+
+    echo installing gitolite...
+    gitolite/install >/dev/null
+    echo
+
+    echo setting up gitolite...
+    export PATH=$PWD/gitolite/src:$PATH
+    gitolite setup -a admin
+    echo
+
+    exit 0
+fi
+
+od=$PWD
+cd $testconf
+export HOME=$PWD
+export PATH=$PWD/gitolite/src:$PATH
+
+if [ $1 = edit ]
+then
+    editor=${EDITOR:-vim}
+    $editor .gitolite/conf/gitolite.conf
+elif [ $1 = compile ]
+then
+    gitolite compile
+elif [ $1 = compile+ ]
+then
+    gitolite compile\; gitolite trigger POST_COMPILE
+elif [ $1 = info ]
+then
+    shift
+    user=$1
+    shift
+
+    GL_USER=$user gitolite info "$@"
+elif [ $1 = access ]
+then
+    shift
+
+    gitolite access "$@"
+elif [ $1 = clone ]
+then
+    shift
+    export G3T_USER=$1
+    shift
+
+    cd $od
+    export GL_BINDIR=$HOME/gitolite/t
+        # or you could do it the long way, using 'gitolite query-rc GL_BINDIR'
+    repo=$1; shift
+    git clone --upload-pack=$GL_BINDIR/gitolite-upload-pack file:///$repo "$@"
+elif [ $1 = fetch ]
+then
+    shift
+    export G3T_USER=$1
+    shift
+
+    cd $od
+    export GL_BINDIR=$HOME/gitolite/t
+    git fetch --upload-pack=$GL_BINDIR/gitolite-upload-pack "$@"
+elif [ $1 = push ]
+then
+    shift
+    export G3T_USER=$1
+    shift
+
+    cd $od
+    export GL_BINDIR=$HOME/gitolite/t
+    git push --receive-pack=$GL_BINDIR/gitolite-receive-pack "$@"
+fi
