@@ -88,7 +88,8 @@ try "
                                     !ok;    /FATAL: 'cc/../../../../../..$rb/gitolite-admin' contains '\\.\\.'/
 
     glt perms u4 -c cc/bar/baz/../frob + READERS u2
-                                    !ok;    /FATAL: 'cc/bar/baz/\\.\\./frob' contains '\\.\\.'/
+                                    !ok;    /FATAL: no relative paths allowed anywhere!/
+                                    'cc/bar/baz/\\.\\./frob' contains '\\.\\.'/
 
 
 ";
