@@ -62,7 +62,7 @@ tsh "
         /1 file.*changed/
     git push
         ok
-        /Initialized.*var.www.gitolite-home.repositories.t2.git/
+        /Initialized.*usr.share.httpd.gitolite-home.repositories.t2.git/
         /To http:..admin:admin.localhost.git.gitolite-admin.git/
         /master -. master/
     ## various ls-remotes
