@@ -6,6 +6,7 @@ mainhost=frodo
 
 # setup software
 bd=`gitolite query-rc -n GL_BINDIR`
+mkdir -p /tmp/g3
 rm -rf /tmp/g3/src
 cp -a $bd /tmp/g3/src
 chmod -R go+rX /tmp/g3
