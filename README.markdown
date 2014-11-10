@@ -216,7 +216,7 @@ you; try running "gitolite help".
 Please see <http://gitolite.com/gitolite/#contact> for mailing list and IRC
 info.
 
-# license {#license -}
+# license
 
 The gitolite software is copyright Sitaram Chamarty and is licensed under the
 GPL v2; please see the file called COPYING in the source distribution.
