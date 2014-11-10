@@ -1,3 +1,12 @@
+2014-11-10  v3.6.2  disable ../ everywhere (see mailing list thread for
+                    details)
+
+                    VREF/NAME_NC -- like VREF/NAME but for new commits only.
+                    Details within src/VREF/NAME_NC.
+
+                    allow gitolite.conf to be tested locally; details within
+                    contrib/utils/gitolite-local
+
 2014-06-22  v3.6.1  experimental rc format convertor for "<= 3.3" users who
                     have already upgraded the *code* to ">= v3.4".  Program is
                     in contrib/utils.
