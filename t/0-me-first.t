@@ -11,7 +11,7 @@ my $rb = `gitolite query-rc -n GL_REPO_BASE`;
 # initial smoke tests
 # ----------------------------------------------------------------------
 
-try "plan 71";
+try "plan 72";
 
 # basic push admin repo
 confreset;confadd '
@@ -89,7 +89,7 @@ try "
 
     glt perms u4 -c cc/bar/baz/../frob + READERS u2
                                     !ok;    /FATAL: no relative paths allowed anywhere!/
-                                    'cc/bar/baz/\\.\\./frob' contains '\\.\\.'/
+                                           !/'cc/bar/baz/\\.\\./frob' contains '\\.\\.'/
 
 
 ";
