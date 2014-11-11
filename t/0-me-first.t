@@ -89,7 +89,5 @@ try "
 
     glt perms u4 -c cc/bar/baz/../frob + READERS u2
                                     !ok;    /FATAL: no relative paths allowed anywhere!/
-                                    'cc/bar/baz/\\.\\./frob' contains '\\.\\.'/
-
 
 ";
