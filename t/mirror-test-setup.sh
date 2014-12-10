@@ -30,6 +30,7 @@ cd /tmp/g3
     done
     cp $bd/../t/mirror-test-ssh-config ssh-config
 }
+chmod -R go+rX /tmp/g3
 
 for h in $hosts
 do
@@ -96,6 +97,7 @@ RW  =   u1
 for h in $hosts
 do
     cat $bd/../t/mirror-test-rc | perl -pe "s/%HOSTNAME/$h/" > /tmp/g3/temp
+    chmod go+rX /tmp/g3/temp
     sudo -u $h -i cp /tmp/g3/temp .gitolite.rc
     echo "$lines"  | sudo -u $h -i sh -c 'cat >> .gitolite/conf/gitolite.conf'
     echo "$lines2" | sudo -u $h -i sh -c "cat >> .gitolite/conf/$h.conf"

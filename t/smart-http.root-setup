@@ -17,13 +17,32 @@ die() { echo "$@"; exit 1; }
     exit 1
 }
 
-id | grep '=0(root)' || die "you must run this as root"
+# ----------------------------------------------------------------------
+# are we *BSD or Linux?
+uname_s=`uname -s`  # could be Linux or FreeBSD or some other BSD
+if [ "$uname_s" = "Linux" ]
+then
+    bsd=:
+else
+    lnx=:
+fi
+
+# ----------------------------------------------------------------------
+# main
+
+[ $EUID = 0 ] || die "you must run this as root"
 
 # delete any existing apache conf for gitolite
-rm /etc/httpd/conf.d/gitolite.conf
+$lnx rm /etc/httpd/conf.d/gitolite.conf
+$bsd rm /usr/local/etc/apache24/Includes/gitolite.conf
 
 # build your "home within a home"
-cd ~apache
+$lnx cd ~apache
+$bsd rm -rf /tmp/usr.share.httpd
+$bsd mkdir -p /tmp/usr.share.httpd
+$bsd chown www:www /tmp/usr.share.httpd
+$bsd cd /tmp/usr.share.httpd
+
 rm -rf gitolite-home
 mkdir gitolite-home
 export GITOLITE_HTTP_HOME=$PWD/gitolite-home
@@ -52,12 +71,13 @@ cat .gitolite.rc >> 1
 \mv 1 .gitolite.rc
 
 # fix up ownership
-chown -R apache.apache $GITOLITE_HTTP_HOME
+$lnx chown -R apache:apache $GITOLITE_HTTP_HOME
+$bsd chown -R www:www $GITOLITE_HTTP_HOME
 
 # create the apache config.  Note the trailing slashes on the 2 ScriptAlias
 # lines.  (The second one is optional for most sites).  NOTE: you also need to
 # give the AuthUserFile a better name/location than what I have below.
-cat <<EOF1 > /etc/httpd/conf.d/gitolite.conf
+cat <<EOF1 > 1
 SetEnv GIT_PROJECT_ROOT $GITOLITE_HTTP_HOME/repositories
 ScriptAlias /git/ $GITOLITE_HTTP_HOME/gitolite-source/src/gitolite-shell/
 ScriptAlias /gitmob/ $GITOLITE_HTTP_HOME/gitolite-source/src/gitolite-shell/
@@ -71,12 +91,15 @@ SetEnv GIT_HTTP_EXPORT_ALL
     AuthUserFile $GITOLITE_HTTP_HOME/gitolite-http-authuserfile
 </Location>
 EOF1
+$lnx mv 1 /etc/httpd/conf.d/gitolite.conf
+$bsd mv 1 /usr/local/etc/apache24/Includes/gitolite.conf
 
 # NOTE: this is for testing only
 htpasswd -bc $GITOLITE_HTTP_HOME/gitolite-http-authuserfile admin admin
 map "htpasswd -b $GITOLITE_HTTP_HOME/gitolite-http-authuserfile % %" u{1..6}
-chown apache.apache $GITOLITE_HTTP_HOME/gitolite-http-authuserfile
+$lnx chown apache:apache $GITOLITE_HTTP_HOME/gitolite-http-authuserfile
+$bsd chown www:www $GITOLITE_HTTP_HOME/gitolite-http-authuserfile
 
 # restart httpd to make it pick up all the new stuff
-service httpd restart
-
+$lnx service httpd restart
+$bsd /usr/local/etc/rc.d/apache24 restart

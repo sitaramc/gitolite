@@ -171,7 +171,7 @@ sub test_gs {
     try 'perl $_ = "' . $res  . '"; /1/';
     $res = ( $href->{gitolite_version} =~ /^v3.[5-9]/ ? 1 : 'undef' );
     try 'perl $_ = "' . $res  . '"; /1/';
-    $res = ( $href->{git_version} =~ /^1.[6-9]/ ? 1 : 'undef' );
+    $res = ( $href->{git_version} =~ /^1.[6-9]|^2./ ? 1 : 'undef' );
     try 'perl $_ = "' . $res  . '"; /1/';
 }
 
