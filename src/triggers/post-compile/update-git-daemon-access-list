@@ -14,14 +14,10 @@ RB=`gitolite query-rc GL_REPO_BASE`
 export EO RB
 
 gitolite list-phy-repos | gitolite access % daemon R any |
-    perl -lane '
+    perl -MGitolite::Easy -lane '
         unlink "$ENV{RB}/$F[0].git/$ENV{EO}" if /DENIED/;
-        print $F[0] unless /DENIED/
-    ' |
-    while read r
-    do
-        > $RB/$r.git/$EO
-    done
+        textfile( file => $ENV{EO}, repo => $F[0], text => "" ) unless /DENIED/;
+    '
 
 # A bit of explanation may be in order.  The gitolite output looks somewhat
 # like this:

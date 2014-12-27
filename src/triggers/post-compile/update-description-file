@@ -10,8 +10,7 @@
 # adding this program to the POST_COMPILE trigger list).
 
 cd $GL_REPO_BASE
-gitolite list-phy-repos | gitolite git-config % gitweb.description |
-    while read a b c
-    do
-        echo "$c" > $GL_REPO_BASE/$a.git/description
-    done
+gitolite list-phy-repos | gitolite git-config % gitweb.description | perl -MGitolite::Easy -lne '
+            my @F = split /\s+/,$_,3;
+            textfile( file => "description", repo => $F[0], text => $F[2] );
+    '
