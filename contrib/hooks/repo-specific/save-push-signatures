@@ -1,0 +1,185 @@
+#!/bin/sh
+
+# ----------------------------------------------------------------------
+# post-receive hook to adopt push certs into 'refs/push-certs'
+
+# Collects the cert blob on push and saves it, then, if a certain number of
+# signed pushes have been seen, processes all the "saved" blobs in one go,
+# adding them to the special ref 'refs/push-certs'.  This is done in a way
+# that allows searching for all the certs pertaining to one specific branch
+# (thanks to Junio Hamano for this idea plus general brainstorming).
+
+# WARNINGS:
+#   Does not check that GIT_PUSH_CERT_STATUS = "G".  If you want to check that
+#   and FAIL the push, you'll have to write a simple pre-receive hook
+#   (post-receive is not the place for that; see 'man githooks').
+#
+#   Gitolite users: failing the hook cannot be done as a VREF because git does
+#   not set those environment variables in the update hook.  You'll have to
+#   write a trivial pre-receive hook and add that in.
+
+# Relevant gitolite doc links:
+#   repo-specific environment variables
+#       http://gitolite.com/gitolite/dev-notes.html#rsev
+#   repo-specific hooks
+#       http://gitolite.com/gitolite/non-core.html#rsh
+#       http://gitolite.com/gitolite/cookbook.html#v3.6-variation-repo-specific-hooks
+
+# Environment:
+#   GL_OPTIONS_GPC_PENDING (optional; defaults to 1).  This is the number of
+#   git push certs that should be waiting in order to trigger the post
+#   processing.  You can set it within gitolite like so:
+#
+#   repo foo bar    # or maybe just 'repo @all'
+#       option ENV.GPC_PENDING = 5
+
+# Setup:
+#   Set up this code as a post-receive hook for whatever repos you need to.
+#   Then arrange to have the environment variable GL_OPTION_GPC_PENDING set to
+#   some number, as shown above.  (This is only required if you need it to be
+#   greater than 1.)  It could of course be different for different repos.
+#   Also see "Invocation" section below.
+
+# Invocation:
+#   Normally via git (see 'man githooks'), once it is setup as a post-receive
+#   hook.
+#
+#   However, if you set the "pending" limit high, and want to periodically
+#   "clean up" pending certs without necessarily waiting for the counter to
+#   trip, do the following (untested):
+#
+#       RB=$(gitolite query-rc GL_REPO_BASE)
+#       for r in $(gitolite list-phy-repos)
+#       do
+#           cd $RB/$repo.git
+#           unset GL_OPTIONS_GPC_PENDING    # if it is set higher up
+#           hooks/post-receive post_process
+#       done
+#
+#   That will take care of it.
+
+# Using without gitolite:
+#   Just set GL_OPTIONS_GPC_PENDING within the script (maybe read it from git
+#   config).  Everything else is independent of gitolite.
+
+# ----------------------------------------------------------------------
+# make it work on BSD also (but NOT YET TESTED on FreeBSD!)
+uname_s=`uname -s`
+if [ "$uname_s" = "Linux" ]
+then
+    _lock() { flock "$@"; }
+else
+    _lock() { lockf -k "$@"; }
+    # I'm assuming other BSDs also have this; I only have FreeBSD.
+fi
+
+# ----------------------------------------------------------------------
+# standard stuff
+die() { echo "$@" >&2; exit 1; }
+warn() { echo "$@" >&2; }
+
+# ----------------------------------------------------------------------
+# if there are no arguments, we're running as a "post-receive" hook
+if [ -z "$1" ]
+then
+    # note the lock file used
+    _lock .gpc.lock $0 cat_blob
+
+    # if you want to initiate the post-processing ONLY from outside (for
+    # example via cron), comment out the next line.
+    exec $0 post_process
+fi
+
+# ----------------------------------------------------------------------
+# the 'post_process' part; see "Invocation" section in the doc at the top
+if [ "$1" = "post_process" ]
+then
+    # this is the same lock file as above
+    _lock .gpc.lock $0 count_and_rotate $$
+
+    [ -d git-push-certs.$$ ] || exit 0
+
+    # but this is a different one
+    _lock .gpc.ref.lock $0 update_ref $$
+
+    exit 0
+fi
+
+# ----------------------------------------------------------------------
+# other values for "$1" are internal use only
+
+if [ "$1" = "cat_blob" ]
+then
+    mkdir -p git-push-certs
+    git cat-file blob $GIT_PUSH_CERT > git-push-certs/$GIT_PUSH_CERT
+    echo $GIT_PUSH_CERT >> git-push-certs/.blob.list
+fi
+
+if [ "$1" = "count_and_rotate" ]
+then
+    count=$(ls git-push-certs | wc -l)
+    if test $count -ge ${GL_OPTIONS_GPC_PENDING:-1}
+    then
+        # rotate the directory
+        mv git-push-certs git-push-certs.$2
+    fi
+fi
+
+if [ "$1" = "update_ref" ]
+then
+    # use a different index file for all this
+    GIT_INDEX_FILE=push_certs_index; export GIT_INDEX_FILE
+
+    # prepare the special ref to receive commits
+    PUSH_CERTS=refs/push-certs
+    if git rev-parse -q --verify $PUSH_CERTS >/dev/null
+    then
+        git read-tree $PUSH_CERTS
+    else
+        git read-tree --empty
+        T=$(git write-tree)
+        C=$(echo 'start' | git commit-tree $T)
+        git update-ref $PUSH_CERTS $C
+    fi
+
+    # for each cert blob...
+    for b in `cat git-push-certs.$2/.blob.list`
+    do
+        cf=git-push-certs.$2/$b
+
+        # it's highly unlikely that the blob got GC-ed already but write it
+        # back anyway, just in case
+        B=$(git hash-object -w $cf)
+
+        # bit of a sanity check
+        [ "$B" = "$b" ] || warn "this should not happen: $B is not equal to $b"
+
+        # for each ref described within the cert, update the index
+        for ref in `cat $cf | egrep '^[a-f0-9]+ [a-f0-9]+ refs/' | cut -f3 -d' '`
+        do
+            git update-index --add --cacheinfo 100644,$b,$ref
+            # we're using the ref name as a "fake" filename, so people can,
+            # for example, 'git log refs/push-certs -- refs/heads/master', to
+            # see all the push certs pertaining to the master branch.  This
+            # idea came from Junio Hamano, the git maintanier (I certainly
+            # don't deal with git plumbing enough to have thought of it!)
+        done
+
+        T=$(git write-tree)
+        C=$(
+            (
+                echo "git push cert blob $b"
+                echo
+                cat $cf | grep ^pusher | perl -pe 's/\d{10}.*/localtime $&/e'
+                cat $cf | grep ^pushee
+                echo
+                cat $cf | egrep '^[a-f0-9]+ [a-f0-9]+ refs/'
+            ) | git commit-tree -p $PUSH_CERTS $T
+        )
+        git update-ref $PUSH_CERTS $C
+
+        rm -f $cf
+    done
+    rm -f git-push-certs.$2/.blob.list
+    rmdir git-push-certs.$2
+fi
