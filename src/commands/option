@@ -1,0 +1,127 @@
+#!/usr/bin/perl
+
+# ----------------------------------------------------------------------
+# gitolite command to allow repo "owners" to set "options" on repos
+
+# This command can be run by a user to set "options" for any repo that she
+# owns.
+#
+# However, gitolite does *not* have the concept of an incremental "compile",
+# and options are only designed to be specified in the gitolite.conf file
+# (which a user should not be able to even see!).  Therefore, we allow one
+# specific file (conf/options.conf) to be manipulated by a remote user in a
+# *controlled* fashion, and this file is "include"d in the main gitolite.conf
+# file.
+
+# WARNINGS:
+#   1.  Runs "gitolite compile" at the end.  On really huge systems (where the
+#       sum total of the conf files is in the order of tens of thousands of
+#       lines) this may take a second or two :)
+#   2.  Since "options.conf" is not part of the admin repo, you may need to
+#       back it up separately, just like you currently back up gl-creator and
+#       gl-perms files from individual repos.
+#   3.  "options.conf" is formatted very strictly because it's not meant to be
+#       human edited.  If you edit it directly on the server, be careful.
+
+# Relevant gitolite doc links:
+#   "wild" repos and "owners"
+#       http://gitolite.com/gitolite/wild.html
+#       http://gitolite.com/gitolite/wild.html#specifying-owners
+#       http://gitolite.com/gitolite/wild.html#appendix-1-owner-and-creator
+#   gitolite "options"
+#       http://gitolite.com/gitolite/options.html
+#   the "include" statement
+#       http://gitolite.com/gitolite/conf.html#include
+
+# setup:
+#   1.  Enable the command by adding it to the ENABLE list in the rc file.
+#
+#   2.  Make sure your gitolite.conf has this line at the end:
+#
+#           include "options.conf"
+#
+#       then add/commit/push.
+#
+#       Do NOT add a file called "options.conf" to your gitolite-admin repo!
+#       This means every time you compile (push the admin repo) you will get a
+#       warning about the missing file.
+#
+#       You can either "touch ~/.gitolite/conf/options.conf" on the server, or
+#       take *any* wild repo and add *any* option to create it.
+#
+#   3.  Specify options allowed to be changed by the user.  For example:
+#
+#           repo foo/..*
+#               C   =   blah blah
+#               ...other rules...
+#               option user-options = hook\..* foo bar[0-9].*
+#
+#       Users can then set any of these options, but no others.
+
+# ----------------------------------------------------------------------
+
+use strict;
+use warnings;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Easy;
+use Gitolite::Common;
+
+# ----------------------------------------------------------------------
+# usage and arg checks
+
+=for usage
+Usage:    ssh git@host option <repo> add <key> <val>
+          ssh git@host option <repo> del <key>
+          ssh git@host option <repo> list
+
+Add, delete, or list options for wild repos.  Keys must match one of the
+allowed patterns; your system administrator will tell you what they are.
+
+Doesn't check things like adding a key that already exists (simply overwrites
+without warning), deleting a key that doesn't, etc.
+=cut
+
+usage() if not @ARGV or $ARGV[0] eq '-h';
+
+my $OPTIONS = "$ENV{HOME}/.gitolite/conf/options.conf";
+
+my $repo = shift;
+die "sorry, you are not authorised\n" unless owns($repo);
+
+my $op = shift; usage() unless $op =~ /^(add|del|list)$/;
+my $key = shift; usage() if not $key and $op ne 'list';
+my $val = shift; usage() if not $val and $op eq 'add';
+
+_print( $OPTIONS, "" ) unless -f $OPTIONS;    # avoid error on first run
+my $options = slurp($OPTIONS);
+
+# ----------------------------------------------------------------------
+# get 'list' out of the way first
+if ( $op eq 'list' ) {
+    print "$1\t$2\n" while $options =~ /^repo $repo\n    option (\S+) = (.*)/mg;
+    exit 0;
+}
+
+# ----------------------------------------------------------------------
+# that leaves 'add' or 'del'
+
+# NOTE: sanity check on characters in key and val not needed;
+# REMOTE_COMMAND_PATT is more restrictive than UNSAFE_PATT anyway!
+
+# check if the key is allowed
+my $user_options = option( $repo, 'user-options' );
+# this is a space separated list of allowed option keys
+my @validkeys = split( ' ', ( $user_options || '' ) );
+my @matched = grep { $key =~ /^$_$/i } @validkeys;
+_die "option '$key' not allowed\n" if ( @matched < 1 );
+
+# delete anyway
+$options =~ s/^repo $repo\n    option $key = .*\n//m;
+# then re-add if needed
+$options .= "repo $repo\n    option $key = $val\n" if $op eq 'add';
+
+# ----------------------------------------------------------------------
+# save and compile
+_print( $OPTIONS, $options );
+system("gitolite compile");
