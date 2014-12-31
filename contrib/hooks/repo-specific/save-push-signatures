@@ -9,6 +9,11 @@
 # that allows searching for all the certs pertaining to one specific branch
 # (thanks to Junio Hamano for this idea plus general brainstorming).
 
+# The "collection" happens only if $GIT_PUSH_CERT_NONCE_STATUS = OK; again,
+# thanks to Junio for pointing this out; see [1]
+#
+# [1]: https://groups.google.com/forum/#!topic/gitolite/7cSrU6JorEY
+
 # WARNINGS:
 #   Does not check that GIT_PUSH_CERT_STATUS = "G".  If you want to check that
 #   and FAIL the push, you'll have to write a simple pre-receive hook
@@ -26,12 +31,14 @@
 #       http://gitolite.com/gitolite/cookbook.html#v3.6-variation-repo-specific-hooks
 
 # Environment:
+#   GIT_PUSH_CERT_NONCE_STATUS should be "OK" (as mentioned above)
+#
 #   GL_OPTIONS_GPC_PENDING (optional; defaults to 1).  This is the number of
 #   git push certs that should be waiting in order to trigger the post
 #   processing.  You can set it within gitolite like so:
 #
-#   repo foo bar    # or maybe just 'repo @all'
-#       option ENV.GPC_PENDING = 5
+#       repo foo bar    # or maybe just 'repo @all'
+#           option ENV.GPC_PENDING = 5
 
 # Setup:
 #   Set up this code as a post-receive hook for whatever repos you need to.
@@ -82,6 +89,11 @@ warn() { echo "$@" >&2; }
 # if there are no arguments, we're running as a "post-receive" hook
 if [ -z "$1" ]
 then
+    # ignore if it may be a replay attack
+    [ "$GIT_PUSH_CERT_NONCE_STATUS" = "OK" ] || exit 1
+    # I don't think "exit 1" does anything in a post-receive anyway, so that's
+    # just a symbolic gesture!
+
     # note the lock file used
     _lock .gpc.lock $0 cat_blob
 
@@ -161,21 +173,12 @@ then
             # we're using the ref name as a "fake" filename, so people can,
             # for example, 'git log refs/push-certs -- refs/heads/master', to
             # see all the push certs pertaining to the master branch.  This
-            # idea came from Junio Hamano, the git maintanier (I certainly
+            # idea came from Junio Hamano, the git maintainer (I certainly
             # don't deal with git plumbing enough to have thought of it!)
         done
 
         T=$(git write-tree)
-        C=$(
-            (
-                echo "git push cert blob $b"
-                echo
-                cat $cf | grep ^pusher | perl -pe 's/\d{10}.*/localtime $&/e'
-                cat $cf | grep ^pushee
-                echo
-                cat $cf | egrep '^[a-f0-9]+ [a-f0-9]+ refs/'
-            ) | git commit-tree -p $PUSH_CERTS $T
-        )
+        C=$( git commit-tree -p $PUSH_CERTS $T < $cf )
         git update-ref $PUSH_CERTS $C
 
         rm -f $cf
