@@ -102,7 +102,7 @@ sub main {
 
     # set up the repo and the attempted access
     my ( $verb, $repo ) = parse_soc();    # returns only for git commands
-    sanity($repo);
+    Gitolite::Conf::Load::sanity($repo, $REPONAME_PATT);
     $ENV{GL_REPO} = $repo;
     my $aa = ( $verb =~ 'upload' ? 'R' : 'W' );
 
@@ -169,13 +169,6 @@ sub parse_soc {
     }
 
     _die "unknown git/gitolite command: '$soc'";
-}
-
-sub sanity {
-    my $repo = shift;
-    _die "'$repo' contains bad characters" if $repo !~ $REPONAME_PATT;
-    _die "'$repo' ends with a '/'"         if $repo =~ m(/$);
-    _die "'$repo' contains '..'"           if $repo =~ m(\.\.);
 }
 
 # ----------------------------------------------------------------------

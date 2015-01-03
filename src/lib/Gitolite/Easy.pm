@@ -195,7 +195,7 @@ sub textfile {
     # target file
     _die "need file" unless $h{file};
     _die "'$h{file}' contains a '/'" if $h{file} =~ m(/);
-    _sanity($h{file});
+    Gitolite::Conf::Load::sanity($h{file}, $REPONAME_PATT);
 
     # target file's location.  This can come from one of two places: dir
     # (which comes from our code, so does not need to be sanitised), or repo,
@@ -203,7 +203,7 @@ sub textfile {
     _die "need exactly one of repo or dir" unless $h{repo} xor $h{dir};
     _die "'$h{dir}' does not exist" if $h{dir} and not -d $h{dir};
     if ($h{repo}) {
-        _sanity($h{repo});
+        Gitolite::Conf::Load::sanity($h{repo}, $REPONAME_PATT);
         $h{dir} = "$rc{GL_REPO_BASE}/$h{repo}.git";
         _die "repo '$h{repo}' does not exist" if not -d $h{dir};
 
@@ -231,14 +231,6 @@ sub textfile {
 }
 
 # ----------------------------------------------------------------------
-
-sub _sanity {
-    my $name = shift;
-    _die "'$name' contains bad characters" if $name !~ $REPONAME_PATT;
-    _die "'$name' ends with a '/'"         if $name =~ m(/$);
-    _die "'$name' contains '..'"           if $name =~ m(\.\.);
-}
-
 
 sub valid_user {
     _die "GL_USER not set" unless exists $ENV{GL_USER};
