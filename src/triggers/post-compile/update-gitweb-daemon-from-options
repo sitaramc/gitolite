@@ -51,4 +51,4 @@ trap "rm -rf $tmp" 0
 gitolite list-phy-repos | sort | tee $tmp/all | gitolite git-config % gitolite-options.daemon | cut -f1 > $tmp/daemon
 
 comm -23 $tmp/all $tmp/daemon | perl -lne 'unlink "$ENV{RB}/$_.git/$ENV{EO}"'
-cat               $tmp/daemon | perl -MGitolite::Easy -lne 'textfile( file => $ENV{EO}, repo => $_, text = "");'
+cat               $tmp/daemon | perl -I"$GL_LIBDIR" -MGitolite::Easy -lne 'textfile( file => $ENV{EO}, repo => $_, text => "");'
