@@ -46,11 +46,11 @@ $rc{LOG_TEMPLATE}  = "$ENV{HOME}/.gitolite/logs/gitolite-%y-%m.log";
 # ----------------------------------------------------------------------
 
 #<<<
-$REMOTE_COMMAND_PATT  =                qr(^[-0-9a-zA-Z._\@/+ :,\%=]*$);
-$REF_OR_FILENAME_PATT =     qr(^[0-9a-zA-Z][-0-9a-zA-Z._\@/+ :,]*$);
-$REPONAME_PATT        =  qr(^\@?[0-9a-zA-Z][-0-9a-zA-Z._\@/+]*$);
-$REPOPATT_PATT        = qr(^\@?[[0-9a-zA-Z][-0-9a-zA-Z._\@/+\\^$|()[\]*?{},]*$);
-$USERNAME_PATT        =  qr(^\@?[0-9a-zA-Z][-0-9a-zA-Z._\@+]*$);
+$REMOTE_COMMAND_PATT  =                qr(^[-0-9\p{Letter}._\@/+ :,\%=]*$);
+$REF_OR_FILENAME_PATT =     qr(^[0-9\p{Letter}][-0-9\p{Letter}._\@/+ :,]*$);
+$REPONAME_PATT        =  qr(^\@?[0-9\p{Letter}][-0-9\p{Letter}._\@/+]*$);
+$REPOPATT_PATT        = qr(^\@?[[0-9\p{Letter}][-0-9\p{Letter}._\@/+\\^$|()[\]*?{},]*$);
+$USERNAME_PATT        =  qr(^\@?[0-9\p{Letter}][-0-9\p{Letter}._\@+]*$);
 
 $UNSAFE_PATT          = qr([`~#\$\&()|;<>]);
 #>>>

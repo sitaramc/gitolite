@@ -10,7 +10,7 @@ package Gitolite::Common;
   say2    _die    _system slurp             tsh_lines
           trace           cleanup_conf_line tsh_try
           usage                             tsh_run
-          gen_lfn
+          gen_lfn         utf8match
           gl_log
 
           dd
@@ -21,6 +21,7 @@ package Gitolite::Common;
 use Exporter 'import';
 use File::Path qw(mkpath);
 use Carp qw(carp cluck croak confess);
+use Encode;
 
 use strict;
 use warnings;
@@ -177,6 +178,19 @@ sub slurp {
     local $/ = undef unless wantarray;
     my $fh = _open( "<", $_[0] );
     return <$fh>;
+}
+
+# PLEASE NOTE that this function is a bit of a band-aid type solution.  We'll
+# be using it piecemeal, as and when we find a place where unicode matching is
+# needed.  However, a *proper* solution would be to trap every point where
+# data "enters" the program, use decode() there, and similarly encode() at
+# every point where data exits the system... or at least that is my current
+# understanding, based on a quick readthru of some perl unicode man pages.
+sub utf8match {
+    # XXX for now it's a simple match; we don't cover even "/i"
+    my $txt = decode('UTF-8', +shift);
+    my $re = decode('UTF-8', +shift);
+    return $txt =~ /$re/;
 }
 
 sub dos2unix {
