@@ -29,7 +29,7 @@ my $op   = shift;    # on|off|status
 if ( $repo eq '@all' ) {
     _die "you are not authorized" if $ENV{GL_USER} and not is_admin();
 } else {
-    _die "you are not authorized" if $ENV{GL_USER} and not( owns($repo) or is_admin() );
+    _die "you are not authorized" if $ENV{GL_USER} and not( owns($repo) or is_admin() or ( can_write($repo) and $op eq 'status' ) );
 }
 
 my $msg = join( " ", @ARGV );
@@ -46,13 +46,15 @@ if ( $repo eq '@all' ) {
     target( $ENV{HOME} );
 } else {
     target("$rb/$repo.git");
+    target( $ENV{HOME} ) if $op eq 'status';
 }
+
+exit 0;
 
 sub target {
     my $repodir = shift;
     if ( $op eq 'status' ) {
         exit 1 if -e "$repodir/$sf";
-        exit 0;
     } elsif ( $op eq 'on' ) {
         unlink "$repodir/$sf";
     } elsif ( $op eq 'off' ) {
