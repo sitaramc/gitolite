@@ -82,7 +82,7 @@ sub access {
     $deny_rules = option( $repo, 'deny-rules' );
 
     # sanity check the only piece the user can control
-    _die "invalid characters in ref or filename: '$ref'\n" unless $ref =~ m(^VREF/NAME/) or $ref =~ $REF_OR_FILENAME_PATT;
+    _die "invalid characters in ref or filename: '$ref'\n" unless $ref =~ m(^VREF/NAME/) or utf8match($ref, $REF_OR_FILENAME_PATT);
     # apparently we can't always force sanity; at least what we *return*
     # should be sane/safe.  This pattern is based on REF_OR_FILENAME_PATT.
     ( my $safe_ref = $ref ) =~ s([^-0-9a-zA-Z._\@/+ :,])(.)g;
