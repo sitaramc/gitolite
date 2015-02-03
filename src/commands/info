@@ -97,11 +97,16 @@ sub listem {
         my $perm = '';
         $creator = creator($repo) if $lc;
 
-        my $desc = '';
-        for my $d ("$ENV{GL_REPO_BASE}/$repo.git/description") {
-            next unless $ld and -r $d;
-            $desc = slurp($d);
-            chomp($desc);
+        my $desc;
+        if ($ld) {
+            # use config value first, else 'description' file as second choice
+            my $k = 'gitweb.description';
+            my $d = "$ENV{GL_REPO_BASE}/$repo.git/description";
+            $desc = git_config( $repo, $k )->{$k} || '';
+            if ( !$desc and -r $d ) {
+                $desc = slurp($d);
+                chomp($desc);
+            }
         }
 
         for my $aa (@aa) {
