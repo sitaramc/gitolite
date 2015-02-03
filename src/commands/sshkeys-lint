@@ -17,6 +17,7 @@ $|++;
 
 my $in_gl_section = 0;
 my $warnings      = 0;
+my $KEYTYPE_REGEX = qr/\b(?:ssh-(?:rsa|dss|ed25519)|ecdsa-sha2-nistp(?:256|384|521))\b/;
 
 sub dbg {
     use Data::Dumper;
@@ -126,7 +127,7 @@ sub user {
     my $user = '';
     $user ||= "user $1"         if /^command=.*gitolite-shell (.*?)"/;
     $user ||= "unknown command" if /^command/;
-    $user ||= "shell access"    if /^ssh-(rsa|dss)/;
+    $user ||= "shell access"    if /$KEYTYPE_REGEX/;
 
     return $user;
 }
@@ -142,10 +143,10 @@ sub ak_comment {
 sub fprint {
     local $_ = shift;
     my ( $fh, $tempfn, $in );
-    if ( /ssh-(dss|rsa) / || /ecdsa-/ ) {
+    if ( /$KEYTYPE_REGEX/ ) {
         # an actual key was passed.  Since ssh-keygen requires an actual file,
         # make a temp file to take the data and pass on to ssh-keygen
-        s/^.* (ssh-dss|ssh-rsa|ecdsa-\S+)/$1/;
+        s/^.* ($KEYTYPE_REGEX)/$1/;
         use File::Temp qw(tempfile);
         ( $fh, $tempfn ) = tempfile();
         $in = $tempfn;
