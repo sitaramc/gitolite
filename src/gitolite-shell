@@ -67,6 +67,7 @@ sub in_http {
     # fake out SSH_ORIGINAL_COMMAND and SSH_CONNECTION when called via http,
     # so the rest of the code stays the same (except the exec at the end).
     http_simulate_ssh_connection();
+    $ENV{SSH_ORIGINAL_COMMAND} ||= '';
 
     $ENV{REMOTE_USER} ||= $rc{HTTP_ANON_USER};
     @ARGV = ( $ENV{REMOTE_USER} );
