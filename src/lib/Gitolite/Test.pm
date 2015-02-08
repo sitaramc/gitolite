@@ -63,8 +63,9 @@ try "
     ln -sf $ENV{PWD}/t/glt ~/bin
     ./install -ln
     cd; rm -vrf .gito* repositories
-    git config --global user.name \"gitolite tester\"
-    git config --global user.email \"tester\@example.com\"
+    git config --file $ENV{HOME}/.gitconfig.local user.name \"gitolite tester\"
+    git config --file $ENV{HOME}/.gitconfig.local user.email \"tester\@example.com\"
+    git config --global                           include.path \"~/.gitconfig.local\"
 
     # setup
     gitolite setup -a admin
