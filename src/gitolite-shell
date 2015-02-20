@@ -36,6 +36,12 @@ my $soc = $ENV{SSH_ORIGINAL_COMMAND};
 $soc =~ s/[\n\r]+/<<newline>>/g;
 _die "I don't like newlines in the command: '$soc'\n" if $ENV{SSH_ORIGINAL_COMMAND} ne $soc;
 
+# allow gitolite-shell to be used as "$SHELL".  Experts only; no support, no docs
+if (@ARGV and $ARGV[0] eq '-c') {
+    shift;
+    $ARGV[0] =~ s/^$0 //;
+}
+
 # the INPUT trigger massages @ARGV and $ENV{SSH_ORIGINAL_COMMAND} as needed
 trigger('INPUT');
 
