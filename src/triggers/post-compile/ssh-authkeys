@@ -82,7 +82,7 @@ sub sanity {
     _mkdir( $akdir, 0700 ) if not -d $akdir;
     if ( not -f $akfile ) {
         _print( $akfile, "" );
-        chmod 0700, $akfile;
+        chmod 0600, $akfile;
     }
 }
 
