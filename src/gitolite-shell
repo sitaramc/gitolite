@@ -39,7 +39,7 @@ _die "I don't like newlines in the command: '$soc'\n" if $ENV{SSH_ORIGINAL_COMMA
 # allow gitolite-shell to be used as "$SHELL".  Experts only; no support, no docs
 if (@ARGV and $ARGV[0] eq '-c') {
     shift;
-    $ARGV[0] =~ s/^$0 //;
+    $ARGV[0] =~ s/^$0 // or _die "unknown git/gitolite command: '$ARGV[0]'";
 }
 
 # the INPUT trigger massages @ARGV and $ENV{SSH_ORIGINAL_COMMAND} as needed
