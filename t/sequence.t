@@ -34,7 +34,7 @@ try "
         /To file:///foo/u1/bar/
         /\\[new branch\\]      master -> master/
     echo WRITERS u2 | glt perms u1 foo/u1/bar
-    glt perms u1 -l foo/u1/bar
+    glt perms u1 foo/u1/bar -l
         /WRITERS u2/
     # expand
     glt info u2
@@ -78,7 +78,7 @@ try "
         /To file:///foo/u1/bar/
         /\\[new branch\\]      master -> master/
     echo WRITERS u2 | glt perms u1 foo/u1/bar
-    glt perms u1 -l foo/u1/bar
+    glt perms u1 foo/u1/bar -l
         /WRITERS u2/
     # expand
     glt info u2
@@ -106,7 +106,7 @@ try "
     echo READERS u2 | glt perms u1 -c foo/u1/baz
         /Initialized empty Git repository in .*/foo/u1/baz.git/
 
-    glt perms u1 -l foo/u1/baz
+    glt perms u1 foo/u1/baz -l
         /READERS u2/
     # expand
     glt info u2

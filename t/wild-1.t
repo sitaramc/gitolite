@@ -93,7 +93,7 @@ glt clone u5 file:///foo/u4/a12 u5a12;  !ok;    /R any foo/u4/a12 u5 DENIED by f
 glt perms u4 foo/u4/a12 + READERS u5
 glt perms u4 foo/u4/a12 + WRITERS u6
 
-glt perms u4 -l foo/u4/a12
+glt perms u4 foo/u4/a12 -l
 ";
 
 cmp 'READERS u5

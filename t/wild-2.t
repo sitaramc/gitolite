@@ -94,7 +94,7 @@ glt perms u4 foo/u4/a12 + READERS u5
 glt perms u4 foo/u4/a12 + WRITERS u6
 
 # getperms
-glt perms u4 -l foo/u4/a12
+glt perms u4 foo/u4/a12 -l
 ";
 
 cmp 'READERS u5

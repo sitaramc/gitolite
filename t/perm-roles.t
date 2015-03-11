@@ -64,7 +64,7 @@ glt push u1 file:///foo/u1/u1r1 t1
 
 # add u2 to WRITERS
 echo WRITERS \@g2 | glt perms u1 foo/u1/u1r1
-glt perms u1 -l foo/u1/u1r1
+glt perms u1 foo/u1/u1r1 -l
         /WRITERS \@g2/
 
 glt fetch u1
@@ -96,7 +96,7 @@ glt push u2 file:///foo/u1/u1r1 t2
 
 # change u2 to READERS
 echo READERS u2 | glt perms u1 foo/u1/u1r1
-glt perms u1 -l foo/u1/u1r1
+glt perms u1 foo/u1/u1r1 -l
         /READERS u2/
 
 glt fetch u1
@@ -122,7 +122,7 @@ try "
     gitolite compile;   ok or die compile failed
     /usr/bin/printf 'READERS u6\\nMANAGERS u2\\n' | glt perms u1 foo/u1/u1r1
                             ok;    !/Invalid role 'MANAGERS'/
-    glt perms u1 -l foo/u1/u1r1
+    glt perms u1 foo/u1/u1r1 -l
 ";
 
 cmp 'READERS u6
@@ -169,7 +169,7 @@ gitolite compile;   ok or die compile failed
 # add u2 to now valid TESTERS
 echo TESTERS u2 | glt perms u1 foo/u1/u1r1
         !/Invalid role 'TESTERS'/
-glt perms u1 -l foo/u1/u1r1
+glt perms u1 foo/u1/u1r1 -l
 ";
 
 cmp 'TESTERS u2

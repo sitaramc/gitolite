@@ -22,6 +22,7 @@ confreset;confadd '
     repo cc/..*
         C       =   u4
         RW+     =   CREATOR u5
+        R       =   READERS
 ';
 
 try "ADMIN_PUSH set1; !/FATAL/" or die text();

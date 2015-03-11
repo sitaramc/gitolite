@@ -53,7 +53,7 @@ try "
     glt perms u1 bar/u1/try1 + READERS daemon
     !/./
 
-    glt perms u1 -l bar/u1/try1
+    glt perms u1 bar/u1/try1 -l
     /READERS daemon/
 
     find $h/repositories -name git-daemon-export-ok
@@ -65,7 +65,7 @@ try "
 
     glt perms u1 bar/u1/try2 + READERS gitweb
 
-    glt perms u1 -l bar/u1/try2
+    glt perms u1 bar/u1/try2 -l
     /READERS gitweb/
 
     find $h/repositories -name git-daemon-export-ok

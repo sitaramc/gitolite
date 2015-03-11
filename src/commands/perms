@@ -8,18 +8,22 @@ use Gitolite::Common;
 use Gitolite::Easy;
 
 =for usage
-Usage:  ssh git@host perms -l <repo>
-        ssh git@host perms <repo> - <rolename> <username>
-        ssh git@host perms <repo> + <rolename> <username>
+perms -- list or set permissions for user-created ("wild") repo.
 
-List or set permissions for user-created ("wild") repo.  The first usage shown
-will list the current contents of the permissions file.  The other two will
-change permissions, adding or removing a user from a role.
+Usage summary:
+    ssh git@host perms <repo> -l
+        # list current permissions on repo
+    ssh git@host perms <repo> -lr
+        # list available roles and their access rights
+
+    ssh git@host perms <repo> + <rolename> <username>
+        # change permissions: add a user to a role
+    ssh git@host perms <repo> - <rolename> <username>
+        # change permissions: remove a user from a role
 
 Examples:
-    ssh git@host perms foo + READERS user1
-    ssh git@host perms foo + READERS user2
-    ssh git@host perms foo + READERS user3
+    ssh git@host perms my/repo + READERS alice
+    ssh git@host perms my/repo + WRITERS bob
 
 ----
 There is also a batch mode useful for scripting and bulk loading.  Do not
@@ -38,11 +42,8 @@ $ENV{GL_USER} or _die "GL_USER not set";
 
 my $generic_error = "repo does not exist, or you are not authorised";
 
-my $list = 0;
-if ( $ARGV[0] eq '-l' ) {
-    $list++;
-    shift;
-    getperms(@ARGV);    # doesn't return
+if ( @ARGV >= 2 and $ARGV[1] eq '-l' ) {
+    getperms($ARGV[0]);    # doesn't return
 }
 
 # auto-create the repo if -c passed and repo doesn't exist
@@ -63,7 +64,13 @@ if ( $ARGV[0] eq '-c' ) {
 }
 
 my $repo = shift;
-setperms(@ARGV);
+
+if ( $ARGV[0] eq '-lr' ) {
+    list_roles();
+    exit 0;
+} else {
+    setperms(@ARGV);
+}
 
 # cache control
 if ($rc{CACHE}) {
@@ -96,7 +103,7 @@ sub setperms {
         @ARGV = ();
         my @a;
         for (<>) {
-            _die "Invalid role '$1'; check the rc file" if /(\S+)/ and not $rc{ROLES}{$1};
+            invalid_role($1) if /(\S+)/ and not $rc{ROLES}{$1};
             push @a, $_;
         }
         print STDERR "\n";    # make sure Ctrl-C gets caught
@@ -107,7 +114,6 @@ sub setperms {
     _die "Invalid syntax.  Please re-run with '-h' for detailed usage" if @_ != 3;
     my ( $op, $role, $user ) = @_;
     _die "Invalid syntax.  Please re-run with '-h' for detailed usage" if $op ne '+' and $op ne '-';
-    _die "Invalid role '$role'; check the rc file"                     if not $rc{ROLES}{$role};
     _die "Invalid user '$user'"                                        if not $user =~ $USERNAME_PATT;
 
     my $text = '';
@@ -123,6 +129,7 @@ sub setperms {
             _print( $pf, @text );
         }
     } else {
+        invalid_role($role) unless grep { $_->[3] eq $role } load_roles();
         if ($present) {
             _warn "'$role $user' already present in file";
         } else {
@@ -131,4 +138,51 @@ sub setperms {
             _print( $pf, @text );
         }
     }
+}
+
+my @rules;
+
+sub load_roles {
+    return @rules if @rules;
+
+    require Gitolite::Conf::Load;
+    Gitolite::Conf::Load::load($repo);
+
+    my %repos = %Gitolite::Conf::Load::repos;
+    my @repo_memberships = Gitolite::Conf::Load::memberships('repo', $repo);
+
+    for my $rp (@repo_memberships) {
+        my $hr = $repos{$rp};
+        for my $r ( keys %$hr ) {
+            next unless $r =~ s/^@//;
+            next unless $rc{ROLES}{$r};
+            map { $_->[3] = $r } @{ $hr->{"\@$r"} };
+            push @rules, @{ $hr->{"\@$r"} };
+        }
+    }
+    return @rules;
+}
+
+sub invalid_role {
+    my $role = shift;
+
+    print STDERR "Invalid role '$role'; valid roles for this repo:\n";
+    list_roles();
+    exit 1;
+}
+
+sub list_roles {
+
+    my @rules = sort { $a->[0] <=> $b->[0] } load_roles();
+
+    for (@rules) {
+        $_->[2] =~ s(^refs/heads/)();
+        $_->[2] = '--any--' if $_->[2] eq 'refs/.*';
+    }
+
+    my $max = 0;
+    map { $max = $_ if $_ > $max } map { length($_->[2]) } @rules;
+    printf("\t%s\t%*s\t \t%s\n", "perm",  -$max, "ref",   "role");
+    printf("\t%s\t%*s\t \t%s\n", "----",  -$max, "---",   "----");
+    printf("\t%s\t%*s\t=\t%s\n", $_->[1], -$max, $_->[2], $_->[3]) for @rules;
 }

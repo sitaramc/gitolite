@@ -51,7 +51,7 @@ try "
 
     # \@devs can R try1
     echo READERS \@devs | glt perms u1 bar/u1/try1; ok
-    glt perms u1 -l bar/u1/try1
+    glt perms u1 bar/u1/try1 -l
         /READERS \@devs/
         !/WRITERS \@leads/
 
@@ -68,7 +68,7 @@ try "
 
 # combo of previous 2
     /usr/bin/printf 'READERS \@devs\\nWRITERS \@leads\\n' | glt perms u1 bar/u1/try1; ok
-    glt perms u1 -l bar/u1/try1
+    glt perms u1 bar/u1/try1 -l
         /READERS \@devs/
         /WRITERS \@leads/
     glt info u1 -lc
