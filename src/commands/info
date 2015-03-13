@@ -91,13 +91,16 @@ sub print_phy_repos {
 
 sub listem {
     my ( $repos, $lc, $ld, @aa ) = @_;
-    my $creator = '';
+    my @list;
+    my $mlr = 0;    # max length of reponame
+    my $mlc = 0;    # ...and creator
     for my $repo (@$repos) {
         next unless $repo =~ /$patt/;
-        my $perm = '';
+        my $creator = '';
+        my $desc    = '';
+        my $perm    = '';
         $creator = creator($repo) if $lc;
 
-        my $desc;
         if ($ld) {
             # use config value first, else 'description' file as second choice
             my $k = 'gitweb.description';
@@ -120,15 +123,16 @@ sub listem {
             $out{repos}{$repo}{creator}     = $creator if $lc;
             $out{repos}{$repo}{description} = $desc    if $ld;
             $out{repos}{$repo}{perms}       = _hash($perm);
-
-            next;
+        } else {
+            $mlr = length($repo) if ( $lc or $ld ) and $mlr < length($repo);
+            $mlc = length($creator) if $lc and $ld and $mlc < length($creator);
+            push @list, [ $perm, $repo, $creator, $desc ];
         }
-
-        print "$perm\t$repo";
-        print "\t$creator" if $lc;
-        print "\t$desc"    if $ld;
-        print "\n";
     }
+    return if $json;
+
+    my $fmt = "%s\t%-${mlr}s\t%-${mlc}s\t%s\n";
+    map { s/\t\t/\t/; s/\s*$/\n/; print } map { sprintf $fmt, @$_ } @list;
 }
 
 sub _hash {
