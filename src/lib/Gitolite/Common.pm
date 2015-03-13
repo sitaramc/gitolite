@@ -226,7 +226,7 @@ sub cleanup_conf_line {
         # receiving *any* arg invalidates cache)
         return \@phy_repos if ( @phy_repos and not @_ );
 
-        for my $repo (`find . -name "*.git" -prune`) {
+        for my $repo (`find . -follow -name "*.git" -prune`) {
             chomp($repo);
             $repo =~ s(\./(.*)\.git$)($1);
             push @phy_repos, $repo;
