@@ -226,9 +226,11 @@ sub cleanup_conf_line {
         # receiving *any* arg invalidates cache)
         return \@phy_repos if ( @phy_repos and not @_ );
 
-        for my $repo (`find . -name "*.git" -prune`) {
+        my $cmd = 'find . ' . ($Gitolite::Rc::rc{REPO_SYMLINKS} || '') . ' -name "*.git" -prune';
+        for my $repo (`$cmd`) {
             chomp($repo);
-            $repo =~ s(\./(.*)\.git$)($1);
+            $repo =~ s/\.git$//;
+            $repo =~ s(^\./)();
             push @phy_repos, $repo;
         }
         trace( 3, scalar(@phy_repos) . " physical repos found" );

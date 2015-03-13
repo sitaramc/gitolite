@@ -224,13 +224,12 @@ sub new_wild_repo {
 
 sub hook_repos {
     trace(3);
+
     # all repos, all hooks
     _chdir( $rc{GL_REPO_BASE} );
+    my $phy_repos = list_phy_repos(1);
 
-    for my $repo (`find . -name "*.git" -prune`) {
-        chomp($repo);
-        $repo =~ s/\.git$//;
-        $repo =~ s(^\./)();
+    for my $repo ( @{$phy_repos} ) {
         hook_1($repo);
     }
 }
