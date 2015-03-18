@@ -115,7 +115,7 @@ sub fp_file {
     my $f  = shift;
     my $fp = `ssh-keygen -l -f '$f'`;
     chomp($fp);
-    _die "fingerprinting failed for '$f'" unless $fp =~ /([0-9a-f][0-9a-f](:[0-9a-f][0-9a-f])+)/;
+    _die "fingerprinting failed for '$f'" unless $fp =~ /([0-9a-f][0-9a-f](:[0-9a-f][0-9a-f])+)/ or $fp =~ m(SHA256:([A-ZA-z0-9+/]+));
     $fp = $1;
     return $fp;
 }
