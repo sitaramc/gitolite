@@ -65,7 +65,7 @@ if ( $ARGV[0] eq '-c' ) {
 
 my $repo = shift;
 
-if ( $ARGV[0] eq '-lr' ) {
+if ( @ARGV and $ARGV[0] eq '-lr' ) {
     list_roles();
     exit 0;
 } else {
