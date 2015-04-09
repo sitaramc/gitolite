@@ -1,0 +1,88 @@
+#!/usr/bin/perl
+use 5.10.0;
+
+# ----------------------------------------------------------------------
+# gitolite command to allow "git config" on repos (with some restrictions)
+
+# (Not to be confused with the 'git-config' command, which is used only in
+# server-side scripts, not remotely.)
+
+# setup:
+#   1.  Enable the command by adding it to the COMMANDS section in the ENABLE
+#       list in the rc file.
+#
+#   2.  Specify configs allowed to be changed by the user.  This is a space
+#       separated regex list.  For example:
+
+#           repo ...
+#               ... (various rules) ...
+#               option user-configs = hook\..* foo.bar[0-9].*
+
+use strict;
+use warnings;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Easy;
+use Gitolite::Common;
+
+# ----------------------------------------------------------------------
+# usage
+
+=for usage
+Usage:    ssh git@host config <repo> [git config options]
+
+Runs "git config" in the repo.  Only the following 3 syntaxes are supported
+(see 'man git-config'):
+
+          --add name value
+      --get-all name
+    --unset-all name
+         --list
+
+Your administrator should tell you what keys are allowed for the "name".
+=cut
+
+# ----------------------------------------------------------------------
+# arg checks
+
+my %nargs = qw(
+          --add 3
+      --get-all 2
+    --unset-all 2
+         --list 1
+     );
+
+usage() if not @ARGV or $ARGV[0] eq '-h';
+
+my $repo = shift;
+
+my ($op, $key, $val) = @ARGV;
+usage() unless $op and exists $nargs{$op} and @ARGV == $nargs{$op};
+
+# ----------------------------------------------------------------------
+# authorisation checks
+
+die "sorry, you are not authorised\n" unless
+    owns($repo)
+        or
+    ( ( $op eq '--get-all' or $op eq '--list' )
+        ? can_read($repo)
+        : ( can_write($repo) and option( $repo, 'writer-is-owner' ) )
+    );
+
+# ----------------------------------------------------------------------
+# key validity checks
+
+unless ($op eq '--list') {
+    my $user_configs = option( $repo, 'user-configs' );
+    # this is a space separated list of allowed config keys
+    my @validkeys = split( ' ', ( $user_configs || '' ) );
+    my @matched = grep { $key =~ /^$_$/i } @validkeys;
+    _die "config '$key' not allowed\n" if ( @matched < 1 );
+}
+
+# ----------------------------------------------------------------------
+# go!
+
+_chdir("$rc{GL_REPO_BASE}/$repo.git");
+_system( "git", "config", @ARGV );
