@@ -18,12 +18,13 @@ my $cmd = $ENV{SSH_ORIGINAL_COMMAND};
 
 # Expect commands like:
 #   git-annex-shell 'configlist' '/~/repo'
+#   git-annex-shell 'configlist' '/repo'
 #   git-annex-shell 'sendkey' '/~/repo' 'key'
 # The parameters are always single quoted, and the repo path is always
 # the second parameter.
 # Further parameters are not validated here (see below).
 die "bad git-annex-shell command: $cmd"
-  unless $cmd =~ m#^(git-annex-shell '\w+' ')/\~/([0-9a-zA-Z][0-9a-zA-Z._\@/+-]*)('( .*|))$#;
+  unless $cmd =~ m#^(git-annex-shell '\w+' ')/(?:\~/)?([0-9a-zA-Z][0-9a-zA-Z._\@/+-]*)('( .*|))$#;
 my $start = $1;
 my $repo  = $2;
 my $end   = $3;
