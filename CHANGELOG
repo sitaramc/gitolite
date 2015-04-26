@@ -1,3 +1,26 @@
+2015-04-26  v3.6.3  allow limited use of 'git config' using the new 'config'
+                    command
+
+                    accept openssh 6.8's new fingerprint output format
+
+                    (finally!) allow limited symlinks within ~/repositories;
+                    see commit 8e36230 for details
+
+                    perms command now lists available roles
+
+                    minor backward compat breakage: 'perms -l repo' no longer
+                    works; see 'perms -h' for new usage
+
+                    allow gitolite-shell to be used as $SHELL (experts only;
+                    no support, no docs; see commit 9cd1e37 for details)
+
+                    help with 'git push --signed' using a post-receive hook to
+                    adopt push certs into 'refs/push-certs'; for details see
+                    contrib/hooks/repo-specific/save-push-signatures
+
+                    new 'transparent proxy' feature for git repos; see
+                    src/lib/Gitolite/Triggers/TProxy.pm for details
+
 2014-11-10  v3.6.2  disable ../ everywhere (see mailing list thread for
                     details)
 
