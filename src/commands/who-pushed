@@ -5,27 +5,17 @@ use warnings;
 use lib $ENV{GL_LIBDIR};
 use Gitolite::Easy;
 
-=for usage
-Usage:    ssh git@host who-pushed <repo> <SHA>
+usage($ARGV[1]) if $ARGV[1] and $ARGV[1] =~ /^[\w-]+$/ and $ARGV[0] eq '-h';
 
-Determine who pushed the given commit.  The first few hex digits of the SHA
-should suffice.
+( my $logdir = $ENV{GL_LOGFILE} ) =~ s(/[^/]+$)();
 
-Each line of the output contains the following fields: timestamp, a
-transaction ID, username, refname, and the old and new SHAs for the ref.
+# deal with migrate
+my %gl_log_lines_buffer;
+my $countr = 0;
+my $countl = 0;
+migrate(@ARGV) if $ARGV[0] eq '--migrate';   # won't return; exits right there
 
-We assume the logfile names have been left as default, or if changed, in such
-a way that they come up oldest first when sorted.
-
-The program searches ALL the log files, in reverse sorted order (i.e., newest
-first).  This means it could take a long time if your log directory is large
-and contains lots of old log files.  Patches to limit the search to an
-optional date range are welcome.
-
-Note on the "transaction ID" field: if looking at the log file doesn't help
-you figure out what its purpose is, please just ignore it.
-=cut
-
+# the normal who-pushed
 usage() if not @ARGV or @ARGV < 2 or $ARGV[0] eq '-h';
 usage() if $ARGV[1] !~ /^[0-9a-f]+$/i;
 
@@ -38,9 +28,11 @@ $ENV{GL_USER} and ( can_read($repo) or die "no read permissions on '$repo'" );
 
 my $repodir = "$ENV{GL_REPO_BASE}/$repo.git";
 chdir $repodir or die "repo '$repo' missing";
-( my $logdir = $ENV{GL_LOGFILE} ) =~ s(/[^/]+$)();
 
-for my $logfile ( reverse glob("$logdir/*") ) {
+my @logfiles = reverse glob("$logdir/*");
+@logfiles = ( "$repodir/gl-log" ) if -f "$repodir/gl-log";
+
+for my $logfile ( @logfiles ) {
     @ARGV = ($logfile);
     for my $line ( reverse grep { m(\tupdate\t($repo|$repodir)\t) } <> ) {
         chomp($line);
@@ -55,3 +47,106 @@ for my $logfile ( reverse glob("$logdir/*") ) {
         system("git rev-list $old$new 2>/dev/null | grep ^$sha >/dev/null && echo '$ts $pid $who $ref $d_old $new'");
     }
 }
+
+# ----------------------------------------------------------------------
+# migration
+
+sub migrate {
+    chdir $ENV{GL_REPO_BASE};
+    my @repos = `gitolite list-phy-repos`; chomp @repos;
+
+    my $count = scalar( grep { -f "$_.git/gl-log" } @repos );
+    if ( $count and ( $_[1] || '' ) ne '--force' ) {
+        say2 "$count repo(s) already have gl-log files.  To confirm overwriting, please re-run as:";
+        say2 "\tgitolite who-pushed --migrate --force";
+        say2 "see help ('-h', '-h logfiles', or '-h migrate') for details.";
+        exit 1;
+    }
+
+    my %repo_exists = map { $_ => 1 } @repos;
+    @ARGV = sort ( glob("$logdir/*") );
+    while (<>) {
+        say2 "processed '$ARGV'" if eof(ARGV);
+        next unless /\tupdate\t/;
+        my @f = split /\t/;
+        my $repo = $f[3];
+        if ($repo =~ m(^/)) {
+            $repo =~ s/^$ENV{GL_REPO_BASE}\///;
+            $repo =~ s/\.git$//;
+        }
+
+        gen_gl_log($repo, $_) if $repo_exists{$repo};
+    }
+    flush_gl_log();
+
+    exit 0;
+}
+sub gen_gl_log {
+    my ($repo, $l) = @_;
+
+    $countr++ unless $gl_log_lines_buffer{$repo};    # new repo, not yet seen
+    $countl++;
+    $gl_log_lines_buffer{$repo} .= $l;
+
+    # once we have buffered log lines for about 100 repos, or about 10,000 log
+    # lines, we flush them
+    flush_gl_log() if $countr >= 100 or $countl >= 10_000;
+}
+sub flush_gl_log {
+    while (my ($r, $l) = each %gl_log_lines_buffer) {
+        _print("$r.git/gl-log", $l);
+    }
+    %gl_log_lines_buffer = ();
+    say2 "flushed $countl lines to $countr repos...";
+    $countr = $countl = 0;
+}
+
+__END__
+
+=for usage
+Usage:    ssh git@host who-pushed <repo> <SHA>
+
+Determine who pushed the given commit.  The first few hex digits of the SHA
+should suffice.
+
+Each line of the output contains the following fields: timestamp, a
+transaction ID, username, refname, and the old and new SHAs for the ref.
+
+Note on the "transaction ID" field: if looking at the log file doesn't help
+you figure out what its purpose is, please just ignore it.
+
+TO SEE ADDITIONAL HELP, run with options "-h logfiles" or "-h migrate".
+=cut
+
+=for logfiles
+There are 2 places that gitolite logs to, based on the value give to the
+LOG_DEST rc variable.  By default, log files go to ~/.gitolite/logs, but you
+can choose to send them to syslog instead (in which case 'who-pushed' will not
+work), or to both syslog and the normal log files.
+
+In addition, gitolite can also be told to log just the "update" records to a
+special "gl-log" file in the bare repo directory.  This makes 'who-pushed'
+**much** faster (thanks to milki for the problem *and* the simple solution).
+
+'who-pushed' will look for that special file first and use only that if it is
+found.  Otherwise it will look in the normal gitolite log files, which will of
+course be much slower.
+=cut
+
+=for migrate
+If you installed gitolite before v3.6.4, and you wish to use the new, more
+efficient logging that helps who-pushed run faster, you should first update
+the rc file (see http://gitolite.com/gitolite/rc.html for notes on that) to
+specify a suitable value for LOG_DEST.
+
+After that you should probably do a one-time generation of the repo-specific
+'gl-log' files from the normal log files.  This can only be done from the
+server command line, even if the 'who-pushed' command has been enabled for
+remote access.
+
+To do this, just run 'gitolite who-pushed --migrate'.  If some of your repos
+already had gl-log files, it will warn you, and tell you how to override.
+You're only supposed to to use this *once* after upgrading to v3.6.4 and
+setting LOG_DEST in the rc file anyway.
+=cut
+

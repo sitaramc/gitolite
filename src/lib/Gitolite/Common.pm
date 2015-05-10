@@ -282,8 +282,19 @@ sub gl_log {
     my $ts = gen_ts();
     my $tid = $ENV{GL_TID} ||= $$;
 
-    # syslog
     $log_dest = $Gitolite::Rc::rc{LOG_DEST} || '' if not defined $log_dest;
+
+    # log (update records only) to "gl-log" in the bare repo dir; this is to
+    # make 'who-pushed' more efficient.  Since this is only for the update
+    # records, it is not a replacement for the other two types of logging.
+    if ($log_dest =~ /repo-log/ and $_[0] eq 'update') {
+        # if the log line is 'update', we're already in the bare repo dir
+        open my $lfh, ">>", "gl-log" or _die "open gl-log failed: $!";
+        print $lfh "$ts\t$tid\t$msg\n";
+        close $lfh;
+    }
+
+    # syslog
     if ($log_dest =~ /syslog/) {            # log_dest *includes* syslog
         if ($syslog_opened == 0) {
             require Sys::Syslog;
@@ -301,7 +312,7 @@ sub gl_log {
         # the priority/level of the syslog message.
         syslog( ( $msg =~ /^\t/ ? 'debug' : 'info' ), "%s", $msg);
 
-        return if $log_dest eq 'syslog';    # log_dest *equals* syslog
+        return if $log_dest !~ /normal/;
     }
 
     my $fh;

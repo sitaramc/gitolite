@@ -509,12 +509,17 @@ __DATA__
 
     # comment out if you don't need all the extra detail in the logfile
     LOG_EXTRA                       =>  1,
-    # syslog options
-    # 1. leave this section as is for normal gitolite logging
-    # 2. uncomment this line to log only to syslog:
+    # logging options
+    # 1. leave this section as is for 'normal' gitolite logging (default)
+    # 2. uncomment this line to log ONLY to syslog:
     # LOG_DEST                      => 'syslog',
     # 3. uncomment this line to log to syslog and the normal gitolite log:
     # LOG_DEST                      => 'syslog,normal',
+    # 4. prefixing "repo-log," to any of the above will **also** log just the
+    #    update records to "gl-log" in the bare repo directory:
+    # LOG_DEST                      => 'repo-log,normal',
+    # LOG_DEST                      => 'repo-log,syslog',
+    # LOG_DEST                      => 'repo-log,syslog,normal',
 
     # roles.  add more roles (like MANAGER, TESTER, ...) here.
     #   WARNING: if you make changes to this hash, you MUST run 'gitolite
