@@ -215,6 +215,7 @@ sub glrc {
 }
 
 my $all   = 0;
+my $dump  = 0;
 my $nonl  = 0;
 my $quiet = 0;
 
@@ -228,6 +229,13 @@ sub query_rc {
         for my $e ( sort keys %rc ) {
             print "$e=" . ( defined( $rc{$e} ) ? $rc{$e} : 'undef' ) . "\n";
         }
+        exit 0;
+    }
+
+    if ($dump) {
+        require Data::Dumper;
+        $Data::Dumper::Sortkeys = 1;
+        print Data::Dumper::Dumper \%rc;
         exit 0;
     }
 
@@ -350,9 +358,11 @@ sub _which {
 
 =for args
 Usage:  gitolite query-rc -a
+        gitolite query-rc -d
         gitolite query-rc [-n] [-q] rc-variable
 
     -a          print all variables and values (first level only)
+    -d          dump the entire rc structure
     -n          do not append a newline if variable is scalar
     -q          exit code only (shell truth; 0 is success)
 
@@ -379,6 +389,7 @@ Explore:
     gitolite query-rc -a
     # prints all first level variables and values, one per line.  Any that are
     # listed as HASH or ARRAY can be explored further in subsequent commands.
+    gitolite query-rc -d                # dump the entire rc structure
 =cut
 
 sub args {
@@ -387,13 +398,14 @@ sub args {
     require Getopt::Long;
     Getopt::Long::GetOptions(
         'all|a'   => \$all,
+        'dump|d'  => \$dump,
         'nonl|n'  => \$nonl,
         'quiet|q' => \$quiet,
         'help|h'  => \$help,
     ) or usage();
 
-    usage("'-a' cannot be combined with other arguments or options") if $all and ( @ARGV or $nonl or $quiet );
-    usage() if not $all and not @ARGV or $help;
+    _die("'-a' cannot be combined with other arguments or options; run with '-h' for usage") if $all and ( @ARGV or $dump or $nonl or $quiet );
+    usage() if not $all and not $dump and not @ARGV or $help;
     return @ARGV;
 }
 
