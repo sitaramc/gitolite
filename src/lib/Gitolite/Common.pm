@@ -113,13 +113,13 @@ sub _die {
 $SIG{__DIE__} = \&_die;
 
 sub usage {
-    _warn(shift) if @_;
     my $script = (caller)[1];
-    my $function = ( ( ( caller(1) )[3] ) || ( ( caller(0) )[3] ) );
+    my $function = shift if @_ and $_[0] =~ /^[\w-]+$/;
+    $function ||= ( ( ( caller(1) )[3] ) || ( ( caller(0) )[3] ) );
     $function =~ s/.*:://;
     my $code = slurp($script);
     $code =~ /^=for $function\b(.*?)^=cut/sm;
-    say2( $1 ? $1 : "...no usage message in $script" );
+    say( $1 ? $1 : "...no usage message for '$function' in $script" );
     exit 1;
 }
 
