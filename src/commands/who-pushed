@@ -63,6 +63,10 @@ sub migrate {
         exit 1;
     }
 
+    foreach my $r (@repos) {
+        _print("$r.git/gl-log", '');
+    }
+
     my %repo_exists = map { $_ => 1 } @repos;
     @ARGV = sort ( glob("$logdir/*") );
     while (<>) {
@@ -94,7 +98,9 @@ sub gen_gl_log {
 }
 sub flush_gl_log {
     while (my ($r, $l) = each %gl_log_lines_buffer) {
-        _print("$r.git/gl-log", $l);
+        open my $fh, ">>", "$r.git/gl-log" or _die "open flush_gl_log failed: $!";
+        print $fh $l;
+        close $fh;
     }
     %gl_log_lines_buffer = ();
     say2 "flushed $countl lines to $countr repos...";
