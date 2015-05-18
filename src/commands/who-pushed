@@ -15,6 +15,13 @@ my $countr = 0;
 my $countl = 0;
 migrate(@ARGV) if $ARGV[0] eq '--migrate';   # won't return; exits right there
 
+# tip search?
+my $tip_search = 0;
+if ($ARGV[0] eq '--tip') {
+    shift;
+    $tip_search = 1;
+}
+
 # the normal who-pushed
 usage() if not @ARGV or @ARGV < 2 or $ARGV[0] eq '-h';
 usage() if $ARGV[1] !~ /^[0-9a-f]+$/i;
@@ -44,7 +51,11 @@ for my $logfile ( @logfiles ) {
         $old = ""       if $d_old eq ( "0" x 40 );
         $old = "$old.." if $old;
 
-        system("git rev-list $old$new 2>/dev/null | grep ^$sha >/dev/null && echo '$ts $pid $who $ref $d_old $new'");
+        if ($tip_search) {
+            print "$ts $pid $who $ref $d_old $new\n" if $new =~ /^$sha/;
+        } else {
+            system("git rev-list $old$new 2>/dev/null | grep ^$sha >/dev/null && echo '$ts $pid $who $ref $d_old $new'");
+        }
     }
 }
 
@@ -110,10 +121,12 @@ sub flush_gl_log {
 __END__
 
 =for usage
-Usage:    ssh git@host who-pushed <repo> <SHA>
+uSAge:    ssh git@host who-pushed [--tip] <repo> <SHA>
 
 Determine who pushed the given commit.  The first few hex digits of the SHA
-should suffice.
+should suffice.  If the '--tip' option is supplied, it'll only look for the
+SHA among "tip" commits (i.e., search the "new SHA"s, without running the
+expensive 'git rev-parse' for each push).
 
 Each line of the output contains the following fields: timestamp, a
 transaction ID, username, refname, and the old and new SHAs for the ref.
