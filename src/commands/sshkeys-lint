@@ -163,7 +163,7 @@ sub fprint {
     # dbg("fp = $fp");
     close $fh;
     unlink $tempfn if $tempfn;
-    warn "$fp\n" unless $fp =~ /([0-9a-f][0-9a-f](:[0-9a-f][0-9a-f])+)/ or $fp =~ m(SHA256:([A-ZA-z0-9+/]+));
+    warn "$fp\n" unless $fp =~ /([0-9a-f][0-9a-f](:[0-9a-f][0-9a-f])+)/ or $fp =~ m(SHA256:([A-Za-z0-9+/]+));
 
     return $1;
 }
