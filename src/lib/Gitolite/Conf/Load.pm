@@ -123,9 +123,21 @@ sub access {
         trace( 2, "DENIED by $refex" ) if $perm eq '-';
         return "$aa $safe_ref $repo $user DENIED by $refex" if $perm eq '-';
 
-        # $perm can be RW\+?(C|D|CD|DC)?M?.  $aa can be W, +, C or D, or
-        # any of these followed by "M".
+        # For repo creation, perm will be C and aa will be "^C".  For branch
+        # access, $perm can be RW\+?(C|D|CD|DC)?M?, and $aa can be W, +, C or
+        # D, or any of these followed by "M".
+
+        # We need to turn $aa into a regex that can match a suitable $perm.
+        # This is trivially true for "^C", "W" and "D", but the others (+, C,
+        # M) need some tweaking.
+
+        # first, quote the '+':
         ( my $aaq = $aa ) =~ s/\+/\\+/;
+        # if aa is just "C", the user is trying to create a *branch* (not a
+        # *repo*), so let's make the pattern clearer to reflect that.
+        $aaq = "RW.*C" if $aaq eq "C";
+        # if the aa is, say "WM", make this "W.*M" because the perm could be
+        # 'RW+M', 'RW+CDM' etc, and they are all valid:
         $aaq =~ s/M/.*M/;
 
         $rc{RULE_TRACE} .= "A";
