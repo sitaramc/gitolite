@@ -56,7 +56,7 @@ if ( $repo ne '%' and $user ne '%' ) {
     # single repo, single user; no STDIN
     $ret = access( $repo, $user, $aa, $ref );
 
-    show() if $s;
+    show($ret) if $s;
 
     if ( $ret =~ /DENIED/ ) {
         print "$ret\n" unless $q;
@@ -81,7 +81,10 @@ while (<>) {
 }
 
 sub show {
-    my $in = $rc{RULE_TRACE} or die "this should not happen!";
+    my $ret = shift;
+    die "repo already exists; ^C won't work\n" if $ret =~ /DENIED by existence/;
+
+    my $in = $rc{RULE_TRACE} or die "this should not happen! $ret";
 
     print STDERR "legend:";
     print STDERR "
