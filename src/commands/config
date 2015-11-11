@@ -1,6 +1,13 @@
 #!/usr/bin/perl
 use 5.10.0;
 
+# ---- WARNING ----
+
+# If your site makes a distinction between "right to push the admin repo" and
+# "right to run arbitrary commands on the server" (i.e., if not all of your
+# "admins" have shell access to the server), this is a security risk. If that
+# is the case, DO NOT ENABLE THIS COMMAND.
+
 # ----------------------------------------------------------------------
 # gitolite command to allow "git config" on repos (with some restrictions)
 
@@ -9,7 +16,7 @@ use 5.10.0;
 
 # setup:
 #   1.  Enable the command by adding it to the COMMANDS section in the ENABLE
-#       list in the rc file.
+#       list in the rc file.  (Have you read the warning above?)
 #
 #   2.  Specify configs allowed to be changed by the user.  This is a space
 #       separated regex list.  For example:
