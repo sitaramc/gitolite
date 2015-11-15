@@ -24,19 +24,21 @@ my $driver = "$rc{LOCAL_CODE}/hooks/multi-hook-driver";
     chmod 0755, $driver;
 }
 
+my %repo_hooks;
 while (<>) {
     chomp;
     my ( $repo, $hook, $codes ) = split /\t/, $_;
     $codes ||= '';
 
-    # we don't allow fiddling with the admin repo
-    if ( $repo eq 'gitolite-admin' ) {
-        _warn "repo-specific-hooks: ignoring attempts to set hooks for the admin repo";
-        next;
-    }
-
     # get the hook name
     $hook =~ s/^gitolite-options\.hook\.//;
+    $hook =~ s/\..*//;
+
+    # this is a special case
+    if ( $repo eq 'gitolite-admin' and $hook eq 'post-update' ) {
+        _warn "repo-specific-hooks: ignoring attempts to set post-update hook for the admin repo";
+        next;
+    }
 
     unless ( $hook =~ /^(pre-receive|post-receive|post-update)$/ ) {
         _warn "repo-specific-hooks: '$hook' is not allowed, ignoring";
@@ -45,32 +47,39 @@ while (<>) {
     }
 
     my @codes = split /\s+/, $codes;
+    push @{ $repo_hooks{$repo}{$hook} }, @codes if @codes;
+}
 
-    my $dst = "$repo.git/hooks/$hook";
-    unlink( glob("$dst.*") );
+for my $repo (keys %repo_hooks) {
+    for my $hook (keys %{ $repo_hooks{$repo} }) {
+        my @codes = @{ $repo_hooks{$repo}{$hook} };
 
-    my $counter = "h00";
-    foreach my $code (@codes) {
-        if ( $code =~ m(^/|\.\.) ) {
-            _warn "repo-specific-hooks: double dot or leading slash not allowed in '$code'";
-            next;
+        my $dst = "$repo.git/hooks/$hook";
+        unlink( glob("$dst.*") );
+
+        my $counter = "h00";
+        foreach my $code (@codes) {
+            if ( $code =~ m(^/|\.\.) ) {
+                _warn "repo-specific-hooks: double dot or leading slash not allowed in '$code'";
+                next;
+            }
+
+            my $src = $rc{LOCAL_CODE} . "/hooks/repo-specific/$code";
+            my $dst = "$repo.git/hooks/$hook.$counter-$code";
+            unless ( -x $src ) {
+                _warn "repo-specific-hooks: '$src' doesn't exist or is not executable";
+                next;
+            }
+            unlink $dst;
+            symlink $src, $dst or _warn "could not symlink '$src' to '$dst'";
+            $counter++;
+
+            # no sanity checks for multiple overwrites of the same hook
         }
 
-        my $src = $rc{LOCAL_CODE} . "/hooks/repo-specific/$code";
-        my $dst = "$repo.git/hooks/$hook.$counter-$code";
-        unless ( -x $src ) {
-            _warn "repo-specific-hooks: '$src' doesn't exist or is not executable";
-            next;
-        }
         unlink $dst;
-        symlink $src, $dst or _warn "could not symlink '$src' to '$dst'";
-        $counter++;
-
-        # no sanity checks for multiple overwrites of the same hook
+        symlink $driver, $dst or die "could not symlink '$driver' to '$dst'";
     }
-
-    unlink $dst;
-    symlink $driver, $dst or die "could not symlink '$driver' to '$dst'";
 }
 
 __DATA__

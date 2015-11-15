@@ -9,7 +9,7 @@ use Gitolite::Test;
 # test script for partial copy feature
 # ----------------------------------------------------------------------
 
-try "plan 117";
+try "plan 128";
 my $h = $ENV{HOME};
 my $rb = `gitolite query-rc -n GL_REPO_BASE`;
 
@@ -47,6 +47,9 @@ confreset;confadd '
 
     repo baz
             RW+                 =   @all
+
+    repo frob
+            RW+                 =   @all
 ';
 
 try "ADMIN_PUSH repo-specific-hooks-0; !/FATAL/" or die text();
@@ -55,6 +58,7 @@ try "
     /Init.*empty.*foo\\.git/
     /Init.*empty.*bar\\.git/
     /Init.*empty.*baz\\.git/
+    /Init.*empty.*frob\\.git/
 ";
 
 my $failing_hook = "#!/bin/sh
@@ -65,11 +69,13 @@ exit 1
 put "$rb/foo.git/hooks/post-recieve", $failing_hook;
 put "$rb/bar.git/hooks/pre-recieve", $failing_hook;
 put "$rb/baz.git/hooks/post-update", $failing_hook;
+put "$rb/frob.git/hooks/post-update", $failing_hook;
 
 try "# Verify hooks
     ls -l $rb/foo.git/hooks/*;  ok;     !/post-receive -. .*local/hooks/multi-hook-driver/
     ls -l $rb/bar.git/hooks/*;  ok;     !/pre-receive -. .*local/hooks/multi-hook-driver/
     ls -l $rb/baz.git/hooks/*;  ok;     !/post-update -. .*local/hooks/multi-hook-driver/
+    ls -l $rb/frob.git/hooks/*; ok;     !/post-update -. .*local/hooks/multi-hook-driver/
 ";
 
 confreset;confadd '
@@ -85,6 +91,14 @@ confreset;confadd '
             RW+                 =   @all
             option hook.post-receive =  first
             option hook.post-update =  first second
+
+    repo frob
+            RW+                 =   @all
+            option hook.post-receive.b      =   first
+            option hook.post-receive.a      =   second
+
+    repo gitolite-admin
+            option hook.post-receive = second
 ';
 
 
@@ -101,6 +115,13 @@ try "# Verify hooks
                                         /post-update.h00-first/
                                         /post-update.h01-second/
                                         /post-update -. .*local/hooks/multi-hook-driver/
+    ls -l $rb/frob.git/hooks/*; ok;     /post-receive.h00-second/
+                                        /post-receive.h01-first/
+                                        /post-receive -. .*local/hooks/multi-hook-driver/
+    ls -l $rb/gitolite-admin.git/hooks/*
+                                ok;     /post-receive.h/
+                                        /post-receive -. .*local/hooks/multi-hook-driver/
+                                       !/post-update -. .*local/hooks/multi-hook-driver/
 ";
 
 try "
