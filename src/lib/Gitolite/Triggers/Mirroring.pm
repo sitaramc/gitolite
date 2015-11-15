@@ -234,6 +234,7 @@ sub push_to_slaves {
     delete $ENV{GL_USER};    # why?  see src/commands/mirror
 
     for my $s ( sort keys %slaves ) {
+        trace( 1, "push_to_slaves: skipping self" ), next if $s eq $hn;
         system("gitolite mirror push $s $repo </dev/null >/dev/null 2>&1 &") if $slaves{$s} eq 'async';
         system("gitolite mirror push $s $repo </dev/null >/dev/null 2>&1")   if $slaves{$s} eq 'sync';
         _warn "manual mirror push pending for '$s'"                          if $slaves{$s} eq 'nosync';
