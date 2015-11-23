@@ -97,7 +97,7 @@ if ( $cmd eq 'push' ) {
     _chdir("$repo.git");
 
     $host = '*' if $host eq 'all';
-    map { print_status($_) } sort glob("gl-slave-$host.status");
+    map { print_status($repo, $_) } sort glob("gl-slave-$host.status");
 } else {
     # strictly speaking, we could allow some of the possible commands remotely
     # also, at least for admins.  However, these commands are mainly intended
@@ -137,11 +137,12 @@ sub repo_master {
 }
 
 sub print_status {
+    my $repo = shift;
     my $file = shift;
     return unless -f $file;
     my $slave = $1 if $file =~ /^gl-slave-(.+)\.status$/;
     print "----------\n";
-    print "WARNING: previous mirror push to host '$slave' failed, status is:\n";
+    print "WARNING: previous mirror push of repo '$repo' to host '$slave' failed, status is:\n";
     print slurp($file);
     print "----------\n";
 }
