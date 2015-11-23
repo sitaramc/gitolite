@@ -36,6 +36,9 @@ Notes:
 
   - '-s' shows the rules (conf file name, line number, and rule) that were
     considered and how they fared.
+
+  - you can also test the ability to create wild repos if you set GL_USER to
+    the username and use ^C as the permission to check for.
 =cut
 
 usage() if not @ARGV or $h;
