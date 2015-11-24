@@ -16,7 +16,11 @@ use Gitolite::Conf::Load;
 
 =for usage
 Usage 1:    gitolite mirror push <slave> <repo>
+            gitolite mirror status <slave> <repo>
+            gitolite mirror status all <repo>
+            gitolite mirror status all all
 Usage 2:    ssh git@master-server mirror push <slave> <repo>
+            ssh git@master-server mirror status <slave> <repo>
 
 Forces a push of one repo to one slave.
 
@@ -29,11 +33,10 @@ Usage 2 can be initiated by *any* user who has *any* gitolite access to the
 master server, but it checks that the slave is in one of the slaves options
 before doing the push.
 
-MIRROR STATUS: To find the status of the last mirror push to any slave, run
-the same command except with 'status' instead of 'push'.  With usage 1, you
-can use the special name "all" to get the status of all slaves for the given
-repo.  (Admins wishing to find the status of all slaves for ALL repos will
-have to script it using the output of "gitolite list-phy-repos".)
+MIRROR STATUS: The usage examples above show what can be done.  The 'status
+all <repo>' usage checks the status of all the slaves defined for the given
+repo.  The 'status all all' usage is special, in that it only prints a list of
+repos that have *some* error, instead of dumping all the error info itself.
 
 SERVER LIST: 'gitolite mirror list master <reponame>' and 'gitolite mirror
 list slaves <reponame>' will show you the name of the master server, and list
@@ -90,6 +93,20 @@ if ( $cmd eq 'push' ) {
 
     exit $errors;
 } elsif ($cmd eq 'status') {
+    if (not exists $ENV{GL_USER} and $repo eq 'all') {
+        # this means 'gitolite mirror status all all'; in this case we only
+        # return a list of repos that *have* status files (indicating some
+        # problem).  It's upto you what you do with that list.  This is not
+        # allowed to be run remotely; far too wide ranging, sorry.
+        _chdir( $rc{GL_REPO_BASE} );
+        my $phy_repos = list_phy_repos(1);
+        for my $repo ( @{$phy_repos} ) {
+            my @x = glob("$rc{GL_REPO_BASE}/$repo.git/gl-slave-*.status");
+            print "$repo\n" if @x;
+        }
+        exit 0;
+    }
+
     valid_slave( $host, $repo ) if exists $ENV{GL_USER};
     # will die if host not in slaves for repo
 
