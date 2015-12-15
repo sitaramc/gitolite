@@ -14,7 +14,7 @@ my @cmd_plus_args = @ARGV;    # the actual 'gitolite mirror ...' command
 
 open( my $fhrun, ">", "$lockbase.run" ) or die "open '$lockbase.run' failed: $!";
 if ( flock( $fhrun, LOCK_EX | LOCK_NB ) ) {
-    # got run state; you're good to go
+    # got run lock; you're good to go
 
     system(@cmd_plus_args);
 
@@ -26,9 +26,9 @@ if ( flock( $fhrun, LOCK_EX | LOCK_NB ) ) {
 
 open( my $fhqueue, ">", "$lockbase.queue" ) or die "open '$lockbase.queue' failed: $!";
 if ( flock( $fhqueue, LOCK_EX | LOCK_NB ) ) {
-    # got queue state, now block waiting for "run" state
+    # got queue lock, now block waiting for "run" lock
     flock( $fhrun, LOCK_EX );
-    # got run state, so take yourself our of "queue" state, then run
+    # got run lock, so take yourself out of "queue" state, then run
     flock( $fhqueue, LOCK_UN );
 
     system(@cmd_plus_args);
@@ -38,5 +38,5 @@ if ( flock( $fhqueue, LOCK_EX | LOCK_NB ) ) {
 }
 
 # "queue" lock also failed; someone is running AND someone is queued; we can go home
-say STDERR "'$lockbase' already running and 1 in queue";
+say STDERR "INFO: nothing to do/queue; '$lockbase' already running and 1 in queue";
 exit 0;
