@@ -18,8 +18,6 @@
 
 # - assumes you don't have a subdir in keydir called "__split_keys__"
 
-# - God help you if you try to throw in a putty key in there.
-
 # - RUNNING "GITOLITE SETUP" WILL LOSE ALL THESE KEYS.  So if you ever do
 #   that, you will then need to make a dummy push to the admin repo to add
 #   them back.  If all your **admin** keys were in split keys, then you lost
@@ -30,8 +28,7 @@
 # SUPPORT
 # -------
 #
-# NONE.  Mainly because I **know** someone will throw in a putty key.  I just
-# know it.
+# NONE.
 
 # USAGE
 # -----
@@ -59,7 +56,14 @@ do
     seq=1
     while read line
     do
-        echo "$line" > $SKD/$base@$seq.pub
+        f=$SKD/$base@$seq.pub
+        echo "$line" > $f
+        # similar sanity check as main ssh-authkeys script
+        if ! ssh-keygen -l -f $f
+        then
+            echo 1>&2 "ssh-authkeys-split: bad line $seq in keydir/$k"
+            rm -f $f
+        fi
         (( seq++ ))
     done < $k
 
