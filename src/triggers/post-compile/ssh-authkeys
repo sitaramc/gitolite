@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 
-use File::Temp qw(tempfile);
 use Getopt::Long;
 
 use lib $ENV{GL_LIBDIR};
@@ -113,19 +112,15 @@ sub fp {
 sub fp_file {
     return $selinux++ if $selinux;    # return a unique "fingerprint" to prevent noise
     my $f  = shift;
-    my $fp = `ssh-keygen -l -f '$f'`;
-    chomp($fp);
-    _die "fingerprinting failed for '$f'" unless $fp =~ /([0-9a-f][0-9a-f](:[0-9a-f][0-9a-f])+)/ or $fp =~ m(SHA256:([A-ZA-z0-9+/]+));
-    $fp = $1;
+    my ($fp, $output) = ssh_fingerprint_file($f);
+    _die "fingerprinting failed for '$f': $output" unless $fp;
     return $fp;
 }
 
 sub fp_line {
-    my ( $fh, $fn ) = tempfile();
-    print $fh shift() . "\n";
-    close $fh;
-    my $fp = fp_file($fn);
-    unlink $fn;
+    my $line = shift;
+    my ($fp, $output) = ssh_fingerprint_line($line);
+    _die "fingerprinting failed for '$line': $output" unless $fp;
     return $fp;
 }
 
