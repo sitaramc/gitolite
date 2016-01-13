@@ -220,10 +220,10 @@ sub cd_temp_clone {
 
 # compute the fingerprint from the full path of a pubkey file
 sub fingerprint {
-    my $fp = `ssh-keygen -l -f $_[0]`;
-    die "does not seem to be a valid pubkey\n"
-        unless $fp =~ /(([0-9a-f]+:)+[0-9a-f]+) /i;
-    return $1;
+    my ($fp, $output) = ssh_fingerprint_file(shift);
+    # Do not print the output of $output to an untrusted destination.
+    die "does not seem to be a valid pubkey\n" unless $fp;
+    return $fp;
 }
 
 
