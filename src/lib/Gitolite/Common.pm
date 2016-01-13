@@ -16,10 +16,14 @@ package Gitolite::Common;
           dd
           t_start
           t_lap
+
+          ssh_fingerprint_file
+          ssh_fingerprint_line
 );
 #>>>
 use Exporter 'import';
 use File::Path qw(mkpath);
+use File::Temp qw(tempfile);
 use Carp qw(carp cluck croak confess);
 
 use strict;
@@ -330,6 +334,44 @@ sub logger_plus_stderr {
         print $fh "FATAL: $_\n";
     }
     exit 1;
+}
+
+# ----------------------------------------------------------------------
+# Get the SSH fingerprint of a file
+# If the fingerprint cannot be parsed, it will be undef
+# In a scalar context, returns the fingerprint
+# In a list context, returns (fingerprint, output) where output
+# is the raw output of the ssh-keygen command
+sub ssh_fingerprint_file {
+    my $in = shift;
+    -f $in or die "file not found: $in\n";
+    my $fh;
+    open( $fh, "ssh-keygen -l -f $in |" ) or die "could not fork: $!\n";
+    my $output = <$fh>;
+    chomp $output;
+    # dbg("fp = $fp");
+    close $fh;
+    # Return a valid fingerprint or undef
+    my $fp = undef;
+    if($output =~ /((?:MD5:)?(?:[0-9a-f]{2}:){15}[0-9a-f]{2})/i or
+       $output =~ m{((?:RIPEMD|SHA)\d+:[A-ZA-z0-9+/=]+)}i) {
+        $fp = $1;
+    }
+    return wantarray ? ($fp, $output) : $fp;
+}
+
+# Get the SSH fingerprint of a line of text
+# If the fingerprint cannot be parsed, it will be undef
+# In a scalar context, returns the fingerprint
+# In a list context, returns (fingerprint, output) where output
+# is the raw output of the ssh-keygen command
+sub ssh_fingerprint_line {
+    my ( $fh, $fn ) = tempfile();
+    print $fh shift() . "\n";
+    close $fh;
+    my ($fp,$output) = ssh_fingerprint_file($fn);
+    unlink $fn;
+    return wantarray ? ($fp,$output) : $fp;
 }
 
 # ----------------------------------------------------------------------
