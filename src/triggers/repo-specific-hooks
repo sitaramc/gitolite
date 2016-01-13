@@ -40,9 +40,9 @@ while (<>) {
         next;
     }
 
-    unless ( $hook =~ /^(pre-receive|post-receive|post-update)$/ ) {
+    unless ( $hook =~ /^(pre-receive|post-receive|post-update|pre-auto-gc)$/ ) {
         _warn "repo-specific-hooks: '$hook' is not allowed, ignoring";
-        _warn "    (only pre-receive, post-receive, and post-update are allowed)";
+        _warn "    (only pre-receive, post-receive, post-update, and pre-auto-gc are allowed)";
         next;
     }
 
