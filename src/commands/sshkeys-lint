@@ -21,13 +21,6 @@ my $in_gl_section = 0;
 my $warnings      = 0;
 my $KEYTYPE_REGEX = qr/\b(?:ssh-(?:rsa|dss|ed25519)|ecdsa-sha2-nistp(?:256|384|521))\b/;
 
-sub dbg {
-    use Data::Dumper;
-    for my $i (@_) {
-        print STDERR "DBG: " . Dumper($i);
-    }
-}
-
 sub msg {
     my $warning = shift;
     return if $quiet and not $warning;
@@ -161,8 +154,7 @@ sub fprint {
 }
 
 # ------------------------------------------------------------------------
-sub usage {
-    print <<EOF;
+=for usage
 
 Usage:  gitolite sshkeys-lint [-q] [optional list of pubkey filenames]
         (optionally, STDIN can be a pipe or redirected from a file; see below)
@@ -181,6 +173,4 @@ Note that this runs ssh-keygen -l for each line in the authkeys file and each
 pubkey in the argument list, so be wary of running it on something huge.  This
 is meant for troubleshooting.
 
-EOF
-    exit 1;
-}
+=cut
