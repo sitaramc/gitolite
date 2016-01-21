@@ -5,6 +5,7 @@ use warnings;
 use lib $ENV{GL_LIBDIR};
 use Gitolite::Easy;
 
+usage() if not @ARGV;
 usage($ARGV[1]) if $ARGV[1] and $ARGV[1] =~ /^[\w-]+$/ and $ARGV[0] eq '-h';
 
 ( my $logdir = $ENV{GL_LOGFILE} ) =~ s(/[^/]+$)();
@@ -23,7 +24,7 @@ if ($ARGV[0] eq '--tip') {
 }
 
 # the normal who-pushed
-usage() if not @ARGV or @ARGV < 2 or $ARGV[0] eq '-h';
+usage() if @ARGV < 2 or $ARGV[0] eq '-h';
 usage() if $ARGV[1] !~ /^[0-9a-f]+$/i;
 
 my $repo = shift;
@@ -121,7 +122,7 @@ sub flush_gl_log {
 __END__
 
 =for usage
-uSAge:    ssh git@host who-pushed [--tip] <repo> <SHA>
+usage:    ssh git@host who-pushed [--tip] <repo> <SHA>
 
 Determine who pushed the given commit.  The first few hex digits of the SHA
 should suffice.  If the '--tip' option is supplied, it'll only look for the
