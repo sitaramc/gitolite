@@ -41,7 +41,7 @@ Notes:
     the username and use ^C as the permission to check for.
 =cut
 
-usage() if not @ARGV or $h;
+usage() if not @ARGV >= 2 or $h;
 
 my ( $repo, $user, $aa, $ref ) = @ARGV;
 # default access is '+'
