@@ -36,8 +36,10 @@ sub input {
         _die "$hn: '$repo' is native"                       if $mode eq 'master';
         _die "$hn: '$sender' is not the master for '$repo'" if $master ne $sender;
 
+        $ENV{GL_BYPASS_CREATOR_CHECK} = option($repo, "bypass-creator-check");
         # this expects valid perms content on STDIN
         _system("gitolite perms -c $repo");
+        delete $ENV{GL_BYPASS_CREATOR_CHECK};
 
         # we're done.  Yes, really...
         exit 0;

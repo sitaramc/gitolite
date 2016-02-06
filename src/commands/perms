@@ -53,8 +53,10 @@ if ( $ARGV[0] eq '-c' ) {
     _die "invalid repo '$repo'" unless $repo =~ $REPONAME_PATT;
 
     if ( not -d "$rc{GL_REPO_BASE}/$repo.git" ) {
-        my $ret = Gitolite::Conf::Load::access( $repo, $ENV{GL_USER}, '^C', 'any' );
-        _die $generic_error if $ret =~ /DENIED/;
+        unless ($ENV{GL_BYPASS_CREATOR_CHECK}) {
+            my $ret = Gitolite::Conf::Load::access( $repo, $ENV{GL_USER}, '^C', 'any' );
+            _die $generic_error if $ret =~ /DENIED/;
+        }
 
         require Gitolite::Conf::Store;
         Gitolite::Conf::Store->import;
