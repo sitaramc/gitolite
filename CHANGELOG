@@ -1,3 +1,22 @@
+2016-02-20  v3.6.5  allow creator check to be bypassed during mirroring
+
+                    handle new style ssh fingerprinting correctly (thanks to
+                    Robin Johnson)
+
+                    allow pre-auto-gc as a repo-specific hook
+
+                    optimise mirror pushes for heavily used repos
+
+                    create-with-reference trigger: on repo creation, setup
+                    objects/info/alternates for a server side alternate object
+                    store.
+
+                    'mirror status all all' prints a list of repos that have
+                    *some* error, which is arguably more useful for further
+                    action/processing
+
+                    allow incrementally adding more repo-specific hooks
+
 2015-11-01  v3.6.4  a ref-create bug in wild repos was fixed
 
                     some contrib code related to AD integration, and to
