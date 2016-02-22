@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use 5.10.0;
 
 # import LOCK_*
 use Fcntl qw(:flock);
