@@ -95,3 +95,5 @@ sub input {
     # redirect to upstream
     exec( "ssh", $rc{TPROXY_FORWARDS_TO}, "TPROXY_FOR=$user", "SOC=$ENV{SSH_ORIGINAL_COMMAND}" );
 }
+
+1;
