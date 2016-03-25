@@ -238,7 +238,9 @@ sub rc_lines {
         local $_ = shift @lines;
         chomp; $_ = trim_ws($_);
 
+        no warnings;
         $line++;
+        use warnings;
 
         # this also sets $testname
         next if is_comment_or_empty($_);
