@@ -24,7 +24,7 @@ my $kfn = '';
 GetOptions( 'key-file-name|kfn' => \$kfn, );
 
 tsh_try("sestatus");
-my $selinux = ( tsh_text() =~ /enabled/ );
+my $selinux = ( tsh_text() =~ /enforcing/ );
 
 my $ab = $rc{GL_ADMIN_BASE};
 trace( 1, "'keydir' not found in '$ab'; exiting" ), exit if not -d "$ab/keydir";
