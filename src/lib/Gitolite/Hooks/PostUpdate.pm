@@ -20,6 +20,7 @@ use warnings;
 
 sub post_update {
     trace( 3, 'post-up', @ARGV );
+    exit 0 unless grep( m(^refs/heads/master$), @ARGV );
     # this is the *real* post_update hook for gitolite
 
     tsh_try("git ls-tree --name-only master");
