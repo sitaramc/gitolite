@@ -33,7 +33,7 @@ try "
     glt push u1 origin master
         /To file:///foo/u1/bar/
         /\\[new branch\\]      master -> master/
-    echo WRITERS u2 | glt perms u1 foo/u1/bar
+    echo WRITERS u2 | glt perms u1 -c foo/u1/bar
     glt perms u1 foo/u1/bar -l
         /WRITERS u2/
     # expand
@@ -77,7 +77,7 @@ try "
     glt push u1 origin master
         /To file:///foo/u1/bar/
         /\\[new branch\\]      master -> master/
-    echo WRITERS u2 | glt perms u1 foo/u1/bar
+    echo WRITERS u2 | glt perms u1 -c foo/u1/bar
     glt perms u1 foo/u1/bar -l
         /WRITERS u2/
     # expand

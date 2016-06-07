@@ -41,7 +41,7 @@ try "
         !/R W *\tbar/u1/try1\tu1/
 
     # \@leads can RW try1
-    echo WRITERS \@leads | glt perms u1 bar/u1/try1; ok
+    echo WRITERS \@leads | glt perms u1 -c bar/u1/try1; ok
     glt info u1 -lc
         /R W *\tbar/u1/try1\tu1/
     glt info u2 -lc
@@ -50,7 +50,7 @@ try "
         !/R W *\tbar/u1/try1\tu1/
 
     # \@devs can R try1
-    echo READERS \@devs | glt perms u1 bar/u1/try1; ok
+    echo READERS \@devs | glt perms u1 -c bar/u1/try1; ok
     glt perms u1 bar/u1/try1 -l
         /READERS \@devs/
         !/WRITERS \@leads/
@@ -67,7 +67,7 @@ try "
         /R *\tbar/u1/try1\tu1/
 
 # combo of previous 2
-    /usr/bin/printf 'READERS \@devs\\nWRITERS \@leads\\n' | glt perms u1 bar/u1/try1; ok
+    /usr/bin/printf 'READERS \@devs\\nWRITERS \@leads\\n' | glt perms u1 -c bar/u1/try1; ok
     glt perms u1 bar/u1/try1 -l
         /READERS \@devs/
         /WRITERS \@leads/

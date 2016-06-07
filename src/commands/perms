@@ -26,23 +26,24 @@ Examples:
     ssh git@host perms my/repo + WRITERS bob
 
 ----
-There is also a batch mode useful for scripting and bulk loading.  Do not
-combine this with the +/- mode above.  This mode also accepts an optional "-c"
-flag to create the repo if it does not already exist (assuming $GL_USER has
-permissions to create it).
-
-Examples:
-    cat copy-of-backed-up-gl-perms | ssh git@host perms <repo>
-    cat copy-of-backed-up-gl-perms | ssh git@host perms -c <repo>
+There is also a batch mode useful for scripting and bulk loading; see the
+source code of the perms command for details.
 =cut
 
-usage() if not @ARGV or $ARGV[0] eq '-h';
+# BATCH MODE: DO NOT combine this with the +/- mode above.  This mode also
+# creates the repo if it does not already exist (assuming $GL_USER has
+# permissions to create it).
+#
+# Example:
+#     cat copy-of-backed-up-gl-perms | ssh git@host perms -c <repo>
+
+usage() if not @ARGV or $ARGV[0] eq '-h' or @ARGV < 2;
 
 $ENV{GL_USER} or _die "GL_USER not set";
 
 my $generic_error = "repo does not exist, or you are not authorised";
 
-if ( @ARGV >= 2 and $ARGV[1] eq '-l' ) {
+if ( $ARGV[1] eq '-l' ) {
     getperms($ARGV[0]);    # doesn't return
 }
 

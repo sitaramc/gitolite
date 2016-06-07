@@ -139,7 +139,7 @@ try "cd $od";
 
 # add perms to an old repo
 try "
-echo WRITERS \@h1 | glt perms u1 foo/u1/u1r1
+echo WRITERS \@h1 | glt perms u1 -c foo/u1/u1r1
 ";
 
 try "cd $rb; find . -name gl-perms";
