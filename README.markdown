@@ -78,6 +78,11 @@ either add it, or just run:
 
     $HOME/bin/gitolite setup -pk YourName.pub
 
+If you use gitolite only via HTTP(S) based authentication then run setup
+instead with:
+
+    gitolite setup -a AdminName
+
 If you get any other errors please refer to the online documentation whose URL
 was given at the top of this file.
 
@@ -123,6 +128,13 @@ Once you have made these changes, do something like this:
 When the push completes, gitolite will add the new users to
 `~/.ssh/authorized_keys` on the server, as well as create a new, empty, repo
 called "foo".
+
+## importing existing repos
+
+When importing existing repos copy them into gitolite's repository-directory
+and then run:
+
+    gitolite setup
 
 ## help for your users
 
