@@ -46,7 +46,9 @@ find . -type f -name "*.pub" | while read k
 do
     # do we need to split?
     lines=`wc -l < $k`
-    [ "$lines" = "1" ] && continue
+    case $lines in
+        (0|1) continue
+    esac
 
     # is it sane to split?
     base=`basename $k .pub`
