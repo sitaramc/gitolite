@@ -7,14 +7,14 @@ Gitolite README
 
 **This is a minimal README for gitolite**, so you can quickly get started with:
 
-*   installing gitolite on a fresh userid on a Unix(-like) machine
+*   installing gitolite on a fresh userid on a Unix(-like) machine, using ssh
 *   learning enough to do some basic access control
 
 **For anything more, you need to look at the complete documentation, at:
 <http://gitolite.com/gitolite>**.  Please go there for what/why/how, concepts,
 background, troubleshooting, more details on what is covered here, advanced
-features not covered here, migration from older gitolite, and many more
-topics.
+features not covered here, migration from older gitolite, running gitolite
+over http (rather than ssh), and many more topics.
 
 <!-- --------------------------------------------------------------------- -->
 
