@@ -276,7 +276,7 @@ sub load_common {
         return;
     }
 
-    my $cc = "conf/gitolite.conf-compiled.pm";
+    my $cc = "./conf/gitolite.conf-compiled.pm";
 
     _die "parse '$cc' failed: " . ( $! or $@ ) unless do $cc;
 
