@@ -235,7 +235,8 @@ sub cleanup_conf_line {
             chomp($repo);
             $repo =~ s/\.git$//;
             $repo =~ s(^\./)();
-            push @phy_repos, $repo;
+            push @phy_repos, $repo unless $repo =~ m(/$);
+                # tolerate bare repos within ~/repositories but silently ignore them
         }
         trace( 3, scalar(@phy_repos) . " physical repos found" );
         return sort_u( \@phy_repos );
