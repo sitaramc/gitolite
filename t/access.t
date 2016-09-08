@@ -9,7 +9,7 @@ use Gitolite::Test;
 # test 'gitolite access'
 # ----------------------------------------------------------------------
 
-try "plan 208";
+try "plan 216";
 
 confreset;confadd '
     @admins     =   admin dev1
@@ -162,6 +162,12 @@ confreset;confadd '
 
     repo @all
         R   =   gitweb
+
+    repo c0
+        RW+ =   @all
+    repo c1
+        RWC =   u1
+        RW+ =   @all
 ';
 
 try "ADMIN_PUSH set4; !/FATAL/" or die text();
@@ -184,4 +190,13 @@ try "
     gitolite access foo u3 R;           ok
     gitolite access foo u4 R;           !ok
     gitolite access foo gitweb R;       ok
+
+    gitolite access c0  u1 +;           ok
+    gitolite access c0  u1 C;           ok
+    gitolite access c0  u2 +;           ok
+    gitolite access c0  u2 C;           ok
+    gitolite access c1  u1 +;           ok
+    gitolite access c1  u1 C;           ok
+    gitolite access c1  u2 +;           ok
+    gitolite access c1  u2 C;           !ok
 ";

@@ -57,7 +57,7 @@ my $ret = '';
 
 if ( $repo ne '%' and $user ne '%' ) {
     # single repo, single user; no STDIN
-    $ret = access( $repo, $user, $aa, $ref );
+    $ret = access( $repo, $user, adjust_aa($repo, $aa), $ref );
 
     show($ret) if $s;
 
@@ -79,8 +79,15 @@ while (<>) {
     my @in = split;
     my $r  = $repo || shift @in;
     my $u  = $user || shift @in;
-    $ret = access( $r, $u, $aa, $ref );
+    $ret = access( $r, $u, adjust_aa($r, $aa), $ref );
     print "$r\t$u\t$ret\n";
+}
+
+sub adjust_aa {
+    my ($repo, $aa) = @_;
+    $aa = '+' if $aa eq 'C' and not option($repo, 'CREATE_IS_C');
+    $aa = '+' if $aa eq 'D' and not option($repo, 'DELETE_IS_D');
+    return $aa;
 }
 
 sub show {
