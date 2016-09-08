@@ -593,7 +593,7 @@ __DATA__
             # essential (unless you're using smart-http mode)
             'ssh-authkeys',
 
-            # creates git-config enties from gitolite.conf file entries like 'config foo.bar = baz'
+            # creates git-config entries from gitolite.conf file entries like 'config foo.bar = baz'
             'git-config',
 
             # creates git-daemon-export-ok files; if you don't use git-daemon, comment this out
