@@ -1,3 +1,13 @@
+2016-09-08  v3.6.6  simple but important fix for a future perl deprecation
+                    (perl will be removing "." from @INC in 5.24)
+
+                    'perms' now requires a '-c' to activate batch mode
+                    (should not affect interactive use but check your scripts
+                    perhaps?)
+
+                    gitolite setup now accepts a '-m' option to supply a
+                    custom message (useful when it is used by a script)
+
 2016-02-20  v3.6.5  allow creator check to be bypassed during mirroring
 
                     handle new style ssh fingerprinting correctly (thanks to
