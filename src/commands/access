@@ -157,11 +157,17 @@ sub read_ri {
     my %conf_lines;
 
     sub conf_lines {
-        my ( $file, $line ) = @_;
+        my ( $file, $line, $slurpfile ) = @_;
         $line--;
 
         unless ( $conf_lines{$file} ) {
-            $conf_lines{$file} = [ slurp( $ENV{GL_ADMIN_BASE} . "/conf/$file" ) ];
+            # respect absolute paths in includes
+            if ($file =~ '^/') {
+                $slurpfile = $file
+            } else {
+                $slurpfile = $ENV{GL_ADMIN_BASE} . "/conf/$file"
+            }
+            $conf_lines{$file} = [ slurp( $slurpfile ) ];
             chomp( @{ $conf_lines{$file} } );
         }
         return $conf_lines{$file}[$line];
