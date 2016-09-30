@@ -543,15 +543,24 @@ sub list_groups {
 =for list_users
 Usage:  gitolite list-users [<repo name pattern>]
 
-List all users and groups explicitly named in a rule.  User names not
-mentioned in an access rule will not show up; you have to run 'list-members'
-on each group name yourself to see them.
+List all users and groups explicitly named in a rule.
+
+-   you will have to run 'list-members' on each group name to expand it -- for
+    details and caveats on that please see its help message.
+-   User names not mentioned in an access rule will not show up at all (for
+    example, if you have users who only have access via an '@all' rule).
 
 WARNING: may be slow if you have thousands of repos.  The optional repo name
 pattern is an unanchored regex; it can speed things up if you're interested
 only in users of a matching set of repos.  This is only an optimisation, not
 an actual access list; you will still have to pipe it to 'gitolite access'
 with appropriate arguments to get an actual access list.
+
+NOTE: If you're running in ssh mode, it may be simpler to parse the authorized
+keys file in ~/.ssh, like so:
+    perl -lne '/ ([a-z0-9]+)"/; print $1 if $1' < ~/.ssh/authorized_keys | sort -u
+If you're running in http mode, only your web server knows all the potential
+user names.
 =cut
 
 sub list_users {
@@ -637,6 +646,13 @@ Usage:  gitolite list-members <group name>
 
   - list all members of a group
   - takes one group name
+
+'@all' is not expandable in this context.  Also, if you have GROUPLIST_PGM set
+in your rc file[1], gitolite cannot expand group names completely; only your
+external database can.
+
+[1]: http://gitolite.com/gitolite/conf.html#ldap
+
 =cut
 
 sub list_members {
