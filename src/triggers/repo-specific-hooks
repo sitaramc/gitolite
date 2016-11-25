@@ -85,7 +85,7 @@ for my $repo (keys %repo_hooks) {
 }
 
 __DATA__
-#/bin/sh
+#!/bin/sh
 
 # Determine what input the hook needs
 # post-update takes args, pre/post-receive take stdin
