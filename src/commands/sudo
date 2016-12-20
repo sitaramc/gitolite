@@ -11,7 +11,7 @@ usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
 [ "$1" = "-h" ] && usage
 [ -z "$GL_USER" ] && die GL_USER not set
 
-gitolite access -q gitolite-admin $GL_USER W any || die "You are not authorised"
+gitolite access -q $rc{GL_ADMIN_REPO} $GL_USER W any || die "You are not authorised"
 
 user="$1"; shift
 cmd="$1"; shift

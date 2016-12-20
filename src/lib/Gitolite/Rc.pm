@@ -40,6 +40,7 @@ $rc{GL_LIBDIR} = $ENV{GL_LIBDIR};
 # these keys could be overridden by the rc file later
 $rc{GL_REPO_BASE}  = "$ENV{HOME}/repositories";
 $rc{GL_ADMIN_BASE} = "$ENV{HOME}/.gitolite";
+$rc{GL_ADMIN_REPO} = "gitolite-admin";
 $rc{LOG_TEMPLATE}  = "$ENV{HOME}/.gitolite/logs/gitolite-%y-%m.log";
 
 # variables that should probably never be changed but someone will want to, I'll bet...
@@ -564,6 +565,12 @@ __DATA__
         # called "local" in your gitolite-admin repo.  For a SECURITY WARNING
         # on this, see http://gitolite.com/gitolite/non-core.html#pushcode
         # LOCAL_CODE                =>  "$rc{GL_ADMIN_BASE}/local",
+
+    # ------------------------------------------------------------------
+
+    # suggested name for gitolite-admin repo
+
+    # GL_ADMIN_REPO                   =>  "gitolite-admin",
 
     # ------------------------------------------------------------------
 

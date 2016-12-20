@@ -78,7 +78,7 @@ my $user;
 
 sub is_admin {
     valid_user();
-    return not( access( 'gitolite-admin', $user, 'W', 'any' ) =~ /DENIED/ );
+    return not( access( '$rc{GL_ADMIN_REPO}', $user, 'W', 'any' ) =~ /DENIED/ );
 }
 
 # is_super_admin()
@@ -89,10 +89,10 @@ sub is_admin {
 # repo
 
 # shell equivalent
-#   if gitolite access -q gitolite-admin $GL_USER W VREF/NAME/; then ...
+#   if gitolite access -q $rc{GL_ADMIN_REPO} $GL_USER W VREF/NAME/; then ...
 sub is_super_admin {
     valid_user();
-    return not( access( 'gitolite-admin', $user, 'W', 'VREF/NAME/' ) =~ /DENIED/ );
+    return not( access( '$rc{GL_ADMIN_REPO}', $user, 'W', 'VREF/NAME/' ) =~ /DENIED/ );
 }
 
 # in_group()

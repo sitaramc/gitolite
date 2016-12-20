@@ -38,7 +38,7 @@ while (<>) {
     next unless @codes;
 
     # this is a special case
-    if ( $repo eq 'gitolite-admin' and $hook eq 'post-update' ) {
+    if ( $repo eq '$rc{GL_ADMIN_REPO}' and $hook eq 'post-update' ) {
         _warn "repo-specific-hooks: ignoring attempts to set post-update hook for the admin repo";
         next;
     }

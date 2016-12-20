@@ -35,7 +35,7 @@ for my $d (`gitolite list-phy-repos | gitolite access % daemon R any`) {
 #   bar^Idaemon^IR any bar daemon DENIED by fallthru$
 #   foo^Idaemon^Irefs/.*$
 #   fubar^Idaemon^Irefs/.*$
-#   gitolite-admin^Idaemon^IR any gitolite-admin daemon DENIED by fallthru$
+#   $rc{GL_ADMIN_REPO}^Idaemon^IR any $rc{GL_ADMIN_REPO} daemon DENIED by fallthru$
 #   testing^Idaemon^Irefs/.*$
 
 # where I've typed "^I" to denote a tab.

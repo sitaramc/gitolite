@@ -356,11 +356,11 @@ sub store_common {
         # them, but only once per run
         if ( not $hook_reset ) {
             _mkdir("$rc{GL_ADMIN_BASE}/hooks/common");
-            _mkdir("$rc{GL_ADMIN_BASE}/hooks/gitolite-admin");
+            _mkdir("$rc{GL_ADMIN_BASE}/hooks/$rc{GL_ADMIN_REPO}");
             _print( "$rc{GL_ADMIN_BASE}/hooks/common/update",              update_hook() );
-            _print( "$rc{GL_ADMIN_BASE}/hooks/gitolite-admin/post-update", post_update_hook() );
+            _print( "$rc{GL_ADMIN_BASE}/hooks/$rc{GL_ADMIN_REPO}/post-update", post_update_hook() );
             chmod 0755, "$rc{GL_ADMIN_BASE}/hooks/common/update";
-            chmod 0755, "$rc{GL_ADMIN_BASE}/hooks/gitolite-admin/post-update";
+            chmod 0755, "$rc{GL_ADMIN_BASE}/hooks/$rc{GL_ADMIN_REPO}/post-update";
             $hook_reset++;
         }
 
@@ -370,7 +370,7 @@ sub store_common {
         # override/propagate gitolite defined hooks for all repos
         ln_sf( "$rc{GL_ADMIN_BASE}/hooks/common", "*", "$repo.git/hooks" );
         # override/propagate gitolite defined hooks for the admin repo
-        ln_sf( "$rc{GL_ADMIN_BASE}/hooks/gitolite-admin", "*", "$repo.git/hooks" ) if $repo eq 'gitolite-admin';
+        ln_sf( "$rc{GL_ADMIN_BASE}/hooks/$rc{GL_ADMIN_REPO}", "*", "$repo.git/hooks" ) if $repo eq '$rc{GL_ADMIN_REPO}';
     }
 }
 
