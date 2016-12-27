@@ -370,7 +370,7 @@ sub store_common {
         # override/propagate gitolite defined hooks for all repos
         ln_sf( "$rc{GL_ADMIN_BASE}/hooks/common", "*", "$repo.git/hooks" );
         # override/propagate gitolite defined hooks for the admin repo
-        ln_sf( "$rc{GL_ADMIN_BASE}/hooks/$rc{GL_ADMIN_REPO}", "*", "$repo.git/hooks" ) if $repo eq '$rc{GL_ADMIN_REPO}';
+        ln_sf( "$rc{GL_ADMIN_BASE}/hooks/$rc{GL_ADMIN_REPO}", "*", "$repo.git/hooks" ) if $repo eq $rc{GL_ADMIN_REPO};
     }
 }
 
