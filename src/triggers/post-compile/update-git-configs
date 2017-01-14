@@ -48,10 +48,18 @@ sub fixup_config {
     my $gc = git_config( $pr, '.', 1 );
     while ( my ( $key, $value ) = each( %{$gc} ) ) {
         next if $key =~ /^gitolite-options\./;
+        $value =~ s/(@\w+)/expand_group($1)/ge if $rc{EXPAND_GROUPS_IN_CONFIG};
         if ( $value ne "" ) {
             system( "git", "config", "--file", "$RB/$pr.git/config", $key, $value );
         } else {
             system( "git", "config", "--file", "$RB/$pr.git/config", "--unset-all", $key );
         }
     }
+}
+
+sub expand_group {
+    my $g = shift;
+    my @m = @{ Gitolite::Conf::Load::list_members($1) };
+    return join(" ", @m) if @m;
+    return $g;
 }
