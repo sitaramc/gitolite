@@ -308,7 +308,7 @@ sub load_1 {
         return if not $split_conf{$repo};
 
         my $cc = "./gl-conf";
-        _die "parse '$cc' failed: " . ( $! or $@ ) unless do $cc;
+        _die "parse '$cc' failed: " . ( $@ or $! ) unless do $cc;
 
         $last_repo = $repo;
         $repos{$repo} = $one_repo{$repo};
