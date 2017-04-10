@@ -61,7 +61,7 @@ do
         f=$SKD/$base@$seq.pub
         echo "$line" > $f
         # similar sanity check as main ssh-authkeys script
-        if ! ssh-keygen -l -f $f
+        if ! ssh-keygen -l -f $f >/dev/null
         then
             echo 1>&2 "ssh-authkeys-split: bad line $seq in keydir/$k"
             rm -f $f

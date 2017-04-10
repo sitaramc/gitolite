@@ -288,8 +288,6 @@ sub store_1 {
 
     my ( %one_repo, %one_config );
 
-    open( my $compiled_fh, ">", "$repo.git/gl-conf" ) or return;
-
     my $dumped_data = '';
     if ( $repos{$repo} ) {
         $one_repo{$repo} = $repos{$repo};
@@ -303,8 +301,7 @@ sub store_1 {
         $dumped_data .= Data::Dumper->Dump( [ \%one_config ], [qw(*one_config)] );
     }
 
-    print $compiled_fh $dumped_data;
-    close $compiled_fh;
+    _print( "$repo.git/gl-conf", $dumped_data );
 
     $split_conf{$repo} = 1;
 }

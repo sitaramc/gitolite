@@ -305,7 +305,7 @@ sub gl_log {
             require Sys::Syslog;
             Sys::Syslog->import(qw(:standard));
 
-            openlog("gitolite" . ( $ENV{GL_TID} ? "[$ENV{GL_TID}]" : "" ), "pid", "local0");
+            openlog("gitolite" . ( $ENV{GL_TID} ? "[$ENV{GL_TID}]" : "" ), "pid", $Gitolite::Rc::rc{LOG_FACILITY} || 'local0');
             $syslog_opened = 1;
         }
 
