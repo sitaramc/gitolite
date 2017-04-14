@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# this is meant to be run on your *client* (where you edit and commit files
+# in a gitolite-admin *working* repo), not on the gitolite server.
+#
+# TO USE
+# ======
+
+# To use this, first upgrade gitolite to the latest on the server; you need at
+# least v3.6.7.
+#
+# Then, on the client:
+#
+#   1.  copy this file (contrib/utils/testconf in the latest gitolite) to
+#       somewhere in your $PATH
+#   2.  modify the following lines if you wish (default should be fine for
+#       most people):
+
+    # a semi-permanent area to play in (please delete it manually if you want to start afresh).
+    testconf=$HOME/GITOLITE-TESTCONF
+    # the gitolite source code
+    gitolite_url=git://github.com/sitaramc/gitolite
+
+#   3.  go to your gitolite-admin clone and make suitable changes; see example
+#       below.  No need to push to the server, yet.
+#   4.  run 'testconf`
+#
+# CAVEAT: include files are not handled the same way gitolite parsing handles
+# them -- we just cat all the conf files together, in sorted order.
+#
+# If the tests ran OK, push your changes to the server as usual.
+
+# EXAMPLE changes to gitolite.conf
+# ================================
+# Say you have these rules in the conf file:
+#
+#     repo foo
+#         R       =   u1
+#         RW      =   u2
+#         RW+     =   u3
+#
+# To create test code for this, add the following lines to the conf file.
+#
+#     =begin testconf
+#     # you can put arbitrary bash code here, but a simple example follows
+#
+#     ok() { "$@" && echo ok || echo "not ok ($*)"; }
+#     nok() { ! "$@" && echo ok || echo "not ok ($*)"; }
+#
+#     ok gitolite access -q foo u1 R
+#     nok gitolite access -q foo u1 W
+#
+#     ok gitolite access -q foo u2 W
+#     nok gitolite access -q foo u2 +
+#
+#     ok gitolite access -q foo u3 +
+#     =end
+#
+# Note that you can actually put in any bash code between the 'begin' and
+# 'end' lines; the above is just a useful sample/template.
+#
+# Because of the 'begin' and 'end' lines, gitolite will ignore those lines
+# when processing the conf file ON THE SERVER.
+#
+# (optional) TAP compliance
+# =========================
+# if you add a line 'echo 1..5' (in this case, since there are 5 ok/nok lines;
+# you will certainly have more) to the top the file, you can run
+#
+#   prove `which testconf`
+#
+# which will give you a much nicer output.  The only issue is if you have
+# include files, you will need to put that in the file whose name is sorted
+# first!
+
+# ----------------------------------------------------------------------
+od=$PWD
+
+# prep
+
+mkdir -p $testconf
+cd $testconf
+
+export HOME=$PWD
+export PATH=$PWD/gitolite/src:$PATH
+
+[ -d gitolite ] || {
+
+    echo getting gitolite source...
+    git clone $gitolite_url gitolite
+    echo
+
+    echo installing gitolite...
+    gitolite/install >/dev/null
+    echo
+
+    echo setting up gitolite...
+    gitolite setup -a admin
+    echo
+
+}
+
+# copy conf from $od
+
+rm -rf           $testconf/.gitolite/conf
+mkdir -p         $testconf/.gitolite/conf
+cp -a $od/conf/* $testconf/.gitolite/conf/
+
+# compile+
+
+gitolite compile
+gitolite trigger POST_COMPILE
+
+# snarf bits of code from conf files and run them
+
+cat `find $testconf/.gitolite/conf -type f -name "*.conf" | sort` |
+    perl -ne '
+        print if /^=begin testconf$/ .. /^=end$/ and not /^=(begin|end)/;
+    ' | /bin/bash

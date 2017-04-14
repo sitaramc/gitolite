@@ -68,6 +68,7 @@ sub sugar {
     $lines = owner_desc($lines);
     $lines = name_vref($lines);
     $lines = role_names($lines);
+    $lines = skip_block($lines);
 
     return $lines;
 }
@@ -177,6 +178,22 @@ sub role_names {
         }
     }
     return \@ret;
+}
+
+sub skip_block {
+    my $lines = shift;
+
+    my @out  = ();
+    for (@$lines) {
+        my $skip = 0;
+        $skip = 1 if /^= *begin testconf$/;
+        # add code for other types of blocks here as needed
+
+        next if $skip .. /^= *end$/;
+        push @out, $_;
+    }
+
+    return \@out;
 }
 
 1;
