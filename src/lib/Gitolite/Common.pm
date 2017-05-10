@@ -355,7 +355,7 @@ sub ssh_fingerprint_file {
     # Return a valid fingerprint or undef
     my $fp = undef;
     if($output =~ /((?:MD5:)?(?:[0-9a-f]{2}:){15}[0-9a-f]{2})/i or
-       $output =~ m{((?:RIPEMD|SHA)\d+:[A-ZA-z0-9+/=]+)}i) {
+       $output =~ m{((?:RIPEMD|SHA)\d+:[A-Za-z0-9+/=]+)}i) {
         $fp = $1;
     }
     return wantarray ? ($fp, $output) : $fp;
