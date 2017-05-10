@@ -15,7 +15,7 @@ _chdir( $ENV{GL_REPO_BASE} );
 
 @ARGV = ("gitolite list-phy-repos | gitolite git-config -ev -r % gitolite-options\\.hook\\. |");
 
-my $driver = "$rc{LOCAL_CODE}/hooks/multi-hook-driver";
+my $driver = $rc{MULTI_HOOK_DRIVER} || "$rc{LOCAL_CODE}/hooks/multi-hook-driver";
 # Hook Driver
 {
     local $/ = undef;
