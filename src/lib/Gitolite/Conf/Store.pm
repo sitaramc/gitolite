@@ -360,7 +360,8 @@ sub store_common {
             chmod 0755, "$rc{GL_ADMIN_BASE}/hooks/gitolite-admin/post-update";
             $hook_reset++;
         }
-
+        _mkdir("$repo.git/hooks");
+        
         # propagate user-defined (custom) hooks to all repos
         ln_sf( "$rc{LOCAL_CODE}/hooks/common", "*", "$repo.git/hooks" ) if $rc{LOCAL_CODE};
 
