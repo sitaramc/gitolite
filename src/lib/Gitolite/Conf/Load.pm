@@ -248,7 +248,8 @@ sub sanity {
     my ($repo, $patt) = @_;
     $patt ||= $REPOPATT_PATT;
 
-    _die "invalid repo '$repo'" if not( $repo and $repo =~ $patt );
+    _die "no repo specified" if not( $repo );
+    _die "invalid repo '$repo'" if not( $repo =~ $patt );
     _die "'$repo' ends with a '/'"  if $repo =~ m(/$);
     _die "'$repo' contains '..'"    if $repo =~ $REPONAME_PATT and $repo =~ m(\.\.);
     _die "'$repo' contains '.git/'" if $repo =~ $REPONAME_PATT and $repo =~ m(\.git/);
