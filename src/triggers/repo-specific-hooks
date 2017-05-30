@@ -73,7 +73,12 @@ for my $repo (keys %repo_hooks) {
             }
 
             my $src = $rc{LOCAL_CODE} . "/hooks/repo-specific/$code";
+
+            # if $code has slashes in it, flatten it for use in $dst, to avoid
+            # having to re-create those intermediate sub-directories
+            $code =~ s(/)(_)g;
             my $dst = "$repo.git/hooks/$hook.$counter-$code";
+
             unless ( -x $src ) {
                 _warn "repo-specific-hooks: '$src' doesn't exist or is not executable";
                 next;
