@@ -13,7 +13,13 @@ _die "repo-specific-hooks: '$rc{LOCAL_CODE}/hooks/repo-specific' does not exist 
 
 _chdir( $ENV{GL_REPO_BASE} );
 
-@ARGV = ("gitolite list-phy-repos | gitolite git-config -ev -r % gitolite-options\\.hook\\. |");
+if ($ARGV[0] eq 'POST_CREATE') {
+    # just the repo given in arg-2
+    @ARGV = ("gitolite git-config -ev -r $ARGV[1] gitolite-options\\.hook\\. |");
+} else {
+    # POST_COMPILE, all repos
+    @ARGV = ("gitolite list-phy-repos | gitolite git-config -ev -r % gitolite-options\\.hook\\. |");
+}
 
 my $driver = $rc{MULTI_HOOK_DRIVER} || "$rc{LOCAL_CODE}/hooks/multi-hook-driver";
 # Hook Driver
