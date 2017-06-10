@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Check an IP before allowing access.
+
+# This is also a generic example of how to add arbitrary checks at the PRE_GIT
+# stage, in order to control fetch/clone as well, not just push operations
+# (VREFs, in contrast, only work for pushes).
+
+# Notice how repo-specific information is being passed to this code (bullet 3
+# below).  For more on that, see:
+# https://gitolite.com/gitolite/dev-notes/#appendix-1-repo-specific-environment-variables
+
+# Instructions:
+
+#   1.  put this in an appropriate triggers directory (read about non-core
+#       code at http://gitolite.com/gitolite/non-core/ for more on this; the
+#       cookbook may also help here).
+
+#   2.  add a line:
+#           PRE_GIT => [ 'IP-check' ],
+#       just before the "ENABLE" line in the rc file
+
+#   3.  add a line like this to the "repo ..." section in gitolite.conf:
+#           option ENV.IP_allowed   =   1.2.3.0/24
+#       take care that this expression is valid, in the sense that passing it
+#       to 'ipcalc -n' will return the part before the "/".  I.e., in this
+#       example, 'ipcalc -n 1.2.3.0/24' should (and does) return 1.2.3.0.
+
+# ----
+
+[ -n "$GL_OPTION_IP_allowed" ] || exit 0
+
+expected=${GL_OPTION_IP_allowed%/*}
+    mask=${GL_OPTION_IP_allowed#*/}
+
+current_ip=${SSH_CONNECTION%% *}
+
+eval `ipcalc -n $current_ip/$mask`
+
+[ "$expected" == "$NETWORK" ] && exit 0
+
+echo >&2 "IP $current_ip does not match allowed block $GL_OPTION_IP_allowed"
+exit 1
