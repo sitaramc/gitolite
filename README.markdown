@@ -65,7 +65,7 @@ First, prepare the ssh key:
 
 Next, install gitolite by running these commands:
 
-    git clone git://github.com/sitaramc/gitolite
+    git clone https://github.com/sitaramc/gitolite
     mkdir -p $HOME/bin
     gitolite/install -to $HOME/bin
 

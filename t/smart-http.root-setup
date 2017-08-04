@@ -51,7 +51,7 @@ export GITOLITE_HTTP_HOME=$PWD/gitolite-home
 cd gitolite-home
 git clone /tmp/gitolite.git gitolite-source
 # NOTE: I use a bare repo in /tmp for convenience; you'd use
-# 'git://github.com/sitaramc/gitolite'
+# 'https://github.com/sitaramc/gitolite'
 
 # make the bin directory, and add it to PATH
 cd gitolite-source

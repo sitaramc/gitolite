@@ -32,7 +32,7 @@ git fetch -q "$url" '+refs/*:refs/*'
 #           R                       =   @all
 #           RW+ my-company/         =   @developers
 #
-#           option  upstream.url    =   git://git.kernel.org/pub/scm/git/git.git
+#           option  upstream.url    =   https://git.kernel.org/pub/scm/git/git.git
 #           option  upstream.nice   =   120
 #
 # * to force a fetch on the server shell (or via cron), run this command:
@@ -55,9 +55,9 @@ git fetch -q "$url" '+refs/*:refs/*'
 #   repo github/CREATOR/..*
 #       C   = @all
 #       R   = @all
-#       option upstream.url                     =   git://github.com/%GL_REPO.git
-#       option upstream.nice                    =   120
-#       config url.git://github.com/.insteadOf  =   git://github.com/github/
+#       option upstream.url                         =   https://github.com/%GL_REPO.git
+#       option upstream.nice                        =   120
+#       config url.https://github.com/.insteadOf    =   https://github.com/github/
 #
 # Now you can make local, read-only, clones of all your github repos with
 #

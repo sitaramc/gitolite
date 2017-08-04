@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 # change these lines to suit
 testconf=$HOME/GITOLITE-TESTCONF
-gitolite_url=git://github.com/sitaramc/gitolite
+gitolite_url=https://github.com/sitaramc/gitolite
     # change it to something local for frequent use
     # gitolite_url=file:///tmp/gitolite.git
 

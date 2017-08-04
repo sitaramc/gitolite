@@ -19,7 +19,7 @@
     # a semi-permanent area to play in (please delete it manually if you want to start afresh).
     testconf=$HOME/GITOLITE-TESTCONF
     # the gitolite source code
-    gitolite_url=git://github.com/sitaramc/gitolite
+    gitolite_url=https://github.com/sitaramc/gitolite
 
 #   3.  go to your gitolite-admin clone and make suitable changes; see example
 #       below.  No need to push to the server, yet.
