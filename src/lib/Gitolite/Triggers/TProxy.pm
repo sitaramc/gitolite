@@ -58,7 +58,6 @@ use Gitolite::Conf::Load;
 use strict;
 use warnings;
 
-my $git_commands = "git-upload-pack|git-receive-pack|git-upload-archive";
 my $soc = $ENV{SSH_ORIGINAL_COMMAND};
 
 # ----------------------------------------------------------------------
