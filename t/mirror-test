@@ -91,7 +91,7 @@ try "
     git add keydir;                     ok
     git commit -m 6keys;                ok
     git push;                           ok
-        /To frodo\@localhost:gitolite-admin/
+        /To localhost:gitolite-admin/
         /master -> master/
     sleep 5
     git rev-parse HEAD
@@ -118,7 +118,7 @@ try "
     cd sga;                             ok
     empty;                              ok
     git push;                           ok
-        /To sam\@localhost:gitolite-admin/
+        /To localhost:gitolite-admin/
         /master -> master/
     sleep 5
     git rev-parse HEAD
@@ -145,7 +145,7 @@ try "
     cd gga;                             ok
     empty;                              ok
     git push;                           !ok
-        !/To gollum\@localhost:gitolite-admin/
+        !/To localhost:gitolite-admin/
         !/master -> master/
         /gollum: pushing 'gitolite-admin' to slave 'gollum' not allowed/
     git rev-parse HEAD
@@ -193,7 +193,7 @@ try "
     cd fga;                             ok
     empty;                              ok
     git push;                           ok
-        /To frodo\@localhost:gitolite-admin/
+        /To localhost:gitolite-admin/
         /master -> master/
     sleep 5
 

@@ -95,7 +95,7 @@ try "
         /52c7716..ca37871  next -> next/
     tag u4/nexttag; glt push u4 --tags
         /To file:///foo-pc/
-        /\\[new tag\\]         u4/nexttag -> u4/nexttag/
+        /\\[new tag\\]         u4/nexttag +-> +u4/nexttag/
         /\\[new branch\\]      ca3787119b7e8b9914bc22c939cefc443bc308da -> refs/partial/br-\\d+/
 
     checkout master
@@ -112,8 +112,8 @@ try "
     glt fetch u1
         /From file:///foo/
         /new branch\\]      dev/u4/u4master -> origin/dev/u4/u4master/
-        /new tag\\]         u4/nexttag -> u4/nexttag/
-        /52c7716..ca37871  next       -> origin/next/
+        /new tag\\]         u4/nexttag +-> +u4/nexttag/
+        /52c7716..ca37871  next +-> +origin/next/
     checkout master; tc u1ma1 u1ma2;
         /\\[master 8ab1ff5\\] u1ma2 at Thu Jul  7 06:23:20 2011/
     tag mt2; PUSH u1 master; ok

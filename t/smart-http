@@ -63,7 +63,7 @@ tsh "
     git push
         ok
         /Initialized.*usr.share.httpd.gitolite-home.repositories.t2.git/
-        /To http:..admin:admin.localhost.git.gitolite-admin.git/
+        /To http:..localhost.git.gitolite-admin.git/
         /master -. master/
     ## various ls-remotes
     git ls-remote `url u1 gitolite-admin`
@@ -81,7 +81,7 @@ tsh "
     ## push to u1:t2
     git push      `url u1 t2` master:master
         ok
-        /To http:..u1:u1.localhost.git.t2.git/
+        /To http:..localhost.git.t2.git/
         /master -. master/
     git ls-remote `url u2 t2`
         ok
