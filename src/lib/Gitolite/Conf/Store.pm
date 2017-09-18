@@ -25,8 +25,6 @@ use Exporter 'import';
 use Data::Dumper;
 $Data::Dumper::Indent   = 1;
 $Data::Dumper::Sortkeys = 1;
-use Fcntl;
-use GDBM_File;
 
 use Gitolite::Rc;
 use Gitolite::Common;
@@ -42,11 +40,6 @@ my %repos;
 my %groups;
 my %configs;
 my %split_conf;
-
-# reduce the number of unnecessary stat() calls for installations like Fedora,
-# which have (as of 2017-08) about 42000 repos.  Each compile will only
-# *really* change a few repos so this helps us not to touch the others.
-my %gl_conf_cache;
 
 my @repolist;    # current repo list; reset on each 'repo ...' line
 my $subconf = 'master';
@@ -195,13 +188,10 @@ sub new_repos {
         next unless $repo =~ $REPONAME_PATT;    # skip repo patterns
         next if $repo =~ m(^\@|EXTCMD/);        # skip groups and fake repos
 
-        # use gl-conf as a sentinel; if it exists, all is well
-        next if -f "$repo.git/gl-conf";
+        # use gl-conf as a sentinel
+        hook_1($repo) if -d "$repo.git" and not -f "$repo.git/gl-conf";
 
-        if (-d "$repo.git") {
-            # directory exists but sentinel missing?  Maybe a freshly imported repo?
-            hook_1($repo);
-        } else {
+        if ( not -d "$repo.git" ) {
             push @{ $rc{NEW_REPOS_CREATED} }, $repo;
             trigger( 'PRE_CREATE', $repo );
             new_repo($repo);
@@ -247,24 +237,16 @@ sub hook_repos {
 sub store {
     trace(3);
 
-    my $dbf = "$rc{GL_ADMIN_BASE}/gl-conf.cache";
-    tie(%gl_conf_cache, 'GDBM_File', $dbf, O_RDWR|O_CREAT, 0666) or _die "Tie '$dbf' failed: $!";
-
     # first write out the ones for the physical repos
     _chdir( $rc{GL_REPO_BASE} );
+    my $phy_repos = list_phy_repos(1);
 
-    # list of repos (union of keys of %repos plus %configs)
-    my %kr_kc;
-    @kr_kc{ keys %repos } = ();
-    @kr_kc{ keys %configs } = ();
-    for my $repo ( keys %kr_kc ) {
+    for my $repo ( @{$phy_repos} ) {
         store_1($repo);
     }
 
     _chdir( $rc{GL_ADMIN_BASE} );
     store_common();
-
-    untie %gl_conf_cache;
 }
 
 sub parse_done {
@@ -302,7 +284,7 @@ sub store_1 {
     # warning: writes and *deletes* it from %repos and %configs
     my ($repo) = shift;
     trace( 3, $repo );
-    return unless -d "$repo.git";
+    return unless ( $repos{$repo} or $configs{$repo} ) and -d "$repo.git";
 
     my ( %one_repo, %one_config );
 
@@ -319,10 +301,7 @@ sub store_1 {
         $dumped_data .= Data::Dumper->Dump( [ \%one_config ], [qw(*one_config)] );
     }
 
-    if ( ($gl_conf_cache{$repo} || '') ne $dumped_data ) {
-        _print( "$repo.git/gl-conf", $dumped_data );
-        $gl_conf_cache{$repo} = $dumped_data;
-    }
+    _print( "$repo.git/gl-conf", $dumped_data );
 
     $split_conf{$repo} = 1;
 }
