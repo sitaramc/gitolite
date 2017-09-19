@@ -17,13 +17,6 @@ my $RB = $rc{GL_REPO_BASE};
 _chdir($RB);
 
 # ----------------------------------------------------------------------
-# skip if arg-0 is POST_CREATE and no arg-2 (user name) exists; this means
-# it's been triggered by a *normal* (not "wild") repo creation, which in turn
-# means a POST_COMPILE should be following so there's no need to waste time
-# running this once for each new repo
-exit 0 if @ARGV and $ARGV[0] eq 'POST_CREATE' and not $ARGV[2];
-
-# ----------------------------------------------------------------------
 # if called from POST_CREATE, we have only a single repo to worry about
 if ( @ARGV and $ARGV[0] eq 'POST_CREATE' ) {
     my $repo = $ARGV[1];
