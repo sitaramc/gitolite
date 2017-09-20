@@ -384,6 +384,13 @@ sub memberships {
                 push @ret, $i;
             }
         }
+
+        # add in any group names explicitly given in (GIT_DIR)/gl-repo-groups
+        push @ret,
+            map { s/^\@?/\@/; $_ }
+            grep { ! /[^\w@-]/ }
+            split (' ', slurp("$ENV{GL_REPO_BASE}/$base.git/gl-repo-groups"))
+                if -f         "$ENV{GL_REPO_BASE}/$base.git/gl-repo-groups";
     }
 
     push @ret, @{ $groups{$base} } if exists $groups{$base};
