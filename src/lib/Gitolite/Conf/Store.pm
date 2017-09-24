@@ -188,10 +188,13 @@ sub new_repos {
         next unless $repo =~ $REPONAME_PATT;    # skip repo patterns
         next if $repo =~ m(^\@|EXTCMD/);        # skip groups and fake repos
 
-        # use gl-conf as a sentinel
-        hook_1($repo) if -d "$repo.git" and not -f "$repo.git/gl-conf";
+        # use gl-conf as a sentinel; if it exists, all is well
+        next if -f "$repo.git/gl-conf";
 
-        if ( not -d "$repo.git" ) {
+        if (-d "$repo.git") {
+            # directory exists but sentinel missing?  Maybe a freshly imported repo?
+            hook_1($repo);
+        } else {
             push @{ $rc{NEW_REPOS_CREATED} }, $repo;
             trigger( 'PRE_CREATE', $repo );
             new_repo($repo);
@@ -239,9 +242,12 @@ sub store {
 
     # first write out the ones for the physical repos
     _chdir( $rc{GL_REPO_BASE} );
-    my $phy_repos = list_phy_repos(1);
 
-    for my $repo ( @{$phy_repos} ) {
+    # list of repos (union of keys of %repos plus %configs)
+    my %kr_kc;
+    @kr_kc{ keys %repos } = ();
+    @kr_kc{ keys %configs } = ();
+    for my $repo ( keys %kr_kc ) {
         store_1($repo);
     }
 
@@ -284,7 +290,7 @@ sub store_1 {
     # warning: writes and *deletes* it from %repos and %configs
     my ($repo) = shift;
     trace( 3, $repo );
-    return unless ( $repos{$repo} or $configs{$repo} ) and -d "$repo.git";
+    return unless -d "$repo.git";
 
     my ( %one_repo, %one_config );
 
