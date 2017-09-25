@@ -1,0 +1,99 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# read template data to produce gl-perms and gl-repo-groups files in each
+# $repo dir.  Create the repo if needed, using the wild repos create logic
+# (with a "creator" of "gitolite-admin"!), though they're not really wild
+# repos.
+
+# see rule-templates.html in the gitolite documentation site.
+
+# pure text manipulation (and very little of that!), no git or gitolite
+# functions, no access checks, no possibility of a performance drama (or at
+# least not a *complex* performance drama)
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf::Load;
+use Gitolite::Conf::Store;
+
+my $rb = $rc{GL_REPO_BASE};
+
+@ARGV = `find $rc{GL_ADMIN_BASE}/conf -type f -name "*.conf" | sort`; chomp(@ARGV);
+# we don't see the files in the exact same order that gitolite compile sees
+# them, but we don't need to, for the data we are interested in (as long as
+# you don't break up one repo's data across multiple files!)
+
+# XXX We also potentially see more; a conf file may be in the directory, but
+# not pulled in via an 'include' or 'subconf', so it doesn't exist as far as
+# 'gitolite compile' is concerned, but here we *do* pull it in.
+
+my $repos = '';
+my $perms = '';
+my $list = '';  # list of templates to apply
+my $lip = '';   # line in progress
+while (<>) {
+    chomp;
+    next unless /^=begin template-data$/ .. /^=end$/ and not /^=(begin|end)/;
+
+    next unless /\S/;
+    next if /^\s*#/;
+
+    # handle continuation lines (backslash as last character)
+    if (/\\$/) {
+        s/\\$//;
+        $lip .= $_;
+        next;
+    }
+    $_ = $lip . $_;
+    $lip = '';
+
+    next if m([^ \w.\@/=-]);    # silently ignore lines that have characters we don't need
+    if (/^\s*repo\s+(\S.*)=\s*(\S.*)$/) {
+        flush($repos, $list, $perms);
+        $repos = $1;
+        $perms = '';
+        $list = $2;
+
+    } elsif (/^\s*(\S+)\s*=\s*(\S.*)$/) {
+        $perms .= "$1 = $2\n";
+    } else {
+        # probably a blank line or a comment line.  If not, well *shrug*
+    }
+}
+flush($repos, $list, $perms);
+
+sub flush {
+    my ($r, $l, $p) = @_;
+    return unless $r and $l and $p;
+    $l =~ s/\s+/ /g;
+
+    my @r = split ' ', $r;
+    while (@r) {
+        my $r1 = shift @r;
+        if ($r1 =~ m(^@)) {
+            my @g = @{ Gitolite::Conf::Load::list_members($r1) };
+            _warn "undefined group '$r1'" unless @g;
+            unshift @r, @g;
+            next;
+        }
+
+        flush_1($r1, $l, $p);
+    }
+}
+sub flush_1 {
+    my ($repo, $list, $perms) = @_;
+
+    # beware of wild characters!
+    return unless $repo =~ $REPONAME_PATT;
+
+    if (not -d "$rb/$repo.git") {
+        new_wild_repo( $repo, 'gitolite-admin', 'template-data' );
+    }
+
+    _print("$rb/$repo.git/gl-repo-groups", $list);
+
+    _print("$rb/$repo.git/gl-perms", $perms);
+}

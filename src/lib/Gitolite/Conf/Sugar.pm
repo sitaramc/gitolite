@@ -187,6 +187,7 @@ sub skip_block {
     for (@$lines) {
         my $skip = 0;
         $skip = 1 if /^= *begin testconf$/;
+        $skip = 1 if /^= *begin template-data$/;
         # add code for other types of blocks here as needed
 
         next if $skip .. /^= *end$/;

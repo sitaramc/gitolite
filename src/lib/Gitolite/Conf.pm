@@ -57,6 +57,9 @@ sub compile {
     for my $repo ( @{ $rc{NEW_REPOS_CREATED} } ) {
         trigger( 'POST_CREATE', $repo );
     }
+
+    # process rule template data
+    _system("gitolite compile-template-data");
 }
 
 sub parse {
