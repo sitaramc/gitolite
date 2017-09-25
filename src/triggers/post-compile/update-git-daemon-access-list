@@ -14,7 +14,13 @@ use warnings;
 my $EO = "git-daemon-export-ok";
 my $RB = $rc{GL_REPO_BASE};
 
-for my $d (`gitolite list-phy-repos | gitolite access % daemon R any`) {
+my $cmd = "gitolite list-phy-repos";
+if ( @ARGV and $ARGV[0] eq 'POST_CREATE' ) {
+    # only one repo to do
+    $cmd = "echo $ARGV[1]";
+}
+
+for my $d (`$cmd | gitolite access % daemon R any`) {
     my @F = split "\t", $d;
     if ($F[2] =~ /DENIED/) {
         unlink "$RB/$F[0].git/$EO";

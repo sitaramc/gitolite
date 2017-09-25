@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# TODO: look at the commit in which *this* line was added, and see the changes
+# to the other scripts.  We need to make those changes here also, but I'm too
+# lazy right now.  Plus I'm not even sure if anyone is using this!
+
 # Update git-daemon and gitweb access using 'option' lines instead of special
 # usernames.
 

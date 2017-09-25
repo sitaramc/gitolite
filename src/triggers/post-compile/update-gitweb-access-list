@@ -18,11 +18,23 @@ plf=`gitolite query-rc GITWEB_PROJECTS_LIST`
 tmpfile=`mktemp $plf.tmp_XXXXXXXX`
 rm -f $tmpfile;
 
-(
-    gitolite list-phy-repos | gitolite access % gitweb R any | grep -v DENIED
-    gitolite list-phy-repos | gitolite git-config -r % gitweb\\.
-) |
-    cut -f1 | sort -u | sed -e 's/$/.git/' > $tmpfile
+if [ "$1" = "POST_CREATE" ] && [ -n "$2" ]
+then
+    # just one to be done
+    repo="$2"
+    grep -v "^$repo.git$" $plf > $tmpfile
+    if gitolite access -q $repo gitweb R any || gitolite git-config -q -r $repo gitweb\\.
+    then
+        echo "$repo.git" >> $tmpfile
+    fi
+else
+    # all of them
+    (
+        gitolite list-phy-repos | gitolite access % gitweb R any | grep -v DENIED
+        gitolite list-phy-repos | gitolite git-config -r % gitweb\\.
+    ) |
+        cut -f1 | sort -u | sed -e 's/$/.git/' > $tmpfile
+fi
 
 [ -f $plf ] && perl -e "chmod ( ( (stat('$plf'))[2] & 07777 ), '$tmpfile')"
 mv $tmpfile $plf
