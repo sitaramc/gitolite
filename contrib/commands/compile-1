@@ -1,0 +1,149 @@
+#!/usr/bin/perl -s
+
+
+# To anyone except pingou: these aren't the droids you are looking for.  Move along.
+
+
+use strict;
+use warnings;
+
+# This program is meant to re-compile the access rules (and 'config' or
+# 'option' lines) of exacttly ONE repo.
+
+# It expects to run as a gitolite sub-command, that is:
+#   gitolite compile-1 $single_repo_conf_file
+
+# It takes one argument: the name of a file that contains the new ruleset you
+# want to use.  The file must contain exactly one 'repo' line, with exactly
+# one repo name, followed by the rules, configs, and options for that repo in
+# the normal gitolite.conf syntax.
+
+# IMPORTANT CAVEATS ARE DISCUSSED AT THE END OF THIS FILE.  PLEASE READ!
+
+# THERE IS NO ERROR CHECKING ON THESE CAVEATS.  PLEASE USE CAREFULLY!
+
+use 5.10.0;
+use Data::Dumper;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Rc;
+use Gitolite::Common;
+use Gitolite::Conf;
+use Gitolite::Conf::Store;
+use Gitolite::Conf::Sugar;
+
+# these variables get populated by the "do" function
+our %one_repo;
+our %one_config;
+
+my ($cf, $repo) = args();       # conffile from @ARGV, repo from first line of conffile
+do_gl_conf($repo);              # read conffile and grab %one_repo and %one_config
+my $startseq = startseq();      # get the lowest sequence number from %one_repo and %one_config
+parse_and_store($cf, $repo);    # parse the ruleset and write out just the gl-conf file
+                                # (this is the only part that uses core gitolite functions)
+update_seq($repo, $startseq);   # update gl-conf with adjusted sequence numbers
+
+exit 0;
+
+# ----------------------------------------------------------------------
+
+sub args {
+    my $cf = shift @ARGV or _die "need conffile";
+    $cf = $ENV{PWD} . "/" . $cf unless $cf =~ m(^/);
+
+    my $t = slurp($cf);
+    _die "bad conf file" unless $t =~ /^\s*repo\s+(\S+)\s*$/m;
+    my $repo = $1;
+
+    return ($cf, $repo);
+}
+
+sub do_gl_conf {
+    my $repo = shift;
+    _chdir("$rc{GL_REPO_BASE}/$repo.git");
+    _die "parse gl-conf failed: " . ( $@ or $! ) unless do "./gl-conf";
+    # populates the two "our" variables
+}
+
+sub startseq {
+    # find the starting sequence number from the two "our" variables
+    $one_config{$repo} ||= [];
+    my ($startseq) =
+        sort { $a <=> $b }
+        map { $_->[0] }
+        map { @$_ }
+        (
+            $one_config{$repo}, 
+            map { values %$_ } $one_repo{$repo}
+        );
+    return $startseq;
+}
+
+sub parse_and_store {
+    my ($cf, $repo) = @_;
+
+    parse(sugar($cf));
+    _chdir( $rc{GL_REPO_BASE} );
+    Gitolite::Conf::Store::store_1($repo);
+}
+
+sub update_seq {
+    my ($repo, $startseq) = @_;
+
+    _chdir("$rc{GL_REPO_BASE}/$repo.git");
+    my $text = slurp("gl-conf");
+
+    $startseq--;    # adjust for ++ at start of parse
+    $text =~ s/^( +)(\d+),$/"$1" . ($2+$startseq) . ","/gme;
+
+    _print("gl-conf", $text);
+}
+
+__END__
+
+This program is meant to do one thing, and one thing only: re-compile the
+rules for a single repo quickly and efficiently.
+
+CAVEATS:
+
+Apart from the requirements listed at the top, there are some things to watch for.
+
+Before we do that, let's define some terms for ease of discussion.
+
+*   "named repos" -- repos that are explicitly named in gitolite.conf; e.g.
+
+        repo foo bar baz
+            ...
+
+*   "other repos" -- repos that are not "named".  Usually, they are defined
+    via a group definition or a regex; e.g.
+
+        repo @all
+            ...
+
+        @g1 = foo bar baz
+        repo @g1
+            ...
+
+        repo fo[a-z].*
+            ...
+
+Now the caveats:
+
+1.  You can only use this to recompile rules for named repos, not for other
+    repos.
+
+2.  The repo must be defined only once in gitolite.conf.  I.e., it's rules
+    must NOT be split up across multiple sections or files, with other repos
+    rules intervening in between.  (Normal gitolite lets you do that, but that
+    won't work with this code).
+
+3.  All the "named repos" which you might ever want to single-compile in
+    future, must be placed at the end of gitolite.conf.  Do not place any
+    "other repo" definitions after them.
+
+    (This is a somewhat conservative restriction; there are situations in
+    which it can be violated but it's hard to explain.  Your current config
+    seems to satisfy this constraint so I won't bother detailing how to get
+    around it!  Ask me on email if needed.)
+
