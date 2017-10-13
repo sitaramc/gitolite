@@ -305,7 +305,7 @@ sub load_1 {
     }
 
     if ( -f "gl-conf" ) {
-        return if not $split_conf{$repo};
+        return if not $split_conf{$repo} and not $rc{ALLOW_ORPHAN_GL_CONF};
 
         my $cc = "./gl-conf";
         _die "parse '$cc' failed: " . ( $@ or $! ) unless do $cc;
