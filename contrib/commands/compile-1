@@ -1,26 +1,79 @@
 #!/usr/bin/perl -s
-
-
-# To anyone except pingou: these aren't the droids you are looking for.  Move along.
-
-
 use strict;
 use warnings;
 
-# This program is meant to re-compile the access rules (and 'config' or
-# 'option' lines) of exacttly ONE repo.
+# DESCRIPTION:
 
-# It expects to run as a gitolite sub-command, that is:
-#   gitolite compile-1 $single_repo_conf_file
+#   This program is meant to re-compile the access rules (and 'config' or
+#   'option' lines) of exactly ONE actual repo (i.e., not a repo group or a
+#   repo pattern).
 
-# It takes one argument: the name of a file that contains the new ruleset you
-# want to use.  The file must contain exactly one 'repo' line, with exactly
-# one repo name, followed by the rules, configs, and options for that repo in
-# the normal gitolite.conf syntax.
+# MOTIVATION:
 
-# IMPORTANT CAVEATS ARE DISCUSSED AT THE END OF THIS FILE.  PLEASE READ!
+#   Fedora has a huge number of repos, as well as lot of churn in permissions.
+#   The combination of having a large conf *and* frequent compiles were not
+#   working out, hence this solution.  Not sure if any others have such a
+#   situation, so it's a standalone program, separate from "core" gitolite,
+#   shipped in "contrib" instead of "src".
 
-# THERE IS NO ERROR CHECKING ON THESE CAVEATS.  PLEASE USE CAREFULLY!
+# SETUP:
+
+#   It expects to run as a gitolite sub-command, which means you will need to
+#   copy it from contrib to src/commands, or the equivalent location inside
+#   LOCAL_CODE; see non-core.html in the docs for details.
+
+# INVOCATION:
+
+#   It takes one argument: the name of a file that contains the new ruleset
+#   you want to use.  (This cannot be STDIN or "-" or something).
+
+#   example:
+#
+#       gitolite compile-1 <file-containing-rules-for-exactly-one-repo>
+
+# WARNING:
+
+#   If the main gitolite.conf changes significantly (specifically, if the
+#   number of effective rules in it increase quite a bit), you may have to run
+#   this command on ALL repos to update their individual gl-conf files.
+#
+#   (TBD: explain this in more concrete terms)
+
+# ----------------------------------------------------------------------
+# THERE IS NO ERROR CHECKING ON THE WARNING ABOVE, NOR ON THE ASSUMPTIONS AND
+# REQUIREMENTS BELOW.  PLEASE USE CAREFULLY!
+# ----------------------------------------------------------------------
+
+# ASSUMPTIONS/REQUIREMENTS:
+
+#   The file given must contain exactly one 'repo' line, with exactly one repo
+#   name, followed by the rules, configs, and options for that repo in the
+#   normal gitolite.conf syntax.
+
+#   The file must not have any group definitions, though it may use group
+#   definitions already setup in the main gitolite.conf file.
+
+#   Rules for this repo need not be already defined in the main gitolite.conf.
+#   If they are, they will cease to have any effect once you run this command
+#   - only the rules you supply in the file passed to this command will apply,
+#   and they will be considered to be placed at the end of gitolite.conf.
+
+#   If the repo does not exist, it must be first created using:
+#
+#       GL_USER=admin gitolite create <reponame>
+#
+#   where <reponame> is the gitolite-style name (i.e., "foo", not "foo.git" or
+#   "~/repositories/foo" or "~/repositories/foo.git")
+#
+#   This, of course, requires the main gitolite.conf to have the following
+#   lines at the top:
+#
+#       repo [A-Za-z].*
+#           C   =   admin
+
+#   Any change to the main gitolite.conf is followed by a full 'gitolite
+#   compile'; i.e., ~/.gitolite/conf/gitolite.conf-compiled.pm, the main
+#   "compiled" conf file, is consistent with the latest gitolite.conf.
 
 use 5.10.0;
 use Data::Dumper;
@@ -32,13 +85,8 @@ use Gitolite::Conf;
 use Gitolite::Conf::Store;
 use Gitolite::Conf::Sugar;
 
-# these variables get populated by the "do" function
-our %one_repo;
-our %one_config;
-
 my ($cf, $repo) = args();       # conffile from @ARGV, repo from first line of conffile
-do_gl_conf($repo);              # read conffile and grab %one_repo and %one_config
-my $startseq = startseq();      # get the lowest sequence number from %one_repo and %one_config
+my $startseq = getseq();        # get the starting sequence number by looking in the (common) compiled conf file
 parse_and_store($cf, $repo);    # parse the ruleset and write out just the gl-conf file
                                 # (this is the only part that uses core gitolite functions)
 update_seq($repo, $startseq);   # update gl-conf with adjusted sequence numbers
@@ -58,25 +106,14 @@ sub args {
     return ($cf, $repo);
 }
 
-sub do_gl_conf {
-    my $repo = shift;
-    _chdir("$rc{GL_REPO_BASE}/$repo.git");
-    _die "parse gl-conf failed: " . ( $@ or $! ) unless do "./gl-conf";
-    # populates the two "our" variables
-}
+sub getseq {
+    my @main_cc = slurp "$rc{GL_ADMIN_BASE}/conf/gitolite.conf-compiled.pm";
+    my $max = 0;
+    for (@main_cc) {
+        $max = $1 if m/^ +(\d+),$/ and $max < $1;
+    }
 
-sub startseq {
-    # find the starting sequence number from the two "our" variables
-    $one_config{$repo} ||= [];
-    my ($startseq) =
-        sort { $a <=> $b }
-        map { $_->[0] }
-        map { @$_ }
-        (
-            $one_config{$repo}, 
-            map { values %$_ } $one_repo{$repo}
-        );
-    return $startseq;
+    return $max;
 }
 
 sub parse_and_store {
@@ -93,57 +130,10 @@ sub update_seq {
     _chdir("$rc{GL_REPO_BASE}/$repo.git");
     my $text = slurp("gl-conf");
 
-    $startseq--;    # adjust for ++ at start of parse
+    $startseq+=1000;
+    # just for safety, in case someone adds a few rules to the main conf later, but neglects to update repo confs
+
     $text =~ s/^( +)(\d+),$/"$1" . ($2+$startseq) . ","/gme;
 
     _print("gl-conf", $text);
 }
-
-__END__
-
-This program is meant to do one thing, and one thing only: re-compile the
-rules for a single repo quickly and efficiently.
-
-CAVEATS:
-
-Apart from the requirements listed at the top, there are some things to watch for.
-
-Before we do that, let's define some terms for ease of discussion.
-
-*   "named repos" -- repos that are explicitly named in gitolite.conf; e.g.
-
-        repo foo bar baz
-            ...
-
-*   "other repos" -- repos that are not "named".  Usually, they are defined
-    via a group definition or a regex; e.g.
-
-        repo @all
-            ...
-
-        @g1 = foo bar baz
-        repo @g1
-            ...
-
-        repo fo[a-z].*
-            ...
-
-Now the caveats:
-
-1.  You can only use this to recompile rules for named repos, not for other
-    repos.
-
-2.  The repo must be defined only once in gitolite.conf.  I.e., it's rules
-    must NOT be split up across multiple sections or files, with other repos
-    rules intervening in between.  (Normal gitolite lets you do that, but that
-    won't work with this code).
-
-3.  All the "named repos" which you might ever want to single-compile in
-    future, must be placed at the end of gitolite.conf.  Do not place any
-    "other repo" definitions after them.
-
-    (This is a somewhat conservative restriction; there are situations in
-    which it can be violated but it's hard to explain.  Your current config
-    seems to satisfy this constraint so I won't bother detailing how to get
-    around it!  Ask me on email if needed.)
-
