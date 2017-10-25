@@ -18,13 +18,6 @@
 
 # - assumes you don't have a subdir in keydir called "__split_keys__"
 
-# - RUNNING "GITOLITE SETUP" WILL LOSE ALL THESE KEYS.  So if you ever do
-#   that, you will then need to make a dummy push to the admin repo to add
-#   them back.  If all your **admin** keys were in split keys, then you lost
-#   remote access.  If that happens, log on to the server using "su - git" or
-#   such, then use the methods described in the "bypassing gitolite" section
-#   in "emergencies.html" instead of a remote push.
-
 # SUPPORT
 # -------
 #
@@ -42,7 +35,29 @@ rm -rf __split_keys__
 mkdir __split_keys__
 export SKD=$PWD/__split_keys__
 
-find . -type f -name "*.pub" | while read k
+# if we're coming from a gitolite-admin push, delete all *.multi, and rename
+# all multi-line *.pub to *.multi
+if [ "$GL_REPO" = "gitolite-admin" ] || [ "$GL_BYPASS_ACCESS_CHECKS" = "1" ]
+then
+    find . -type f -name "*.multi" | while read k
+    do
+        rm -f "$k"
+    done
+    find . -type f -name "*.pub" | while read k
+    do
+        # is this a multi-key?
+        lines=`wc -l < $k`
+        case $lines in
+            (0|1) continue
+        esac
+
+        base=`basename $k .pub`
+        mv $k $base.multi
+    done
+fi
+
+# now process *.multi
+find . -type f -name "*.multi" | while read k
 do
     # do we need to split?
     lines=`wc -l < $k`
@@ -50,14 +65,16 @@ do
         (0|1) continue
     esac
 
-    # is it sane to split?
-    base=`basename $k .pub`
+    base=`basename $k .multi`
+    # sanity check
     echo $base | grep '@' >/dev/null && continue
 
     # ok do it
-    seq=1
+    seq=0
     while read line
     do
+        (( seq++ ))
+        [ -z "$line" ] && continue
         f=$SKD/$base@$seq.pub
         echo "$line" > $f
         # similar sanity check as main ssh-authkeys script
@@ -66,9 +83,5 @@ do
             echo 1>&2 "ssh-authkeys-split: bad line $seq in keydir/$k"
             rm -f $f
         fi
-        (( seq++ ))
     done < $k
-
-    # now delete the original file
-    rm $k
 done
