@@ -50,7 +50,7 @@ while (<>) {
     $_ = $lip . $_;
     $lip = '';
 
-    next if m([^ \w.\@/=-]);    # silently ignore lines that have characters we don't need
+    _warn("bad line: $_"), next if m([^ \w.\@/=-]);    # silently ignore lines that have characters we don't need
     if (/^\s*repo\s+(\S.*)=\s*(\S.*)$/) {
         flush($repos, $list, $perms);
         $repos = $1;
