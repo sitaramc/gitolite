@@ -111,8 +111,8 @@ for h in $0.*; do
     [ -x $h ] || continue
     if [ $type = args ]
     then
-        $h $@
+        $h $@ || { [ $0 = hooks/pre-receive ] && exit 1; }
     else
-        echo "$stdin" | $h
+        echo "$stdin" | $h || { [ $0 = hooks/pre-receive ] && exit 1; }
     fi
 done
