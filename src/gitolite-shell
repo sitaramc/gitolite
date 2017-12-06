@@ -109,6 +109,10 @@ sub main {
 
     # set up the repo and the attempted access
     my ( $verb, $repo ) = parse_soc();    # returns only for git commands
+
+    # remove trailing slash, if any
+    $repo =~ s(/$)();
+
     Gitolite::Conf::Load::sanity($repo, $REPONAME_PATT);
     $ENV{GL_REPO} = $repo;
     my $aa = ( $verb =~ 'upload' ? 'R' : 'W' );
