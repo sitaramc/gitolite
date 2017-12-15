@@ -109,10 +109,6 @@ sub main {
 
     # set up the repo and the attempted access
     my ( $verb, $repo ) = parse_soc();    # returns only for git commands
-
-    # remove trailing slash, if any
-    $repo =~ s(/$)();
-
     Gitolite::Conf::Load::sanity($repo, $REPONAME_PATT);
     $ENV{GL_REPO} = $repo;
     my $aa = ( $verb =~ 'upload' ? 'R' : 'W' );
@@ -157,11 +153,19 @@ sub parse_soc {
     $soc ||= 'info';
 
     my $git_commands = "git-upload-pack|git-receive-pack|git-upload-archive";
-    if ( $soc =~ m(^($git_commands) '?/?(.*?)(?:\.git(\d)?)?'?$) ) {
-        my ( $verb, $repo, $trace_level ) = ( $1, $2, $3 );
-        $ENV{D} = $trace_level if $trace_level;
-        _die "invalid repo name: '$repo'" if $repo !~ $REPONAME_PATT;
+    # simplify the regex; we'll handle all the reponame nuances later
+    if ( $soc =~ m(^($git_commands) '?/?(.*?)'?$) ) {
+        my ( $verb, $repo ) = ( $1, $2 );
         trace( 2, "git command", $soc );
+
+        # clean up the repo name; first extract the trace level if supplied
+        # (and no, you can't have a trace level *and* a trailing slash).
+        $ENV{D} = $1 if $repo =~ s/\.git(\d)$//;
+        # and then the git-daemon-compatibility trailers
+        $repo =~ s(/$)();
+        $repo =~ s(\.git$)();
+
+        _die "invalid repo name: '$repo'" if $repo !~ $REPONAME_PATT;
         return ( $verb, $repo );
     }
 
