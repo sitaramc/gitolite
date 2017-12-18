@@ -129,7 +129,7 @@ END { `/bin/rm -rf $TEMPDIR`; }
 
 sub cd_temp_clone {
     chomp($TEMPDIR);
-    hushed_git( "clone", "$rb/gitolite-admin.git", "$TEMPDIR" );
+    hushed_git( "clone", "$rb/$rc{GL_ADMIN_REPO}.git", "$TEMPDIR" );
     chdir($TEMPDIR);
     my $hostname = `hostname`; chomp($hostname);
     hushed_git( "config", "--get", "user.email" ) and hushed_git( "config", "user.email", $ENV{USER} . "@" . $hostname );

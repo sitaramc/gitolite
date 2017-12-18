@@ -115,9 +115,6 @@ sub setup_gladmin {
     _die "'-pk' or '-a' required; see 'gitolite setup -h' for more"
       if not $admin and not -f "$rc{GL_ADMIN_BASE}/conf/gitolite.conf";
 
-    # reminder: 'admin files' are in ~/.gitolite, 'admin repo' is
-    # $rc{GL_REPO_BASE}/gitolite-admin.git
-
     # grab the pubkey content before we chdir() away
     my $pubkey_content = '';
     $pubkey_content = slurp($pubkey) if $pubkey;
@@ -135,6 +132,7 @@ sub setup_gladmin {
         $conf = <DATA>;
     }
     $conf =~ s/%ADMIN/$admin/g;
+    $conf =~ s/%REPO_DE_ADMIN/$rc{GL_ADMIN_REPO}/g;
 
     _print( "conf/gitolite.conf", $conf ) if not -f "conf/gitolite.conf";
 
@@ -146,15 +144,14 @@ sub setup_gladmin {
     # set up the admin repo in repo-base
 
     _chdir();
-    _mkdir( $rc{GL_REPO_BASE} );
-    _chdir( $rc{GL_REPO_BASE} );
-
-    new_repo("gitolite-admin") if not -d "gitolite-admin.git";
+    _mkdir( "$rc{GL_REPO_BASE}" );
+    _chdir( "$rc{GL_REPO_BASE}" );
+    new_repo("$rc{GL_ADMIN_REPO}") if not -d "$rc{GL_ADMIN_REPO}.git";
 
     # commit the admin files to the admin repo
 
     $ENV{GIT_WORK_TREE} = $rc{GL_ADMIN_BASE};
-    _chdir("$rc{GL_REPO_BASE}/gitolite-admin.git");
+    _chdir("$rc{GL_REPO_BASE}/$rc{GL_ADMIN_REPO}.git");
     _system("git add conf/gitolite.conf");
     _system("git add keydir") if $pubkey;
     tsh_try("git config --get user.email") or tsh_run( "git config user.email $ENV{USER}\@" . `hostname` );
@@ -168,7 +165,7 @@ sub setup_gladmin {
 1;
 
 __DATA__
-repo gitolite-admin
+repo %REPO_DE_ADMIN
     RW+     =   %ADMIN
 
 repo testing
