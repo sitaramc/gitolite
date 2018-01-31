@@ -41,21 +41,23 @@ while (<>) {
     $hook =~ s/\..*//;
 
     my @codes = split /\s+/, $codes;
-    next unless @codes;
 
-    # this is a special case
-    if ( $repo eq 'gitolite-admin' and $hook eq 'post-update' ) {
-        _warn "repo-specific-hooks: ignoring attempts to set post-update hook for the admin repo";
-        next;
+    # check for disallowed hook types only if @codes is non-empty
+    if (@codes) {
+        # this is a special case
+        if ( $repo eq 'gitolite-admin' and $hook eq 'post-update' ) {
+            _warn "repo-specific-hooks: ignoring attempts to set post-update hook for the admin repo";
+            next;
+        }
+
+        unless ( $hook =~ /^(pre-receive|post-receive|post-update|pre-auto-gc)$/ ) {
+            _warn "repo-specific-hooks: '$hook' is not allowed, ignoring";
+            _warn "    (only pre-receive, post-receive, post-update, and pre-auto-gc are allowed)";
+            next;
+        }
     }
 
-    unless ( $hook =~ /^(pre-receive|post-receive|post-update|pre-auto-gc)$/ ) {
-        _warn "repo-specific-hooks: '$hook' is not allowed, ignoring";
-        _warn "    (only pre-receive, post-receive, post-update, and pre-auto-gc are allowed)";
-        next;
-    }
-
-    push @{ $repo_hooks{$repo}{$hook} }, @codes if @codes;
+    push @{ $repo_hooks{$repo}{$hook} }, @codes;
 }
 
 for my $repo (keys %repo_hooks) {

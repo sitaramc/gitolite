@@ -173,10 +173,10 @@ try "
 
 # Verify hooks are removed properly
 
-confreset;confadd '
+confadd '
     repo foo
             RW+                 =   @all
-            option hook.post-receive =
+            option hook.post-receive = ""
 
     repo bar
             RW+                 =   @all
@@ -184,17 +184,17 @@ confreset;confadd '
 
     repo baz
             RW+                 =   @all
-            option hook.post-receive =
+            option hook.post-receive = ""
             option hook.post-update =  second
 ';
 
 try "ADMIN_PUSH repo-specific-hooks-02; !/FATAL/" or die text();
 
 try "
-    ls $rb/foo.git/hooks/*;  ok;    !/post-receive/
+    ls $rb/foo.git/hooks/*;  ok;    !/post-receive.h0/
     ls $rb/bar.git/hooks/*;  ok;    !/pre-receive.*first/
                                      /pre-receive.h00-second/
-    ls $rb/baz.git/hooks/*;  ok;    !/post-receive/
+    ls $rb/baz.git/hooks/*;  ok;    !/post-receive.h0/
                                     !/post-update.*first/
                                      /post-update.h00-second/
 ";
@@ -216,7 +216,7 @@ try "
     PUSH admin master;      ok; /master -. master/
                                 /hooks/pre-receive.h00-second/
                                 !/hooks/pre-receive.*has args:/
-                                /hooks/pre-receive.h00-second has stdin: 0000000000000000000000000000000000000000 cc7808f77c7c7d705f82dc54dc3152146175768f refs/heads/master/
+                                /hooks/pre-receive.h00-second has stdin: cfc8561c7827a8b94df6c5dad156383d4cb210f5 cc7808f77c7c7d705f82dc54dc3152146175768f refs/heads/master/
 
     cd ..
 
