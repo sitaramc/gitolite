@@ -41,6 +41,8 @@ while (<>) {
     next unless /\S/;
     next if /^\s*#/;
 
+    s/\t/ /g;   # all the same to us
+
     # handle continuation lines (backslash as last character)
     if (/\\$/) {
         s/\\$//;
