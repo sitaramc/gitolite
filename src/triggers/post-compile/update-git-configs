@@ -39,12 +39,15 @@ sub fixup_config {
     my $creator = creator($pr);
 
     my $gc = git_config( $pr, '.', 1 );
+    my $ac = `git config --file $RB/$pr.git/config -l`;
     while ( my ( $key, $value ) = each( %{$gc} ) ) {
         next if $key =~ /^gitolite-options\./;
         $value =~ s/(@\w+)/expand_group($1)/ge if $rc{EXPAND_GROUPS_IN_CONFIG};
+        my $lkey = lc $key;
+        next if $ac =~ /^\Q$lkey\E=\Q$value\E$/m;
         if ( $value ne "" ) {
             system( "git", "config", "--file", "$RB/$pr.git/config", $key, $value );
-        } else {
+        } elsif ( $ac =~ /^\Q$lkey\E=/m ) {
             system( "git", "config", "--file", "$RB/$pr.git/config", "--unset-all", $key );
         }
     }

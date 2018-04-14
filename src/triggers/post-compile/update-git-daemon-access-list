@@ -24,7 +24,7 @@ for my $d (`$cmd | gitolite access % daemon R any`) {
     my @F = split "\t", $d;
     if ($F[2] =~ /DENIED/) {
         unlink "$RB/$F[0].git/$EO";
-    } else {
+    } elsif (! -f "$RB/$F[0].git/$EO") {
         textfile( file => $EO, repo => $F[0], text => "" );
     }
 }
