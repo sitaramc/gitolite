@@ -9,9 +9,9 @@ use warnings;
 
 # usage in conf/gitolite.conf goes like this:
 
-#       -   VREF/MERGE_CHECK/master     =   @all
+#       -   VREF/MERGE-CHECK/master     =   @all
 #       # reject only if the merge commit is being pushed to the master branch
-#       -   VREF/MERGE_CHECK            =   @all
+#       -   VREF/MERGE-CHECK            =   @all
 #       # reject merge commits to any branch
 
 my $ref    = $ARGV[0];
