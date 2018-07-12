@@ -1,3 +1,14 @@
+2018-07-12  v3.6.8  fix bug when deleting *all* hooks for a repo
+
+                    allow trailing slashes in repo names
+
+                    make pre-receive hook driver bail on non-zero exit of a
+                    pre-receive hook
+
+                    allow templates in gitolite.conf (new feature)
+
+                    various optimiations
+
 2017-07-02  v3.6.7  allow repo-specific hooks to be organised into
                     subdirectories, and allow the multi-hook driver to be
                     placed in some other location of your choice
