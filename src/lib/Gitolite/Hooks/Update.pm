@@ -17,6 +17,8 @@ use Gitolite::Conf::Load;
 use strict;
 use warnings;
 
+$|++;
+
 # ----------------------------------------------------------------------
 
 sub update {
