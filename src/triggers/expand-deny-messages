@@ -49,10 +49,14 @@ _info( "Operation", _op( $a12, $aa, $oldsha, $newsha ) );
 
 if ( $ref =~ m((^VREF/[^/]+)) ) {
     my $vref      = $1;
-    my $vref_text = slurp( _which( $vref, 'x' ) );
-    my $etag      = '(?:help|explain|explanation)';
-    $vref_text =~ m(^\s*# $etag.start\n(.*)^\s*# $etag.end\n)sm
-      and print STDERR "Explanation for $vref:\n$1";
+    if ($ref =~ s(^VREF/NAME/)()) {
+        print STDERR "You're apparently not allowed to push '$ref'";
+    } else {
+        my $vref_text = slurp( _which( $vref, 'x' ) );
+        my $etag      = '(?:help|explain|explanation)';
+        $vref_text =~ m(^\s*# $etag.start\n(.*)^\s*# $etag.end\n)sm
+          and print STDERR "Explanation for $vref:\n$1";
+  }
 }
 
 print STDERR "\n";
