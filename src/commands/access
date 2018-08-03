@@ -85,8 +85,9 @@ while (<>) {
 
 sub adjust_aa {
     my ($repo, $aa) = @_;
-    $aa = '+' if $aa eq 'C' and not option($repo, 'CREATE_IS_C');
+    $aa = 'W' if $aa eq 'C' and not option($repo, 'CREATE_IS_C');
     $aa = '+' if $aa eq 'D' and not option($repo, 'DELETE_IS_D');
+    $aa = 'W' if $aa eq 'M' and not option($repo, 'MERGE_CHECK');
     return $aa;
 }
 

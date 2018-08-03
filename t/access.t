@@ -9,7 +9,7 @@ use Gitolite::Test;
 # test 'gitolite access'
 # ----------------------------------------------------------------------
 
-try "plan 216";
+try "plan 254";
 
 confreset;confadd '
     @admins     =   admin dev1
@@ -199,4 +199,55 @@ try "
     gitolite access c1  u1 C;           ok
     gitolite access c1  u2 +;           ok
     gitolite access c1  u2 C;           !ok
+";
+
+confreset;confadd '
+    repo foo
+        R   =   u1
+        RW  =   u2
+        RW+ =   u3
+
+    repo bar
+        R   =   u1
+        RW  =   u2
+        RW+ =   u3
+        RW+CDM  =   u6
+
+';
+
+try "ADMIN_PUSH set4; !/FATAL/" or die text();
+
+try "
+    gitolite access foo u1 +;           !ok
+    gitolite access foo u2 +;           !ok
+    gitolite access foo u3 +;           ok
+    gitolite access foo u1 C;           !ok
+    gitolite access foo u2 C;           ok
+    gitolite access foo u3 C;           ok
+    gitolite access foo u1 D;           !ok
+    gitolite access foo u2 D;           !ok
+    gitolite access foo u3 D;           ok
+    gitolite access foo u1 M;           !ok
+    gitolite access foo u2 M;           ok
+    gitolite access foo u3 M;           ok
+
+    gitolite access bar u1 +;           !ok
+    gitolite access bar u2 +;           !ok
+    gitolite access bar u3 +;           ok
+    gitolite access bar u1 C;           !ok
+    gitolite access bar u2 C;           !ok
+    gitolite access bar u3 C;           !ok
+    gitolite access bar u1 D;           !ok
+    gitolite access bar u2 D;           !ok
+    gitolite access bar u3 D;           !ok
+    gitolite access bar u1 M;           !ok
+    gitolite access bar u2 M;           !ok
+    gitolite access bar u3 M;           !ok
+
+    gitolite access bar u6 R;           ok
+    gitolite access bar u6 W;           ok
+    gitolite access bar u6 +;           ok
+    gitolite access bar u6 C;           ok
+    gitolite access bar u6 D;           ok
+    gitolite access bar u6 M;           ok
 ";
