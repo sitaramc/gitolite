@@ -51,7 +51,7 @@ $ref ||= 'any';
 # fq the ref if needed
 $ref =~ s(^)(refs/heads/) if $ref and $ref ne 'any' and $ref !~ m(^(refs|VREF)/);
 _die "invalid perm" if not( $aa and $aa =~ /^(R|W|\+|C|D|M|\^C)$/ );
-_die "invalid ref name" if not( $ref and $ref =~ $REPONAME_PATT );
+_die "invalid ref name" if not( $ref and $ref =~ $REF_OR_FILENAME_PATT );
 
 my $ret = '';
 
