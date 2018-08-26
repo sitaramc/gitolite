@@ -61,6 +61,9 @@ if ( $repo ne '%' and $user ne '%' ) {
 
     show($ret) if $s;
 
+    # adjust for fallthru in VREFs
+    $ret =~ s/DENIED by fallthru/allowed by fallthru/ if $ref =~ m(^VREF/);
+
     if ( $ret =~ /DENIED/ ) {
         print "$ret\n" unless $q;
         exit 1;
@@ -104,7 +107,7 @@ sub show {
     p => skipped due to perm (W, +, etc) not matching,
     D => explicitly denied,
     A => explicitly allowed,
-    F => denied due to fallthru (no rules matched)
+    F => fallthru; access denied for normal refs, allowed for VREFs
 
 ";
 
