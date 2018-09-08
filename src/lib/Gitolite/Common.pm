@@ -19,6 +19,8 @@ package Gitolite::Common;
 
           ssh_fingerprint_file
           ssh_fingerprint_line
+
+          update_hook_present
 );
 #>>>
 use Exporter 'import';
@@ -235,12 +237,26 @@ sub cleanup_conf_line {
             chomp($repo);
             $repo =~ s/\.git$//;
             $repo =~ s(^\./)();
-            push @phy_repos, $repo unless $repo =~ m(/$);
-                # tolerate bare repos within ~/repositories but silently ignore them
+            next if $repo =~ m(/$);
+                # tolerate non-bare repos within ~/repositories but silently ignore them
+            next unless update_hook_present($repo);
+                # ignore repos that don't yet have the update hook
+            push @phy_repos, $repo;
         }
         trace( 3, scalar(@phy_repos) . " physical repos found" );
         return sort_u( \@phy_repos );
     }
+}
+
+sub update_hook_present {
+    my $repo = shift;
+
+    return 1 unless -d "$ENV{GL_REPO_BASE}/$repo.git";  # non-existent repo is fine
+
+    my $x = readlink("$ENV{GL_REPO_BASE}/$repo.git/hooks/update");
+    return 1 if $x and $x eq "$ENV{GL_ADMIN_BASE}/hooks/common/update";
+
+    return 0;
 }
 
 # generate a timestamp
