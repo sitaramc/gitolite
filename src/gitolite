@@ -71,6 +71,11 @@ if ( $command eq 'setup' ) {
     compile(@args);
 
 } elsif ( $command eq 'trigger' ) {
+    my $s = $args[0];
+    _die "trigger section '$s' not found in rc"
+        unless  $s eq 'POST_COMPILE'
+             or $s eq 'POST_CREATE'
+             or ( exists $rc{$s} and ref( $rc{$s} ) eq 'ARRAY' );
     trigger(@args);
 
 } elsif ( my $c = _which( "commands/$command", 'x' ) ) {
