@@ -1,3 +1,9 @@
+2018-08-07  v3.6.9  prevent racy access to repos in process of migration to
+                    gitolite
+
+                    'info' learns new '-p' option to show only physical repos
+                    (as opposed to wild repos)
+
 2018-07-12  v3.6.8  fix bug when deleting *all* hooks for a repo
 
                     allow trailing slashes in repo names
