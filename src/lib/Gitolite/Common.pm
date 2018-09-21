@@ -239,8 +239,6 @@ sub cleanup_conf_line {
             $repo =~ s(^\./)();
             next if $repo =~ m(/$);
                 # tolerate non-bare repos within ~/repositories but silently ignore them
-            next unless update_hook_present($repo);
-                # ignore repos that don't yet have the update hook
             push @phy_repos, $repo;
         }
         trace( 3, scalar(@phy_repos) . " physical repos found" );

@@ -73,6 +73,7 @@ sub access {
     trace( 2, $repo, $user, $aa, $ref );
     _die "invalid user '$user'" if not( $user and $user =~ $USERNAME_PATT );
     sanity($repo);
+    return "$aa any $repo $user DENIED by fallthru" unless update_hook_present($repo);
 
     my @rules;
     my $deny_rules;

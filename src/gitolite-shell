@@ -113,13 +113,6 @@ sub main {
     $ENV{GL_REPO} = $repo;
     my $aa = ( $verb =~ 'upload' ? 'R' : 'W' );
 
-    # catch rare race when moving repos into gitolite control
-    _die "$aa any $repo $user DENIED by fallthru" .
-            "\n(or you mis-spelled the reponame)"
-        unless update_hook_present($repo);
-    # this error message is exactly the same as that from elsewhere in the
-    # code, for the usual reasons (avoid leaking information)
-
     # set up env vars from options set for this repo
     env_options($repo);
 
