@@ -1,3 +1,6 @@
+2018-09-30  v3.6.10 fix up boo-boo caused by previous release; see mails on
+                    list for details
+
 2018-08-07  v3.6.9  prevent racy access to repos in process of migration to
                     gitolite
 
