@@ -213,7 +213,7 @@ you; try running "gitolite help".
 
 # contact and support
 
-Please see <http://gitolite.com/gitolite/#contact> for mailing list and IRC
+Please see <http://gitolite.com/gitolite/#contactsupport> for mailing list and IRC
 info.
 
 # license
