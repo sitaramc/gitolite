@@ -72,6 +72,14 @@
 # which will give you a much nicer output.  The only issue is if you have
 # include files, you will need to put that in the file whose name is sorted
 # first!
+#
+# Using a non-default ".gitolite.rc"
+# ==================================
+#
+# If your conf needs a non-default `~/.gitolite.rc`, copy the file you need as
+# "testconf.gitolite.rc" in the root directory of the gitolite-admin clone
+# where you are running "testconf".  (Whether you commit this file to the
+# gitolite-admin repo, or keep it local/untracked, is your call).
 
 # ----------------------------------------------------------------------
 od=$PWD
@@ -105,6 +113,9 @@ export PATH=$PWD/gitolite/src:$PATH
 rm -rf           $testconf/.gitolite/conf
 mkdir -p         $testconf/.gitolite/conf
 cp -a $od/conf/* $testconf/.gitolite/conf/
+
+# copy rc from $od, if it exists
+[ -f $od/testconf.gitolite.rc ] && cp $od/testconf.gitolite.rc $testconf/.gitolite.rc
 
 # compile+
 
