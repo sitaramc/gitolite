@@ -28,11 +28,6 @@ BUNDLE SUPPORT
 
     (2) Add 'rsync' to the ENABLE list in the rc file
 
-
-GENERIC RSYNC SUPPORT
-
-    TBD
-
 =cut
 
 =for usage
@@ -43,7 +38,7 @@ BUNDLE SUPPORT
     Admins: see src/commands/rsync for setup instructions
 
     Users:
-        rsync -P git@host:repo.bundle .
+        rsync git@host:repo.bundle .
             # downloads a file called "<basename of repo>.bundle"; repeat as
             # needed till the whole thing is downloaded
         git clone repo.bundle repo
@@ -51,9 +46,8 @@ BUNDLE SUPPORT
         git remote set-url origin git@host:repo
         git fetch origin    # and maybe git pull, etc. to freshen the clone
 
-GENERIC RSYNC SUPPORT
-
-    TBD
+    NOTE on options to the rsync command: you are only allowed to use the
+    "-v", "-n", "-q", and "-P" options.
 
 =cut
 
@@ -62,9 +56,9 @@ usage() if not @ARGV or $ARGV[0] eq '-h';
 # rsync driver program.  Several things can be done later, but for now it
 # drives just the 'bundle' transfer.
 
-if ( $ENV{SSH_ORIGINAL_COMMAND} =~ /^rsync --server --sender (-[-\w=.]+ )+\. (\S+)\.bundle$/ ) {
+if ( $ENV{SSH_ORIGINAL_COMMAND} =~ /^rsync --server --sender (?:-[vn]*(?:e\d*\.\w*)? )?\. (\S+)\.bundle$/ ) {
 
-    my $repo = $2;
+    my $repo = $1;
     $repo =~ s/\.git$//;
 
     # all errors have the same message to avoid leaking info
@@ -81,7 +75,7 @@ if ( $ENV{SSH_ORIGINAL_COMMAND} =~ /^rsync --server --sender (-[-\w=.]+ )+\. (\S
     exit 0;
 }
 
-_warn "invalid rsync command '$ENV{SSH_ORIGINAL_COMMAND}'";
+_warn "Sorry, you are only allowed to use the '-v', '-n', '-q', and '-P' options.";
 usage();
 
 # ----------------------------------------------------------------------
