@@ -137,7 +137,6 @@ try "
 $t = join("\n", sort (lines()));
 
 cmp $t, 'bar.git/config:	bare = true
-bar.git/config:[foo]
 foo.git/config:	bar = f1
 foo.git/config:	bare = true
 foo.git/config:[foo]
