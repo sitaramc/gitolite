@@ -21,6 +21,8 @@ die "not meant to be run manually" unless $ARGV[7];
 
 my ( $newsha, $oldtree, $newtree, $refex, $max ) = @ARGV[ 2, 3, 4, 6, 7 ];
 
+exit 0 if $newsha eq '0000000000000000000000000000000000000000';
+
 # / (.*) +\| Bin 0 -> (\d+) bytes/
 
 chomp( my $author_email = `git log --format=%ae -1 $newsha` );
