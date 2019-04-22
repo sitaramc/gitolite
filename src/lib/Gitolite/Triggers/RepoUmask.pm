@@ -23,6 +23,10 @@ use warnings;
 
         option umask = 0027
 
+  * Anytime you add or change the value, if there are existing repos that
+    would be affected, you will need to do a manual "chmod" adjustment,
+    because umask only affects newly created files.
+
 =cut
 
 # sadly option/config values are not available at pre_create time for normal
