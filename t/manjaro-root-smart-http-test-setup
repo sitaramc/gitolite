@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# gitolite http mode TESTING setup for Manjaro
+# - Probably works for Arch also; if someone tests it let me know
+# - Use the comments to create a version for your distro if needed
+
+# CAUTION: This script needs to be run as root, so you best eyeball it at
+# least once to make sure you know what changes it is making.
+
+# WARNING: clobbers /srv/http/gitolite-home, and also creates 7 http
+# users with trivial passwords FOR TESTING.
+
+# HOWEVER: if you remove some of that, especially the part that creates test
+# users, this *should* work as a quick "setup gitolite http mode" script.
+
+# CAUTION: This script assumes the httpd.conf file is pretty much the default
+# "as shipped" version.  If you fiddled with it, this script *may* break.
+# It's on you to determine if that is the case and manually simulate the
+# actions of this script.  It's not that hard, and anyway it's just once (for
+# a given server) so it's not too bad.
+
+# ----------------------------------------------------------------------
+# BEGIN APACHE CONF CHANGES
+
+# Unlike Fedora, Manjaro's default httpd.conf does not contain a wildcard
+# include for stuff in conf.d; they're all explicitly included, so we need to
+# include gitolite.conf.
+cd /etc/httpd/conf
+grep ^Include.*gitolite.conf httpd.conf ||
+    printf "\n%s\n%s\n" '# gitolite http mode' 'Include conf/extra/gitolite.conf' >> httpd.conf
+
+# Again, unlike Fedora, Manjaro's default conf does not come with cgi enabled.
+# In fact, the directive is both commented out *and* inside an "IF" block for
+# some other module.  Since I don't plan to be an expert on apache, I will
+# punt by including the required LoadModule line before the first LoadModule
+# line that is not in an "if" block (i.e., not indented).
+grep '^LoadModule cgi_module modules/mod_cgi.so' httpd.conf ||
+    perl -i -pE 'say "LoadModule cgi_module modules/mod_cgi.so" if /^LoadModule/ and not $flag++' httpd.conf
+
+# END APACHE CONF CHANGES
+# ----------------------------------------------------------------------
+
+cd ~http
+# should be /srv/http; you may want to check just to be safe
+export GITOLITE_HTTP_HOME=$PWD/gitolite-home
+
+[[ -d gitolite-home ]] && {
+    [[ $GITOLITE_TEST != y ]] && {
+        echo "If you're OK with clobbering $GITOLITE_HTTP_HOME, please rerun with
+environment variable GITOLITE_TEST set to 'y'."
+        exit 1;
+    }
+}
+
+rm -rf gitolite-home
+mkdir gitolite-home
+
+# setup apache conf for gitolite
+cd /etc/httpd/conf/extra
+[[ -f gitolite.conf ]] || {
+    cat > gitolite.conf <<-EOF
+		SetEnv GIT_PROJECT_ROOT $GITOLITE_HTTP_HOME/repositories
+		ScriptAlias /git/ $GITOLITE_HTTP_HOME/gitolite-source/src/gitolite-shell/
+		ScriptAlias /gitmob/ $GITOLITE_HTTP_HOME/gitolite-source/src/gitolite-shell/
+		SetEnv GITOLITE_HTTP_HOME $GITOLITE_HTTP_HOME
+		SetEnv GIT_HTTP_EXPORT_ALL
+
+		<Location /git>
+		    AuthType Basic
+		    AuthName "Private Git Access"
+		    Require valid-user
+		    AuthUserFile $GITOLITE_HTTP_HOME/gitolite-http-authuserfile
+		</Location>
+	EOF
+}
+
+# get the gitolite sources
+cd $GITOLITE_HTTP_HOME
+
+if [[ -d /tmp/gitolite.git ]]; then
+    git clone /tmp/gitolite.git                      gitolite-source
+    # I do this because I have to test stuff *before* it gets to github, so I
+    # can't simply clone what's on github.  Instead, I use a local
+    # world-readable bare repo cloned from my dev environment.
+else
+    git clone 'https://github.com/sitaramc/gitolite' gitolite-source
+fi
+
+# make the bin directory, and add it to PATH
+cd gitolite-source
+mkdir             $GITOLITE_HTTP_HOME/bin
+./install -ln     $GITOLITE_HTTP_HOME/bin
+export PATH=$PATH:$GITOLITE_HTTP_HOME/bin
+
+# come back to base, then run setup.  Notice that you have to point HOME to
+# the right place, even if it is just for this command
+cd $GITOLITE_HTTP_HOME
+HOME=$GITOLITE_HTTP_HOME gitolite setup -a admin
+
+# insert some essential lines at the beginning of the rc file
+echo '$ENV{PATH} .= ":$ENV{GITOLITE_HTTP_HOME}/bin";'  > 1
+echo >> 1
+cat .gitolite.rc >> 1
+\mv 1 .gitolite.rc
+
+# create users "admin" and "u1" thru "u6" for testing
+htpasswd -bc $GITOLITE_HTTP_HOME/gitolite-http-authuserfile admin admin
+seq 6 | xargs -I % htpasswd -b $GITOLITE_HTTP_HOME/gitolite-http-authuserfile u% u%
+
+# fix up ownership
+chown -R http:http $GITOLITE_HTTP_HOME
+
+# restart httpd to make it pick up all the new stuff
+systemctl restart httpd

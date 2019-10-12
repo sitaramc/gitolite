@@ -1,7 +1,26 @@
+# instructions for running the tests
 
-============================================
-WARNING: THE TEST SUITE DELETES STUFF FIRST!
-============================================
+# Pre-requisites
+
+Install the following packages:
+
+*   Manjaro (and probably Arch):
+
+        pacman -S perl-json perl-json-xs apache
+
+*   Fedora (and probably CentOS):
+
+        dnf install -y perl-Test-Harness perl-JSON perl-JSON-XS httpd httpd-tools
+
+*   others:
+
+    (TBD)
+
+# RUNNING THE MAIN TEST SUITE
+
+    ======================================
+    WARNING: THE TEST SUITE DELETES STUFF!
+    ======================================
 
 Please run the tests ONLY on a userid where it's ok to LOSE DATA.
 
@@ -12,3 +31,86 @@ On such a userid, clone gitolite then run this command in the clone:
 http://gitolite.com/gitolite/testing.html has more details.  Alternatively,
 http://gitolite.com/gitolite/req.html#trying will help you try out gitolite if
 you want to play with gitolite safely.
+
+# RUNNING THE HTTP AND MIRROR TESTS
+
+    ======================================
+    WARNING: THE TEST SUITE DELETES STUFF!
+    ======================================
+
+The http and mirror tests require a lot more preparation, including commands
+and/or scripts to be run as root, so they're not invoked when you simply run
+"prove" as above.
+
+## Manjaro
+
+1.  Create 3 users: sam, frodo, and gollum (`useradd -m`).
+
+2.  Assuming you're running the tests using a local user called `g3`, run
+    `visudo` and add the following line:
+
+        g3 ALL = (sam,frodo,gollum) NOPASSWD: ALL
+
+    Test this by running this command from within `g3` and making sure you get
+    the correct results:
+
+        sudo -u sam -i pwd
+        # should print /home/sam
+        # similarly make sure frodo and gollum also give correct results
+
+    The mirror test will not run if this does not work.  That does not mean
+    *mirroring* will not work; only the test suite depends on this feature.
+
+3.  Manjaro does not, by default, add $HOME/bin to $PATH, so you will need the
+    following on at least sam, frodo, and gollum:
+
+        # copy-paste this into a root terminal
+        for u in frodo sam gollum; do
+            grep '$HOME/bin' /home/$u/.bash_profile || echo 'export PATH="$HOME/bin:$PATH"' >> /home/$u/.bash_profile
+        done
+
+    Again, test this by running:
+
+        sudo -u sam -i echo '$PATH'
+
+    and making sure the output starts with `/home/sam/bin:` (and similarly for
+    frodo and gollum).
+
+4.  Take a look inside `t/manjaro-root-smart-http-test-setup` to make sure
+    everything looks sane (because you have to run it as root!!), then run it
+    as root.
+
+5.  Now you are ready to run the last two tests:
+
+        GITOLITE_TEST=y prove t/smart-http
+        GITOLITE_TEST=y prove t/mirror-test
+
+## Fedora
+
+1.  Create 3 users: sam, frodo, and gollum (`useradd`).
+
+2.  Assuming you're running the tests using a local user called `g3`, run
+    `visudo` and add the following line:
+
+        g3 ALL = (sam,frodo,gollum) NOPASSWD: ALL
+
+    Test this by running this command from within `g3` and making sure you get
+    the correct results:
+
+        sudo -u sam -i pwd
+        # should print /home/sam
+        # similarly make sure frodo and gollum also give correct results
+
+    The mirror test will not run if this does not work.  That does not mean
+    *mirroring* will not work; only the test suite depends on this feature.
+
+3.  Take a look inside `t/fedora-root-smart-http-test-setup` to make sure
+    everything looks sane (because you have to run it as root!!), then run it
+    as root.
+
+4.  Now you are ready to run the last two tests:
+
+        prove t/smart-http
+        prove t/mirror-test
+
+vim: ft=markdown
