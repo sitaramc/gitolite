@@ -396,9 +396,12 @@ sub memberships {
 
     push @ret, @{ $groups{$base} } if exists $groups{$base};
     push @ret, @{ $groups{$base2} } if $base2 and exists $groups{$base2};
-    for my $i ( keys %{ $patterns{groups} } ) {
-        if ( $base =~ /^$i$/ or $base2 and ( $base2 =~ /^$i$/ ) ) {
-            push @ret, @{ $groups{$i} };
+    if ($type eq 'repo') {
+        # regexes can only be used for repos, not for users
+        for my $i ( keys %{ $patterns{groups} } ) {
+            if ( $base =~ /^$i$/ or $base2 and ( $base2 =~ /^$i$/ ) ) {
+                push @ret, @{ $groups{$i} };
+            }
         }
     }
 
