@@ -63,8 +63,8 @@ usage() if not @ARGV or $ARGV[0] eq '-h';
 
 my $repo = shift;
 
-my ($op, $key, $val) = @ARGV;
-usage() unless $op and exists $nargs{$op} and @ARGV == $nargs{$op};
+my $op = shift;
+usage() unless $op and exists $nargs{$op};
 
 # ----------------------------------------------------------------------
 # authorisation checks
@@ -81,15 +81,30 @@ die "sorry, you are not authorised\n" unless
 # key validity checks
 
 unless ($op eq '--list') {
+    my $key = shift;
+
+    my $val = '';
+    $val = join(" ", @ARGV) if @ARGV;
+    # values with spaces embedded get flattened by sshd when it passes
+    # SSH_ORIGINAL_COMMAND to gitolite.  In this specific instance, we will
+    # pretend we know what the user meant, and join up the last 1+ args into
+    # one space-separated arg.
+
     my $user_configs = option( $repo, 'user-configs' );
     # this is a space separated list of allowed config keys
     my @validkeys = split( ' ', ( $user_configs || '' ) );
     my @matched = grep { $key =~ /^$_$/i } @validkeys;
     _die "config '$key' not allowed\n" if ( @matched < 1 );
+
+    @ARGV = ($key);
+    push @ARGV, $val if $val;
 }
 
 # ----------------------------------------------------------------------
 # go!
+
+unshift @ARGV, $op;
+usage() unless @ARGV == $nargs{$op};
 
 _chdir("$rc{GL_REPO_BASE}/$repo.git");
 _system( "git", "config", @ARGV );
