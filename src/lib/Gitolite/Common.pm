@@ -361,7 +361,7 @@ sub ssh_fingerprint_file {
     my $in = shift;
     -f $in or die "file not found: $in\n";
     my $fh;
-    open( $fh, "ssh-keygen -l -f $in |" ) or die "could not fork: $!\n";
+    open( $fh, "ssh-keygen -l -f $in 2>&1 |" ) or die "could not fork: $!\n";
     my $output = <$fh>;
     chomp $output;
     # dbg("fp = $fp");
