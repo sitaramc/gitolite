@@ -137,6 +137,7 @@ sub optionise {
         return '';
     }
     chomp(@line);
-    return "command=\"$glshell $user" . ( $kfn ? " $f" : "" ) . "\",$auth_options $line[0]";
+    return "command=\"$glshell $user" . ( $kfn ? " $f" : "" ) . "\",$auth_options" .
+        ($line[0] =~ /^(ecdsa|ssh)-/ ? " " : "," ) . $line[0];
 }
 
