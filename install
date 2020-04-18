@@ -7,6 +7,7 @@ use warnings;
 
 use Getopt::Long;
 use FindBin;
+use Config;
 
 # meant to be run from the root of the gitolite tree, one level above 'src'
 BEGIN { $ENV{GL_BINDIR} = $FindBin::RealBin . "/src"; }
@@ -33,6 +34,12 @@ Usage (from gitolite clone directory):
         $PATH, use the full path to run gitolite commands.
 
         Please provide a full path, not a relative path.
+
+    <perl-executable> ./install -to <dir>
+        to copy the entire 'src' directory to <dir>, but will replace
+        all of the shebangs with the path to <perl-executable>.  This
+        is a way to force gitolite to use some perl that is not
+        installed at /usr/bin/perl.
 
 Simplest use, if $HOME/bin exists and is in $PATH, is:
 
@@ -76,6 +83,12 @@ if ($to) {
     _mkdir($to);
     system("cp -RpP * $to");
     _print( "$to/VERSION", $version );
+
+    # Replace shebangs if necessary.
+    my $thisperl = $Config{perlpath};
+    if ($thisperl ne '/usr/bin/perl') {
+        system("cd $to; grep -r -l /usr/bin/perl | xargs perl -pi -e 's(^#!/usr/bin/perl)(#!$thisperl)'");
+    }
 } elsif ($ln) {
     ln_sf( $ENV{GL_BINDIR}, "gitolite", $ln );
     _print( "VERSION", $version );
