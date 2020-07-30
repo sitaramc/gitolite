@@ -293,7 +293,7 @@ sub sanitize_pubkeypath {
 # This function is only relavant for guest key managers.
 # It returns true if the pattern is OK and false otherwise.
 sub required_guest_keyid {
-    my ($_) = @_;
+    local ($_) = @_;
     /$required_guest_pattern/ and ! /$forbidden_guest_pattern/;
 }
 
