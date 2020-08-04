@@ -73,11 +73,11 @@ Notes:
     test it and make it work please let me know.
 
   * funnily enough, this even works with mirroring!  That is, a master can
-    push a repo "foo" to a slave per its configuration, while the slave thinks
+    push a repo "foo" to a copy per its configuration, while the copy thinks
     it is getting repo "bar" from the master per its configuration.
 
     Just make sure to put the Alias::input line *before* the Mirroring::input
-    line in the rc file on the slave.
+    line in the rc file on the copy.
 
     However, it will probably not work with redirected pushes unless you setup
     the opposite alias ("bar" -> "foo") on master.

@@ -15,32 +15,32 @@ use Gitolite::Common;
 use Gitolite::Conf::Load;
 
 =for usage
-Usage 1:    gitolite mirror push <slave> <repo>
-            gitolite mirror status <slave> <repo>
+Usage 1:    gitolite mirror push <copy> <repo>
+            gitolite mirror status <copy> <repo>
             gitolite mirror status all <repo>
             gitolite mirror status all all
-Usage 2:    ssh git@master-server mirror push <slave> <repo>
-            ssh git@master-server mirror status <slave> <repo>
+Usage 2:    ssh git@master-server mirror push <copy> <repo>
+            ssh git@master-server mirror status <copy> <repo>
 
-Forces a push of one repo to one slave.
+Forces a push of one repo to one copy.
 
-Usage 1 is directly on the master server.  Nothing is checked; if the slave
-accepts it, the push happens, even if the slave is not in any slaves
+Usage 1 is directly on the master server.  Nothing is checked; if the copy
+accepts it, the push happens, even if the copy is not in any copies
 option.  This is how you do delayed or lagged pushes to servers that do not
 need real-time updates or have bandwidth/connectivity issues.
 
 Usage 2 can be initiated by *any* user who has *any* gitolite access to the
-master server, but it checks that the slave is in one of the slaves options
+master server, but it checks that the copy is in one of the copies options
 before doing the push.
 
 MIRROR STATUS: The usage examples above show what can be done.  The 'status
-all <repo>' usage checks the status of all the slaves defined for the given
+all <repo>' usage checks the status of all the copies defined for the given
 repo.  The 'status all all' usage is special, in that it only prints a list of
 repos that have *some* error, instead of dumping all the error info itself.
 
 SERVER LIST: 'gitolite mirror list master <reponame>' and 'gitolite mirror
-list slaves <reponame>' will show you the name of the master server, and list
-the slave servers, for the repo.  They only work on the server command line
+list copies <reponame>' will show you the name of the master server, and list
+the copy servers, for the repo.  They only work on the server command line
 (any server), but not remotely (from a normal user).
 =cut
 
@@ -49,12 +49,13 @@ usage() if not @ARGV or $ARGV[0] eq '-h';
 _die "HOSTNAME not set" if not $rc{HOSTNAME};
 
 my ( $cmd, $host, $repo ) = @ARGV;
+$host = 'copies' if $host eq 'slaves';
 $repo =~ s/\.git$//;
 usage() if not $repo;
 
 if ( $cmd eq 'push' ) {
-    valid_slave( $host, $repo ) if exists $ENV{GL_USER};
-    # will die if host not in slaves for repo
+    valid_copy( $host, $repo ) if exists $ENV{GL_USER};
+    # will die if host not in copies for repo
 
     trace( 1, "TID=$tid host=$host repo=$repo", "gitolite mirror push started" );
     _chdir( $rc{GL_REPO_BASE} );
@@ -80,15 +81,15 @@ if ( $cmd eq 'push' ) {
             trace( 1, "mirror: $_" );
         }
     }
-    # save the mirror push status for this slave if the word 'fatal' is found,
+    # save the mirror push status for this copy if the word 'fatal' is found,
     # else remove the status file.  We don't store "success" output messages;
     # you can always get those from the log files if you really need them.
     if ( $glss =~ /fatal/i ) {
         my $glss_prefix = Gitolite::Common::gen_ts() . "\t$ENV{GL_TID}\t";
         $glss =~ s/^/$glss_prefix/gm;
-        _print("gl-slave-$host.status", $glss);
+        _print("gl-copy-$host.status", $glss);
     } else {
-        unlink "gl-slave-$host.status";
+        unlink "gl-copy-$host.status";
     }
 
     exit $errors;
@@ -101,20 +102,20 @@ if ( $cmd eq 'push' ) {
         _chdir( $rc{GL_REPO_BASE} );
         my $phy_repos = list_phy_repos(1);
         for my $repo ( @{$phy_repos} ) {
-            my @x = glob("$rc{GL_REPO_BASE}/$repo.git/gl-slave-*.status");
+            my @x = glob("$rc{GL_REPO_BASE}/$repo.git/gl-copy-*.status");
             print "$repo\n" if @x;
         }
         exit 0;
     }
 
-    valid_slave( $host, $repo ) if exists $ENV{GL_USER};
-    # will die if host not in slaves for repo
+    valid_copy( $host, $repo ) if exists $ENV{GL_USER};
+    # will die if host not in copies for repo
 
     _chdir( $rc{GL_REPO_BASE} );
     _chdir("$repo.git");
 
     $host = '*' if $host eq 'all';
-    map { print_status($repo, $_) } sort glob("gl-slave-$host.status");
+    map { print_status($repo, $_) } sort glob("gl-copy-$host.status");
 } else {
     # strictly speaking, we could allow some of the possible commands remotely
     # also, at least for admins.  However, these commands are mainly intended
@@ -126,18 +127,18 @@ if ( $cmd eq 'push' ) {
 
 # ----------------------------------------------------------------------
 
-sub valid_slave {
+sub valid_copy {
     my ( $host, $repo ) = @_;
     _die "invalid repo '$repo'" unless $repo =~ $REPONAME_PATT;
 
-    my %list = repo_slaves($repo);
-    _die "'$host' not a valid slave for '$repo'" unless $list{$host};
+    my %list = repo_copies($repo);
+    _die "'$host' not a valid copy for '$repo'" unless $list{$host};
 }
 
-sub repo_slaves {
+sub repo_copies {
     my $repo = shift;
 
-    my $ref = git_config( $repo, "^gitolite-options\\.mirror\\.slaves.*" );
+    my $ref = git_config( $repo, "^gitolite-options\\.mirror\\.copies.*" );
     my %list = map { $_ => 1 } map { split } values %$ref;
 
     return %list;
@@ -157,9 +158,9 @@ sub print_status {
     my $repo = shift;
     my $file = shift;
     return unless -f $file;
-    my $slave = $1 if $file =~ /^gl-slave-(.+)\.status$/;
+    my $copy = $1 if $file =~ /^gl-copy-(.+)\.status$/;
     print "----------\n";
-    print "WARNING: previous mirror push of repo '$repo' to host '$slave' failed, status is:\n";
+    print "WARNING: previous mirror push of repo '$repo' to host '$copy' failed, status is:\n";
     print slurp($file);
     print "----------\n";
 }
@@ -167,17 +168,17 @@ sub print_status {
 # ----------------------------------------------------------------------
 # server side commands.  Very little error checking.
 #   gitolite mirror list master <repo>
-#   gitolite mirror list slaves <repo>
+#   gitolite mirror list copies <repo>
 
 sub server_side_commands {
     if ( $cmd eq 'list' ) {
         if ( $host eq 'master' ) {
             say repo_master($repo);
-        } elsif ( $host eq 'slaves' ) {
-            my %list = repo_slaves($repo);
+        } elsif ( $host eq 'copies' ) {
+            my %list = repo_copies($repo);
             say join( " ", sort keys %list );
         } else {
-            _die "gitolite mirror list master|slaves <reponame>";
+            _die "gitolite mirror list master|copies <reponame>";
         }
     } else {
         _die "invalid command";

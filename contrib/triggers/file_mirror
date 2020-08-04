@@ -22,16 +22,16 @@ exit 0 if     $trigger eq 'POST_GIT' and $op ne 'W';
 
 chdir("$rc{GL_REPO_BASE}/$repo.git") or _die "chdir failed: $!\n";
 
-my %config = config( $repo, "gitolite-options\\.mirror\\.extslave" );
-for my $slave ( values %config ) {
-    _do($slave);
+my %config = config( $repo, "gitolite-options\\.mirror\\.extcopy" );
+for my $copy ( values %config ) {
+    _do($copy);
 
-    # processing one slave is sufficient for restoring!
+    # processing one copy is sufficient for restoring!
     last if $trigger eq 'POST_CREATE';
 }
 
 # in shell, that would be something like:
-#   gitolite git-config -r $repo gitolite-options\\.mirror\\.extslave | cut -f3 | while read slave
+#   gitolite git-config -r $repo gitolite-options\\.mirror\\.extcopy | cut -f3 | while read copy
 #   do
 #       ...
 
@@ -94,7 +94,7 @@ DESIGN NOTES
 ------------
 
 This is really just a combination of "upstream" (see src/triggers/upstream)
-and mirroring (gitolite mirroring does allow a slave to be non-gitolite, as
+and mirroring (gitolite mirroring does allow a copy to be non-gitolite, as
 long as the ssh stuff is done the same way).
 
 The main difference is that gitolite mirroring expects peers to all talk ssh,
@@ -127,8 +127,8 @@ SETUP
 4.  Do something like this in your gitolite.conf file:
 
         repo @all
-            option mirror.extslave-1    =   file:///tmp/he1/%GL_REPO.git
-            option mirror.extslave-2    =   file:///tmp/he2/%GL_REPO.git
+            option mirror.extcopy-1    =   file:///tmp/he1/%GL_REPO.git
+            option mirror.extcopy-2    =   file:///tmp/he2/%GL_REPO.git
 
     As you can see, since this is just for demo/test, we're using a couple of
     temp directories to serve as our "remotes" using the file:// protocol.

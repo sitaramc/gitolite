@@ -105,6 +105,7 @@ sub option {
     #   ->  config gitolite-options.foo = bar
 
     for my $line (@$lines) {
+        $line =~ s/option mirror\.slaves/option mirror.copies/;
         if ( $line =~ /^option (\S+) = (\S.*)/ ) {
             push @ret, "config gitolite-options.$1 = $2";
         } else {

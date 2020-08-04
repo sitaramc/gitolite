@@ -49,7 +49,7 @@ package Gitolite::Triggers::TProxy;
 #       corresponding pub keys would already be set ok so step 2 in the
 #       upstream server setup (above) will not be needed.
 #   2.  needless to say, **don't** declare the repos you want to be
-#       transparently proxied in the gitolite.conf for the slave.
+#       transparently proxied in the gitolite.conf for the copy.
 
 use Gitolite::Rc;
 use Gitolite::Common;

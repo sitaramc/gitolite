@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use lib $ENV{GL_LIBDIR};
+use Gitolite::Easy;
+
+=for usage
+Usage:    ssh git@host newbranch <repo name> <new branch name> <based-on ref name>
+
+Create a new branch and set it to existing branch or tag.  You should have
+write access to that branch.
+
+NOTE: runs "git branch arg-2 arg-3" in repo given by arg-1, which means you
+should NOT prefix arguments with "refs/heads/" or "refs/tags/".
+
+----
+
+This is for people who have restrictions on what files they can "touch".  When
+you fork a branch and change a file, even if you changed only the files you're
+allowed to, gitolite thinks you changed *all* the files in the repo because
+the "old SHA" is basically empty.
+
+This helps get around that by first creating the new branch, so that you can
+then push to it.
+
+To enable this command, add it to the rc file as a 'command'.
+
+TODO: handle deletes also (less commonly encountered and left as an "exercise
+for the reader" for now!)
+=cut
+
+usage() if not @ARGV or @ARGV < 3 or $ARGV[0] eq '-h';
+
+my $repo   = shift;
+my $newbr  = shift;
+my $oldref = shift;
+
+_die "you are not authorized" unless can_write($repo, "W", "refs/heads/$newbr");
+
+Gitolite::Common::_system("git", "branch", $newbr, $oldref);

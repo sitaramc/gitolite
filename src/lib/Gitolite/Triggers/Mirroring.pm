@@ -9,7 +9,7 @@ use warnings;
 
 my $hn           = $rc{HOSTNAME};
 
-my ( $mode, $master, %slaves, %trusted_slaves );
+my ( $mode, $master, %copies, %trusted_copies );
 
 # ----------------------------------------------------------------------
 
@@ -51,7 +51,7 @@ sub input {
         $rc{REDIRECTED_PUSH}       = 1;
         trace( 3, "redirected_push for user $1" );
     } else {
-        # master -> slave push, no access checks needed
+        # master -> copy push, no access checks needed
         $ENV{GL_BYPASS_ACCESS_CHECKS} = 1;
     }
 }
@@ -72,32 +72,32 @@ sub pre_git {
     # now you know the repo, get its mirroring details
     details($repo);
 
-    # print mirror status if at least one slave status file is present
-    print_status( $repo ) if not $rc{HUSH_MIRROR_STATUS} and $mode ne 'local' and glob("$rc{GL_REPO_BASE}/$repo.git/gl-slave-*.status");
+    # print mirror status if at least one copy status file is present
+    print_status( $repo ) if not $rc{HUSH_MIRROR_STATUS} and $mode ne 'local' and glob("$rc{GL_REPO_BASE}/$repo.git/gl-copy-*.status");
 
     # we don't deal with any reads.  Note that for pre-git this check must
     # happen *after* getting details, to give mode() a chance to die on "known
     # unknown" repos (repos that are in the config, but mirror settings
-    # exclude this host from both the master and slave lists)
+    # exclude this host from both the master and copy lists)
     return if $aa eq 'R';
 
     trace( 1, "mirror", "pre_git", $repo, "user=$user", "sender=$sender", "mode=$mode", ( $rc{REDIRECTED_PUSH} ? ("redirected") : () ) );
 
     # ------------------------------------------------------------------
-    # case 1: we're master or slave, normal user pushing to us
+    # case 1: we're master or copy, normal user pushing to us
     if ( $user and not $rc{REDIRECTED_PUSH} ) {
         trace( 3, "case 1, user push" );
         return if $mode eq 'local' or $mode eq 'master';
-        if ( $trusted_slaves{$hn} ) {
+        if ( $trusted_copies{$hn} ) {
             trace( 1, "redirect to $master" );
             exec( "ssh", $master, "USER=$user", "SOC=$ENV{SSH_ORIGINAL_COMMAND}" );
         } else {
-            _die "$hn: pushing '$repo' to slave '$hn' not allowed";
+            _die "$hn: pushing '$repo' to copy '$hn' not allowed";
         }
     }
 
     # ------------------------------------------------------------------
-    # case 2: we're slave, master pushing to us
+    # case 2: we're copy, master pushing to us
     if ( $sender and not $rc{REDIRECTED_PUSH} ) {
         trace( 3, "case 2, master push" );
         _die "$hn: '$repo' is local"                        if $mode eq 'local';
@@ -107,13 +107,13 @@ sub pre_git {
     }
 
     # ------------------------------------------------------------------
-    # case 3: we're master, slave sending a redirected push to us
+    # case 3: we're master, copy sending a redirected push to us
     if ( $sender and $rc{REDIRECTED_PUSH} ) {
-        trace( 3, "case 2, slave redirect" );
+        trace( 3, "case 2, copy redirect" );
         _die "$hn: '$repo' is local"                           if $mode eq 'local';
-        _die "$hn: '$repo' is not native"                      if $mode eq 'slave';
-        _die "$hn: '$sender' is not a valid slave for '$repo'" if not $slaves{$sender};
-        _die "$hn: redirection not allowed from '$sender'"     if not $trusted_slaves{$sender};
+        _die "$hn: '$repo' is not native"                      if $mode eq 'copy';
+        _die "$hn: '$sender' is not a valid copy for '$repo'"  if not $copies{$sender};
+        _die "$hn: redirection not allowed from '$sender'"     if not $trusted_copies{$sender};
         return;
     }
 
@@ -142,20 +142,20 @@ sub post_git {
     trace( 1, "mirror", "post_git", $repo, "user=$user", "sender=$sender", "mode=$mode", ( $rc{REDIRECTED_PUSH} ? ("redirected") : () ) );
 
     # ------------------------------------------------------------------
-    # case 1: we're master or slave, normal user pushing to us
+    # case 1: we're master or copy, normal user pushing to us
     if ( $user and not $rc{REDIRECTED_PUSH} ) {
         trace( 3, "case 1, user push" );
         return if $mode eq 'local';
-        # slave was eliminated earlier anyway, so that leaves 'master'
+        # copy was eliminated earlier anyway, so that leaves 'master'
 
-        # find all slaves and push to each of them
-        push_to_slaves($repo);
+        # find all copies and push to each of them
+        push_to_copies($repo);
 
         return;
     }
 
     # ------------------------------------------------------------------
-    # case 2: we're slave, master pushing to us
+    # case 2: we're copy, master pushing to us
     if ( $sender and not $rc{REDIRECTED_PUSH} ) {
         trace( 3, "case 2, master push" );
         # nothing to do
@@ -163,12 +163,12 @@ sub post_git {
     }
 
     # ------------------------------------------------------------------
-    # case 3: we're master, slave sending a redirected push to us
+    # case 3: we're master, copy sending a redirected push to us
     if ( $sender and $rc{REDIRECTED_PUSH} ) {
-        trace( 3, "case 2, slave redirect" );
+        trace( 3, "case 2, copy redirect" );
 
-        # find all slaves and push to each of them
-        push_to_slaves($repo);
+        # find all copies and push to each of them
+        push_to_copies($repo);
 
         return;
     }
@@ -182,39 +182,39 @@ sub post_git {
         return if $lastrepo eq $repo;
 
         $master         = master($repo);
-        %slaves         = slaves($repo);
+        %copies         = copies($repo);
         $mode           = mode($repo);
-        %trusted_slaves = trusted_slaves($repo);
-        trace( 3, $master, $mode, join( ",", sort keys %slaves ), join( ",", sort keys %trusted_slaves ) );
+        %trusted_copies = trusted_copies($repo);
+        trace( 3, $master, $mode, join( ",", sort keys %copies ), join( ",", sort keys %trusted_copies ) );
     }
 
     sub master {
         return option( +shift, 'mirror.master' );
     }
 
-    sub slaves {
+    sub copies {
         my $repo = shift;
 
-        my $ref = git_config( $repo, "^gitolite-options\\.mirror\\.slaves.*" );
+        my $ref = git_config( $repo, "^gitolite-options\\.mirror\\.copies.*" );
         my %out = map { $_ => 'async' } map { split } values %$ref;
 
-        $ref = git_config( $repo, "^gitolite-options\\.mirror\\.slaves\\.sync.*" );
+        $ref = git_config( $repo, "^gitolite-options\\.mirror\\.copies\\.sync.*" );
         map { $out{$_} = 'sync' } map { split } values %$ref;
 
-        $ref = git_config( $repo, "^gitolite-options\\.mirror\\.slaves\\.nosync.*" );
+        $ref = git_config( $repo, "^gitolite-options\\.mirror\\.copies\\.nosync.*" );
         map { $out{$_} = 'nosync' } map { split } values %$ref;
 
         return %out;
     }
 
-    sub trusted_slaves {
+    sub trusted_copies {
         my $ref = git_config( +shift, "^gitolite-options\\.mirror\\.redirectOK.*" );
-        # the list of trusted slaves (where we accept redirected pushes from)
+        # the list of trusted copies (where we accept redirected pushes from)
         # is either explicitly given...
         my @out = map { split } values %$ref;
         my %out = map { $_ => 1 } @out;
-        # ...or it's all the slaves mentioned if the list is just a "all"
-        %out = %slaves if ( @out == 1 and $out[0] eq 'all' );
+        # ...or it's all the copies mentioned if the list is just a "all"
+        %out = %copies if ( @out == 1 and $out[0] eq 'all' );
         return %out;
     }
 
@@ -222,24 +222,24 @@ sub post_git {
         my $repo = shift;
         return 'local'  if not $hn;
         return 'master' if $master eq $hn;
-        return 'slave'  if $slaves{$hn};
-        return 'local'  if not $master and not %slaves;
+        return 'copy'   if $copies{$hn};
+        return 'local'  if not $master and not %copies;
         _die "$hn: '$repo' is mirrored but not here";
     }
 }
 
-sub push_to_slaves {
+sub push_to_copies {
     my $repo = shift;
 
     my $u = $ENV{GL_USER};
     delete $ENV{GL_USER};    # why?  see src/commands/mirror
 
     my $lb = "$ENV{GL_REPO_BASE}/$repo.git/.gl-mirror-lock";
-    for my $s ( sort keys %slaves ) {
-        trace( 1, "push_to_slaves: skipping self" ), next if $s eq $hn;
-        system("gitolite 1plus1 $lb.$s gitolite mirror push $s $repo </dev/null >/dev/null 2>&1 &") if $slaves{$s} eq 'async';
-        system("gitolite 1plus1 $lb.$s gitolite mirror push $s $repo </dev/null >/dev/null 2>&1")   if $slaves{$s} eq 'sync';
-        _warn "manual mirror push pending for '$s'"                          if $slaves{$s} eq 'nosync';
+    for my $s ( sort keys %copies ) {
+        trace( 1, "push_to_copies skipping self" ), next if $s eq $hn;
+        system("gitolite 1plus1 $lb.$s gitolite mirror push $s $repo </dev/null >/dev/null 2>&1 &") if $copies{$s} eq 'async';
+        system("gitolite 1plus1 $lb.$s gitolite mirror push $s $repo </dev/null >/dev/null 2>&1")   if $copies{$s} eq 'sync';
+        _warn "manual mirror push pending for '$s'"                          if $copies{$s} eq 'nosync';
     }
 
     $ENV{GL_USER} = $u;

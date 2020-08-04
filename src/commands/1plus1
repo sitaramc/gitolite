@@ -5,7 +5,7 @@ use warnings;
 # import LOCK_*
 use Fcntl qw(:flock);
 
-my $lockbase      = shift;    # suggested: $GL_REPO_BASE/$GL_REPO.git/.gl-mirror-push-lock.$SLAVE_NAME
+my $lockbase      = shift;    # suggested: $GL_REPO_BASE/$GL_REPO.git/.gl-mirror-push-lock.$COPY_NAME
 my @cmd_plus_args = @ARGV;    # the actual 'gitolite mirror ...' command
 @ARGV = ();
 
