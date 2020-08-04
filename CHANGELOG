@@ -1,3 +1,16 @@
+2020-08-04  v3.6.12 mirroring terminoligy changes
+
+                    install script can now modify #! lines when using a custom
+                    perl executable
+
+                    'config' user command allows for config values with spaces
+                    in them
+
+                    finally added notes in "t/README" on testing http mode and
+                    mirroring, with pre-build helpers for Fedora and Manjaro
+
+                    ...plus various bug fixes
+
 2019-01-08  v3.6.11 fix security issue in 'rsync' (bundle helper); see commit
                     5df2b81 for more
 
