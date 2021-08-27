@@ -43,7 +43,7 @@ try "
     test-commit bb cc;  ok
     checkout master;    ok;     /Switched to branch 'master'/
     test-commit dd ee;  ok
-    git merge new;      ok;     /Merge made.*recursive/
+    git merge new;      ok;     /Merge made/
     test-commit ff;     ok
     tag end;            ok
 ";
