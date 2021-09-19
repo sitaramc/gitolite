@@ -92,7 +92,8 @@ if ( $keytype eq '' ) {
     if ( $operation eq 'add' ) {
         print STDERR "please supply the new key on STDIN.  (I recommend you
         don't try to do this interactively, but use a pipe)\n";
-        kf_add( $gl_user, $keyid, safe_stdin() );
+        my $keymaterial = <STDIN>;
+        kf_add( $gl_user, $keyid, $keymaterial );
     } elsif ( $operation eq 'del' ) {
         kf_del( $gl_user, $keyid );
     } elsif ( $operation eq 'confirm-del' ) {
@@ -141,16 +142,6 @@ sub fingerprint {
     # Do not print the output of $output to an untrusted destination.
     die "does not seem to be a valid pubkey\n" unless $fp;
     return $fp;
-}
-
-sub safe_stdin {
-    # read one line from STDIN
-    my $data;
-    my $ret = read STDIN, $data, 4096;
-    # current pubkeys are approx 400 bytes so we go a little overboard
-    die "could not read pubkey data" . ( defined($ret) ? "" : ": $!" ) . "\n" unless $ret;
-    die "pubkey data seems to have more than one line\n" if $data =~ /\n./;
-    return $data;
 }
 
 sub hushed_git {
