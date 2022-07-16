@@ -12,7 +12,12 @@ Usage:  ssh git@host help       # via ssh
 
 Prints a list of custom commands available at this gitolite installation.
 
-Each command has its own help, accessed by passing it '-h' again.
+Each command has (or should have!) its own help, accessed by passing it the
+'-h' option; e.g., "gitolite access -h".
+
+NOTE: These commands are found in the commands subdirectory (see the page on
+"core and non-core gitolite" in the documentation).  Gitolite also has some
+built-in commands; run just "gitolite", with no arguments, to see those.
 =cut
 
 usage() if @ARGV;
