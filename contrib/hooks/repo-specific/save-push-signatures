@@ -143,7 +143,42 @@ then
     GIT_INDEX_FILE=push_certs_index; export GIT_INDEX_FILE
 
     # prepare the special ref to receive commits
-    PUSH_CERTS=refs/push-certs
+    # historically this hook put the certs in a ref named refs/push-certs
+    # however, git does *NOT* replicate single-level refs
+    # trying to push them explicitly causes this error:
+    # remote: error: refusing to create funny ref 'refs/push-certs' remotely
+    # https://lore.kernel.org/git/robbat2-20211115T063838-612792475Z@orbis-terrarum.net/
+    #
+    # As a good-enough solution, use the namespace of meta/ for the refs.
+    # This is already used in other systems:
+    # - kernel.org refs/meta/cgit
+    # - gerrit refs/meta/config
+    # - GitBlit reflog: refs/meta/gitblit https://www.gitblit.com/administration.html#H12
+    # - cc-utils refs/meta/ci
+    # - JGit refs/meta/push-certs https://www.ibm.com/docs/en/radfws/9.6.1?topic=SSRTLW_9.6.1/org.eclipse.egit.doc/help/JGit/New_and_Noteworthy/4.1/4.1.htm
+    #
+    # To migrate from old to new, for each repo:
+    # git update-ref refs/meta/push-certs refs/push-certs
+    PUSH_CERTS_EXTRA_REFS='' PUSH_CERTS='' # These vars will be populated after checks.
+    # others vars are temp
+    _OLD_PUSH_CERTS=refs/push-certs
+    _NEW_PUSH_CERTS=refs/meta/push-certs
+    _OLD_PUSH_CERTS_EXISTS=0
+    _NEW_PUSH_CERTS_EXISTS=0
+    git show-ref --verify --quiet -- "$_OLD_PUSH_CERTS" && _OLD_PUSH_CERTS_EXISTS=1
+    git show-ref --verify --quiet -- "$_NEW_PUSH_CERTS" && _NEW_PUSH_CERTS_EXISTS=1
+    case "${_OLD_PUSH_CERTS_EXISTS}${_NEW_PUSH_CERTS_EXISTS}" in
+        # neither or new only:
+        # let's push to the NEW name only
+        '00'|'01') PUSH_CERTS=$_NEW_PUSH_CERTS ;;
+        # old-only: stick to the same, the migration is opt-in
+        '10') PUSH_CERTS=$_OLD_PUSH_CERTS ;;
+        # Both: Push to the old name, duplicate to the new name
+        '11') PUSH_CERTS=$_OLD_PUSH_CERTS PUSH_CERTS_EXTRA_REFS=$_NEW_PUSH_CERTS ;;
+    esac
+    # cleanup vars
+    unset _OLD_PUSH_CERTS_EXISTS _NEW_PUSH_CERTS_EXISTS _OLD_PUSH_CERTS _NEW_PUSH_CERTS
+
     if git rev-parse -q --verify $PUSH_CERTS >/dev/null
     then
         git read-tree $PUSH_CERTS
@@ -151,7 +186,9 @@ then
         git read-tree --empty
         T=$(git write-tree)
         C=$(echo 'start' | git commit-tree $T)
-        git update-ref $PUSH_CERTS $C
+        for _ref in $PUSH_CERTS $PUSH_CERTS_EXTRA_REFS ; do
+            git update-ref "${_ref}" "${C}"
+        done
     fi
 
     # for each cert blob...
@@ -179,7 +216,9 @@ then
 
         T=$(git write-tree)
         C=$( git commit-tree -p $PUSH_CERTS $T < $cf )
-        git update-ref $PUSH_CERTS $C
+        for _ref in $PUSH_CERTS $PUSH_CERTS_EXTRA_REFS ; do
+            git update-ref "${_ref}" "${C}"
+        done
 
         rm -f $cf
     done
