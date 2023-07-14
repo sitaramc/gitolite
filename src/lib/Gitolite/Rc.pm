@@ -564,7 +564,7 @@ __DATA__
 
         # or you can use this, which lets you put everything in a subdirectory
         # called "local" in your gitolite-admin repo.  For a SECURITY WARNING
-        # on this, see http://gitolite.com/gitolite/non-core.html#pushcode
+        # on this, see http://gitolite.com/gitolite/non-core.html#using-the-gitolite-admin-repo-to-manage-non-core-code
         # LOCAL_CODE                =>  "$rc{GL_ADMIN_BASE}/local",
 
     # ------------------------------------------------------------------

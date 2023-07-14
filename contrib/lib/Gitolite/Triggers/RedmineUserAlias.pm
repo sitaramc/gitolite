@@ -27,7 +27,7 @@ How:
 *   add this code as lib/Gitolite/Triggers/RedmineUserAlias.pm to your
     site-local code directory; see this link for how:
 
-        http://gitolite.com/gitolite/non-core.html#ncloc
+        http://gitolite.com/gitolite/non-core.html#locations
 
 *   add the following to the rc file, just before the ENABLE section (don't
     forget the trailing comma):

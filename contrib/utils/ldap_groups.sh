@@ -5,7 +5,7 @@
 # Given a username,
 # Provides a space-separated list of groups that the user is a member of.
 #
-# see http://gitolite.com/gitolite/conf.html#ldap
+# see http://gitolite.com/gitolite/conf.html#getting-user-group-info-from-ldap
 # GROUPLIST_PGM => /path/to/ldap_groups.sh
 
 ldap_groups() {

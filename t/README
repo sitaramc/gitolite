@@ -29,7 +29,7 @@ On such a userid, clone gitolite then run this command in the clone:
     GITOLITE_TEST=y prove
 
 http://gitolite.com/gitolite/testing.html has more details.  Alternatively,
-http://gitolite.com/gitolite/req.html#trying will help you try out gitolite if
+https://gitolite.com/gitolite/install.html#trying-out-gitolite-safely will help you try out gitolite if
 you want to play with gitolite safely.
 
 # RUNNING THE HTTP AND MIRROR TESTS

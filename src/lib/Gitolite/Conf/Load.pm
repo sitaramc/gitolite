@@ -662,7 +662,7 @@ Usage:  gitolite list-members <group name>
 in your rc file[1], gitolite cannot expand group names completely; only your
 external database can.
 
-[1]: http://gitolite.com/gitolite/conf.html#ldap
+[1]: http://gitolite.com/gitolite/conf.html#getting-user-group-info-from-ldap
 
 =cut
 

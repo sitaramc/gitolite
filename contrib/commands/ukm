@@ -10,8 +10,8 @@ use Gitolite::Easy;
 =for usage
 Usage for this command is not that simple. Please read the full
 documentation in
-https://github.com/sitaramc/gitolite-doc/blob/master/contrib/ukm.mkd
-or online at http://gitolite.com/gitolite/ukm.html.
+https://github.com/sitaramc/gitolite-doc/blob/master/docs/contrib/ukm.mkd
+or online at http://gitolite.com/gitolite/contrib/ukm.html.
 =cut
 
 usage() if @ARGV and $ARGV[0] eq '-h';

@@ -31,7 +31,7 @@
 #   gitolite "options"
 #       http://gitolite.com/gitolite/options.html
 #   the "include" statement
-#       http://gitolite.com/gitolite/conf.html#include
+#       http://gitolite.com/gitolite/conf.html#include-files
 
 # setup:
 #   1.  Enable the command by adding it to the ENABLE list in the rc file.

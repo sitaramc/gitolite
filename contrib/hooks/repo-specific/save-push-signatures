@@ -25,10 +25,10 @@
 
 # Relevant gitolite doc links:
 #   repo-specific environment variables
-#       http://gitolite.com/gitolite/dev-notes.html#rsev
+#       http://gitolite.com/gitolite/dev-notes.html#appendix-1-repo-specific-environment-variables
 #   repo-specific hooks
-#       http://gitolite.com/gitolite/non-core.html#rsh
-#       http://gitolite.com/gitolite/cookbook.html#v3.6-variation-repo-specific-hooks
+#       http://gitolite.com/gitolite/non-core.html#repo-specific-hooks
+#       http://gitolite.com/gitolite/cookbook.html#v36-variation-repo-specific-hooks
 
 # Environment:
 #   GIT_PUSH_CERT_NONCE_STATUS should be "OK" (as mentioned above)

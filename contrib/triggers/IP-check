@@ -8,12 +8,12 @@
 
 # Notice how repo-specific information is being passed to this code (bullet 3
 # below).  For more on that, see:
-# https://gitolite.com/gitolite/dev-notes/#appendix-1-repo-specific-environment-variables
+# https://gitolite.com/gitolite/dev-notes#appendix-1-repo-specific-environment-variables
 
 # Instructions:
 
 #   1.  put this in an appropriate triggers directory (read about non-core
-#       code at http://gitolite.com/gitolite/non-core/ for more on this; the
+#       code at http://gitolite.com/gitolite/non-core for more on this; the
 #       cookbook may also help here).
 
 #   2.  add a line:
