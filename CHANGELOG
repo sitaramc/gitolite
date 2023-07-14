@@ -1,4 +1,10 @@
-2020-08-04  v3.6.12 mirroring terminoligy changes
+2023-07-14  v3.6.13 only one important fix:
+
+                    remove the "description" file on new repos, to fix a bug
+                    created by an optimisation made 6 years ago in 3.6.8 (and
+                    was caught only in 2022 or so!)
+
+2020-08-04  v3.6.12 mirroring terminology changes
 
                     install script can now modify #! lines when using a custom
                     perl executable
