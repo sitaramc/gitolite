@@ -209,6 +209,7 @@ sub new_repo {
     _mkdir("$repo.git");
     _chdir("$repo.git");
     _system("git init --bare >&2");
+    unlink "description";
     _chdir( $rc{GL_REPO_BASE} );
     hook_1($repo);
 }
