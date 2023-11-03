@@ -1,1 +1,0 @@
-glp	rm -rf /tmp/gitolite.git; umask 022; git clone --bare . /tmp/gitolite.git
