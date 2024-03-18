@@ -43,6 +43,7 @@ grep '^LoadModule cgi_module modules/mod_cgi.so' httpd.conf ||
 cd ~http
 # should be /srv/http; you may want to check just to be safe
 export GITOLITE_HTTP_HOME=$PWD/gitolite-home
+# WARNING: do not add a trailing slash to the value of GITOLITE_HTTP_HOME
 
 [[ -d gitolite-home ]] && {
     [[ $GITOLITE_TEST != y ]] && {

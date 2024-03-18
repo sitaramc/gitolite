@@ -24,6 +24,7 @@
 cd ~apache
 # should be /usr/share/httpd; you may want to check just to be safe
 export GITOLITE_HTTP_HOME=$PWD/gitolite-home
+# WARNING: do not add a trailing slash to the value of GITOLITE_HTTP_HOME
 
 [[ -d gitolite-home ]] && {
     [[ $GITOLITE_TEST != y ]] && {

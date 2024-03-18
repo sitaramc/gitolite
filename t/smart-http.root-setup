@@ -46,6 +46,7 @@ $bsd cd /tmp/usr.share.httpd
 rm -rf gitolite-home
 mkdir gitolite-home
 export GITOLITE_HTTP_HOME=$PWD/gitolite-home
+# WARNING: do not add a trailing slash to the value of GITOLITE_HTTP_HOME
 
 # get the gitolite sources
 cd gitolite-home
