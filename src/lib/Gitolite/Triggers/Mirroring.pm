@@ -194,15 +194,16 @@ sub post_git {
 
     sub copies {
         my $repo = shift;
+        my %out;
 
         my $ref = git_config( $repo, "^gitolite-options\\.mirror\\.copies.*" );
-        my %out = map { $_ => 'async' } map { split } values %$ref;
+        map { $out{$_} = 'async' } map { split } values %$ref;
 
-        $ref = git_config( $repo, "^gitolite-options\\.mirror\\.copies\\.sync.*" );
-        map { $out{$_} = 'sync' } map { split } values %$ref;
-
-        $ref = git_config( $repo, "^gitolite-options\\.mirror\\.copies\\.nosync.*" );
-        map { $out{$_} = 'nosync' } map { split } values %$ref;
+        my @sync_types = qw(sync async nosync nosync-quiet);
+        foreach my $sync_type ( @sync_types ) {
+            $ref = git_config( $repo, "^gitolite-options\\.mirror\\.copies\\.${sync_type}.*" );
+            map { $out{$_} = $sync_type } map { split } values %$ref;
+        }
 
         return %out;
     }
@@ -237,9 +238,18 @@ sub push_to_copies {
     my $lb = "$ENV{GL_REPO_BASE}/$repo.git/.gl-mirror-lock";
     for my $s ( sort keys %copies ) {
         trace( 1, "push_to_copies skipping self" ), next if $s eq $hn;
-        system("gitolite 1plus1 $lb.$s gitolite mirror push $s $repo </dev/null >/dev/null 2>&1 &") if $copies{$s} eq 'async';
-        system("gitolite 1plus1 $lb.$s gitolite mirror push $s $repo </dev/null >/dev/null 2>&1")   if $copies{$s} eq 'sync';
-        _warn "manual mirror push pending for '$s'"                          if $copies{$s} eq 'nosync';
+        my $mirror_command = "gitolite 1plus1 $lb.$s gitolite mirror push $s $repo </dev/null >/dev/null 2>&1";
+        if ($copies{$s} eq 'async') {
+            system($mirror_command . " &");
+        } elsif ($copies{$s} eq 'sync') {
+            system($mirror_command);
+        } elsif ($copies{$s} eq 'nosync') {
+            _warn "manual mirror push pending for '$s'";
+        } elsif ($copies{$s} eq 'nosync-quiet') {
+            1;
+        } else {
+            _warn "unknown mirror copy type $copies{$s} for '$s'";
+        }
     }
 
     $ENV{GL_USER} = $u;
