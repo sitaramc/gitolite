@@ -33,7 +33,7 @@ try "
     ssh-keygen -N '' -q -f alice -C alice
     ssh-keygen -N '' -q -f bob   -C bob
     ssh-keygen -N '' -q -f carol -C carol
-    ssh-keygen -N '' -q -f dave  -C dave
+    ssh-keygen -N '' -q -f dave  -C dave    -t rsa
     ssh-keygen -N '' -q -f eve   -C eve
     rm alice bob carol dave eve
     ls -a;                      ok;     /alice.pub/; /bob.pub/; /carol.pub/; /dave.pub/; /eve.pub/
