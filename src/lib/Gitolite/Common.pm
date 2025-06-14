@@ -246,13 +246,39 @@ sub cleanup_conf_line {
     }
 }
 
+# 2025-06-12 -- this function is the only one in "core" gitolite [1] to have
+# support for Windows systems.  This is because one of gitolite's
+# "contributed" features, which is nevertheless very useful, is the "testconf"
+# feature [2] and [3].  The thing is, testconf is designed to run gitolite **on the
+# client machine**, which is at least for some people, Windows.
+# So yeah, a bit of tail wagging the dog, allowing a "contrib" feature to make
+# changes to "core" gitolite, and that too for an OS we don't support as a
+# server, but it is what it is.  At least we have managed to isolate the
+# change sufficiently.
+
+# [1]: https://gitolite.com/gitolite/internals.html#what-is-core
+# [2]: https://gitolite.com/gitolite/conf-2.html#appendix-3-embedding-test-code-in-your-conf
+# [3]: https://github.com/sitaramc/gitolite/blob/master/contrib/utils/testconf
 sub update_hook_present {
     my $repo = shift;
 
     return 1 unless -d "$ENV{GL_REPO_BASE}/$repo.git";  # non-existent repo is fine
 
-    my $x = readlink("$ENV{GL_REPO_BASE}/$repo.git/hooks/update");
-    return 1 if $x and $x eq "$ENV{GL_ADMIN_BASE}/hooks/common/update";
+    my $repo_hook = "$ENV{GL_REPO_BASE}/$repo.git/hooks/update";
+    my $common_hook = "$ENV{GL_ADMIN_BASE}/hooks/common/update";
+
+    if ($^O eq 'msys') {
+        # No symlinks on Windows.  Please see important note placed just before this function.
+        my $repo_update_text = slurp($repo_hook) if -f $repo_hook;
+        my $common_update_text = slurp($common_hook) if -f $common_hook;
+
+        return 1 if $repo_update_text and $common_update_text and $repo_update_text eq $common_update_text;
+
+        return 0;
+    }
+
+    my $x = readlink($repo_hook);
+    return 1 if $x and $x eq $common_hook;
 
     return 0;
 }
