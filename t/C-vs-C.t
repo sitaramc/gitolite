@@ -38,6 +38,6 @@ try "
     glt push u2 origin master:m2;   !ok;    /FATAL: C/
                                             /DENIED by fallthru/
     glt push u2 origin master:m1;   ok;     /To file:///foo/aa/
-                                            /8cd302a..29b8683/
+                                            /................/
                                             /master -> m1/
 ";

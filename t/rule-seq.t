@@ -9,7 +9,7 @@ use Gitolite::Test;
 # rule sequence
 # ----------------------------------------------------------------------
 
-# this is the specific example in commit 32056e0 of g2
+# this is the specific example in commit ....... of g2
 
 try "plan 27";
 

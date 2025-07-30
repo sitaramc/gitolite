@@ -90,20 +90,20 @@ try "
     tc u4n1 u4n2
     PUSH u4 next; ok
         /To .*/foo.git/
-        /new reference\\]   ca3787119b7e8b9914bc22c939cefc443bc308da -> refs/partial/br-\\d+/
+        /new reference\\]   77ab9e6affcaf2168cf7264b3d41a087800fbb2a1c29438ed6b405d8edcd64da -> refs/partial/br-\\d+/
         /file:///foo-pc/
-        /52c7716..ca37871  next -> next/
+        /................  next -> next/
     tag u4/nexttag; glt push u4 --tags
         /To file:///foo-pc/
         /\\[new tag\\]         u4/nexttag +-> +u4/nexttag/
-        /\\[new reference\\]   ca3787119b7e8b9914bc22c939cefc443bc308da -> refs/partial/br-\\d+/
+        /\\[new reference\\]   77ab9e6affcaf2168cf7264b3d41a087800fbb2a1c29438ed6b405d8edcd64da -> refs/partial/br-\\d+/
 
     checkout master
     checkout -b dev/u4/u4master
     tc devu4m1 devu4m2
     PUSH u4 HEAD; ok
         /To .*/foo.git/
-        /new reference\\]   228353950557ed1eb13679c1fce4d2b4718a2060 -> refs/partial/br-\\d+/
+        /new reference\\]   27dacda49a9aef8f461e252817339a2dad6c8e8bc6fc68315b638c50d0388985 -> refs/partial/br-\\d+/
         /file:///foo-pc/
         /new branch.* HEAD -> dev/u4/u4master/
 
@@ -113,41 +113,41 @@ try "
         /From file:///foo/
         /new branch\\]      dev/u4/u4master -> origin/dev/u4/u4master/
         /new tag\\]         u4/nexttag +-> +u4/nexttag/
-        /52c7716..ca37871  next +-> +origin/next/
+        /................  next +-> +origin/next/
     checkout master; tc u1ma1 u1ma2;
-        /\\[master 8ab1ff5\\] u1ma2 at Thu Jul  7 06:23:20 2011/
+        /\\[master .......\\] u1ma2 at Thu Jul  7 06:23:20 2011/
     tag mt2; PUSH u1 master; ok
     checkout secret-1; tc u1s1b1 u1s1b2
-        /\\[secret-1 5f96cb5\\] u1s1b2 at Thu Jul  7 06:23:20 2011/
+        /\\[secret-1 .......\\] u1s1b2 at Thu Jul  7 06:23:20 2011/
     tag s1t2; PUSH u1 HEAD; ok
     checkout secret-2; tc u1s2b1 u1s2b2
-        /\\[secret-2 1ede682\\] u1s2b2 at Thu Jul  7 06:23:20 2011/
+        /\\[secret-2 .......\\] u1s2b2 at Thu Jul  7 06:23:20 2011/
     tag s2t2; PUSH u1 HEAD; ok
     glt push u1 --tags; ok
 
     glt ls-remote u1 origin
-        /8ab1ff512faf5935dc0fbff357b6f453b66bb98b\trefs/tags/mt2/
-        /5f96cb5ff73c730fb040eb2d01981f7677ca6dba\trefs/tags/s1t2/
-        /1ede6829ec7b75a53cd6acb7da64e5a8011e6050\trefs/tags/s2t2/
+        /........................................\trefs/tags/mt2/
+        /........................................\trefs/tags/s1t2/
+        /........................................\trefs/tags/s2t2/
 
     ## u4 gets updates but without the tag in secret-1
     cd ../foo-pc
     glt ls-remote u4 origin
         !/ refs/heads/secret-1/; !/s1t1/; !/s1t2/
-        /8ab1ff512faf5935dc0fbff357b6f453b66bb98b\tHEAD/
-        /8ced4a374b3935bac1a5ba27ef8dd950bd867d47\trefs/heads/dev/u1/foo/
-        /228353950557ed1eb13679c1fce4d2b4718a2060\trefs/heads/dev/u4/u4master/
-        /8ab1ff512faf5935dc0fbff357b6f453b66bb98b\trefs/heads/master/
-        /ca3787119b7e8b9914bc22c939cefc443bc308da\trefs/heads/next/
-        /1ede6829ec7b75a53cd6acb7da64e5a8011e6050\trefs/heads/secret-2/
-        /8ab1ff512faf5935dc0fbff357b6f453b66bb98b\trefs/tags/mt2/
-        /52c7716c6b029963dd167c647c1ff6222a366499\trefs/tags/nt1/
-        /01f04ece6519e7c0e6aea3d26c7e75e9c4e4b06d\trefs/tags/s2t1/
-        /1ede6829ec7b75a53cd6acb7da64e5a8011e6050\trefs/tags/s2t2/
+        /........................................\tHEAD/
+        /........................................\trefs/heads/dev/u1/foo/
+        /........................................\trefs/heads/dev/u4/u4master/
+        /........................................\trefs/heads/master/
+        /........................................\trefs/heads/next/
+        /........................................\trefs/heads/secret-2/
+        /........................................\trefs/tags/mt2/
+        /........................................\trefs/tags/nt1/
+        /........................................\trefs/tags/s2t1/
+        /........................................\trefs/tags/s2t2/
 
     glt fetch u4
-        /3ea704d..8ab1ff5  master     -> origin/master/
-        /01f04ec..1ede682  secret-2   -> origin/secret-2/
+        /................  master     -> origin/master/
+        /................  secret-2   -> origin/secret-2/
         /\\[new tag\\]         mt2        -> mt2/
         /\\[new tag\\]         s2t2       -> s2t2/
         !/ refs/heads/secret-1/; !/s1t1/; !/s1t2/

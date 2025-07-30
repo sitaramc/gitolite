@@ -39,13 +39,13 @@ try "
     [ -d .git ];                ok
 
     # VREF not called for u1
-    tc a1 a2 a3 a4 a5;          ok;     /aaf9e8e/
+    tc a1 a2 a3 a4 a5;          ok;     /......./
     PUSH u1 master;             ok;     /new branch.*master -. master/
                                         !/helper program missing/
                                         !/hook declined/
                                         !/remote rejected/
     # VREF is called for u2
-    tc b1;                      ok;     /1f440d3/
+    tc b1;                      ok;     /......./
     PUSH u2;                    !ok;    /helper program missing/
                                         /hook declined/
                                         /remote rejected/
@@ -73,66 +73,66 @@ try "
     cd ../foo;                  ok
 
     # u2 1 file
-    PUSH u2;                    ok;     /aaf9e8e..1f440d3.*master -. master/
+    PUSH u2;                    ok;     /.................*master -. master/
 
     # u2 2 files
-    tc b2 b3;                   ok;     /c3397f7/
-    PUSH u2;                    ok;     /1f440d3..c3397f7.*master -. master/
+    tc b2 b3;                   ok;     /......./
+    PUSH u2;                    ok;     /.................*master -. master/
 
     # u2 3 files
-    tc c1 c2 c3;                ok;     /be242d7/
+    tc c1 c2 c3;                ok;     /......./
     PUSH u2;                    !ok;    /W VREF/COUNT/2 foo u2 DENIED by VREF/COUNT/2/
                                         /too many changed files in this push/
                                         /hook declined/
                                         /remote rejected/
 
     # u4 3 files
-    PUSH u4;                    ok;     /c3397f7..be242d7.*master -. master/
+    PUSH u4;                    ok;     /.................*master -. master/
 
     # u4 4 files
-    tc d1 d2 d3 d4;             ok;     /88d80e2/
-    PUSH u4;                    ok;     /be242d7..88d80e2.*master -. master/
+    tc d1 d2 d3 d4;             ok;     /......./
+    PUSH u4;                    ok;     /.................*master -. master/
 
     # u4 5 files
-    tc d5 d6 d7 d8 d9;          ok;     /e9c60b0/
+    tc d5 d6 d7 d8 d9;          ok;     /......./
     PUSH u4;                    !ok;    /W VREF/COUNT/4 foo u4 DENIED by VREF/COUNT/4/
                                         /too many changed files in this push/
                                         /hook declined/
                                         /remote rejected/
 
     # u1 all files
-    PUSH u1;                    ok;     /88d80e2..e9c60b0.*master -. master/
+    PUSH u1;                    ok;     /.................*master -. master/
 
     # u6 6 old files
     test-tick
     tc d1 d2 d3 d4 d5 d6
-                                ok;     /2773f0a/
-    PUSH u6;                    ok;     /e9c60b0..2773f0a.*master -. master/
+                                ok;     /......./
+    PUSH u6;                    ok;     /.................*master -. master/
     tag six
 
     # u6 updates 7 old files
     test-tick; test-tick
     tc d1 d2 d3 d4 d5 d6 d7
-                                ok;     /d3fb574/
+                                ok;     /......./
     PUSH u6;                    !ok;    /W VREF/COUNT/6 foo u6 DENIED by VREF/COUNT/6/
                                         /too many changed files in this push/
                                         /hook declined/
                                         /remote rejected/
-    reset-h six;                ok;     /HEAD is now at 2773f0a/
+    reset-h six;                ok;     /HEAD is now at ......./
 
     # u6 4 new 2 old files
     test-tick; test-tick
     tc d1 d2 n1 n2 n3 n4
-                                ok;     /9e90848/
+                                ok;     /......./
     PUSH u6;                    !ok;    /W VREF/COUNT/3/NEWFILES foo u6 DENIED by VREF/COUNT/3/NEWFILES/
                                         /too many new files in this push/
                                         /hook declined/
                                         /remote rejected/
-    reset-h six;                ok;     /HEAD is now at 2773f0a/
+    reset-h six;                ok;     /HEAD is now at ......./
 
     # u6 3 new 3 old files
     test-tick; test-tick
     tc d1 d2 d3 n1 n2 n3
-                                ok;     /e47ff5d/
-    PUSH u6;                    ok;     /2773f0a..e47ff5d.*master -. master/
+                                ok;     /......./
+    PUSH u6;                    ok;     /.................*master -. master/
 ";

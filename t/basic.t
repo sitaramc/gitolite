@@ -81,7 +81,7 @@ try "
     cd t1;                      ok;
 
     # push
-    test-commit tc1 tc2 tc2;    ok;     /a530e66/
+    test-commit tc1 tc2 tc2;    ok;     /......./
     PUSH u2;                    !ok;    gsh
                                         /DENIED by fallthru/
                                         /fatal: Could not read from remote repository/
@@ -89,15 +89,15 @@ try "
                                         /master -> master/
 
     # rewind
-    reset-h HEAD^;              ok;     /HEAD is now at aa2b5c5 tc2/
-    test-tick; test-commit tc3; ok;     /3ffced1/
+    reset-h HEAD^;              ok;     /HEAD is now at ....... tc2/
+    test-tick; test-commit tc3; ok;     /......./
     PUSH u3;                    !ok;    gsh
                                         /rejected.*master -> master.*non-fast-forward./
     PUSH u3 -f;                 !ok;    gsh
                                         reject
                                         /DENIED by fallthru/
     PUSH u4 +master;            ok;     gsh
-                                        / \\+ a530e66...3ffced1 master -> master.*forced update./
+                                        / \\+ ................. master -> master.*forced update./
 ";
 
 put "../gitolite-admin/conf/gitolite.conf", "
@@ -146,7 +146,7 @@ try "
     test-commit r1;             ok
     PUSH u1 +master;            ok;     gsh
                                         /To file:///aa/
-                                        /\\+ 27ed463...05adfb0 master -> master .forced update./
+                                        /\\+ ................. master -> master .forced update./
 
     # u2 rewind master !ok
     reset-h HEAD^;              ok
@@ -160,13 +160,13 @@ try "
     test-commit r3;             ok
     PUSH u3 +master;            ok;     gsh
                                         /To file:///aa/
-                                        /\\+ 05adfb0...6a532fe master -> master .forced update./
+                                        /\\+ ................. master -> master .forced update./
 
     # u4 push master ok
     test-commit u4;             ok
     PUSH u4 master;             ok;     gsh
                                         /To file:///aa/
-                                        /6a532fe..f929773 +master -> master/
+                                        /................ +master -> master/
 
     # u4 rewind master !ok
     reset-h HEAD^;              ok
@@ -191,7 +191,7 @@ try "
     # clean up for next set
     glt push u1 -f origin master dev foo
                                 ok;     gsh
-                                        /f929773...6a532fe master -> master .forced update./
+                                        /................. master -> master .forced update./
                                         /new branch.*dev -> dev/
                                         /new branch.*foo -> foo/
 
@@ -204,7 +204,7 @@ try "
     # u5 rewind dev ok
     PUSH u5 +dev^:dev
                                 ok;     gsh
-                                        /\\+ 27ed463...1ad477a dev\\^ -> dev .forced update./
+                                        /\\+ ................. dev\\^ -> dev .forced update./
 
 
     # u5 rewind foo !ok
@@ -219,7 +219,7 @@ try "
 
     test-commit u5
     PUSH u5 foo;                ok;     gsh
-                                        /27ed463..83da62c *foo -> foo/
+                                        /................ *foo -> foo/
 
     # u1 delete dev ok
     PUSH u1 :dev;               ok;     gsh

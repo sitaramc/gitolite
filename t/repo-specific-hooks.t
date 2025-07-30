@@ -131,11 +131,11 @@ try "
     [ -d foo ];            !ok;
     CLONE admin foo;        ok; /empty/; /cloned/
     cd foo
-    tc a1;                  ok; /ee47f8b/
+    tc a1;                  ok; /d7b701c/
     PUSH admin master;      ok; /new.*master -. master/
                                 /hooks/post-receive.h00-first/
                                 !/post-receive.*has args:/
-                                /post-receive.h00-first has stdin: 0000000000000000000000000000000000000000 ee47f8b6be2160ad1a3f69c97a0cb3d488e6657e refs/heads/master/
+                                /post-receive.h00-first has stdin: 0000000000000000000000000000000000000000000000000000000000000000 d7b701c77abcfb2cfe6da61c4f2dcef0558492d7174185c863b202185da7495c refs/heads/master/
 
     cd ..
 
@@ -143,14 +143,14 @@ try "
     [ -d bar ];            !ok;
     CLONE admin bar;        ok; /empty/; /cloned/
     cd bar
-    tc a2;                  ok; /cfc8561/
+    tc a2;                  ok; /f20ed70/
     PUSH admin master;      ok; /new.*master -. master/
                                 /hooks/pre-receive.h00-first/
                                 !/hooks/pre-recieve.*has args:/
-                                /hooks/pre-receive.h00-first has stdin: 0000000000000000000000000000000000000000 cfc8561c7827a8b94df6c5dad156383d4cb210f5 refs/heads/master/
+                                /hooks/pre-receive.h00-first has stdin: 0000000000000000000000000000000000000000000000000000000000000000 f20ed70d5724d8e93327ea595c6641a0ce948bcedf4dbb0a998fc767e2dc26cc refs/heads/master/
                                 /hooks/pre-receive.h01-second/
                                 !/hooks/pre-receive.h01.*has args:/
-                                /hooks/pre-receive.h01-second has stdin: 0000000000000000000000000000000000000000 cfc8561c7827a8b94df6c5dad156383d4cb210f5 refs/heads/master/
+                                /hooks/pre-receive.h01-second has stdin: 0000000000000000000000000000000000000000000000000000000000000000 f20ed70d5724d8e93327ea595c6641a0ce948bcedf4dbb0a998fc767e2dc26cc refs/heads/master/
 
     cd ..
 
@@ -158,11 +158,11 @@ try "
     [ -d baz ];            !ok;
     CLONE admin baz;        ok; /empty/; /cloned/
     cd baz
-    tc a3;                  ok; /2863617/
+    tc a3;                  ok; /63bf37d/
     PUSH admin master;      ok; /new.*master -. master/
                                 /hooks/post-receive.h00-first/
                                 !/hooks/post-receive.h00.*has args:/
-                                /hooks/post-receive.h00-first has stdin: 0000000000000000000000000000000000000000 28636171ae703f42fb17c312c6b6a078ed07a2cd refs/heads/master/
+                                /hooks/post-receive.h00-first has stdin: 0000000000000000000000000000000000000000000000000000000000000000 63bf37d384cc96d20f9768b7697c8271ee5813e26c356b6313423803f06f35eb refs/heads/master/
                                 /hooks/post-update.h00-first/
                                 /hooks/post-update.h00-first has args: refs/heads/master/
                                 !/hooks/post-update.h00.*has stdin:/
@@ -204,7 +204,7 @@ try "
 
     # Foo has no hooks
     cd foo
-    tc b1;                  ok; /7ef69de/
+    tc b1;                  ok; /4848065/
     PUSH admin master;      ok; /master -. master/
                                 !/hooks/post-receive/
 
@@ -212,17 +212,17 @@ try "
 
     # Bar only has the second hook
     cd bar
-    tc b2;                  ok; /cc7808f/
+    tc b2;                  ok; /3c36024/
     PUSH admin master;      ok; /master -. master/
                                 /hooks/pre-receive.h00-second/
                                 !/hooks/pre-receive.*has args:/
-                                /hooks/pre-receive.h00-second has stdin: cfc8561c7827a8b94df6c5dad156383d4cb210f5 cc7808f77c7c7d705f82dc54dc3152146175768f refs/heads/master/
+                                /hooks/pre-receive.h00-second has stdin: f20ed70d5724d8e93327ea595c6641a0ce948bcedf4dbb0a998fc767e2dc26cc 3c360241286305bdd108bf368d6a35b1598f2c93853e306520b1205689ac0c8d refs/heads/master/
 
     cd ..
 
     # Baz has no post-receive and keeps the second hook for post-update
     cd baz
-    tc b3;                  ok; /8d20101/
+    tc b3;                  ok; /f9d8247/
     PUSH admin master;      ok; /master -. master/
                                 !/hooks/post-receive.*/
                                 /hooks/post-update.h00-second/

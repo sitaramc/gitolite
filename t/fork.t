@@ -87,3 +87,4 @@ try "cd $rb; find . -name gl-creator"; $t = md5sum(sort (lines())); cmp $t,
 346955ff2eadbf76e19373f07dd370a9  ./foo/u1/u1a2.git/gl-creator
 346955ff2eadbf76e19373f07dd370a9  ./foo/u1/u1e.git/gl-creator
 ';
+

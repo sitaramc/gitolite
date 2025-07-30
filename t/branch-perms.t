@@ -34,7 +34,7 @@ try "
     glt clone u1 file:///aa;         ok
     cd aa;                          ok
     tc l-995 l-996 l-997 l-998 l-999 l-1000 l-1001 l-1002 l-1003;
-                                    ok;     /master a788db9. l-1003/
+                                    ok;     /master ........ l-1003/
     glt push u1 origin HEAD;        ok;     /To file:///aa/
                                             /\\* \\[new branch\\]      HEAD -> master/
 
@@ -42,13 +42,13 @@ try "
     git branch foo;                 ok
 
     # u1 rewind master succeed
-    git reset --hard HEAD^;         ok;     /HEAD is now at 65d5f4a l-1002/
-    tc v-865;                       ok;     /master 3053bb4. v-865/
-    glt push u1 origin +master;     ok;     /\\+ a788db9...3053bb4 master -> master \\(forced update\\)/
+    git reset --hard HEAD^;         ok;     /HEAD is now at ....... l-1002/
+    tc v-865;                       ok;     /master ........ v-865/
+    glt push u1 origin +master;     ok;     /\\+ ................. master -> master \\(forced update\\)/
 
     # u2 rewind master fail
-    git reset --hard HEAD^;         ok;     /HEAD is now at 65d5f4a l-1002/
-    tc s-361;                       ok;     /master b331651. s-361/
+    git reset --hard HEAD^;         ok;     /HEAD is now at ....... l-1002/
+    tc s-361;                       ok;     /master ........ s-361/
     glt push u2 file:///aa +master;  !ok;    reject
                                             /\\+ refs/heads/master aa u2 DENIED by fallthru/
 
