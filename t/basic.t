@@ -211,7 +211,7 @@ try "
     PUSH u5 +foo^:foo
                                 !ok;    gsh
                                         reject
-                                        /remote: FATAL: \\+ refs/heads/foo aa u5 DENIED by fallthru/
+                                        /FATAL: \\+ refs/heads/foo aa u5 DENIED by fallthru/
 
     # u5 push foo ok
     git checkout foo
