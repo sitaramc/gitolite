@@ -115,25 +115,33 @@ sub args {
     my ( $ref, $oldsha, $newsha ) = @_;
     my ( $oldtree, $newtree, $aa );
 
+    my $sha256 = 0;
+    my $zeroes = '0' x 40;
     # this is special to git -- the hash of an empty tree
     my $empty = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
-    $oldtree = $oldsha eq '0' x 40 ? $empty : $oldsha;
-    $newtree = $newsha eq '0' x 40 ? $empty : $newsha;
+    if (length($oldsha) == 64) {
+        $sha256 = 1;
+        $zeroes = '0' x 64;
+        $empty = '6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321';
+    }
 
-    my $merge_base = '0' x 40;
+    $oldtree = $oldsha eq $zeroes ? $empty : $oldsha;
+    $newtree = $newsha eq $zeroes ? $empty : $newsha;
+
+    my $merge_base = $zeroes;
     # for branch create or delete, merge_base stays at '0'x40
     chomp( $merge_base = `git merge-base $oldsha $newsha` )
-      unless $oldsha eq '0' x 40
-      or $newsha eq '0' x 40;
+      unless $oldsha eq $zeroes
+      or $newsha eq $zeroes;
 
     $aa = 'W';
     # tag rewrite
-    $aa = '+' if $ref =~ m(refs/tags/) and $oldsha ne ( '0' x 40 );
+    $aa = '+' if $ref =~ m(refs/tags/) and $oldsha ne ( $zeroes );
     # non-ff push to ref (including ref delete)
     $aa = '+' if $oldsha ne $merge_base;
 
-    $aa = 'D' if ( option( $ENV{GL_REPO}, 'DELETE_IS_D' ) ) and $newsha eq '0' x 40;
-    $aa = 'C' if ( option( $ENV{GL_REPO}, 'CREATE_IS_C' ) ) and $oldsha eq '0' x 40;
+    $aa = 'D' if ( option( $ENV{GL_REPO}, 'DELETE_IS_D' ) ) and $newsha eq $zeroes;
+    $aa = 'C' if ( option( $ENV{GL_REPO}, 'CREATE_IS_C' ) ) and $oldsha eq $zeroes;
 
     # and now "M" commits.  All the other accesses (W, +, C, D) were mutually
     # exclusive in some sense.  Sure a W could be a C or a + could be a D but
@@ -144,7 +152,7 @@ sub args {
     # effect and this push contains a merge inside)
 
     if ( option( $ENV{GL_REPO}, 'MERGE_CHECK' ) ) {
-        if ( $oldsha eq '0' x 40 or $newsha eq '0' x 40 ) {
+        if ( $oldsha eq $zeroes or $newsha eq $zeroes ) {
             _warn "ref create/delete ignored for purposes of merge-check\n";
         } else {
             $aa .= 'M' if `git rev-list -n 1 --merges $oldsha..$newsha` =~ /./;
