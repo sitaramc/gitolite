@@ -126,17 +126,20 @@ sub fp_line {
 
 sub optionise {
     my $f = shift;
+    my $rv;
 
     my $user = $f;
     $user =~ s(.*/)();                # foo/bar/baz.pub -> baz.pub
     $user =~ s/(\@[^.]+)?\.pub$//;    # baz.pub, baz@home.pub -> baz
 
-    my @line = slurp($f);
-    if ( @line != 1 ) {
-        _warn "$f does not contain exactly 1 line; ignoring";
-        return '';
+    my @lines = slurp($f);
+    chomp($lines[-1]);
+    for my $line (@lines) {
+        $rv .= "command=\"$glshell $user" . ( $kfn ? " $f" : "" ) .
+            "\",$auth_options" .
+            ($line =~ /^(ecdsa|ssh)-/ ? " " : "," ) . $line;
     }
-    chomp(@line);
-    return "command=\"$glshell $user" . ( $kfn ? " $f" : "" ) . "\",$auth_options $line[0]";
+
+    return $rv;
 }
 
