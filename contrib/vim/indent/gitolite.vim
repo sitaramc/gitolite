@@ -15,6 +15,8 @@ setlocal autoindent
 setlocal indentexpr=GetGitoliteIndent()
 setlocal indentkeys=o,O,*<Return>,!^F,=repo,\",=
 
+let b:undo_indent = "setl inde< indk<"
+
 " Only define the function once.
 if exists("*GetGitoliteIndent")
   finish
