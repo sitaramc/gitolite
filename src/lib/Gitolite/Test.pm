@@ -53,7 +53,7 @@ try "
     DEF ADMIN_PUSH = AP_2 %1; glt push admin origin; ok; gsh; /master -> master/
 
     DEF CS_1 = pwd; //tmp/tsh_tempdir.*gitolite-admin/; git remote -v; ok; /file:///gitolite-admin/
-    DEF CHECK_SETUP = CS_1; git log; ok; /107215ad61ba9dc4a3ad1c4341d369b1e05001d37a3a604311af3bdecfe7c792/
+    DEF CHECK_SETUP = CS_1; git log; ok; /7568ffe9b363746af3053914f8acf601f3f62bd4/
 
     DEF CLONE = glt clone %1 file:///%2
     DEF PUSH  = glt push %1 origin
@@ -98,6 +98,8 @@ sub confreset {
     system("mv ~/repositories/.ga ~/repositories/gitolite-admin.git");
     system("mv ~/repositories/.te ~/repositories/testing.git       ");
     put "|cut -c9- > conf/gitolite.conf", '
+        repo @all
+            option sha256 = 1
         repo    gitolite-admin
             RW+     =   admin
         repo    testing

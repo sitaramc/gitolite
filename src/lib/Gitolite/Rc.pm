@@ -571,6 +571,11 @@ __DATA__
 
     # List of commands and features to enable
 
+    POST_CREATE =>
+    [
+        'sha256'
+    ],
+
     ENABLE => [
 
         # COMMANDS

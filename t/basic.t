@@ -26,6 +26,9 @@ try "
     ";
 
 put "conf/gitolite.conf", "
+    repo \@all
+        option sha256 = 1
+
     \@admins     =   admin dev1
     repo gitolite-admin
         -   mm  =   \@admins
@@ -53,6 +56,9 @@ try "
     ";
 
 put "conf/gitolite.conf", "
+    repo \@all
+        option sha256 = 1
+
     \@admins     =   admin dev1
     repo gitolite-admin
         RW+     =   admin
@@ -101,6 +107,9 @@ try "
 ";
 
 put "../gitolite-admin/conf/gitolite.conf", "
+    repo \@all
+        option sha256 = 1
+
     \@admins     =   admin dev1
     repo gitolite-admin
         RW+     =   admin
