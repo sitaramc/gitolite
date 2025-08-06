@@ -58,6 +58,7 @@ sub setup {
 
     unless ($h_only) {
         setup_glrc();
+        $ENV{GIT_DEFAULT_HASH} = "sha256";
         setup_gladmin( $admin, $pubkey, $message );
 
         _system("gitolite compile");
