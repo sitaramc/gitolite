@@ -484,6 +484,7 @@ BEGIN {
 # ----------------------------------------------------------------------
 
 __DATA__
+$ENV{GIT_DEFAULT_HASH} = "sha256";
 # configuration variables for gitolite
 
 # This file is in perl syntax.  But you do NOT need to know perl to edit it --
