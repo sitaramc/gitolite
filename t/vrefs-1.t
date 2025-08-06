@@ -12,6 +12,9 @@ use Gitolite::Test;
 try "plan 88";
 
 put "conf/gitolite.conf", "
+    repo \@all
+        option sha256 = 1
+
     repo gitolite-admin
         RW+     =   admin
 
@@ -52,6 +55,9 @@ try "
 ";
 
 put "../gitolite-admin/conf/gitolite.conf", "
+    repo \@all
+        option sha256 = 1
+
     repo gitolite-admin
         RW+     =   admin
 

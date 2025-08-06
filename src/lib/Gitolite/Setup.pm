@@ -168,6 +168,10 @@ sub setup_gladmin {
 1;
 
 __DATA__
+
+repo @all
+    option sha256 = 1
+
 repo gitolite-admin
     RW+     =   %ADMIN
 

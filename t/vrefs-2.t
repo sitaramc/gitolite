@@ -12,6 +12,9 @@ use Gitolite::Test;
 try "plan 72";
 
 put "../gitolite-admin/conf/gitolite.conf", "
+    repo \@all
+        option sha256 = 1
+
     \@gfoo = foo
     \@lead = u1
     \@senior_devs = u2 u3

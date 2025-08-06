@@ -1,0 +1,8 @@
+#!/bin/bash
+
+gitolite git-config -q $2 gitolite-options.sha256 || exit 0
+
+cd $GL_REPO_BASE/$2.git || exit 1
+git config core.repositoryformatversion 1
+git config extensions.objectformat sha256
+
