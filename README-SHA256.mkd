@@ -1,0 +1,180 @@
+This is a short note on gitolite's readiness for SHA256.
+
+## Git's readiness
+
+At the moment, it seems that even adding the `compatobjectformat` setting on the server side makes git unable to push to a repository.  See listing 1 below.  As such, there is no point creating a gitolite repo that has that setting.  So we will ignore that for now.  (Side note: Having that setting on the client side is fine.  See listing 2 below.  But that has nothing to do with gitolite.)
+
+Interoperability between sha256 and sha1 also does not exist as of yet.
+
+## Gitolite "core" changes
+
+It doesn't need a lot of changes to "core" for basic support of sha256.  [3dc8093](https://github.com/sitaramc/gitolite/commit/3dc8093227e15434eec4924590cdf0eb63284c73) was literally the only change that was absolutely *required*.  Everything else can be done using a `POST_CREATE` hook, **or** an environment variable placed at the top of the rc file.
+
+But there are **some caveats**:
+
+-   mirroring and http access have not been tested
+-   non-core commands and triggers have not been tested.  For example, one easy win is to look for the pattern `"0" x 40` and fix those in some manner similar to what was done in [3dc8093](https://github.com/sitaramc/gitolite/commit/3dc8093227e15434eec4924590cdf0eb63284c73), but there may be others that are not so easily caught.
+
+**So be sure to test properly if you want to use it in production**.  Gitolite's ["test setup"](https://gitolite.com/gitolite/testing.html), which can be done using a throw-away userid should be useful to start.  Later, ["embedding test code in the conf file"](https://gitolite.com/gitolite/conf-2.html#appendix-3-embedding-test-code-in-your-conf) should be used on an ongoing basis until things settle down.
+
+Anyway, here are the two methods
+
+## Method 1: environment variable
+
+Use this if you're OK with **all** your repos being sha256.
+
+Edit your `~/.gitolite.rc` and add `$ENV{GIT_DEFAULT_HASH} = "sha256";` at the **top** (definitely before the `%RC = ...` line).
+
+That ensures all repos created from now on, including wild repos, are sha256 (repos created *before* that setting will stay sha1, of course).  As a bonus, setting that variable externally when doing the initial "setup" step will set for objectformat for the gitolite-admin repo also.  (E.g., `GIT_DEFAULT_HASH=sha256 gitolite setup -pk my.pub`).
+
+This mode has also been put through the test suite to a certain degree of confidence; see [0d4a6f4](https://github.com/sitaramc/gitolite/commit/0d4a6f45f3a6394edb3e2bd1689d5c0e3d52eb6e) for details.
+
+## Method 2: `POST_CREATE` trigger
+
+Use this if you want sha256 only for **some** repos.
+
+Use the existing documentation to add a new `POST_CREATE` trigger.  (See [this](https://gitolite.com/gitolite/non-core.html#for-your-non-core-programs) to tell gitolite where your site's "local code" is).
+
+Create a trigger called `sha256` in the "triggers" subdirectory of the local code location above.  It's a simple shell script that contains
+
+    #!/bin/bash
+
+    gitolite git-config -q $2 gitolite-options.sha256 || exit 0
+
+    cd $GL_REPO_BASE/$2.git || exit 1
+    git config core.repositoryformatversion 1
+    git config extensions.objectformat sha256
+
+Make it executable.
+
+3.  In your RC file, add this just before the `ENABLE` section:
+
+        POST_CREATE =>
+        [
+            'sha256'
+        ],
+
+(yes, including the trailing comma!)
+
+4.  For every repo that you want to be created sha256, add this to the gitolite.conf:
+
+        option sha256 = 1
+
+## Listings
+
+### listing 1:
+
+    $ git init --bare --object-format=sha256 b2
+    Initialized empty Git repository in /tmp/tmp.jfOblzuHbi/b2/
+
+    $ cd b2
+
+    $ git config extensions.compatObjectFormat sha1
+
+    $ cd ..
+
+    $ git clone b2 b2c
+    Cloning into 'b2c'...
+    warning: You appear to have cloned an empty repository.
+    done.
+
+    $ cd b2c
+
+    $ /tmp/dummy-commit (random)
+    [master (root-commit) 9c38221] 10851
+     1 file changed, 1 insertion(+)
+     create mode 100644 10851
+
+    $ git push origin master
+    Enumerating objects: 3, done.
+    Counting objects: 100% (3/3), done.
+    Writing objects: 100% (3/3), 241 bytes | 241.00 KiB/s, done.
+    Total 3 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+    remote: error: unable to map tree 382d639e0ec2c1d2254293a0117932ea89a773e56a60a0141d183748c7e62978 in commit object
+    remote: fatal: Failed to convert object from sha256 to sha1
+    error: remote unpack failed: unpack-objects abnormal exit
+    To /tmp/tmp.jfOblzuHbi/b2
+     ! [remote rejected] master -> master (unpacker error)
+    error: failed to push some refs to '/tmp/tmp.jfOblzuHbi/b2'
+
+### listing 2
+
+    $ git init --bare --object-format=sha256 b2
+    Initialized empty Git repository in /tmp/tmp.iuytYx1xiR/b2/
+
+    $ git clone b2 b2c
+    Cloning into 'b2c'...
+    warning: You appear to have cloned an empty repository.
+    done.
+
+    $ cd b2c
+
+    $ git config extensions.compatObjectFormat sha1
+
+    $ /tmp/dummy-commit (random)
+    [master (root-commit) 22528c6] 32399
+     1 file changed, 1 insertion(+)
+     create mode 100644 32399
+
+    $ git pom
+    Enumerating objects: 3, done.
+    Counting objects: 100% (3/3), done.
+    Writing objects: 100% (3/3), 240 bytes | 240.00 KiB/s, done.
+    Total 3 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+    To /tmp/tmp.iuytYx1xiR/b2
+     * [new branch]      master -> master
+
+<!--
+
+## (future) plan for full integration
+
+-   blocker: git init should also have an option to set compatObjectFormat
+
+## test suite
+
+-   stop gap/quick and dirty:
+
+        perl -i -pe 's/\b([0-9a-f]{7,})/"." x length($1)/ge' t/*.t
+
+    this will have false positives, will require a wee bit of manual fine tuning
+
+-   long term: replace all the sha1 hashes with the correct sha256 hashes (try to automate the replacement???)
+
+## code changes in store.pm
+
+Broad outline:
+
+        diff --git i/src/lib/Gitolite/Conf/Store.pm w/src/lib/Gitolite/Conf/Store.pm
+        index a5867a2..f569146 100644
+        --- i/src/lib/Gitolite/Conf/Store.pm
+        +++ w/src/lib/Gitolite/Conf/Store.pm
+        @@ -28,6 +28,7 @@ $Data::Dumper::Sortkeys = 1;
+         
+         use Gitolite::Rc;
+         use Gitolite::Common;
+        +use Gitolite::Conf::Load;
+         use Gitolite::Hooks::Update;
+         use Gitolite::Hooks::PostUpdate;
+         
+        @@ -208,6 +209,13 @@ sub new_repo {
+         
+             _mkdir("$repo.git");
+             _chdir("$repo.git");
+        +    if ($configs{$repo}) {
+        +        say STDERR Dumper $configs{$repo};
+        +        # normal repo; use above configuratiom info to decide and add sha256 options
+        +    } else {
+        +        say STDERR Dumper option($repo, "sha256");
+        +        # wild repo; use above configuratiom info to decide and add sha256 options
+        +    }
+             _system("git init --bare >&2");
+             unlink "description";
+             _chdir( $rc{GL_REPO_BASE} );
+
+NOTES:
+
+-   what prevents using option() or `git_config()` in the "then" part is:
+
+    >   remote: FATAL: split conf set, gl-conf not present for 'testing'
+
+-->
