@@ -1,3 +1,10 @@
+**ABANDONED**
+
+This branch (UTF-8) has long been dead; we just never got around to doing the last rites :-)
+
+**DO NOT USE THIS.  YOU HAVE BEEN WARNED!**
+
+----
 Gitolite README
 ===============
 
