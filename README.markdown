@@ -1,3 +1,13 @@
+**ABANDONED**
+
+This branch (namespaces) has long been dead; we just never got around to doing the last rites :-)
+
+Whatever documentation it had, has been moved to the "archive" subdirectory of the gitolite-doc repository, and is no longer available in the [rendered documentation]https://codeberg.org/sitaramc/gitolite-doc/src/branch/master/docs/build-docs.md).
+
+**DO NOT USE THIS.  YOU HAVE BEEN WARNED!**
+
+----
+
 Gitolite README
 ===============
 
