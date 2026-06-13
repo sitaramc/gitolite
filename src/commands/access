@@ -49,13 +49,16 @@ $aa  ||= '+';
 # default ref is 'any'
 $ref ||= 'any';
 # fq the ref if needed
-$ref =~ s(^)(refs/heads/) if $ref and $ref ne 'any' and $ref !~ m(^(refs|VREF)/);
-_die "invalid perm" if not( $aa and $aa =~ /^(R|W|\+|C|D|M|\^C)$/ );
-_die "invalid ref name" if not( $ref and $ref =~ $REF_OR_FILENAME_PATT );
+if (not $ref eq '%') {
+    $ref = checkref( $ref );
+}
+if (not $aa eq '%') {
+    _die "invalid perm" if not( $aa and $aa =~ /^(R|W|\+|C|D|M|\^C)$/ );
+}
 
 my $ret = '';
 
-if ( $repo ne '%' and $user ne '%' ) {
+if ( $repo ne '%' and $user ne '%' and $aa ne '%' and $ref ne '%' ) {
     # single repo, single user; no STDIN
     $ret = access( $repo, $user, adjust_aa($repo, $aa), $ref );
 
@@ -75,6 +78,8 @@ if ( $repo ne '%' and $user ne '%' ) {
 
 $repo = '' if $repo eq '%';
 $user = '' if $user eq '%';
+$aa = '' if $aa eq '%';
+$ref = '' if $ref eq '%';
 
 _die "'-q' and '-s' meaningless in pipe mode" if $q or $s;
 @ARGV = ();
@@ -82,8 +87,14 @@ while (<>) {
     my @in = split;
     my $r  = $repo || shift @in;
     my $u  = $user || shift @in;
-    $ret = access( $r, $u, adjust_aa($r, $aa), $ref );
-    print "$r\t$u\t$ret\n";
+    my $a  = $aa   || shift @in;
+    my $rf = $ref  || checkref( shift @in );
+    $ret = access( $r, $u, adjust_aa($r, $a), $rf );
+    if ( $aa and $ref ) {
+        print "$r\t$u\t$ret\n";
+    } else {
+        print "$r\t$u\t$a\t$rf\t$ret\n";
+    }
 }
 
 sub adjust_aa {
@@ -92,6 +103,13 @@ sub adjust_aa {
     $aa = '+' if $aa eq 'D' and not option($repo, 'DELETE_IS_D');
     $aa = 'W' if $aa eq 'M' and not option($repo, 'MERGE_CHECK');
     return $aa;
+}
+
+sub checkref {
+    my $ref = shift;
+    $ref =~ s(^)(refs/heads/) if $ref and $ref ne 'any' and $ref !~ m(^(refs|VREF)/);
+    _die "invalid ref name" if not( $ref and $ref =~ $REF_OR_FILENAME_PATT );
+    return $ref
 }
 
 sub show {
