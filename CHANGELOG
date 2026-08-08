@@ -1,3 +1,9 @@
+2026-08-08  v3.6.15 only one major change:
+
+                    allow passing permission and ref to stdin using `access` in batch mode
+                    (brief text added to `gitolite access --help`; more details in
+                    src/commands/access script)
+
 2025-07-18  v3.6.14 only one important fix:
 
                     detect HEAD name in admin repo (don't require it be "master")
