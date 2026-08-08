@@ -9,6 +9,20 @@ use Gitolite::Conf::Load;
 
 our ( $q, $s, $h );    # quiet, show, help
 
+$|++;       # useful when STDOUT is a pipe
+# Additional documentation on the pipe mode.
+# 1.  "access" always had a pipe mode, but only for repo and user, not the
+#     "perm" and "ref" fields
+# 2.  What this enhancement does is allow all 4 fields to be sent in from
+#     STDIN.
+# 3.  The new "t/accesspipe.t" test script exercises both the 3-argument
+#     (repo, user, perm; with ref left as "any") and the 4-argument modes.
+# 4.  One big caveat about using a possibly long-lived "gitolite access"
+#     command serving responses like this is that if the access rules change,
+#     access may not pick up the changes.  If you're doing this you will need
+#     to have a way to restart your script every time gitolite-admin gets
+#     pushed, or a new wild repo is created, to be safe.
+
 =for usage
 Usage:  gitolite access [-q|-s] <repo> <user> <perm> <ref>
 
@@ -22,22 +36,26 @@ DENIED in it if access was denied.  With '-q', returns only an exit code
   - ref:  defauts to 'any'.  See notes below
 
 Notes:
-  - ref: something like 'master', or 'refs/tags/v1.0', or even a VREF if you
+-   ref: something like 'master', or 'refs/tags/v1.0', or even a VREF if you
     know what they look like.
 
     The 'any' ref is special -- it ignores deny rules, thus simulating
     gitolite's behaviour during the pre-git access check (see 'deny-rules'
     section in rules.html for details).
 
-  - batch mode: see src/triggers/post-compile/update-git-daemon-access-list
+-   batch mode: see src/triggers/post-compile/update-git-daemon-access-list
     for a good example that shows how to test several repos in one invocation.
     This is orders of magnitude faster than running the command multiple
     times; you'll notice if you have more than a hundred or so repos.
 
-  - '-s' shows the rules (conf file name, line number, and rule) that were
+    -   update on batch mode, v3.6.15: batch mode now allows all 4 parameters
+        to be sent in via STDIN, but please see source (src/commands/access)
+        for more details and caveats.
+
+-   '-s' shows the rules (conf file name, line number, and rule) that were
     considered and how they fared.
 
-  - you can also test the ability to create wild repos if you set GL_USER to
+-   you can also test the ability to create wild repos if you set GL_USER to
     the username and use ^C as the permission to check for.
 =cut
 
