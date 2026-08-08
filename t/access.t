@@ -215,7 +215,7 @@ confreset;confadd '
 
 ';
 
-try "ADMIN_PUSH set4; !/FATAL/" or die text();
+try "ADMIN_PUSH set5; !/FATAL/" or die text();
 
 try "
     gitolite access foo u1 +;           !ok
