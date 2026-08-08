@@ -1,0 +1,41 @@
+c0  u1 +
+c0  u1 C
+c0  u2 +
+c0  u2 C
+c1  u1 +
+c1  u1 C
+c1  u2 +
+c1  u2 C
+
+foo u1 +
+foo u2 +
+foo u3 +
+foo u1 C
+foo u2 C
+foo u3 C
+foo u1 D
+foo u2 D
+foo u3 D
+foo u1 M
+foo u2 M
+foo u3 M
+
+bar u1 +
+bar u2 +
+bar u3 +
+bar u1 C
+bar u2 C
+bar u3 C
+bar u1 D
+bar u2 D
+bar u3 D
+bar u1 M
+bar u2 M
+bar u3 M
+
+bar u6 R
+bar u6 W
+bar u6 +
+bar u6 C
+bar u6 D
+bar u6 M

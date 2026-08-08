@@ -1,0 +1,76 @@
+@gaa	@g1	+	any	refs/.*
+aa	@g1	+	refs/heads/master	refs/.*
+@gaa	@g1	+	refs/heads/next	refs/.*
+@gaa	@g1	W	refs/heads/next	refs/.*
+@gaa	u1	+	refs/heads/dev	refs/.*
+@gaa	u1	+	refs/heads/next	refs/.*
+aa	u1	W	refs/heads/next	refs/.*
+@gaa	@g2	+	refs/heads/master	+ refs/heads/master @gaa @g2 DENIED by fallthru
+@gaa	@g2	+	refs/heads/next	+ refs/heads/next @gaa @g2 DENIED by fallthru
+aa	@g2	W	refs/heads/master	refs/.*
+aa	u2	+	any	+ any aa u2 DENIED by fallthru
+@gaa	u2	+	refs/heads/master	+ refs/heads/master @gaa u2 DENIED by fallthru
+@gaa	u2	W	refs/heads/master	refs/.*
+@gaa	@g3	+	refs/heads/master	refs/heads/master
+@gaa	@g3	W	refs/heads/next	W refs/heads/next @gaa @g3 DENIED by fallthru
+@gaa	@g3	W	refs/heads/dev	W refs/heads/dev @gaa @g3 DENIED by fallthru
+aa	u3	+	refs/heads/dev	+ refs/heads/dev aa u3 DENIED by fallthru
+aa	u3	+	refs/heads/next	+ refs/heads/next aa u3 DENIED by fallthru
+@gaa	u4	+	refs/heads/master	+ refs/heads/master @gaa u4 DENIED by fallthru
+@gaa	u4	W	refs/heads/master	refs/heads/master
+aa	u4	+	refs/heads/next	+ refs/heads/next aa u4 DENIED by fallthru
+@gaa	u4	W	refs/heads/next	W refs/heads/next @gaa u4 DENIED by fallthru
+@gaa	u5	R	any	refs/heads/dev
+aa	u5	R	any	refs/heads/dev
+@gaa	u5	+	refs/heads/dev	refs/heads/dev
+@gaa	u5	+	refs/heads/master	+ refs/heads/master @gaa u5 DENIED by refs/heads/master
+aa	u5	+	refs/heads/next	+ refs/heads/next aa u5 DENIED by fallthru
+@gaa	u5	R	refs/heads/dev	refs/heads/dev
+@gaa	u5	R	refs/heads/master	R refs/heads/master @gaa u5 DENIED by refs/heads/master
+@gaa	u5	R	refs/heads/next	refs/.*
+aa	u5	W	refs/heads/dev	refs/heads/dev
+aa	u5	W	refs/heads/master	W refs/heads/master aa u5 DENIED by refs/heads/master
+@gaa	u5	W	refs/heads/next	refs/.*
+@gr2	tester	W	refs/heads/v1	W refs/heads/v1 @gr2 tester DENIED by refs/heads/v[0-9]
+@gr1	tester	W	refs/heads/v1	refs/heads
+r1	tester	W	refs/heads/v1	refs/heads
+r2	tester	W	refs/heads/v1	W refs/heads/v1 r2 tester DENIED by refs/heads/v[0-9]
+r2	tester	W	refs/heads/va	refs/heads
+c0	u1	+	any	refs/.*
+c0	u1	C	any	refs/.*
+c0	u2	+	any	refs/.*
+c0	u2	C	any	refs/.*
+c1	u1	+	any	refs/.*
+c1	u1	C	any	refs/.*
+c1	u2	+	any	refs/.*
+c1	u2	C	any	C any c1 u2 DENIED by fallthru
+foo	u1	+	any	+ any foo u1 DENIED by fallthru
+foo	u2	+	any	+ any foo u2 DENIED by fallthru
+foo	u3	+	any	refs/.*
+foo	u1	C	any	W any foo u1 DENIED by fallthru
+foo	u2	C	any	refs/.*
+foo	u3	C	any	refs/.*
+foo	u1	D	any	+ any foo u1 DENIED by fallthru
+foo	u2	D	any	+ any foo u2 DENIED by fallthru
+foo	u3	D	any	refs/.*
+foo	u1	M	any	W any foo u1 DENIED by fallthru
+foo	u2	M	any	refs/.*
+foo	u3	M	any	refs/.*
+bar	u1	+	any	+ any bar u1 DENIED by fallthru
+bar	u2	+	any	+ any bar u2 DENIED by fallthru
+bar	u3	+	any	refs/.*
+bar	u1	C	any	C any bar u1 DENIED by fallthru
+bar	u2	C	any	C any bar u2 DENIED by fallthru
+bar	u3	C	any	C any bar u3 DENIED by fallthru
+bar	u1	D	any	D any bar u1 DENIED by fallthru
+bar	u2	D	any	D any bar u2 DENIED by fallthru
+bar	u3	D	any	D any bar u3 DENIED by fallthru
+bar	u1	M	any	M any bar u1 DENIED by fallthru
+bar	u2	M	any	M any bar u2 DENIED by fallthru
+bar	u3	M	any	M any bar u3 DENIED by fallthru
+bar	u6	R	any	refs/.*
+bar	u6	W	any	refs/.*
+bar	u6	+	any	refs/.*
+bar	u6	C	any	refs/.*
+bar	u6	D	any	refs/.*
+bar	u6	M	any	refs/.*
