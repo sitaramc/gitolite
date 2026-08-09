@@ -1,7 +1,6 @@
 " Vim syntax file
 " Language:	gitolite configuration
-" URL:		https://github.com/sitaramc/gitolite/blob/master/contrib/vim/syntax/gitolite.vim
-"	(https://raw.githubusercontent.com/sitaramc/gitolite/master/contrib/vim/syntax/gitolite.vim)
+" URL:		https://codeberg.org/sitaramc/gitolite/src/branch/master/contrib/vim/syntax/gitolite.vim
 " Maintainer:	Sitaram Chamarty <sitaramc@gmail.com>
 " (former Maintainer:	Teemu Matilainen <teemu.matilainen@iki.fi>)
 " Last Change:	2017 Oct 05

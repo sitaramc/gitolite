@@ -65,7 +65,8 @@ if [[ -d /tmp/gitolite.git ]]; then
     # can't simply clone what's on github.  Instead, I use a local
     # world-readable bare repo cloned from my dev environment.
 else
-    git clone 'https://github.com/sitaramc/gitolite' gitolite-source
+    git clone 'https://codeberg.org/sitaramc/gitolite' gitolite-source
+    # (or) git clone 'https://github.com/sitaramc/gitolite' gitolite-source
 fi
 
 # make the bin directory, and add it to PATH

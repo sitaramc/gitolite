@@ -569,7 +569,7 @@ sub usage {
     # TODO
     print "Please see documentation at:
 
-        https://github.com/sitaramc/tsh/blob/master/README.mkd
+        https://codeberg.org/sitaramc/tsh/src/branch/master/README.mkd
 
 Meanwhile, here are your local 'macro' definitions:
 

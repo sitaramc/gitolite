@@ -43,7 +43,8 @@ Usage (from gitolite clone directory):
 
 Simplest use, if $HOME/bin exists and is in $PATH, is:
 
-    git clone https://github.com/sitaramc/gitolite
+    git clone https://codeberg.org/sitaramc/gitolite
+    # (or) git clone https://github.com/sitaramc/gitolite
     gitolite/install -ln
 
     # now run setup

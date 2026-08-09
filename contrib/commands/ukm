@@ -10,7 +10,7 @@ use Gitolite::Easy;
 =for usage
 Usage for this command is not that simple. Please read the full
 documentation in
-https://github.com/sitaramc/gitolite-doc/blob/master/docs/contrib/ukm.mkd
+https://codeberg.org/sitaramc/gitolite-doc/src/branch/master/docs/contrib/ukm.md
 or online at http://gitolite.com/gitolite/contrib/ukm.html.
 =cut
 

@@ -258,7 +258,7 @@ sub cleanup_conf_line {
 
 # [1]: https://gitolite.com/gitolite/internals.html#what-is-core
 # [2]: https://gitolite.com/gitolite/conf-2.html#appendix-3-embedding-test-code-in-your-conf
-# [3]: https://github.com/sitaramc/gitolite/blob/master/contrib/utils/testconf
+# [3]: https://codeberg.org/sitaramc/gitolite/src/branch/master/contrib/utils/testconf
 sub update_hook_present {
     my $repo = shift;
 
@@ -417,7 +417,7 @@ sub ssh_fingerprint_line {
 
 # ----------------------------------------------------------------------
 
-# bare-minimum subset of 'Tsh' (see github.com/sitaramc/tsh)
+# bare-minimum subset of 'Tsh' (see codeberg.org/sitaramc/tsh)
 {
     my ( $rc, $text );
     sub tsh_rc   { return $rc   || 0; }
