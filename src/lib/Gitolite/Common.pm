@@ -267,7 +267,7 @@ sub update_hook_present {
     my $repo_hook = "$ENV{GL_REPO_BASE}/$repo.git/hooks/update";
     my $common_hook = "$ENV{GL_ADMIN_BASE}/hooks/common/update";
 
-    if ($^O eq 'msys') {
+    if ($^O eq 'msys' || $^O eq 'cygwin') {
         # No symlinks on Windows.  Please see important note placed just before this function.
         my $repo_update_text = slurp($repo_hook) if -f $repo_hook;
         my $common_update_text = slurp($common_hook) if -f $common_hook;
