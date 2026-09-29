@@ -30,7 +30,7 @@ confreset;confadd '
         RW                  =   u5
 ';
 
-try "ADMIN_PUSH set2; !/FATAL/" or die text();
+try "ADMIN_PUSH set1; !/FATAL/" or die text();
 
 confadd '
     @admins     =   admin dev1
@@ -49,7 +49,7 @@ confadd '
         RW  refs/heads          = tester
 ';
 
-try "ADMIN_PUSH set3; !/FATAL/" or die text();
+try "ADMIN_PUSH set2; !/FATAL/" or die text();
 
 confadd '
     repo @all
@@ -62,7 +62,7 @@ confadd '
         RW+ =   @all
 ';
 
-try "ADMIN_PUSH set4; !/FATAL/" or die text();
+try "ADMIN_PUSH set3; !/FATAL/" or die text();
 
 confadd '
     repo foo
@@ -78,4 +78,4 @@ confadd '
 
 ';
 
-try "ADMIN_PUSH set5; !/FATAL/" or die text();
+try "ADMIN_PUSH set4; !/FATAL/" or die text();

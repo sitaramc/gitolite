@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# this needs to be run right after t/access.t because we're using the conf
-# used in the last step of that test.
+# This needs to be run right after t/accesspipe-prep.t because that sets up
+# the conf for the test.  (Accesspipe is in a somewhat unique position that
+# you *can't* test it step by step, like all the other tests do.  It is
+# *meant* to be a batch process.  So the structure of this test is very
+# different from all the other ones we have, hence the separation of the conf
+# preparation).
 
 # ----------------------------------------------------------------------
 # setup the reference output
